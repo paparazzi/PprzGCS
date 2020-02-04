@@ -7,6 +7,9 @@ class TileItem : QGraphicsPixmapItem
 {
 public:
     TileItem(const QPixmap &pixmap, QGraphicsItem *parent = nullptr);
+
+private:
+    bool isDisplayed;
 };
 
 #endif // TILEITEM_H
