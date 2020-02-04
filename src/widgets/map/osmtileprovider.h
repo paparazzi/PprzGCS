@@ -45,6 +45,8 @@ private:
     QMap<TileCoorI, TileItem*> tiles_map;
     QNetworkAccessManager* manager;
     QNetworkDiskCache* diskCache;
+
+    QList<TileCoorI> downloading;
 };
 
 #endif // OSMTILEPROVIDER_H

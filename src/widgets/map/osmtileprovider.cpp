@@ -50,60 +50,57 @@ std::string OSMTileProvider::tilePath(TileCoorI coor) {
 }
 
 void OSMTileProvider::fetch_tile(TileCoorI t) {
-    std::cout << "Fetch tile " << "X" << std::get<0>(t) << " Y" << std::get<1>(t);
-    QMap<TileCoorI, TileItem*>::const_iterator tile = tiles_map.find(t);
-    if ( tile == tiles_map.end() ) {
-        // tile not in map. Load it from disk or download it
-        std::string path = tilePath(t);
-        std::cout << "  search in " << path << std::endl;
+    // If the file is beeing downloaded, do nothing, it will come soon !
+    if(!downloading.contains(t)) {
+        QMap<TileCoorI, TileItem*>::const_iterator tile = tiles_map.find(t);
+        if ( tile == tiles_map.end() ) {
+            // tile not in map. Load it from disk or download it
+            std::string path = tilePath(t);
+            std::ifstream f(path);
+            if(f.good()) {
+                // tile found on disk
+                load_tile_from_disk(t);
+            } else {
+                // tile not on disk, download it
 
-        std::ifstream f(path);
-        if(f.good()) {
-            // tile found on disk
-            load_tile_from_disk(t);
+                int x = std::get<0>(t);
+                int y = std::get<1>(t);
+                int z = std::get<2>(t);
+                std::string url_str = "http://tile.openstreetmap.org/" +
+                        std::to_string(z) + "/" +
+                        std::to_string(x) + "/" +
+                        std::to_string(y) + ".png";
+
+                QUrl url = QUrl(url_str.c_str());
+
+                QNetworkRequest request = QNetworkRequest(url);
+
+                QList<QVariant> l = QList<QVariant>();
+                l.append(x);
+                l.append(y);
+                l.append(z);
+                request.setRawHeader("User-Agent", "Une belle tuile");
+                request.setAttribute(QNetworkRequest::User, QVariant(l));
+                manager->get(request);
+                downloading.append(t);
+            }
+
         } else {
-            // tile not on disk, download it
-
-            int x = std::get<0>(t);
-            int y = std::get<1>(t);
-            int z = std::get<2>(t);
-            std::string url_str = "http://tile.openstreetmap.org/" +
-                    std::to_string(z) + "/" +
-                    std::to_string(x) + "/" +
-                    std::to_string(y) + ".png";
-
-            std::cout << "file NOT found! Download from " << url_str << std::endl;
-
-            QUrl url = QUrl(url_str.c_str());
-
-            QNetworkRequest request = QNetworkRequest(url);
-
-            QList<QVariant> l = QList<QVariant>();
-            l.append(x);
-            l.append(y);
-            l.append(z);
-            request.setRawHeader("User-Agent", "Une belle tuile");
-            request.setAttribute(QNetworkRequest::User, QVariant(l));
-            manager->get(request);
+            //tile found in map
+            emit(tileReady(tile.value(), t));
         }
-
-    } else {
-        //tile found in map
-        emit(tileReady(tile.value(), t));
     }
 }
 
 void OSMTileProvider::handleReply(QNetworkReply *reply) {
     QList<QVariant> l = reply->request().attribute(QNetworkRequest::User).toList();
+    int x = l.takeFirst().toInt(nullptr);
+    int y = l.takeFirst().toInt(nullptr);
+    int z = l.takeFirst().toInt(nullptr);
+    TileCoorI coor = std::make_tuple(x, y, z);
+
     if(reply->error() == QNetworkReply::NetworkError::NoError) {
-        int x = l.takeFirst().toInt(nullptr);
-        int y = l.takeFirst().toInt(nullptr);
-        int z = l.takeFirst().toInt(nullptr);
-        TileCoorI coor = std::make_tuple(x, y, z);
         std::string path = tilePath(coor);
-
-        std::cout << "save image to " << path << std::endl;
-
         QFile file(path.c_str());
         QFileInfo fi(path.c_str());
         QDir dirName = fi.dir();
@@ -117,15 +114,17 @@ void OSMTileProvider::handleReply(QNetworkReply *reply) {
             reply->deleteLater();
         }
         load_tile_from_disk(coor);
+
     } else {
         std::cout << "An Error occurs!!! " << std::endl;
     }
+
+    downloading.removeAll(coor);
 }
 
 
 void OSMTileProvider::load_tile_from_disk(TileCoorI t) {
     std::string path = tilePath(t);
-    std::cout << "file found!" << std::endl;
     QPixmap pixmap = QPixmap(path.c_str());
     TileItem* item = new TileItem(pixmap);
     tiles_map[t] = item;

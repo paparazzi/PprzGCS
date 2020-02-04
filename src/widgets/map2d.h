@@ -21,6 +21,7 @@ public slots:
 
 protected:
     virtual void wheelEvent(QWheelEvent* event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
 
 private slots:
     void acChanged(int);
@@ -28,6 +29,7 @@ private slots:
 
 private:
     QGraphicsScene* scene;
+    int zoomLevel;
 
     QGraphicsTextItem* current_ac;
 
