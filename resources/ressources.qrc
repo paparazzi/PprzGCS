@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>fake_map.png</file>
+        <file>test_gcs_qt.xml</file>
+    </qresource>
+</RCC>
