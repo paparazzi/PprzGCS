@@ -10,7 +10,7 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
-find_package(Qt5 COMPONENTS Widgets Xml REQUIRED)
+find_package(Qt5 COMPONENTS Widgets Xml Network REQUIRED)
 
 # LibProj dependency for calculating coordinate projections
 find_package(PROJ4 REQUIRED proj>=4.0)
@@ -62,5 +62,5 @@ include_directories(src
 
 add_executable(${PROJECT_NAME} ${SOURCE})
 
-target_link_libraries(PprzGCS Qt5::Widgets Qt5::Xml ${PROJ4_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(PprzGCS Qt5::Widgets Qt5::Xml Qt5::Network ${PROJ4_LIBRARIES} ${Boost_LIBRARIES})
 

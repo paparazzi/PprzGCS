@@ -6,52 +6,39 @@
 #include <QGraphicsScene>
 #include <QWheelEvent>
 #include <QGraphicsTextItem>
+#include "osmtileprovider.h"
 
 class Map2D : public QGraphicsView
 {
     Q_OBJECT
 public:
     explicit Map2D(QWidget *parent = nullptr);
-    Q_PROPERTY(QPointF _pos READ pos WRITE setPos)
-
-    inline const QPointF &pos() const { return _pos; }
-    inline void setPos(const QPointF &pos) { _pos = pos;}
-    inline void setLatLon0(qreal lat0, qreal lon0) {latLon0 = QPointF(lat0, lon0);}
 
 signals:
 
 public slots:
+
 
 protected:
     virtual void wheelEvent(QWheelEvent* event);
 
 private slots:
     void acChanged(int);
+    void handleTile(TileItem*, TileCoorI);
 
 private:
-//    ///
-//    /// \brief latLonOfPos
-//    /// \return
-//    ///
-//    QPointF latLonOfPos();
-
-//    QPointF posOfLatLon(QPointF latlon);
-
     QGraphicsScene* scene;
 
     QGraphicsTextItem* current_ac;
 
-    ///
-    /// \brief _pos: X/Y position in meters
-    ///
-    QPointF _pos;
+    OSMTileProvider tileProvider;
 
-    qint16 tileSize;
 
     ///
     /// \brief latLon0: GPQ coordinates of the (0,0) pos.
     ///
-    QPointF latLon0;
+    double lat0, lon0;
+    QPointF pos0;
 };
 
 #endif // MAP2D_H

@@ -4,6 +4,7 @@
 #include <string>
 #include "pprz_dispatcher.h"
 #include "dispatcher_ui.h"
+#include <iostream>
 
 #define SIZE 10000
 
@@ -13,18 +14,14 @@
  *
  */
 
-Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), _pos(QPointF(0,0)), tileSize(256)
+Map2D::Map2D(QWidget *parent) : QGraphicsView(parent)
 {
-    scene = new QGraphicsScene(0,0, 2*SIZE, 2*SIZE, parent);
+    scene = new QGraphicsScene(-SIZE, -SIZE, 2*SIZE, 2*SIZE, parent);
     setScene(scene);
-    QPixmap pixmap = QPixmap("://fake_map.png");
-    QGraphicsPixmapItem *pixmapItem = scene->addPixmap(pixmap);
-    pixmapItem->setPos(SIZE - pixmapItem->boundingRect().width()/2, SIZE - pixmapItem->boundingRect().height()/2);
-
     current_ac = new QGraphicsTextItem("AC : None");
     current_ac->setScale(4);
     scene->addItem(current_ac);
-    current_ac->setPos(SIZE, SIZE);
+    current_ac->setPos(0, -100);
 
     setDragMode(QGraphicsView::ScrollHandDrag);
     setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
@@ -32,6 +29,21 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), _pos(QPointF(0,0)), tileS
     setBackgroundBrush(QBrush(Qt::darkGreen));
 
     connect(DispatcherUi::get(), SIGNAL(ac_selected(int)), this, SLOT(acChanged(int)));
+
+    connect(&tileProvider, SIGNAL(tileReady(TileItem*, TileCoorI)), this, SLOT(handleTile(TileItem*, TileCoorI)));
+
+    lat0 = 43.5;
+    lon0 = 1.2;
+
+    TileCoorD coorD = tileProvider.tileCoorFromLatlon(lat0, lon0, 18);
+    pos0 = QPointF(std::get<0>(coorD), std::get<1>(coorD));
+
+    // fetch 1 tile to test
+    TileCoorI coorI = COOR_I_OF_D(coorD);
+    tileProvider.fetch_tile(coorI);
+
+    TileCoorI c2 = std::make_tuple(std::get<0>(coorI) -3, std::get<1>(coorI), std::get<2>(coorI));
+    tileProvider.fetch_tile(c2);
 }
 
 
@@ -55,18 +67,13 @@ void Map2D::acChanged(int ac_id) {
     current_ac->setPlainText("AC : " + QString::number(ac_id));
 }
 
-//QPointF Map2D::latLonOfPos() {
-//    // Todo
-//    QPointF latLon;
-//    latLon.setX(latLon0.y() + _pos.y() * 0.0001);
-//    latLon.setY(latLon0.x() + _pos.x() * 0.0001);
-//    return latLon;
-//}
+void Map2D::handleTile(TileItem* tile, TileCoorI coorI) {
+    QPointF pos = QPointF(
+        tileProvider.TILE_SIZE*(std::get<0>(coorI) - pos0.x()),
+        tileProvider.TILE_SIZE*(std::get<1>(coorI) - pos0.y())
+    );
+    scene->addItem(tile);
+    tile->setPos(pos);
+    tile->setDisplayed(true);
+}
 
-//QPointF Map2D::posOfLatLon(QPointF latlon) {
-//    qreal dlat = latlon.x() - latLon0.x();
-//    qreal dlon = latlon.y() - latLon0.y();
-//    qreal x = dlat*6535;
-//    qreal y = dlon*6535*cos(latLon0.x());
-//    return QPointF(x, y);
-//}
