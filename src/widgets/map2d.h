@@ -13,7 +13,7 @@ class Map2D : public QGraphicsView
     Q_OBJECT
 public:
     explicit Map2D(QWidget *parent = nullptr);
-    void setPos(Point2DLatLon latLon);
+    void setPos(Point2DLatLon latLon, double cx=0, double cy=0);
 
 signals:
 
@@ -33,8 +33,6 @@ private:
 
     void updateTiles();
     QGraphicsScene* scene;
-
-    QGraphicsTextItem* current_ac;
 
     TileProvider tileProvider;
 

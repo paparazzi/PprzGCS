@@ -22,8 +22,14 @@ Point2DTile::Point2DTile(Point2DLatLon latLon) {
 
 }
 
-QString Point2DTile::to_string() {
+QString Point2DTile::to_istring() {
     std::string pStr;
-    pStr += "X" + std::to_string(xp) + "Y" + std::to_string(yp) + "Z" + std::to_string(zoomp);
+    pStr += "X" + std::to_string(xi()) + "Y" + std::to_string(yi()) + "Z" + std::to_string(zoomp);
     return QString(pStr.c_str());
+}
+
+bool Point2DTile::isValid() {
+    int max = 1 << zoomp;
+    return xp >= 0 && xp < max &&
+           yp >= 0 && yp < max;
 }

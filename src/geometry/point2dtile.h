@@ -23,12 +23,14 @@ public:
     void setY(double y) {yp = y;}
     void setZoom(int zoom) { zoomp = clamp(zoom, zoomMinp, zoomMaxp); }
 
+    bool isValid();
+
     int zoomMin() {return zoomMinp;}
     int zoomMax() {return zoomMaxp;}
     void setZoomMin(int zoomMin) {zoomMinp = zoomMin;}
     void setZoomMax(int zoomMax) {zoomMaxp = zoomMax;}
 
-    QString to_string();
+    QString to_istring();
 
 private:
     double xp;
@@ -37,6 +39,7 @@ private:
 
     int zoomMinp;
     int zoomMaxp;
+
 };
 
 

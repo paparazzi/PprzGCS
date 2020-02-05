@@ -13,15 +13,11 @@
 
 Map2D::Map2D(QWidget *parent) : QGraphicsView(parent)
 {
-    //scene = new QGraphicsScene(0, 0, 524288*256, 524288*256, parent);
-    scene = new QGraphicsScene(parent);
+    scene = new QGraphicsScene(-500, -500, 524288*256, 524288*256, parent);
+    //scene = new QGraphicsScene(parent);
+    //tileProvider.setTileSource(OSM_STAMEN);
     //tileProvider.setTileSource(OSM_CLASSIC);
     setScene(scene);
-    current_ac = new QGraphicsTextItem("AC : None");
-    current_ac->setScale(4);
-    scene->addItem(current_ac);
-    current_ac->setPos(0, -100);
-    current_ac->setZValue(10);
 
     setDragMode(QGraphicsView::ScrollHandDrag);
     setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
@@ -32,7 +28,7 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent)
 
     connect(&tileProvider, SIGNAL(tileReady(TileItem*, Point2DTile)), this, SLOT(handleTile(TileItem*, Point2DTile)));
 
-    setPos(Point2DLatLon(43.5, 1.2, 16));
+    setPos(Point2DLatLon(43.5, 1.2, 7));
 }
 
 
@@ -50,13 +46,20 @@ void Map2D::wheelEvent(QWheelEvent* event) {
 
     if(event->delta() > 0) {
         latLon.setZoom(latLon.zoom() + 1);
-        setPos(latLon);
     } else {
         latLon.setZoom(latLon.zoom() - 1);
-        setPos(latLon);
     }
-    translate(dx, dy);
-    updateTiles();
+
+    Point2DTile tt(latLon);
+    double xx = tt.x()*tileProvider.TILE_SIZE - dx;
+    double yy = tt.y()*tileProvider.TILE_SIZE - dy;
+
+    setPos(latLon, xx, yy);
+
+    //centerOn(QPointF(xx, yy));
+
+    //translate(dx, dy);
+    //updateTiles();
 }
 
 void Map2D::mouseMoveEvent(QMouseEvent *event) {
@@ -86,7 +89,7 @@ void Map2D::updateTiles() {
 }
 
 void Map2D::acChanged(int ac_id) {
-    current_ac->setPlainText("AC : " + QString::number(ac_id));
+    (void)ac_id;
     setPos(Point2DLatLon(45.5, 1.34, 16));
 }
 
@@ -108,7 +111,7 @@ void Map2D::handleTile(TileItem* tile, Point2DTile coorI) {
     tile->setPos(pos);
 }
 
-void Map2D::setPos(Point2DLatLon latLon) {
+void Map2D::setPos(Point2DLatLon latLon, double cx, double cy) {
     Point2DTile coorD(latLon);
 
     tileProvider.setZoomLevel(coorD.zoom());
@@ -125,9 +128,14 @@ void Map2D::setPos(Point2DLatLon latLon) {
         }
     }
 
+    if(cx==0 && cy==0) {
+        cx = tileProvider.TILE_SIZE*coorD.x();
+        cy = tileProvider.TILE_SIZE*coorD.y();
+    }
+
     centerOn(
         QPointF(
-         tileProvider.TILE_SIZE*coorD.x(),
-         tileProvider.TILE_SIZE*coorD.y()
+         cx,
+         cy
      ));
 }

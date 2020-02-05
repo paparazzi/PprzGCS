@@ -44,6 +44,12 @@ std::string TileProvider::tilePath(Point2DTile coor) {
                 "/X" + std::to_string(coor.xi()) +
                 "_Y" + std::to_string(coor.yi()) + ".png";
         break;
+    case OSM_STAMEN:
+        path += std::string(tilesPath) + "/OSM_STAMEN/" +
+                std::to_string(coor.zoom()) +
+                "/X" + std::to_string(coor.xi()) +
+                "_Y" + std::to_string(coor.yi()) + ".jpg";
+        break;
     }
     return path;
 }
@@ -62,15 +68,20 @@ QUrl TileProvider::tileUrl(Point2DTile coor) {
                 std::to_string(coor.xi()) + "/" +
                 std::to_string(coor.yi()) + ".png";
         break;
+    case OSM_STAMEN:
+        url += "http://c.tile.stamen.com/watercolor/" +
+                std::to_string(coor.zoom()) + "/" +
+                std::to_string(coor.xi()) + "/" +
+                std::to_string(coor.yi()) + ".jpg";
+        break;
     }
     return QUrl(url.c_str());
 }
 
 void TileProvider::fetch_tile(Point2DTile t) {
     // If the file is beeing downloaded, do nothing, it will come soon !
-    if(!downloading.contains(t.to_string())) {
-        downloading.append(t.to_string());
-        QMap<QString, TileItem*>::const_iterator tile = tiles_maps[_zoomLevel].find(t.to_string());
+    if(t.isValid() && !downloading.contains(t.to_istring())) {
+        QMap<QString, TileItem*>::const_iterator tile = tiles_maps[_zoomLevel].find(t.to_istring());
         if ( tile == tiles_maps[_zoomLevel].end() ) {
             // tile not in map. Load it from disk or download it
             std::string path = tilePath(t);
@@ -80,7 +91,7 @@ void TileProvider::fetch_tile(Point2DTile t) {
                 load_tile_from_disk(t);
             } else {
                 // tile not on disk, download it
-
+                downloading.append(t.to_istring());
                 QUrl url = tileUrl(t);
 
                 QNetworkRequest request = QNetworkRequest(url);
@@ -89,7 +100,7 @@ void TileProvider::fetch_tile(Point2DTile t) {
                 l.append(t.x());
                 l.append(t.y());
                 l.append(t.zoom());
-                request.setRawHeader("User-Agent", "Une belle tuile");
+                request.setRawHeader("User-Agent", "PPRZGCS");
                 request.setAttribute(QNetworkRequest::User, QVariant(l));
                 manager->get(request);
             }
@@ -125,10 +136,14 @@ void TileProvider::handleReply(QNetworkReply *reply) {
         load_tile_from_disk(coor);
 
     } else {
-        std::cout << "An Error occurs!!! " << reply->error() << std::endl;
+        if(reply->error() == QNetworkReply::NetworkError::ConnectionRefusedError) {
+            std::cout << "ConnectionRefusedError! Maybe the tile provider banned you ?" << std::endl;
+        } else {
+           std::cout << "Error " << reply->error() << " !" << coor.to_istring().toStdString() << std::endl;
+        }
     }
 
-    downloading.removeAll(coor.to_string());
+    downloading.removeAll(coor.to_istring());
 }
 
 
@@ -136,7 +151,7 @@ void TileProvider::load_tile_from_disk(Point2DTile t) {
     std::string path = tilePath(t);
     QPixmap pixmap = QPixmap(path.c_str());
     TileItem* item = new TileItem(pixmap, t);
-    tiles_maps[_zoomLevel][t.to_string()] = item;
+    tiles_maps[_zoomLevel][t.to_istring()] = item;
     emit(tileReady(item, t));
 }
 

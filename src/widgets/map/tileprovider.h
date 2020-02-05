@@ -13,6 +13,7 @@
 enum TileSource {
     GOOGLE,
     OSM_CLASSIC,
+    OSM_STAMEN
 };
 
 class TileProvider : public QObject
