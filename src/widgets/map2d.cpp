@@ -11,11 +11,11 @@
 #define SIZE 10000
 
 
-Map2D::Map2D(QWidget *parent) : QGraphicsView(parent)
+Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0)
 {
     scene = new QGraphicsScene(-500, -500, 524288*256, 524288*256, parent);
     //scene = new QGraphicsScene(parent);
-    //tileProvider.setTileSource(OSM_STAMEN);
+    tileProvider.setTileSource(HIKING);
     //tileProvider.setTileSource(OSM_CLASSIC);
     setScene(scene);
 
@@ -28,38 +28,59 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent)
 
     connect(&tileProvider, SIGNAL(tileReady(TileItem*, Point2DTile)), this, SLOT(handleTile(TileItem*, Point2DTile)));
 
-    setPos(Point2DLatLon(43.5, 1.2, 7));
+    setPos(Point2DLatLon(43.4625, 1.2732, 6));
 }
 
 
 void Map2D::wheelEvent(QWheelEvent* event) {
     setTransformationAnchor(QGraphicsView::NoAnchor);
 
-    QPointF oldPos = mapToScene(event->pos());
-    int dx = event->pos().x() - width()/2;
-    int dy = event->pos().y() - height()/2;
+    if( (numericZoom != 0) ||
+        (event->delta() > 0 && tileProvider.zoomLevel() == tileProvider.ZOOM_MAX)) {
+    // "numeric" zoom
 
-    double xEvent = oldPos.x()/tileProvider.TILE_SIZE;
-    double yEvent = oldPos.y()/tileProvider.TILE_SIZE;
+        double scaleIni = 1 + NUMERIC_ZOOM_FACTOR*numericZoom;
 
-    Point2DLatLon latLon(Point2DTile(xEvent, yEvent, tileProvider.zoomLevel()));
+        if(event->delta() > 0) {
+            numericZoom += 1;
+        } else {
+            numericZoom -= 1;
+        }
+        double scaleTarget = 1 + NUMERIC_ZOOM_FACTOR*numericZoom;
 
-    if(event->delta() > 0) {
-        latLon.setZoom(latLon.zoom() + 1);
-    } else {
-        latLon.setZoom(latLon.zoom() - 1);
+        double scaleFactor = scaleTarget/scaleIni;
+
+        QPointF oldPos = mapToScene(event->pos());
+
+        scale(scaleFactor, scaleFactor);
+
+        QPointF newPos = mapToScene(event->pos());
+        QPointF delta = newPos - oldPos;
+        translate(delta.x(), delta.y());
+
     }
+    else {
+        QPointF oldPos = mapToScene(event->pos());
+        int dx = event->pos().x() - width()/2;
+        int dy = event->pos().y() - height()/2;
 
-    Point2DTile tt(latLon);
-    double xx = tt.x()*tileProvider.TILE_SIZE - dx;
-    double yy = tt.y()*tileProvider.TILE_SIZE - dy;
+        double xEvent = oldPos.x()/tileProvider.TILE_SIZE;
+        double yEvent = oldPos.y()/tileProvider.TILE_SIZE;
 
-    setPos(latLon, xx, yy);
+        Point2DLatLon latLon(Point2DTile(xEvent, yEvent, tileProvider.zoomLevel()));
 
-    //centerOn(QPointF(xx, yy));
+        if(event->delta() > 0) {
+            latLon.setZoom(latLon.zoom() + 1);
+        } else {
+            latLon.setZoom(latLon.zoom() - 1);
+        }
 
-    //translate(dx, dy);
-    //updateTiles();
+        Point2DTile tt(latLon);
+        double xx = tt.x()*tileProvider.TILE_SIZE - dx;
+        double yy = tt.y()*tileProvider.TILE_SIZE - dy;
+
+        setPos(latLon, xx, yy);
+    }
 }
 
 void Map2D::mouseMoveEvent(QMouseEvent *event) {
