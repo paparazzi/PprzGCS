@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(PprzGCS)
 
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra")
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
@@ -27,7 +29,7 @@ set(SOURCE
     src/widgets/strip.cpp
     src/widgets/ac_selector.ui
     src/widgets/ac_selector.cpp
-    src/widgets/map/osmtileprovider.cpp
+    src/widgets/map/tileprovider.cpp
     src/widgets/map/tileitem.cpp
     src/widgets/map2d.cpp
     src/layout_builder.cpp
@@ -36,6 +38,8 @@ set(SOURCE
     src/pprzmain.cpp
     src/dispatcher_ui.cpp
     src/geometry/coordinates.cpp
+    src/geometry/point2dlatlon.cpp
+    src/geometry/point2dtile.cpp
     resources/ressources.qrc
 )
 

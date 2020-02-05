@@ -2,21 +2,23 @@
 #define TILEITEM_H
 
 #include <QGraphicsPixmapItem>
-typedef std::tuple<int, int, int> TileCoorI;
+#include "point2dtile.h"
+
+//typedef std::tuple<int, int, int> TileCoorI;
 
 class TileItem : public QGraphicsPixmapItem
 {
 
 public:
-    TileItem(const QPixmap &pixmap, TileCoorI coordinates, QGraphicsItem *parent = nullptr);
+    TileItem(const QPixmap &pixmap, Point2DTile coordinates, QGraphicsItem *parent = nullptr);
 
     bool isInScene() { return inScene;}
     void setInScene(bool in_s) {inScene = in_s;}
-    TileCoorI coordinates() {return _coordinates;}
+    Point2DTile coordinates() {return _coordinates;}
 
 private:
     bool inScene;
-    TileCoorI _coordinates;
+    Point2DTile _coordinates;
 };
 
 #endif // TILEITEM_H

@@ -1,4 +1,4 @@
-#include "osmtileprovider.h"
+#include "tileprovider.h"
 #include "math.h"
 #include <iostream>
 #include <string>
@@ -13,11 +13,11 @@
 
 static const char tilesPath[] = "/home/fabien/DEV/test_qt/PprzGCS/data/map";
 
-OSMTileProvider::OSMTileProvider(QObject *parent) : QObject (parent), _zoomLevel(16)
+TileProvider::TileProvider(QObject *parent) : QObject (parent), _zoomLevel(16), source(GOOGLE)
 {
     // a map for each zoom level so its easier to change zoom level
     for(int z=ZOOM_MIN; z<=ZOOM_MAX; z++) {
-        tiles_maps.append(QMap<TileCoorI, TileItem*>());
+        tiles_maps.append(QMap<QString, TileItem*>());
     }
 
     manager = new QNetworkAccessManager(this);
@@ -26,38 +26,51 @@ OSMTileProvider::OSMTileProvider(QObject *parent) : QObject (parent), _zoomLevel
     manager->setCache(diskCache);
 
     //connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(handleReply(QNetworkReply*)));
-    connect(manager, &QNetworkAccessManager::finished, this, &OSMTileProvider::handleReply);
+    connect(manager, &QNetworkAccessManager::finished, this, &TileProvider::handleReply);
 }
 
-TileCoorD OSMTileProvider::tileCoorFromLatlon(double lat, double lon, int z)
-{
-    double tileX = (lon + 180.0) / 360.0 * (1 << z);
-    double latrad = lat * M_PI/180.0;
-    double tileY = (1.0 - asinh(tan(latrad)) / M_PI) / 2.0 * (1 << z);
-    return std::make_tuple(tileX, tileY, z);
-}
-
-
-std::tuple<double, double> OSMTileProvider::LatlonFromTile(double x, double y, int z)
-{
-    double lon = x / static_cast<double>(1 << z) * 360.0 - 180;
-    double n = M_PI - 2.0 * M_PI * y / static_cast<double>(1 << z);
-    double lat = 180.0 / M_PI * atan(0.5 * (exp(n) - exp(-n)));
-    return std::make_tuple(lat, lon);
-}
-
-std::string OSMTileProvider::tilePath(TileCoorI coor) {
-    std::string path = std::string(tilesPath) + "/" +
-            std::to_string(std::get<2>(coor)) +
-            "/X" + std::to_string(std::get<0>(coor)) +
-            "_Y" + std::to_string(std::get<1>(coor)) + ".png";
+std::string TileProvider::tilePath(Point2DTile coor) {
+    std::string path;
+    switch (source) {
+    case GOOGLE:
+        path += std::string(tilesPath) + "/GOOGLE/" +
+                std::to_string(coor.zoom()) +
+                "/X" + std::to_string(coor.xi()) +
+                "_Y" + std::to_string(coor.yi()) + ".jpeg";
+        break;
+    case OSM_CLASSIC:
+        path += std::string(tilesPath) + "/OSM_CLASSIC/" +
+                std::to_string(coor.zoom()) +
+                "/X" + std::to_string(coor.xi()) +
+                "_Y" + std::to_string(coor.yi()) + ".png";
+        break;
+    }
     return path;
 }
 
-void OSMTileProvider::fetch_tile(TileCoorI t) {
+QUrl TileProvider::tileUrl(Point2DTile coor) {
+    std::string url;
+
+    switch (source) {
+    case GOOGLE:
+        url += "https://khms3.google.com/kh/v=863?x=" +
+                std::to_string(coor.xi()) + "&y=" +std::to_string(coor.yi()) + "&z=" + std::to_string(coor.zoom());
+        break;
+    case OSM_CLASSIC:
+        url += "http://tile.openstreetmap.org/" +
+                std::to_string(coor.zoom()) + "/" +
+                std::to_string(coor.xi()) + "/" +
+                std::to_string(coor.yi()) + ".png";
+        break;
+    }
+    return QUrl(url.c_str());
+}
+
+void TileProvider::fetch_tile(Point2DTile t) {
     // If the file is beeing downloaded, do nothing, it will come soon !
-    if(!downloading.contains(t)) {
-        QMap<TileCoorI, TileItem*>::const_iterator tile = tiles_maps[_zoomLevel].find(t);
+    if(!downloading.contains(t.to_string())) {
+        downloading.append(t.to_string());
+        QMap<QString, TileItem*>::const_iterator tile = tiles_maps[_zoomLevel].find(t.to_string());
         if ( tile == tiles_maps[_zoomLevel].end() ) {
             // tile not in map. Load it from disk or download it
             std::string path = tilePath(t);
@@ -68,28 +81,17 @@ void OSMTileProvider::fetch_tile(TileCoorI t) {
             } else {
                 // tile not on disk, download it
 
-                int x = std::get<0>(t);
-                int y = std::get<1>(t);
-                int z = std::get<2>(t);
-//                std::string url_str = "http://tile.openstreetmap.org/" +
-//                        std::to_string(z) + "/" +
-//                        std::to_string(x) + "/" +
-//                        std::to_string(y) + ".png";
-                std::string url_str = "https://khms3.google.com/kh/v=863?x=" +
-                        std::to_string(x) + "&y=" +std::to_string(y) + "&z=" + std::to_string(z);
-
-                QUrl url = QUrl(url_str.c_str());
+                QUrl url = tileUrl(t);
 
                 QNetworkRequest request = QNetworkRequest(url);
 
                 QList<QVariant> l = QList<QVariant>();
-                l.append(x);
-                l.append(y);
-                l.append(z);
+                l.append(t.x());
+                l.append(t.y());
+                l.append(t.zoom());
                 request.setRawHeader("User-Agent", "Une belle tuile");
                 request.setAttribute(QNetworkRequest::User, QVariant(l));
                 manager->get(request);
-                downloading.append(t);
             }
 
         } else {
@@ -99,12 +101,12 @@ void OSMTileProvider::fetch_tile(TileCoorI t) {
     }
 }
 
-void OSMTileProvider::handleReply(QNetworkReply *reply) {
+void TileProvider::handleReply(QNetworkReply *reply) {
     QList<QVariant> l = reply->request().attribute(QNetworkRequest::User).toList();
     int x = l.takeFirst().toInt(nullptr);
     int y = l.takeFirst().toInt(nullptr);
     int z = l.takeFirst().toInt(nullptr);
-    TileCoorI coor = std::make_tuple(x, y, z);
+    Point2DTile coor(x, y, z);
 
     if(reply->error() == QNetworkReply::NetworkError::NoError) {
         std::string path = tilePath(coor);
@@ -123,22 +125,22 @@ void OSMTileProvider::handleReply(QNetworkReply *reply) {
         load_tile_from_disk(coor);
 
     } else {
-        std::cout << "An Error occurs!!! " << std::endl;
+        std::cout << "An Error occurs!!! " << reply->error() << std::endl;
     }
 
-    downloading.removeAll(coor);
+    downloading.removeAll(coor.to_string());
 }
 
 
-void OSMTileProvider::load_tile_from_disk(TileCoorI t) {
+void TileProvider::load_tile_from_disk(Point2DTile t) {
     std::string path = tilePath(t);
     QPixmap pixmap = QPixmap(path.c_str());
     TileItem* item = new TileItem(pixmap, t);
-    tiles_maps[_zoomLevel][t] = item;
+    tiles_maps[_zoomLevel][t.to_string()] = item;
     emit(tileReady(item, t));
 }
 
-void OSMTileProvider::setZoomLevel(int z) {
+void TileProvider::setZoomLevel(int z) {
     if(z == _zoomLevel) {
         return; // nothing change
     }
