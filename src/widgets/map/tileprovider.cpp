@@ -50,6 +50,18 @@ std::string TileProvider::tilePath(Point2DTile coor) {
                 "/X" + std::to_string(coor.xi()) +
                 "_Y" + std::to_string(coor.yi()) + ".jpg";
         break;
+    case TERRAIN:
+        path += std::string(tilesPath) + "/TERRAIN/" +
+                std::to_string(coor.zoom()) +
+                "/X" + std::to_string(coor.xi()) +
+                "_Y" + std::to_string(coor.yi()) + ".png";
+        break;
+    case HIKING:
+        path += std::string(tilesPath) + "/HIKING/" +
+                std::to_string(coor.zoom()) +
+                "/X" + std::to_string(coor.xi()) +
+                "_Y" + std::to_string(coor.yi()) + ".png";
+        break;
     }
     return path;
 }
@@ -73,6 +85,18 @@ QUrl TileProvider::tileUrl(Point2DTile coor) {
                 std::to_string(coor.zoom()) + "/" +
                 std::to_string(coor.xi()) + "/" +
                 std::to_string(coor.yi()) + ".jpg";
+        break;
+    case TERRAIN:
+        url += "http://b.tile.stamen.com/terrain/" +
+                std::to_string(coor.zoom()) + "/" +
+                std::to_string(coor.xi()) + "/" +
+                std::to_string(coor.yi()) + ".png";
+        break;
+    case HIKING:
+        url += "https://tile.waymarkedtrails.org/hiking/" +
+                std::to_string(coor.zoom()) + "/" +
+                std::to_string(coor.xi()) + "/" +
+                std::to_string(coor.yi()) + ".png";
         break;
     }
     return QUrl(url.c_str());
