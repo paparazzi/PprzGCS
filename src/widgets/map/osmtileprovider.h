@@ -30,7 +30,7 @@ public:
 
     explicit OSMTileProvider(QObject *parent = nullptr);
     TileCoorD tileCoorFromLatlon(double lat, double lon, int z);
-    std::tuple<double, double> LatlonFromTile(int x, int y, int z);
+    std::tuple<double, double> LatlonFromTile(double x, double y, int z);
     void fetch_tile(TileCoorI t);
 
     int zoomLevel() {return _zoomLevel;}

@@ -8,20 +8,17 @@
 
 #define SIZE 10000
 
-/*
- * Fake map just for illustration.
- *
- *
- */
 
-Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), zoomLevel(16)
+Map2D::Map2D(QWidget *parent) : QGraphicsView(parent)
 {
-    scene = new QGraphicsScene(-SIZE, -SIZE, 2*SIZE, 2*SIZE, parent);
+    //scene = new QGraphicsScene(0, 0, 524288*256, 524288*256, parent);
+    scene = new QGraphicsScene(parent);
     setScene(scene);
     current_ac = new QGraphicsTextItem("AC : None");
     current_ac->setScale(4);
     scene->addItem(current_ac);
     current_ac->setPos(0, -100);
+    current_ac->setZValue(10);
 
     setDragMode(QGraphicsView::ScrollHandDrag);
     setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
@@ -32,87 +29,103 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), zoomLevel(16)
 
     connect(&tileProvider, SIGNAL(tileReady(TileItem*, TileCoorI)), this, SLOT(handleTile(TileItem*, TileCoorI)));
 
-    lat0 = 43.5;
-    lon0 = 1.2;
-
-    TileCoorD coorD = tileProvider.tileCoorFromLatlon(lat0, lon0, zoomLevel);
-    pos0 = QPointF(std::get<0>(coorD), std::get<1>(coorD));
-
-    // fetch 1 tile to test
-//    TileCoorI coorI = COOR_I_OF_D(coorD);
-//    tileProvider.fetch_tile(coorI);
-
-//    TileCoorI c2 = std::make_tuple(std::get<0>(coorI) -3, std::get<1>(coorI), std::get<2>(coorI));
-//    tileProvider.fetch_tile(c2);
+    setPos(43.5, 1.2, 16);
 }
 
 
 void Map2D::wheelEvent(QWheelEvent* event) {
-//    setTransformationAnchor(QGraphicsView::NoAnchor);
-//    qreal zoomFactor = 1.25;
-//    if(event->delta() < 0) {
-//        zoomFactor = 1/zoomFactor;
-//    }
+    setTransformationAnchor(QGraphicsView::NoAnchor);
 
-//    QPointF oldPos = mapToScene(event->pos());
+    QPointF oldPos = mapToScene(event->pos());
+    int dx = event->pos().x() - width()/2;
+    int dy = event->pos().y() - height()/2;
 
-//    scale(zoomFactor, zoomFactor);
+    double xEvent = oldPos.x()/tileProvider.TILE_SIZE;
+    double yEvent = oldPos.y()/tileProvider.TILE_SIZE;
 
-//    QPointF newPos = mapToScene(event->pos());
-//    QPointF delta = newPos - oldPos;
-//    translate(delta.x(), delta.y());
-    std::tuple<double, double> latLon = tileProvider.LatlonFromTile(event->pos().x(), event->pos().y(), zoomLevel);
+    std::tuple<double, double> latLon = tileProvider.LatlonFromTile(xEvent, yEvent, tileProvider.zoomLevel());
     double lat = std::get<0>(latLon);
     double lon = std::get<1>(latLon);
 
-    //TileCoorD coorD = tileProvider.tileCoorFromLatlon(lat0, lon0, zoomLevel);
-
     if(event->delta() > 0) {
-        zoomLevel += 1;
+        setPos(lat, lon, tileProvider.zoomLevel() + 1);
     } else {
-        zoomLevel -= 1;
+        setPos(lat, lon, tileProvider.zoomLevel() - 1);
     }
-    TileCoorD coorD = tileProvider.tileCoorFromLatlon(lat0, lon0, zoomLevel);
-    pos0 = QPointF(std::get<0>(coorD), std::get<1>(coorD));
+    translate(dx, dy);
+    updateTiles();
 }
 
 void Map2D::mouseMoveEvent(QMouseEvent *event) {
     QGraphicsView::mouseMoveEvent(event);
     if(event->buttons() & Qt::LeftButton) {
-        QPointF topLeft = mapToScene(QPoint(0,0));
-        QPointF bottomRight = mapToScene(QPoint(width(),height()));
-
-        int xMin = static_cast<int>(topLeft.x()/tileProvider.TILE_SIZE + pos0.x());
-        int yMin = static_cast<int>(topLeft.y()/tileProvider.TILE_SIZE + pos0.y());
-        int xMax = static_cast<int>(bottomRight.x()/tileProvider.TILE_SIZE + pos0.x()) + 1;
-        int yMax = static_cast<int>(bottomRight.y()/tileProvider.TILE_SIZE + pos0.y()) + 1;
-
-        std::cout << std::to_string(xMin) << "<X<" << std::to_string(xMax) << "  " << std::to_string(yMin) << "<Y<" << std::to_string(yMax) << std::endl;
-
-        for(int x=xMin; x<xMax; x++) {
-            for(int y=yMin; y<yMax; y++) {
-                TileCoorI coor = std::make_tuple(x, y, zoomLevel);
-                tileProvider.fetch_tile(coor);
-            }
-        }
-
+        updateTiles();
     }
 }
 
+void Map2D::updateTiles() {
+    QPointF topLeft = mapToScene(QPoint(0,0));
+    QPointF bottomRight = mapToScene(QPoint(width(),height()));
+
+    int xMin = static_cast<int>(topLeft.x()/tileProvider.TILE_SIZE) - 2;
+    int yMin = static_cast<int>(topLeft.y()/tileProvider.TILE_SIZE) - 2;
+    int xMax = static_cast<int>(bottomRight.x()/tileProvider.TILE_SIZE) + 2;
+    int yMax = static_cast<int>(bottomRight.y()/tileProvider.TILE_SIZE) + 2;
+
+    std::cout << std::to_string(xMin) << "<X<" << std::to_string(xMax) << "  " << std::to_string(yMin) << "<Y<" << std::to_string(yMax) << std::endl;
+
+    for(int x=xMin; x<xMax; x++) {
+        for(int y=yMin; y<yMax; y++) {
+            TileCoorI coor = std::make_tuple(x, y, tileProvider.zoomLevel());
+            tileProvider.fetch_tile(coor);
+        }
+    }
+}
 
 void Map2D::acChanged(int ac_id) {
     current_ac->setPlainText("AC : " + QString::number(ac_id));
+    setPos(45.5, 1.34, 16);
 }
 
 void Map2D::handleTile(TileItem* tile, TileCoorI coorI) {
-    if(!tile->isDisplayed()) {
-        QPointF pos = QPointF(
-            tileProvider.TILE_SIZE*(std::get<0>(coorI) - pos0.x()),
-            tileProvider.TILE_SIZE*(std::get<1>(coorI) - pos0.y())
-        );
+    if(!tile->isInScene()) {    // Not in scene, so lets add it
         scene->addItem(tile);
-        tile->setPos(pos);
-        tile->setDisplayed(true);
+        tile->setInScene(true);
     }
+    if(!tile->isVisible()) {    // in scene but hidden, lets show it. TODO: what if this slot is called just atfer a zoom change ?
+        if(std::get<2>(tile->coordinates()) == tileProvider.zoomLevel()) {
+            tile->show();
+        }
+    }
+
+    QPointF pos = QPointF(
+        tileProvider.TILE_SIZE*(std::get<0>(coorI)),
+        tileProvider.TILE_SIZE*(std::get<1>(coorI))
+    );
+    tile->setPos(pos);
 }
 
+void Map2D::setPos(double lat, double lon, int z, int decX, int decY) {
+    tileProvider.setZoomLevel(z);
+    TileCoorD coorD = tileProvider.tileCoorFromLatlon(lat, lon, tileProvider.zoomLevel());
+    double x0 = std::get<0>(coorD);
+    double y0 = std::get<1>(coorD);
+
+    double xMin = x0 - width()/tileProvider.TILE_SIZE - 2;
+    double xMax = x0 + width()/tileProvider.TILE_SIZE + 2;
+    double yMin = y0 - height()/tileProvider.TILE_SIZE - 2;
+    double yMax = y0 + height()/tileProvider.TILE_SIZE + 2;
+
+    for(int x=xMin; x<xMax; x++) {
+        for(int y=yMin; y<yMax; y++) {
+            TileCoorI coor = std::make_tuple(x, y, tileProvider.zoomLevel());
+            tileProvider.fetch_tile(coor);
+        }
+    }
+
+    centerOn(
+        QPointF(
+         tileProvider.TILE_SIZE*x0,
+         tileProvider.TILE_SIZE*y0
+     ));
+}

@@ -16,7 +16,7 @@ static const char tilesPath[] = "/home/fabien/DEV/test_qt/PprzGCS/data/map";
 OSMTileProvider::OSMTileProvider(QObject *parent) : QObject (parent), _zoomLevel(16)
 {
     // a map for each zoom level so its easier to change zoom level
-    for(int z=ZOOM_MIN; z<ZOOM_MAX; z++) {
+    for(int z=ZOOM_MIN; z<=ZOOM_MAX; z++) {
         tiles_maps.append(QMap<TileCoorI, TileItem*>());
     }
 
@@ -38,7 +38,7 @@ TileCoorD OSMTileProvider::tileCoorFromLatlon(double lat, double lon, int z)
 }
 
 
-std::tuple<double, double> OSMTileProvider::LatlonFromTile(int x, int y, int z)
+std::tuple<double, double> OSMTileProvider::LatlonFromTile(double x, double y, int z)
 {
     double lon = x / static_cast<double>(1 << z) * 360.0 - 180;
     double n = M_PI - 2.0 * M_PI * y / static_cast<double>(1 << z);
@@ -71,10 +71,12 @@ void OSMTileProvider::fetch_tile(TileCoorI t) {
                 int x = std::get<0>(t);
                 int y = std::get<1>(t);
                 int z = std::get<2>(t);
-                std::string url_str = "http://tile.openstreetmap.org/" +
-                        std::to_string(z) + "/" +
-                        std::to_string(x) + "/" +
-                        std::to_string(y) + ".png";
+//                std::string url_str = "http://tile.openstreetmap.org/" +
+//                        std::to_string(z) + "/" +
+//                        std::to_string(x) + "/" +
+//                        std::to_string(y) + ".png";
+                std::string url_str = "https://khms3.google.com/kh/v=863?x=" +
+                        std::to_string(x) + "&y=" +std::to_string(y) + "&z=" + std::to_string(z);
 
                 QUrl url = QUrl(url_str.c_str());
 
