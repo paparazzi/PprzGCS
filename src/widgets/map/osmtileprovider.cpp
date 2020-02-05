@@ -13,8 +13,13 @@
 
 static const char tilesPath[] = "/home/fabien/DEV/test_qt/PprzGCS/data/map";
 
-OSMTileProvider::OSMTileProvider(QObject *parent) : QObject (parent)
+OSMTileProvider::OSMTileProvider(QObject *parent) : QObject (parent), _zoomLevel(16)
 {
+    // a map for each zoom level so its easier to change zoom level
+    for(int z=ZOOM_MIN; z<ZOOM_MAX; z++) {
+        tiles_maps.append(QMap<TileCoorI, TileItem*>());
+    }
+
     manager = new QNetworkAccessManager(this);
     diskCache = new QNetworkDiskCache(this);
     diskCache->setCacheDirectory(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
@@ -52,8 +57,8 @@ std::string OSMTileProvider::tilePath(TileCoorI coor) {
 void OSMTileProvider::fetch_tile(TileCoorI t) {
     // If the file is beeing downloaded, do nothing, it will come soon !
     if(!downloading.contains(t)) {
-        QMap<TileCoorI, TileItem*>::const_iterator tile = tiles_map.find(t);
-        if ( tile == tiles_map.end() ) {
+        QMap<TileCoorI, TileItem*>::const_iterator tile = tiles_maps[_zoomLevel].find(t);
+        if ( tile == tiles_maps[_zoomLevel].end() ) {
             // tile not in map. Load it from disk or download it
             std::string path = tilePath(t);
             std::ifstream f(path);
@@ -126,7 +131,25 @@ void OSMTileProvider::handleReply(QNetworkReply *reply) {
 void OSMTileProvider::load_tile_from_disk(TileCoorI t) {
     std::string path = tilePath(t);
     QPixmap pixmap = QPixmap(path.c_str());
-    TileItem* item = new TileItem(pixmap);
-    tiles_map[t] = item;
+    TileItem* item = new TileItem(pixmap, t);
+    tiles_maps[_zoomLevel][t] = item;
     emit(tileReady(item, t));
+}
+
+void OSMTileProvider::setZoomLevel(int z) {
+    if(z == _zoomLevel) {
+        return; // nothing change
+    }
+
+    for(auto t: tiles_maps[_zoomLevel]) {
+        t->hide();
+    }
+
+    if(z > ZOOM_MAX) {
+        _zoomLevel = ZOOM_MAX;
+    } else if(z < ZOOM_MIN) {
+        _zoomLevel = ZOOM_MIN;
+    } else {
+        _zoomLevel = z;
+    }
 }

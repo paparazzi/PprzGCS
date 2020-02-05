@@ -25,11 +25,16 @@ class OSMTileProvider : public QObject
 public:
 
     static const int TILE_SIZE = 256;
+    static const int ZOOM_MIN = 0;
+    static const int ZOOM_MAX = 19;
 
     explicit OSMTileProvider(QObject *parent = nullptr);
     TileCoorD tileCoorFromLatlon(double lat, double lon, int z);
     std::tuple<double, double> LatlonFromTile(int x, int y, int z);
     void fetch_tile(TileCoorI t);
+
+    int zoomLevel() {return _zoomLevel;}
+    void setZoomLevel(int z);
 
 signals:
     void tileReady(TileItem*, TileCoorI);
@@ -39,10 +44,12 @@ private slots:
 
 private:
 
+    int _zoomLevel;
+
     std::string tilePath(TileCoorI);
     void load_tile_from_disk(TileCoorI);
 
-    QMap<TileCoorI, TileItem*> tiles_map;
+    QList<QMap<TileCoorI, TileItem*>> tiles_maps;
     QNetworkAccessManager* manager;
     QNetworkDiskCache* diskCache;
 

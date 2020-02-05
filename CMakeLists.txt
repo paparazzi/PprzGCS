@@ -13,11 +13,11 @@ endif()
 find_package(Qt5 COMPONENTS Widgets Xml Network REQUIRED)
 
 # LibProj dependency for calculating coordinate projections
-find_package(PROJ4 REQUIRED proj>=4.0)
-if (PROJ4_FOUND)
-    include_directories(${PROJ4_INCLUDE_DIRS})
-    link_directories(${PROJ4_LIBRARY_DIRS})
-endif (PROJ4_FOUND)
+#find_package(PROJ4 REQUIRED proj>=4.0)
+#if (PROJ4_FOUND)
+#    include_directories(${PROJ4_INCLUDE_DIRS})
+#    link_directories(${PROJ4_LIBRARY_DIRS})
+#endif (PROJ4_FOUND)
 
 
 set(SOURCE
