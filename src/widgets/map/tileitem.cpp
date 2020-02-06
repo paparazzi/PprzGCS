@@ -32,8 +32,15 @@ TileItem::TileItem(TileItem* mother, QGraphicsItem *parent) :
 }
 
 void TileItem::setPixmap(const QPixmap &pixmap) {
-    _hasData = true;
     QGraphicsPixmapItem::setPixmap(pixmap);
+    _hasData = true;
+    _dataGood = true;
+}
+
+void TileItem::setAltPixmap(const QPixmap &pixmap) {
+    QGraphicsPixmapItem::setPixmap(pixmap);
+    _hasData = true;
+    _dataGood = false;
 }
 
 

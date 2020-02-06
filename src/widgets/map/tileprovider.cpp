@@ -156,6 +156,16 @@ void TileProvider::handleReply(QNetworkReply *reply) {
         load_tile_from_disk(coor);
 
     } else {
+        TileItem* tile = getTile(coor);
+        int xi = tile->coordinates().xi() & 1;
+        int yi = tile->coordinates().yi() & 1;
+
+        QRect rect(xi*TILE_SIZE/2, yi*TILE_SIZE/2, TILE_SIZE/2, TILE_SIZE/2);
+        QPixmap cropped = tile->mother()->pixmap().copy(rect);
+        //cropped.scaledToWidth(TILE_SIZE);
+        tile->setAltPixmap(cropped);
+        tile->setScale(2);
+
         if(reply->error() == QNetworkReply::NetworkError::ConnectionRefusedError) {
             std::cout << "ConnectionRefusedError! Maybe the tile provider banned you ?" << std::endl;
         } else {

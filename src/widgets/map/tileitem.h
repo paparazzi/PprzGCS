@@ -14,6 +14,7 @@ public:
 
     bool isInScene() { return inScene;}
     bool hasData() {return _hasData;}
+    bool dataGood() {return _dataGood;}
     void setInScene(bool in_s) {inScene = in_s;}
     Point2DTile coordinates() {return _coordinates;}
     TileItem* child(int x, int y) {return _childs[x][y];}
@@ -21,10 +22,13 @@ public:
     TileItem* mother() {return _mother;}
 
     virtual void setPixmap(const QPixmap &pixmap);
+    void setAltPixmap(const QPixmap &pixmap);
+
 
 private:
     bool inScene;
     bool _hasData;
+    bool _dataGood;
     Point2DTile _coordinates;
     TileItem* _childs[2][2];
     TileItem* _mother;
