@@ -15,8 +15,8 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0)
 {
     scene = new QGraphicsScene(-500, -500, 524288*256, 524288*256, parent);
     //scene = new QGraphicsScene(parent);
-    tileProvider.setTileSource(HIKING);
-    //tileProvider.setTileSource(OSM_CLASSIC);
+    //tileProvider.setTileSource(HIKING);
+    tileProvider.setTileSource(OSM_CLASSIC);
     setScene(scene);
 
     setDragMode(QGraphicsView::ScrollHandDrag);
@@ -28,7 +28,7 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0)
 
     connect(&tileProvider, SIGNAL(tileReady(TileItem*, Point2DTile)), this, SLOT(handleTile(TileItem*, Point2DTile)));
 
-    setPos(Point2DLatLon(43.4625, 1.2732, 6));
+    setPos(Point2DLatLon(43.4625, 1.2732, 16));
 }
 
 
@@ -115,21 +115,23 @@ void Map2D::acChanged(int ac_id) {
 }
 
 void Map2D::handleTile(TileItem* tile, Point2DTile coorI) {
-    if(!tile->isInScene()) {    // Not in scene, so lets add it
-        scene->addItem(tile);
-        tile->setInScene(true);
-    }
-    if(!tile->isVisible()) {    // in scene but hidden, lets show it. TODO: what if this slot is called just atfer a zoom change ?
-        if(coorI.zoom() == tileProvider.zoomLevel()) {
-            tile->show();
+    if(tile->hasData()){
+        if(!tile->isInScene()) {    // Not in scene, so lets add it
+            scene->addItem(tile);
+            tile->setInScene(true);
         }
-    }
+        if(!tile->isVisible()) {    // in scene but hidden, lets show it. TODO: what if this slot is called just atfer a zoom change ?
+            if(coorI.zoom() == tileProvider.zoomLevel()) {
+                tile->show();
+            }
+        }
 
-    QPointF pos = QPointF(
-        tileProvider.TILE_SIZE*(coorI.x()),
-        tileProvider.TILE_SIZE*(coorI.y())
-    );
-    tile->setPos(pos);
+        QPointF pos = QPointF(
+            tileProvider.TILE_SIZE*(coorI.x()),
+            tileProvider.TILE_SIZE*(coorI.y())
+        );
+        tile->setPos(pos);
+    }
 }
 
 void Map2D::setPos(Point2DLatLon latLon, double cx, double cy) {

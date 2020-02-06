@@ -29,6 +29,12 @@ public:
     explicit TileProvider(QObject *parent = nullptr);
     void fetch_tile(Point2DTile t);
 
+    ///
+    /// \brief getTile create tiles if they do not exist yet
+    /// \return tile at the specified position
+    ///
+    TileItem* getTile(Point2DTile);
+
     int zoomLevel() {return _zoomLevel;}
     void setZoomLevel(int z);
     void setTileSource(TileSource s) {source = s;}
@@ -49,7 +55,8 @@ private:
     QUrl tileUrl(Point2DTile);
     void load_tile_from_disk(Point2DTile);
 
-    QList<QMap<QString, TileItem*>> tiles_maps;
+    //QList<QMap<QString, TileItem*>> tiles_maps;
+    TileItem* motherTile;
     QNetworkAccessManager* manager;
     QNetworkDiskCache* diskCache;
 
