@@ -227,7 +227,7 @@ TileItem* TileProvider::getTile(Point2DTile p) {
         TileItem* next = current->child(xi, yi);
 
         if(next == nullptr) {
-            next = new TileItem(Point2DTile(p.xi()&mask, p.yi()&mask, p.zoom()-i), current);
+            next = new TileItem(current, Point2DTile(p.xi()&mask, p.yi()&mask, p.zoom()-i));
             current->setChild(next, xi, yi);
         }
 

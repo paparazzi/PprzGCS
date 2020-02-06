@@ -1,28 +1,9 @@
 #include "tileitem.h"
 
-TileItem::TileItem(const QPixmap &pixmap, Point2DTile coordinates, TileItem* mother, QGraphicsItem *parent) :
-    QGraphicsPixmapItem (pixmap, parent), inScene(false), _hasData(true), _coordinates(coordinates), _mother(mother)
-{
-    for(int i=0; i<2; i++) {
-        for(int j=0; j<2; j++) {
-            _childs[i][j] = nullptr;
-        }
-    }
-}
-
-
-TileItem::TileItem(Point2DTile coordinates, TileItem* mother, QGraphicsItem *parent) :
-    QGraphicsPixmapItem (parent), inScene(false), _hasData(false), _coordinates(coordinates), _mother(mother)
-{
-    for(int i=0; i<2; i++) {
-        for(int j=0; j<2; j++) {
-            _childs[i][j] = nullptr;
-        }
-    }
-}
-
-TileItem::TileItem(TileItem* mother, QGraphicsItem *parent) :
-    QGraphicsPixmapItem (parent), inScene(false), _hasData(false), _coordinates(Point2DTile(0, 0, 0)), _mother(mother)
+TileItem::TileItem(TileItem* mother, Point2DTile coordinates, QGraphicsItem *parent) :
+    QGraphicsPixmapItem (parent),
+    inScene(false), _hasData(false), _dataGood(false),
+    _coordinates(coordinates), _mother(mother)
 {
     for(int i=0; i<2; i++) {
         for(int j=0; j<2; j++) {

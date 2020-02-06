@@ -8,9 +8,7 @@ class TileItem : public QGraphicsPixmapItem
 {
 
 public:
-    TileItem(TileItem* mother, QGraphicsItem *parent = nullptr);
-    TileItem(const QPixmap &pixmap, Point2DTile coordinates, TileItem* mother, QGraphicsItem *parent = nullptr);
-    TileItem(Point2DTile coordinates, TileItem* mother, QGraphicsItem *parent = nullptr);
+    TileItem(TileItem* mother, Point2DTile coordinates = Point2DTile(0,0,0), QGraphicsItem *parent = nullptr);
 
     bool isInScene() { return inScene;}
     bool hasData() {return _hasData;}
