@@ -1,8 +1,9 @@
 #include "tileitem.h"
+#include <QPainter>
 #include <iostream>
 
-TileItem::TileItem(TileItem* mother, Point2DTile coordinates, QGraphicsItem *parent) :
-    QGraphicsPixmapItem (parent),
+TileItem::TileItem(TileItem* mother, int size, Point2DTile coordinates, QGraphicsItem *parent) :
+    QGraphicsPixmapItem (parent), SIZE(size),
     inScene(false), _hasData(false), _dataGood(false),
     _coordinates(coordinates), _mother(mother)
 {
@@ -26,11 +27,20 @@ void TileItem::setAltPixmap(const QPixmap &pixmap) {
 }
 
 
-
 bool TileItem::setInheritedData() {
+    //std::cout << "setInheritedData " << coordinates().to_istring().toStdString() << std::endl;
+    QPixmap altPixmap(tileSize(), tileSize());
+    bool ancestorsPaint = paintPixmapFromAncestors(&altPixmap);
+    bool offspringPaint = paintPixmapFromOffspring(&altPixmap);
+    setAltPixmap(altPixmap);
+
+    return ancestorsPaint || offspringPaint;
+}
+
+bool TileItem::paintPixmapFromAncestors(QPixmap* altPixmap) {
     if(dataGood()) {
         std::cout << "No need to go to ancestors, I already have good data!!!" << std::endl;
-        return true;
+        return false;
     }
 
     TileItem* current = this;
@@ -45,12 +55,14 @@ bool TileItem::setInheritedData() {
         posY |= (current->coordinates().yi() & 1) << (dz-1);
 
         if(current->mother()->hasData()) {
-            int TILE_SIZE = current->mother()->pixmap().size().width();
-            int PART_SIZE = TILE_SIZE >> dz;
-            QRect rect((posX*TILE_SIZE)>>dz, (posY*TILE_SIZE)>>dz, PART_SIZE, PART_SIZE);
+            int PART_SIZE = tileSize() >> dz;
+            QRect rect((posX*tileSize())>>dz, (posY*tileSize())>>dz, PART_SIZE, PART_SIZE);
             QPixmap cropped = current->mother()->pixmap().copy(rect);
-            QPixmap scaled = cropped.scaled(TILE_SIZE, TILE_SIZE);
-            setAltPixmap(scaled);
+            QPixmap scaled = cropped.scaled(tileSize(), tileSize());
+
+            QPainter painter(altPixmap);
+            painter.drawPixmap(0, 0, scaled);
+            //setAltPixmap(scaled);
             return true;
         }
 
@@ -61,7 +73,22 @@ bool TileItem::setInheritedData() {
 }
 
 
-
+bool TileItem::paintPixmapFromOffspring(QPixmap* altPixmap) {
+    QPixmap notile("/home/fabien/DEV/test_qt/PprzGCS/data/map/notile.jpeg");
+    QPainter painter(altPixmap);
+    //std::cout << "seek children" << std::endl;
+    for(int i=0; i<2; i++) {
+        for(int j=0; j<2; j++) {
+            TileItem* c = child(i, j);
+            //std::cout << "child found!" << std::endl;
+            if(c != nullptr && c->hasData()) {
+                QPixmap part = c->pixmap().scaled(tileSize()/2, tileSize()/2);
+                painter.drawPixmap(i*tileSize()/2, j*tileSize()/2, part);
+            }
+        }
+    }
+    return false;
+}
 
 
 

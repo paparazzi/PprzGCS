@@ -116,11 +116,6 @@ void Map2D::acChanged(int ac_id) {
 
 void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {
     if(tileReady->hasData()){
-        if(tileObj != tileReady) {
-            // get data from ancestor
-            tileObj->setInheritedData();
-        }
-
         if(!tileObj->isInScene()) {    // Not in scene, so lets add it
             scene->addItem(tileObj);
             tileObj->setInScene(true);

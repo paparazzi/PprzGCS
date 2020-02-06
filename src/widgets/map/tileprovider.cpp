@@ -16,7 +16,7 @@ static const char tilesPath[] = "/home/fabien/DEV/test_qt/PprzGCS/data/map";
 
 TileProvider::TileProvider(QObject *parent) : QObject (parent), _zoomLevel(16), source(GOOGLE)
 {
-    motherTile = new TileItem(nullptr);
+    motherTile = new TileItem(nullptr, TILE_SIZE);
     manager = new QNetworkAccessManager(this);
     diskCache = new QNetworkDiskCache(this);
     diskCache->setCacheDirectory(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
@@ -103,14 +103,16 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
     if(t.isValid() && tObj.isValid()) {
         TileItem* tile = getTile(t);
         TileItem* tileObj = getTile(tObj);
-        if(!tile->hasData()) {
+        if(!tile->dataGood()) {
             // display it, or a parent tile if one exist
             TileItem* current = tile;
             while(current != nullptr) {
                 // tile found on disk
                 bool success = load_tile_from_disk(current);
                 if(success) {
-                    // displayTile(tileReady, tileToDisplay)
+                    if(/*!tileObj->hasData() && */current != tileObj) {    // an ancestor was loaded. inherit its data for tileObj
+                        tileObj->setInheritedData();
+                    }
                     emit(displayTile(current, tileObj));
                     break;
                 } else {
@@ -175,7 +177,10 @@ void TileProvider::handleReply(QNetworkReply *reply) {
 
         bool success = load_tile_from_disk(tileCur);
         if(success) {
-           emit(displayTile(tileCur, tileObj));
+            if(/*!tileObj->hasData() && */tileCur != tileObj) {    // an ancestor was loaded. inherit its data for tileObj
+                tileObj->setInheritedData();
+            }
+            emit(displayTile(tileCur, tileObj));
         } else {
            //whyyyyy ???
             std::cout << "WHYYYYYYYYYYY ?" << std::endl;
@@ -189,11 +194,7 @@ void TileProvider::handleReply(QNetworkReply *reply) {
             fetch_tile(tileCur->mother()->coordinates(), tileObj->coordinates());
         }
 
-        if(reply->error() == QNetworkReply::NetworkError::ConnectionRefusedError) {
-            std::cout << "ConnectionRefusedError! Maybe the tile provider banned you ?" << std::endl;
-        } else {
-           std::cout << "Error " << reply->error() << " !" << tileCur->coordinates().to_istring().toStdString() << std::endl;
-        }
+        std::cout << "Error " << reply->error() << " ! " << reply->readAll().toStdString() << std::endl;
     }
 
 }
@@ -256,7 +257,7 @@ TileItem* TileProvider::getTile(Point2DTile p) {
             int y = (p.yi() & mask) >> i;
             int zoom = p.zoom()-i;
 
-            next = new TileItem(current, Point2DTile(x, y, zoom));
+            next = new TileItem(current, motherTile->tileSize(), Point2DTile(x, y, zoom));
             current->setChild(next, xi, yi);
         }
 

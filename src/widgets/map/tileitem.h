@@ -3,13 +3,15 @@
 
 #include <QGraphicsPixmapItem>
 #include "point2dtile.h"
+#include <QPixmap>
 
 class TileItem : public QGraphicsPixmapItem
 {
 
 public:
-    TileItem(TileItem* mother, Point2DTile coordinates = Point2DTile(0,0,0), QGraphicsItem *parent = nullptr);
+    TileItem(TileItem* mother, int size, Point2DTile coordinates = Point2DTile(0,0,0), QGraphicsItem *parent = nullptr);
 
+    int tileSize() {return SIZE;}
     bool isInScene() { return inScene;}
     bool hasData() {return _hasData;}
     bool dataGood() {return _dataGood;}
@@ -19,12 +21,15 @@ public:
     void setChild(TileItem* t, int x, int y) {_childs[x][y] = t;}
     TileItem* mother() {return _mother;}
     bool setInheritedData();
+    bool paintPixmapFromAncestors(QPixmap* altPixmap);
+    bool paintPixmapFromOffspring(QPixmap* altPixmap);
 
     virtual void setPixmap(const QPixmap &pixmap);
     void setAltPixmap(const QPixmap &pixmap);
 
 
 private:
+    const int SIZE;
     bool inScene;
     bool _hasData;
     bool _dataGood;
