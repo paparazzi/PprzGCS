@@ -15,7 +15,10 @@ enum TileSource {
     OSM_CLASSIC,
     OSM_STAMEN,
     TERRAIN,
-    HIKING
+    HIKING,
+    IGN,
+    ICAO,
+    FRANCE_DRONE_RESTRICTIONS
 };
 
 class TileProvider : public QObject

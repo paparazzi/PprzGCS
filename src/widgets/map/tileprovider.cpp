@@ -59,6 +59,25 @@ std::string TileProvider::tilePath(Point2DTile coor) {
                 "/X" + std::to_string(coor.xi()) +
                 "_Y" + std::to_string(coor.yi()) + ".png";
         break;
+    case IGN:
+        path += std::string(tilesPath) + "/IGN/" +
+                std::to_string(coor.zoom()) +
+                "/X" + std::to_string(coor.xi()) +
+                "_Y" + std::to_string(coor.yi()) + ".jpeg";
+        break;
+    case ICAO:
+        path += std::string(tilesPath) + "/ICAO/" +
+                std::to_string(coor.zoom()) +
+                "/X" + std::to_string(coor.xi()) +
+                "_Y" + std::to_string(coor.yi()) + ".jpeg";
+        break;
+    case FRANCE_DRONE_RESTRICTIONS:
+        path += std::string(tilesPath) + "/FR_UAV_RESTRICT/" +
+                std::to_string(coor.zoom()) +
+                "/X" + std::to_string(coor.xi()) +
+                "_Y" + std::to_string(coor.yi()) + ".jpeg";
+        break;
+        break;
     }
     return path;
 }
@@ -94,6 +113,25 @@ QUrl TileProvider::tileUrl(Point2DTile coor) {
                 std::to_string(coor.zoom()) + "/" +
                 std::to_string(coor.xi()) + "/" +
                 std::to_string(coor.yi()) + ".png";
+        break;
+    case IGN:
+        url += "https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=ORTHOIMAGERY.ORTHOPHOTOS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix=" +
+                std::to_string(coor.zoom()) + "&TileCol=" +
+                std::to_string(coor.xi()) + "&TileRow=" +
+                std::to_string(coor.yi());
+                break;
+    case ICAO:
+        url += "https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix=" +
+                std::to_string(coor.zoom()) + "&TileCol=" +
+                std::to_string(coor.xi()) + "&TileRow=" +
+                std::to_string(coor.yi());
+                break;
+    case FRANCE_DRONE_RESTRICTIONS:
+        url += "https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=TRANSPORTS.DRONES.RESTRICTIONS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fpng&TileMatrix=" +
+                std::to_string(coor.zoom()) + "&TileCol=" +
+                std::to_string(coor.xi()) + "&TileRow=" +
+                std::to_string(coor.yi());
+                break;
         break;
     }
     return QUrl(url.c_str());
@@ -135,7 +173,7 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
 
                 // tuple : what is dl, what we want to display
                 downloading.append(std::make_tuple(tile, tile));
-                request.setRawHeader("User-Agent", "PPRZGCS");
+                request.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko");
                 QList<QVariant> l = QList<QVariant>();
                 l.push_back(QVariant::fromValue(tile));
                 l.push_back(QVariant::fromValue(tile));
