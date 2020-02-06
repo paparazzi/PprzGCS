@@ -16,7 +16,7 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0)
     scene = new QGraphicsScene(-500, -500, 524288*256, 524288*256, parent);
     //scene = new QGraphicsScene(parent);
     //tileProvider.setTileSource(HIKING);
-    tileProvider.setTileSource(OSM_CLASSIC);
+    //tileProvider.setTileSource(OSM_CLASSIC);
     setScene(scene);
 
     setDragMode(QGraphicsView::ScrollHandDrag);
@@ -26,9 +26,9 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0)
 
     connect(DispatcherUi::get(), SIGNAL(ac_selected(int)), this, SLOT(acChanged(int)));
 
-    connect(&tileProvider, SIGNAL(tileReady(TileItem*, Point2DTile)), this, SLOT(handleTile(TileItem*, Point2DTile)));
+    connect(&tileProvider, SIGNAL(displayTile(TileItem*, TileItem*)), this, SLOT(handleTile(TileItem*, TileItem*)));
 
-    setPos(Point2DLatLon(43.4625, 1.2732, 16));
+    setPos(Point2DLatLon(43.4625, 1.2732, 2));
 }
 
 
@@ -99,12 +99,12 @@ void Map2D::updateTiles() {
     int xMax = static_cast<int>(bottomRight.x()/tileProvider.TILE_SIZE) + 2;
     int yMax = static_cast<int>(bottomRight.y()/tileProvider.TILE_SIZE) + 2;
 
-    std::cout << std::to_string(xMin) << "<X<" << std::to_string(xMax) << "  " << std::to_string(yMin) << "<Y<" << std::to_string(yMax) << std::endl;
+    //std::cout << std::to_string(xMin) << "<X<" << std::to_string(xMax) << "  " << std::to_string(yMin) << "<Y<" << std::to_string(yMax) << std::endl;
 
     for(int x=xMin; x<xMax; x++) {
         for(int y=yMin; y<yMax; y++) {
             Point2DTile coor(x, y, tileProvider.zoomLevel());
-            tileProvider.fetch_tile(coor);
+            tileProvider.fetch_tile(coor, coor);
         }
     }
 }
@@ -114,23 +114,30 @@ void Map2D::acChanged(int ac_id) {
     setPos(Point2DLatLon(45.5, 1.34, 16));
 }
 
-void Map2D::handleTile(TileItem* tile, Point2DTile coorI) {
-    if(tile->hasData()){
-        if(!tile->isInScene()) {    // Not in scene, so lets add it
-            scene->addItem(tile);
-            tile->setInScene(true);
+void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {
+    if(tileReady->hasData()){
+        if(tileObj != tileReady) {
+            // get data from ancestor
+            tileObj->setInheritedData();
         }
-        if(!tile->isVisible()) {    // in scene but hidden, lets show it. TODO: what if this slot is called just atfer a zoom change ?
-            if(coorI.zoom() == tileProvider.zoomLevel()) {
-                tile->show();
+
+        if(!tileObj->isInScene()) {    // Not in scene, so lets add it
+            scene->addItem(tileObj);
+            tileObj->setInScene(true);
+        }
+        if(!tileObj->isVisible()) {    // in scene but hidden, lets show it. TODO: what if this slot is called just atfer a zoom change ?
+            if(tileObj->coordinates().zoom() == tileProvider.zoomLevel()) {
+                tileObj->show();
             }
         }
 
         QPointF pos = QPointF(
-            tileProvider.TILE_SIZE*(coorI.x()),
-            tileProvider.TILE_SIZE*(coorI.y())
+            tileProvider.TILE_SIZE*(tileObj->coordinates().x()),
+            tileProvider.TILE_SIZE*(tileObj->coordinates().y())
         );
-        tile->setPos(pos);
+        tileObj->setPos(pos);
+    } else {
+        std::cout << "WHAAAAT ? Why I am receiving this signal? Non mais allo quoi !" << std::endl;
     }
 }
 
@@ -147,7 +154,7 @@ void Map2D::setPos(Point2DLatLon latLon, double cx, double cy) {
     for(int x=xMin; x<=xMax; x++) {
         for(int y=yMin; y<=yMax; y++) {
             Point2DTile coor(x, y, tileProvider.zoomLevel());
-            tileProvider.fetch_tile(coor);
+            tileProvider.fetch_tile(coor, coor);
         }
     }
 

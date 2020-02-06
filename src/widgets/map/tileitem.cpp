@@ -1,4 +1,5 @@
 #include "tileitem.h"
+#include <iostream>
 
 TileItem::TileItem(TileItem* mother, Point2DTile coordinates, QGraphicsItem *parent) :
     QGraphicsPixmapItem (parent),
@@ -23,6 +24,45 @@ void TileItem::setAltPixmap(const QPixmap &pixmap) {
     _hasData = true;
     _dataGood = false;
 }
+
+
+
+bool TileItem::setInheritedData() {
+    if(dataGood()) {
+        std::cout << "No need to go to ancestors, I already have good data!!!" << std::endl;
+        return true;
+    }
+
+    TileItem* current = this;
+
+    int posX = 0;
+    int posY = 0;
+
+    int dz = 1;
+
+    while(current->mother() != nullptr) {   // && (dz >< _coordinates.zoom())
+        posX |= (current->coordinates().xi() & 1) << (dz-1);
+        posY |= (current->coordinates().yi() & 1) << (dz-1);
+
+        if(current->mother()->hasData()) {
+            int TILE_SIZE = current->mother()->pixmap().size().width();
+            int PART_SIZE = TILE_SIZE >> dz;
+            QRect rect((posX*TILE_SIZE)>>dz, (posY*TILE_SIZE)>>dz, PART_SIZE, PART_SIZE);
+            QPixmap cropped = current->mother()->pixmap().copy(rect);
+            QPixmap scaled = cropped.scaled(TILE_SIZE, TILE_SIZE);
+            setAltPixmap(scaled);
+            return true;
+        }
+
+        current = current->mother();
+        dz += 1;
+    }
+    return false;   // no data in any parent tile
+}
+
+
+
+
 
 
 

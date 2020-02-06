@@ -30,6 +30,7 @@ QString Point2DTile::to_istring() {
 
 bool Point2DTile::isValid() {
     int max = 1 << zoomp;
-    return xp >= 0 && xp < max &&
+    bool ret = xp >= 0 && xp < max &&
            yp >= 0 && yp < max;
+    return ret;
 }

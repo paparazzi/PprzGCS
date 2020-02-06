@@ -26,7 +26,7 @@ protected:
 
 private slots:
     void acChanged(int);
-    void handleTile(TileItem*, Point2DTile);
+    void handleTile(TileItem*, TileItem*);
 
 
 private:

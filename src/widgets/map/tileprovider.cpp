@@ -10,6 +10,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QNetworkProxy>
+#include <QGraphicsScene>
 
 static const char tilesPath[] = "/home/fabien/DEV/test_qt/PprzGCS/data/map";
 
@@ -98,49 +99,67 @@ QUrl TileProvider::tileUrl(Point2DTile coor) {
     return QUrl(url.c_str());
 }
 
-void TileProvider::fetch_tile(Point2DTile t) {
-    // If the file is beeing downloaded, do nothing, it will come soon !
-    if(t.isValid() && !downloading.contains(t.to_istring())) {
+void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
+    if(t.isValid() && tObj.isValid()) {
         TileItem* tile = getTile(t);
-        if (!tile->hasData()) {
-            // tile not in map. Load it from disk or download it
-            std::string path = tilePath(t);
-            std::ifstream f(path);
-            if(f.good()) {
+        TileItem* tileObj = getTile(tObj);
+        if(!tile->hasData()) {
+            // display it, or a parent tile if one exist
+            TileItem* current = tile;
+            while(current != nullptr) {
                 // tile found on disk
-                load_tile_from_disk(t);
-            } else {
-                // tile not on disk, download it
-                downloading.append(t.to_istring());
-                QUrl url = tileUrl(t);
+                bool success = load_tile_from_disk(current);
+                if(success) {
+                    // displayTile(tileReady, tileToDisplay)
+                    emit(displayTile(current, tileObj));
+                    break;
+                } else {
+                    // this tile was not on the disk, so try with its mother
+                    current = current->mother();
+                }
 
+            }
+            if(current == nullptr) {
+                std::cout << "No ancestor found!!!" << std::endl;
+            }
+            // if the tile was not found, dl it
+            if(current != tile) {
+                //dl tile
+//                // tile not on disk, download it
+                //downloading.append(t.to_istring());
+                QUrl url = tileUrl(t);
                 QNetworkRequest request = QNetworkRequest(url);
 
-                QList<QVariant> l = QList<QVariant>();
-                l.append(t.x());
-                l.append(t.y());
-                l.append(t.zoom());
+
+                // tuple : what is dl, what we want to display
+                downloading.append(std::make_tuple(tile, tile));
                 request.setRawHeader("User-Agent", "PPRZGCS");
-                request.setAttribute(QNetworkRequest::User, QVariant(l));
+                QList<QVariant> l = QList<QVariant>();
+                l.push_back(QVariant::fromValue(tile));
+                l.push_back(QVariant::fromValue(tile));
+
+                request.setAttribute(QNetworkRequest::User, l);
                 manager->get(request);
+
+
             }
 
         } else {
-            //tile found in map
-            emit(tileReady(tile, t));
+            //tile with data found in tree
+            emit(displayTile(tile, tile));
         }
+
     }
 }
 
 void TileProvider::handleReply(QNetworkReply *reply) {
     QList<QVariant> l = reply->request().attribute(QNetworkRequest::User).toList();
-    int x = l.takeFirst().toInt(nullptr);
-    int y = l.takeFirst().toInt(nullptr);
-    int z = l.takeFirst().toInt(nullptr);
-    Point2DTile coor(x, y, z);
+
+    TileItem* tileCur = l.takeFirst().value<TileItem*>();
+    TileItem* tileObj = l.takeFirst().value<TileItem*>();
 
     if(reply->error() == QNetworkReply::NetworkError::NoError) {
-        std::string path = tilePath(coor);
+        std::string path = tilePath(tileCur->coordinates());
         QFile file(path.c_str());
         QFileInfo fi(path.c_str());
         QDir dirName = fi.dir();
@@ -153,55 +172,48 @@ void TileProvider::handleReply(QNetworkReply *reply) {
             file.close();
             reply->deleteLater();
         }
-        load_tile_from_disk(coor);
+
+        bool success = load_tile_from_disk(tileCur);
+        if(success) {
+           emit(displayTile(tileCur, tileObj));
+        } else {
+           //whyyyyy ???
+            std::cout << "WHYYYYYYYYYYY ?" << std::endl;
+        }
+
 
     } else {
-        TileItem* tile = getTile(coor);
-        int xi = tile->coordinates().xi() & 1;
-        int yi = tile->coordinates().yi() & 1;
-
-        QRect rect(xi*TILE_SIZE/2, yi*TILE_SIZE/2, TILE_SIZE/2, TILE_SIZE/2);
-        QPixmap cropped = tile->mother()->pixmap().copy(rect);
-        //cropped.scaledToWidth(TILE_SIZE);
-        tile->setAltPixmap(cropped);
-        tile->setScale(2);
+        //tile dl failed. try the parent tile ?
+        TileItem* parentTile = tileCur->mother();
+        if(parentTile != nullptr) {
+            fetch_tile(tileCur->mother()->coordinates(), tileObj->coordinates());
+        }
 
         if(reply->error() == QNetworkReply::NetworkError::ConnectionRefusedError) {
             std::cout << "ConnectionRefusedError! Maybe the tile provider banned you ?" << std::endl;
         } else {
-           std::cout << "Error " << reply->error() << " !" << coor.to_istring().toStdString() << std::endl;
+           std::cout << "Error " << reply->error() << " !" << tileCur->coordinates().to_istring().toStdString() << std::endl;
         }
     }
 
-    downloading.removeAll(coor.to_istring());
 }
 
 
-void TileProvider::load_tile_from_disk(Point2DTile t) {
-    std::string path = tilePath(t);
-    TileItem* item = getTile(t);
-    item->setPixmap(QPixmap(path.c_str()));
-    emit(tileReady(item, t));
+bool TileProvider::load_tile_from_disk(TileItem* item) {
+    std::string path = tilePath(item->coordinates());
+    std::ifstream f(path);
+    if(f.good()) {
+        // tile found on disk
+        item->setPixmap(QPixmap(path.c_str()));
+        return true;
+    } else {
+        return false;
+    }
 }
 
 void TileProvider::setZoomLevel(int z) {
     if(z == _zoomLevel) {
         return; // nothing change
-    }
-
-//    for(auto t: tiles_maps[_zoomLevel]) {
-//        t->hide();
-//    }
-
-    TileIterator iter(motherTile);
-    while(true) {
-        TileItem* tile = iter.next();
-        if(tile == nullptr) {
-            break;
-        }
-        if(tile->hasData() && tile->coordinates().zoom()==_zoomLevel) {
-            tile->hide();
-        }
     }
 
     if(z > ZOOM_MAX) {
@@ -211,13 +223,26 @@ void TileProvider::setZoomLevel(int z) {
     } else {
         _zoomLevel = z;
     }
+
+    //TODO improve iterator usability (make a C++ standard one)
+    TileIterator iter(motherTile);
+    while(true) {
+        TileItem* tile = iter.next();
+        if(tile == nullptr) {
+            break;
+        }
+        if(tile->hasData() && tile->coordinates().zoom() != _zoomLevel) {
+            tile->hide();
+        }
+    }
+
 }
 
 TileItem* TileProvider::getTile(Point2DTile p) {
     TileItem* current = motherTile;
 
     // mask to apply to the full path (to the objective tile 'p') to get the partial path (the 'next' tile)
-    unsigned int mask = 0;
+    int mask = 0;
 
     for(int i=p.zoom()-1; i>=0; i--) {
         int xi = (p.xi() & 1<<i) ? 1 : 0;
@@ -227,7 +252,11 @@ TileItem* TileProvider::getTile(Point2DTile p) {
         TileItem* next = current->child(xi, yi);
 
         if(next == nullptr) {
-            next = new TileItem(current, Point2DTile(p.xi()&mask, p.yi()&mask, p.zoom()-i));
+            int x = (p.xi() & mask) >> i;
+            int y = (p.yi() & mask) >> i;
+            int zoom = p.zoom()-i;
+
+            next = new TileItem(current, Point2DTile(x, y, zoom));
             current->setChild(next, xi, yi);
         }
 

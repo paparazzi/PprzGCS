@@ -27,7 +27,7 @@ public:
     static const int ZOOM_MAX = 19;
 
     explicit TileProvider(QObject *parent = nullptr);
-    void fetch_tile(Point2DTile t);
+    void fetch_tile(Point2DTile t, Point2DTile tObj);
 
     ///
     /// \brief getTile create tiles if they do not exist yet
@@ -40,7 +40,8 @@ public:
     void setTileSource(TileSource s) {source = s;}
 
 signals:
-    void tileReady(TileItem*, Point2DTile);
+    // tileReady is the tile loaded in memory, tileObj is the one to actually display
+    void displayTile(TileItem* tileReady, TileItem* tileObj);
 
 private slots:
     void handleReply(QNetworkReply *reply);
@@ -53,14 +54,14 @@ private:
 
     std::string tilePath(Point2DTile);
     QUrl tileUrl(Point2DTile);
-    void load_tile_from_disk(Point2DTile);
+    bool load_tile_from_disk(TileItem*);
 
     //QList<QMap<QString, TileItem*>> tiles_maps;
     TileItem* motherTile;
     QNetworkAccessManager* manager;
     QNetworkDiskCache* diskCache;
 
-    QList<QString> downloading;
+    QList<std::tuple<TileItem*, TileItem*>> downloading;
 };
 
 #endif // OSMTILEPROVIDER_H

@@ -18,6 +18,7 @@ public:
     TileItem* child(int x, int y) {return _childs[x][y];}
     void setChild(TileItem* t, int x, int y) {_childs[x][y] = t;}
     TileItem* mother() {return _mother;}
+    bool setInheritedData();
 
     virtual void setPixmap(const QPixmap &pixmap);
     void setAltPixmap(const QPixmap &pixmap);
@@ -27,10 +28,12 @@ private:
     bool inScene;
     bool _hasData;
     bool _dataGood;
-    Point2DTile _coordinates;
+    const Point2DTile _coordinates;
     TileItem* _childs[2][2];
     TileItem* _mother;
 };
+
+Q_DECLARE_METATYPE(TileItem*)
 
 class TileIterator {
 public:
