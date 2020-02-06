@@ -56,7 +56,7 @@ TileItem* TileIterator::next() {
     }
 
     if(explore.last() < 4 && explore.length() <= maxDepth) {   // explore the children (unless maxDEPTH is reached)
-        int x,y;
+        int x=0, y=0;
         switch (explore.last()) {
         case 0:
             x=0; y=0;
@@ -90,12 +90,11 @@ TileItem* TileIterator::next() {
     } else {    // No more children. return the current then go to the parent
         TileItem* ret = current;
         explore.pop_back();
-        if(explore.isEmpty()) {
-            return nullptr;
-        } else {
+        if(!explore.isEmpty()) {
             explore.last() += 1;
         }
-        current = (TileItem*) current->mother();
+
+        current = static_cast<TileItem*>(current->mother());
         return ret;
     }
 }
