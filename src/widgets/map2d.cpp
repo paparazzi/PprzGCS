@@ -7,6 +7,8 @@
 #include <iostream>
 #include "point2dlatlon.h"
 #include "point2dtile.h"
+#include <QtXml>
+#include <QFile>
 
 #define SIZE 10000
 
@@ -14,6 +16,7 @@
 Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0)
 {
     scene = new QGraphicsScene(-500, -500, 524288*256, 524288*256, parent);
+    loadConfig("://tile_sources.xml");
     //scene = new QGraphicsScene(parent);
     //tileProvider.setTileSource(HIKING);
     //tileProvider.setTileSource(OSM_CLASSIC);
@@ -29,6 +32,55 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0)
     connect(&tileProvider, SIGNAL(displayTile(TileItem*, TileItem*)), this, SLOT(handleTile(TileItem*, TileItem*)));
 
     setPos(Point2DLatLon(43.4625, 1.2732, 2));
+}
+
+
+void Map2D::loadConfig(QString filename) {
+    QDomDocument xmlLayout;
+    QFile f(filename);
+    if(!f.open(QIODevice::ReadOnly)) {
+        std::cout << "Error reading file " << filename.toStdString() << "!" << std::endl;
+    }
+    xmlLayout.setContent(&f);
+    f.close();
+
+    QDomElement root = xmlLayout.documentElement();
+    QString rootTag = root.tagName();
+    if (rootTag != "sources") {
+        std::cout << "Root tag expected to be \"sources\". Is this a tileSource file ?" << std::endl;
+    }
+
+    for(int i=0; i<root.childNodes().length(); i++) {
+        if(root.childNodes().item(i).isElement()) {
+            QDomElement ele = root.childNodes().item(i).toElement();
+            QString name = ele.attribute("name");
+            QString dir = ele.attribute("dir");
+            QString addr = ele.attribute("addr");
+
+            struct TileSourceConfig popo = {
+                "", "", "",
+                ele.attribute("posZoom").toInt(),
+                ele.attribute("posX").toInt(),
+                ele.attribute("posY").toInt(),
+                ele.attribute("zoomMin").toInt(),
+                ele.attribute("zoomMax").toInt(),
+                ele.attribute("tileSize").toInt()
+            };
+            memcpy(popo.name, name.toStdString().c_str(), addr.length()+1);
+            memcpy(popo.dir, dir.toStdString().c_str(), addr.length()+1);
+            memcpy(popo.addr, addr.toStdString().c_str(), addr.length()+1);
+
+            std::cout << "addr: " << addr.toStdString() << "  tileSize: " << std::to_string(popo.tileSize) << std::endl;
+
+            char plop[100];
+            int args[3];// = {12, 24, 32};
+            args[popo.posX] = 12;
+            args[popo.posY] = 24;
+            args[popo.posZoom] = 32;
+            snprintf(plop, 99, popo.addr, args[0], args[1], args[2]);
+            std::cout << plop << std::endl;
+        }
+    }
 }
 
 

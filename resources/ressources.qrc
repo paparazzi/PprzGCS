@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>fake_map.png</file>
         <file>test_gcs_qt.xml</file>
+        <file>tile_sources.xml</file>
     </qresource>
 </RCC>

@@ -32,7 +32,7 @@ private slots:
 private:
 
     static constexpr double NUMERIC_ZOOM_FACTOR = 0.3;
-
+    void loadConfig(QString filename);
     void updateTiles();
     QGraphicsScene* scene;
 

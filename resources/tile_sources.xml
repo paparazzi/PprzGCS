@@ -1,0 +1,17 @@
+<sources>
+	<source
+	    name="Google" dir="GOOGLE"
+	    addr="https://khms3.google.com/kh/v=863?x=%d&amp;y=%d&amp;z=%d"
+	    posZoom="2" posX="0" posY="1"
+	    zoomMin="0" zoomMax="19"
+	    tileSize="256"
+	/>
+	<source
+	    name="Watercolor" dir="STAMEN"
+	    addr="http://c.tile.stamen.com/watercolor/%d/%d/%d.png"
+	    posZoom="0" posX="1" posY="2"
+	    zoomMin="0" zoomMax="19"
+	    tileSize="256"
+	/>
+</sources>
+

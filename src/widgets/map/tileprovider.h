@@ -10,6 +10,18 @@
 #include <QtNetwork/QNetworkDiskCache>
 #include "point2dlatlon.h"
 
+struct TileSourceConfig {
+    char name[50];
+    char dir[20];
+    char addr[300];
+    int posZoom;
+    int posX;
+    int posY;
+    int zoomMin;
+    int zoomMax;
+    int tileSize;
+};
+
 enum TileSource {
     GOOGLE,
     OSM_CLASSIC,
