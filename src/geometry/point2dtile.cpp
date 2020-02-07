@@ -34,3 +34,8 @@ bool Point2DTile::isValid() {
            yp >= 0 && yp < max;
     return ret;
 }
+
+Point2DTile Point2DTile::childPoint(int i, int j) {
+    Point2DTile child(xp*2+i, yp*2+j, zoomp+1, zoomMinp, zoomMaxp);
+    return child;
+}

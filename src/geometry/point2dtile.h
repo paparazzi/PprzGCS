@@ -32,6 +32,8 @@ public:
 
     QString to_istring();
 
+    Point2DTile childPoint(int i, int j);
+
 private:
     double xp;
     double yp;

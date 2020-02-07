@@ -75,8 +75,7 @@ std::string TileProvider::tilePath(Point2DTile coor) {
         path += std::string(tilesPath) + "/FR_UAV_RESTRICT/" +
                 std::to_string(coor.zoom()) +
                 "/X" + std::to_string(coor.xi()) +
-                "_Y" + std::to_string(coor.yi()) + ".jpeg";
-        break;
+                "_Y" + std::to_string(coor.yi()) + ".png";
         break;
     }
     return path;
@@ -131,7 +130,6 @@ QUrl TileProvider::tileUrl(Point2DTile coor) {
                 std::to_string(coor.zoom()) + "&TileCol=" +
                 std::to_string(coor.xi()) + "&TileRow=" +
                 std::to_string(coor.yi());
-                break;
         break;
     }
     return QUrl(url.c_str());
@@ -142,31 +140,47 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
         TileItem* tile = getTile(t);
         TileItem* tileObj = getTile(tObj);
         if(!tile->dataGood()) {
-            // display it, or a parent tile if one exist
-            TileItem* current = tile;
-            while(current != nullptr) {
-                // tile found on disk
-                bool success = load_tile_from_disk(current);
-                if(success) {
-                    if(/*!tileObj->hasData() && */current != tileObj) {    // an ancestor was loaded. inherit its data for tileObj
-                        tileObj->setInheritedData();
+
+            // try to load the tile
+            bool success = load_tile_from_disk(tile);
+            if(success) {
+                if(/*!tileObj->hasData() && */tile != tileObj) {    // an ancestor was loaded. inherit its data for tileObj
+                    tileObj->setInheritedData();
+                }
+                emit(displayTile(tile, tileObj));
+            } else {
+                // tile not on disk, try to load ancestors then direct childs
+                TileItem* current = tile->mother();
+                bool success = false;
+                // fist, load ancestors
+                while(current != nullptr) {
+                    // tile found on disk
+                    success = load_tile_from_disk(current);
+                    // ancestor found
+                    if(success) {
+                        break;
+                    } else {
+                        // this tile was not on the disk, so try with its mother
+                        current = current->mother();
                     }
-                    emit(displayTile(current, tileObj));
-                    break;
-                } else {
-                    // this tile was not on the disk, so try with its mother
-                    current = current->mother();
+                }
+                // second, load direct childs
+                for(int i=0; i<2; i++) {
+                    for(int j=0; j<2; j++) {
+                        Point2DTile childPoint = tile->coordinates().childPoint(i, j);
+                        TileItem* child = getTile(childPoint);
+                        success |= load_tile_from_disk(child);
+                    }
                 }
 
-            }
-            if(current == nullptr) {
-                std::cout << "No ancestor found!!!" << std::endl;
-            }
-            // if the tile was not found, dl it
-            if(current != tile) {
-                //dl tile
-//                // tile not on disk, download it
-                //downloading.append(t.to_istring());
+                // at least one tile was loaded, either in ancestors or children
+                if(success) {
+                    tileObj->setInheritedData();
+                    emit(displayTile(current, tileObj));
+                }
+
+
+                // now, dl the right tile
                 QUrl url = tileUrl(t);
                 QNetworkRequest request = QNetworkRequest(url);
 
@@ -177,10 +191,8 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
                 QList<QVariant> l = QList<QVariant>();
                 l.push_back(QVariant::fromValue(tile));
                 l.push_back(QVariant::fromValue(tile));
-
                 request.setAttribute(QNetworkRequest::User, l);
                 manager->get(request);
-
 
             }
 
