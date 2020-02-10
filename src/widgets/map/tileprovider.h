@@ -9,18 +9,9 @@
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkDiskCache>
 #include "point2dlatlon.h"
+#include "tileproviderconfig.h"
+#include <memory>
 
-struct TileSourceConfig {
-    char name[50];
-    char dir[20];
-    char addr[300];
-    int posZoom;
-    int posX;
-    int posY;
-    int zoomMin;
-    int zoomMax;
-    int tileSize;
-};
 
 enum TileSource {
     GOOGLE,
@@ -37,11 +28,7 @@ class TileProvider : public QObject
 {
     Q_OBJECT
 public:
-    static const int TILE_SIZE = 256;
-    static const int ZOOM_MIN = 0;
-    static const int ZOOM_MAX = 19;
-
-    explicit TileProvider(QObject *parent = nullptr);
+    explicit TileProvider(std::unique_ptr<TileProviderConfig>& config, int z = 0, int tileDisplaySize = 0, QObject *parent = nullptr);
     void fetch_tile(Point2DTile t, Point2DTile tObj);
 
     ///
@@ -52,7 +39,8 @@ public:
 
     int zoomLevel() {return _zoomLevel;}
     void setZoomLevel(int z);
-    void setTileSource(TileSource s) {source = s;}
+
+    std::unique_ptr<TileProviderConfig>& getConfig() {return config;}
 
 signals:
     // tileReady is the tile loaded in memory, tileObj is the one to actually display
@@ -63,9 +51,9 @@ private slots:
 
 private:
 
+    std::unique_ptr<TileProviderConfig>& config;
     int _zoomLevel;
 
-    TileSource source;
 
     std::string tilePath(Point2DTile);
     QUrl tileUrl(Point2DTile);
@@ -76,7 +64,7 @@ private:
     QNetworkAccessManager* manager;
     QNetworkDiskCache* diskCache;
 
-    QList<std::tuple<TileItem*, TileItem*>> downloading;
+    //QList<std::tuple<TileItem*, TileItem*>> downloading;
 };
 
 #endif // OSMTILEPROVIDER_H

@@ -7,6 +7,8 @@
 #include <QWheelEvent>
 #include <QGraphicsTextItem>
 #include "tileprovider.h"
+#include "tileproviderconfig.h"
+#include <QMap>
 
 class Map2D : public QGraphicsView
 {
@@ -32,13 +34,14 @@ private slots:
 private:
 
     static constexpr double NUMERIC_ZOOM_FACTOR = 0.3;
-    void loadConfig(QString filename);
+    std::map<QString, std::unique_ptr<TileProviderConfig>> loadConfig(QString filename);
     void updateTiles();
     QGraphicsScene* scene;
 
     int numericZoom;
 
-    TileProvider tileProvider;
+    std::map<QString, std::unique_ptr<TileProviderConfig>> sourceConfigs;
+    TileProvider* tileProvider;
 
 };
 

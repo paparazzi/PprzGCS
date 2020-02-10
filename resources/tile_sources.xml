@@ -5,13 +5,15 @@
 	    posZoom="2" posX="0" posY="1"
 	    zoomMin="0" zoomMax="19"
 	    tileSize="256"
+	    format=".jpeg"
 	/>
 	<source
-	    name="Watercolor" dir="STAMEN"
-	    addr="http://c.tile.stamen.com/watercolor/%d/%d/%d.png"
+	    name="Watercolor" dir="OSM_STAMEN"
+	    addr="http://c.tile.stamen.com/watercolor/%d/%d/%d.jpg"
 	    posZoom="0" posX="1" posY="2"
 	    zoomMin="0" zoomMax="19"
 	    tileSize="256"
+	    format=".jpg"
 	/>
 </sources>
 

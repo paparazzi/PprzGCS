@@ -30,6 +30,7 @@ set(SOURCE
     src/widgets/ac_selector.ui
     src/widgets/ac_selector.cpp
     src/widgets/map/tileprovider.cpp
+    src/widgets/map/tileproviderconfig.cpp
     src/widgets/map/tileitem.cpp
     src/widgets/map2d.cpp
     src/layout_builder.cpp

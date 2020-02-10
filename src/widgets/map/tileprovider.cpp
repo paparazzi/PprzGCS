@@ -12,127 +12,41 @@
 #include <QNetworkProxy>
 #include <QGraphicsScene>
 
+
 static const char tilesPath[] = "/home/fabien/DEV/test_qt/PprzGCS/data/map";
 
-TileProvider::TileProvider(QObject *parent) : QObject (parent), _zoomLevel(16), source(GOOGLE)
+TileProvider::TileProvider(std::unique_ptr<TileProviderConfig>& config, int z, int displaySize, QObject *parent) : QObject (parent),
+    config(config), _zoomLevel(16), z_value(z), tileDisplaySize(displaySize)
 {
-    motherTile = new TileItem(nullptr, TILE_SIZE);
+    if(tileDisplaySize == 0) {
+        tileDisplaySize = config->tileSize;
+    }
+    motherTile = new TileItem(nullptr, tileDisplaySize);
     manager = new QNetworkAccessManager(this);
     diskCache = new QNetworkDiskCache(this);
     diskCache->setCacheDirectory(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
     manager->setCache(diskCache);
 
-    //connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(handleReply(QNetworkReply*)));
     connect(manager, &QNetworkAccessManager::finished, this, &TileProvider::handleReply);
 }
 
 std::string TileProvider::tilePath(Point2DTile coor) {
-    std::string path;
-    switch (source) {
-    case GOOGLE:
-        path += std::string(tilesPath) + "/GOOGLE/" +
-                std::to_string(coor.zoom()) +
-                "/X" + std::to_string(coor.xi()) +
-                "_Y" + std::to_string(coor.yi()) + ".jpeg";
-        break;
-    case OSM_CLASSIC:
-        path += std::string(tilesPath) + "/OSM_CLASSIC/" +
-                std::to_string(coor.zoom()) +
-                "/X" + std::to_string(coor.xi()) +
-                "_Y" + std::to_string(coor.yi()) + ".png";
-        break;
-    case OSM_STAMEN:
-        path += std::string(tilesPath) + "/OSM_STAMEN/" +
-                std::to_string(coor.zoom()) +
-                "/X" + std::to_string(coor.xi()) +
-                "_Y" + std::to_string(coor.yi()) + ".jpg";
-        break;
-    case TERRAIN:
-        path += std::string(tilesPath) + "/TERRAIN/" +
-                std::to_string(coor.zoom()) +
-                "/X" + std::to_string(coor.xi()) +
-                "_Y" + std::to_string(coor.yi()) + ".png";
-        break;
-    case HIKING:
-        path += std::string(tilesPath) + "/HIKING/" +
-                std::to_string(coor.zoom()) +
-                "/X" + std::to_string(coor.xi()) +
-                "_Y" + std::to_string(coor.yi()) + ".png";
-        break;
-    case IGN:
-        path += std::string(tilesPath) + "/IGN/" +
-                std::to_string(coor.zoom()) +
-                "/X" + std::to_string(coor.xi()) +
-                "_Y" + std::to_string(coor.yi()) + ".jpeg";
-        break;
-    case ICAO:
-        path += std::string(tilesPath) + "/ICAO/" +
-                std::to_string(coor.zoom()) +
-                "/X" + std::to_string(coor.xi()) +
-                "_Y" + std::to_string(coor.yi()) + ".jpeg";
-        break;
-    case FRANCE_DRONE_RESTRICTIONS:
-        path += std::string(tilesPath) + "/FR_UAV_RESTRICT/" +
-                std::to_string(coor.zoom()) +
-                "/X" + std::to_string(coor.xi()) +
-                "_Y" + std::to_string(coor.yi()) + ".png";
-        break;
-    }
+    std::string path = std::string(tilesPath) + "/" + config->dir.toStdString()+ "/" +
+        std::to_string(coor.zoom()) +
+        "/X" + std::to_string(coor.xi()) +
+        "_Y" + std::to_string(coor.yi()) + config->format.toStdString();
+
     return path;
 }
 
 QUrl TileProvider::tileUrl(Point2DTile coor) {
-    std::string url;
-
-    switch (source) {
-    case GOOGLE:
-        url += "https://khms3.google.com/kh/v=863?x=" +
-                std::to_string(coor.xi()) + "&y=" +std::to_string(coor.yi()) + "&z=" + std::to_string(coor.zoom());
-        break;
-    case OSM_CLASSIC:
-        url += "http://tile.openstreetmap.org/" +
-                std::to_string(coor.zoom()) + "/" +
-                std::to_string(coor.xi()) + "/" +
-                std::to_string(coor.yi()) + ".png";
-        break;
-    case OSM_STAMEN:
-        url += "http://c.tile.stamen.com/watercolor/" +
-                std::to_string(coor.zoom()) + "/" +
-                std::to_string(coor.xi()) + "/" +
-                std::to_string(coor.yi()) + ".jpg";
-        break;
-    case TERRAIN:
-        url += "http://b.tile.stamen.com/terrain/" +
-                std::to_string(coor.zoom()) + "/" +
-                std::to_string(coor.xi()) + "/" +
-                std::to_string(coor.yi()) + ".png";
-        break;
-    case HIKING:
-        url += "https://tile.waymarkedtrails.org/hiking/" +
-                std::to_string(coor.zoom()) + "/" +
-                std::to_string(coor.xi()) + "/" +
-                std::to_string(coor.yi()) + ".png";
-        break;
-    case IGN:
-        url += "https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=ORTHOIMAGERY.ORTHOPHOTOS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix=" +
-                std::to_string(coor.zoom()) + "&TileCol=" +
-                std::to_string(coor.xi()) + "&TileRow=" +
-                std::to_string(coor.yi());
-                break;
-    case ICAO:
-        url += "https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fjpeg&TileMatrix=" +
-                std::to_string(coor.zoom()) + "&TileCol=" +
-                std::to_string(coor.xi()) + "&TileRow=" +
-                std::to_string(coor.yi());
-                break;
-    case FRANCE_DRONE_RESTRICTIONS:
-        url += "https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=TRANSPORTS.DRONES.RESTRICTIONS&style=normal&tilematrixset=PM&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fpng&TileMatrix=" +
-                std::to_string(coor.zoom()) + "&TileCol=" +
-                std::to_string(coor.xi()) + "&TileRow=" +
-                std::to_string(coor.yi());
-        break;
-    }
-    return QUrl(url.c_str());
+    char plop[300];
+    int args[3];
+    args[config->posX] = coor.xi();
+    args[config->posY] = coor.yi();
+    args[config->posZoom] = coor.zoom();
+    snprintf(plop, 99, config->addr.toStdString().c_str(), args[0], args[1], args[2]);
+    return QUrl(plop);
 }
 
 void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
@@ -142,8 +56,7 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
         if(!tile->dataGood()) {
 
             // try to load the tile
-            bool success = load_tile_from_disk(tile);
-            if(success) {
+            if(load_tile_from_disk(tile)) {
                 if(/*!tileObj->hasData() && */tile != tileObj) {    // an ancestor was loaded. inherit its data for tileObj
                     tileObj->setInheritedData();
                 }
@@ -151,13 +64,14 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
             } else {
                 // tile not on disk, try to load ancestors then direct childs
                 TileItem* current = tile->mother();
-                bool success = false;
+
                 // fist, load ancestors
                 while(current != nullptr) {
                     // tile found on disk
-                    success = load_tile_from_disk(current);
-                    // ancestor found
-                    if(success) {
+                    if(load_tile_from_disk(current)) {
+                        // ancestor found
+                        tileObj->setInheritedData();
+                        emit(displayTile(current, tileObj));
                         break;
                     } else {
                         // this tile was not on the disk, so try with its mother
@@ -169,16 +83,12 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
                     for(int j=0; j<2; j++) {
                         Point2DTile childPoint = tile->coordinates().childPoint(i, j);
                         TileItem* child = getTile(childPoint);
-                        success |= load_tile_from_disk(child);
+                        if(load_tile_from_disk(child)) {
+                            tileObj->setInheritedData();
+                            emit(displayTile(child, tileObj));
+                        }
                     }
                 }
-
-                // at least one tile was loaded, either in ancestors or children
-                if(success) {
-                    tileObj->setInheritedData();
-                    emit(displayTile(current, tileObj));
-                }
-
 
                 // now, dl the right tile
                 QUrl url = tileUrl(t);
@@ -186,7 +96,7 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
 
 
                 // tuple : what is dl, what we want to display
-                downloading.append(std::make_tuple(tile, tile));
+                //downloading.append(std::make_tuple(tile, tile));
                 request.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko");
                 QList<QVariant> l = QList<QVariant>();
                 l.push_back(QVariant::fromValue(tile));
@@ -223,19 +133,19 @@ void TileProvider::handleReply(QNetworkReply *reply) {
             file.write(reply->readAll());
             file.close();
             reply->deleteLater();
-        }
 
-        bool success = load_tile_from_disk(tileCur);
-        if(success) {
-            if(/*!tileObj->hasData() && */tileCur != tileObj) {    // an ancestor was loaded. inherit its data for tileObj
-                tileObj->setInheritedData();
+            if(load_tile_from_disk(tileCur)) {
+                if(/*!tileObj->hasData() && */tileCur != tileObj) {
+                    // an ancestor was loaded. inherit its data for tileObj
+                    tileObj->setInheritedData();
+                }
+                emit(displayTile(tileCur, tileObj));
+            } else {
+                std::cout << "Image just saved, but it could not be loaded!" << std::endl;
             }
-            emit(displayTile(tileCur, tileObj));
         } else {
-           //whyyyyy ???
-            std::cout << "WHYYYYYYYYYYY ?" << std::endl;
+            std::cout << "Could not save image on the disk!" << std::endl;
         }
-
 
     } else {
         //tile dl failed. try the parent tile ?
@@ -255,7 +165,8 @@ bool TileProvider::load_tile_from_disk(TileItem* item) {
     std::ifstream f(path);
     if(f.good()) {
         // tile found on disk
-        item->setPixmap(QPixmap(path.c_str()));
+        QPixmap pixmap(path.c_str());
+        item->setPixmap(pixmap.scaled(tileDisplaySize, tileDisplaySize));
         return true;
     } else {
         return false;
@@ -267,10 +178,10 @@ void TileProvider::setZoomLevel(int z) {
         return; // nothing change
     }
 
-    if(z > ZOOM_MAX) {
-        _zoomLevel = ZOOM_MAX;
-    } else if(z < ZOOM_MIN) {
-        _zoomLevel = ZOOM_MIN;
+    if(z > config->zoomMax) {
+        _zoomLevel = config->zoomMax;
+    } else if(z < config->zoomMin) {
+        _zoomLevel = config->zoomMin;
     } else {
         _zoomLevel = z;
     }
