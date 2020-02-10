@@ -9,7 +9,7 @@ class TileItem : public QGraphicsPixmapItem
 {
 
 public:
-    TileItem(TileItem* mother, int size, Point2DTile coordinates = Point2DTile(0,0,0), QGraphicsItem *parent = nullptr);
+    TileItem(TileItem* mother, int size, Point2DTile coordinates, QGraphicsItem *parent = nullptr);
 
     int tileSize() {return SIZE;}
     bool isInScene() { return inScene;}

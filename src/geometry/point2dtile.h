@@ -12,8 +12,8 @@ class Point2DTile
 {
 
 public:
-    Point2DTile(double x, double y, int zoom, int zoomMin=0, int zoomMax=19);
-    Point2DTile(Point2DLatLon latLon);
+    Point2DTile(double x, double y, int zoom);
+    Point2DTile(Point2DLatLon latLon, int zoom);
 
     double x() {return xp;}
     double y() {return yp;}
@@ -23,14 +23,9 @@ public:
     int zoom() {return zoomp;}
     void setX(double x) {xp = x;}
     void setY(double y) {yp = y;}
-    void setZoom(int zoom) { zoomp = clamp(zoom, zoomMinp, zoomMaxp); }
+    void setZoom(int zoom) { zoomp = zoom; }
 
     bool isValid();
-
-    int zoomMin() {return zoomMinp;}
-    int zoomMax() {return zoomMaxp;}
-    void setZoomMin(int zoomMin) {zoomMinp = zoomMin;}
-    void setZoomMax(int zoomMax) {zoomMaxp = zoomMax;}
 
     QString to_istring();
     void changeZoom(int zoom);
@@ -40,10 +35,6 @@ private:
     double xp;
     double yp;
     int zoomp;
-
-    int zoomMinp;
-    int zoomMaxp;
-
 };
 
 

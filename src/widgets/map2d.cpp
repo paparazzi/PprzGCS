@@ -9,21 +9,25 @@
 #include "point2dtile.h"
 #include <QtXml>
 #include <QFile>
+#include "utils.h"
 
-Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(2)
+Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(16.0), minZoom(0.0), maxZoom(21.0)
 {
     sourceConfigs = loadConfig("://tile_sources.xml");
     auto& config = sourceConfigs[QString("Google")];
     config->printConfig();
     tileSize = config->tileSize;
 
-    scene = new QGraphicsScene(-500, -500, 524288*256, 524288*256, parent);
+    int maxxy = 1 << static_cast<int>(maxZoom);
+
+    scene = new QGraphicsScene(-500, -500, tileSize*maxxy, tileSize*maxxy, parent);
     setScene(scene);
 
     setDragMode(QGraphicsView::ScrollHandDrag);
     setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     setTransformationAnchor(QGraphicsView::NoAnchor);
+    setResizeAnchor(QGraphicsView::AnchorViewCenter);
     setBackgroundBrush(QBrush(Qt::darkGreen));
 
     tileProvider = new TileProvider(config, 0, tileSize, this);
@@ -32,9 +36,14 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(2)
 
     connect(tileProvider, SIGNAL(displayTile(TileItem*, TileItem*)), this, SLOT(handleTile(TileItem*, TileItem*)));
 
-    setPos(Point2DLatLon(43.4625, 1.2732, static_cast<int>(zoom)));
+    Point2DLatLon initLatLon(43.4625, 1.2732);
+
+    centerLatLon(initLatLon);
 }
 
+void Map2D::centerLatLon(Point2DLatLon latLon) {
+    centerOn(scenePoint(latLon, zoomLevel()));
+}
 
 std::map<QString, std::unique_ptr<TileProviderConfig>> Map2D::loadConfig(QString filename) {
     std::map<QString, std::unique_ptr<TileProviderConfig>> map;
@@ -76,47 +85,48 @@ std::map<QString, std::unique_ptr<TileProviderConfig>> Map2D::loadConfig(QString
     return map;
 }
 
+void Map2D::resizeEvent(QResizeEvent *event){
+    QGraphicsView::resizeEvent(event);
+    updateTiles();
+}
+
 
 void Map2D::wheelEvent(QWheelEvent* event) {
 
+    int curZoom = zoomLevel();
+
     if(event->delta() > 0) {
-        zoom += 0.2;
+        zoom += 0.4;
     } else {
-        zoom -= 0.2;
+        zoom -= 0.4;
     }
+    zoom = clamp(zoom, minZoom, maxZoom);
 
     // save initial numericZoom
     double  numZoomIni = numericZoom;
 
     // for tileProvider in tileProviders...
-    // +1: better to downscale a tile than upscaling it, image will be sharper
-    int zoomLevel = int(zoom)+1;
-    zoomLevel = clamp(zoomLevel, tileProvider->getConfig()->zoomMin, tileProvider->getConfig()->zoomMax);
-    numericZoom = zoom - zoomLevel;
+    int nextZoomLevel = zoomLevel();
+    numericZoom = zoom - nextZoomLevel;
 
-    //double scaleFactor = numericZoom/numZoomIni;
     double scaleFactor = pow(2, numericZoom) / pow(2, numZoomIni);
 
-
-
+    // mouse pos in scene
     QPointF oldPos = mapToScene(event->pos());
-    scale(scaleFactor, scaleFactor);
+    // lat lon point pointed by the mouse (at the current zoomLevel)
+    Point2DLatLon poi(tilePoint(oldPos, curZoom));
 
-    Point2DLatLon latLon(Point2DTile(oldPos.x()/tileSize, oldPos.y()/tileSize, tileProvider->zoomLevel()));
-    latLon.setZoom(zoomLevel);
-
-    setPos(latLon, 0, 0);
-
+    scale(scaleFactor, scaleFactor);    // apply scale
+    // mouse pos in scene after scale
     QPointF newPos = mapToScene(event->pos());
-    Point2DTile ptt_new(newPos.x()/tileSize, newPos.y()/tileSize, tileProvider->zoomLevel());
-    ptt_new.changeZoom(zoomLevel);
+    // position of the poi in scene coordinates for the new zoom
+    QPointF poi_scene = scenePoint(poi, nextZoomLevel);
 
-    Point2DTile ptt_old(latLon);
-    QPointF newoldPos(ptt_old.x()*tileSize, ptt_old.y()*tileSize);
-    std::cout << oldPos.x() << " " << oldPos.y()  << "    " << newoldPos.x() << " " << newoldPos.y() << std::endl;
-    QPointF delta = newPos - newoldPos;
+    QPointF delta = newPos - poi_scene;
     translate(delta.x(), delta.y());
 
+    tileProvider->setZoomLevel(nextZoomLevel);
+    updateTiles();
 }
 
 void Map2D::mouseMoveEvent(QMouseEvent *event) {
@@ -124,20 +134,23 @@ void Map2D::mouseMoveEvent(QMouseEvent *event) {
     if(event->buttons() & Qt::LeftButton) {
         updateTiles();
     }
+
+    QPointF pos = mapToScene(event->pos());
+    std::cout << pos.x() << " 0 " << pos.y() << std::endl;
 }
 
 void Map2D::updateTiles() {
     QPointF topLeft = mapToScene(QPoint(0,0));
     QPointF bottomRight = mapToScene(QPoint(width(),height()));
 
-    int xMin = static_cast<int>(topLeft.x()/tileSize) - 2;
-    int yMin = static_cast<int>(topLeft.y()/tileSize) - 2;
-    int xMax = static_cast<int>(bottomRight.x()/tileSize) + 2;
-    int yMax = static_cast<int>(bottomRight.y()/tileSize) + 2;
+    int xMin = static_cast<int>(topLeft.x()/tileSize);
+    int yMin = static_cast<int>(topLeft.y()/tileSize);
+    int xMax = static_cast<int>(bottomRight.x()/tileSize)+1;
+    int yMax = static_cast<int>(bottomRight.y()/tileSize)+1;
 
     for(int x=xMin; x<xMax; x++) {
         for(int y=yMin; y<yMax; y++) {
-            Point2DTile coor(x, y, tileProvider->zoomLevel());
+            Point2DTile coor = Point2DTile(x, y, zoomLevel());
             tileProvider->fetch_tile(coor, coor);
         }
     }
@@ -145,7 +158,6 @@ void Map2D::updateTiles() {
 
 void Map2D::acChanged(int ac_id) {
     (void)ac_id;
-    setPos(Point2DLatLon(45.5, 1.34, 16));
 }
 
 void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {
@@ -156,7 +168,7 @@ void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {
             tileObj->setInScene(true);
         }
         if(!tileObj->isVisible()) {    // in scene but hidden, lets show it. TODO: what if this slot is called just atfer a zoom change ?
-            if(tileObj->coordinates().zoom() == tileProvider->zoomLevel()) {
+            if(tileObj->coordinates().zoom() == zoomLevel()) {
                 tileObj->show();
             }
         }
@@ -167,36 +179,19 @@ void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {
         );
         tileObj->setPos(pos);
     } else {
-        std::cout << "WHAAAAT ? Why I am receiving this signal? Non mais allo quoi !" << std::endl;
+        std::cout << "WHAAAAT ? Why I am receiving this signal but I have no data ?" << std::endl;
     }
 }
 
-void Map2D::setPos(Point2DLatLon latLon, double cx, double cy) {
-    (void)cx;
-    (void)cy;
-    Point2DTile coorD(latLon);
-    tileProvider->setZoomLevel(coorD.zoom());
+Point2DTile Map2D::tilePoint(QPointF scenePos, int zoom) {
+    return Point2DTile(scenePos.x()/tileSize, scenePos.y()/tileSize, zoom);
+}
 
-    int xMin = coorD.xi() - width()/tileSize - 2;
-    int xMax = coorD.xi() + width()/tileSize + 2;
-    int yMin = coorD.yi() - height()/tileSize - 2;
-    int yMax = coorD.yi() + height()/tileSize + 2;
+QPointF Map2D::scenePoint(Point2DTile tilePoint) {
+    return QPointF(tilePoint.x()*tileSize, tilePoint.y()*tileSize);
+}
 
-    for(int x=xMin; x<=xMax; x++) {
-        for(int y=yMin; y<=yMax; y++) {
-            Point2DTile coor(x, y, tileProvider->zoomLevel());
-            tileProvider->fetch_tile(coor, coor);
-        }
-    }
-
-//    if(cx==0 && cy==0) {
-//        cx = tileSize*coorD.x();
-//        cy = tileSize*coorD.y();
-//    }
-
-//    centerOn(
-//        QPointF(
-//         cx,
-//         cy
-//     ));
+QPointF Map2D::scenePoint(Point2DLatLon latlon, int zoomLvl) {
+    Point2DTile tile_pos = Point2DTile(latlon, zoomLvl);
+    return scenePoint(tile_pos);
 }

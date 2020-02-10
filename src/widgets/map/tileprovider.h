@@ -38,14 +38,19 @@ public:
     ///
     TileItem* getTile(Point2DTile);
 
-    int zoomLevel() {return _zoomLevel;}
+    ///
+    /// \brief getValidTile return the closer valid tile : between zoomMin et zoomMax
+    /// \param p
+    /// \return
+    ///
+    TileItem* getValidTile(Point2DTile p);
+
     void setZoomLevel(int z);
     int zValue() {return z_value;}
     void setZValue(int z);
 
-    std::unique_ptr<TileProviderConfig>& getConfig() {return config;}
 
-    Point2DTile tilePoint(QPointF scenePos);
+    std::unique_ptr<TileProviderConfig>& getConfig() {return config;}
 
 signals:
     // tileReady is the tile loaded in memory, tileObj is the one to actually display
@@ -57,7 +62,6 @@ private slots:
 private:
 
     std::unique_ptr<TileProviderConfig>& config;
-    int _zoomLevel;
     int z_value;
 
     /// All displayed tiles must have the same size across tilesProviders
@@ -68,12 +72,9 @@ private:
     QUrl tileUrl(Point2DTile);
     bool load_tile_from_disk(TileItem*);
 
-    //QList<QMap<QString, TileItem*>> tiles_maps;
     TileItem* motherTile;
     QNetworkAccessManager* manager;
     QNetworkDiskCache* diskCache;
-
-    //QList<std::tuple<TileItem*, TileItem*>> downloading;
 };
 
 #endif // OSMTILEPROVIDER_H

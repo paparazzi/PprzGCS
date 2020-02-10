@@ -16,12 +16,12 @@
 static const char tilesPath[] = "/home/fabien/DEV/test_qt/PprzGCS/data/map";
 
 TileProvider::TileProvider(std::unique_ptr<TileProviderConfig>& config, int z, int displaySize, QObject *parent) : QObject (parent),
-    config(config), _zoomLevel(16), z_value(z), tileDisplaySize(displaySize)
+    config(config), z_value(z), tileDisplaySize(displaySize)
 {
     if(tileDisplaySize == 0) {
         tileDisplaySize = config->tileSize;
     }
-    motherTile = new TileItem(nullptr, tileDisplaySize);
+    motherTile = new TileItem(nullptr, tileDisplaySize, Point2DTile(0, 0, 0));
     manager = new QNetworkAccessManager(this);
     diskCache = new QNetworkDiskCache(this);
     diskCache->setCacheDirectory(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
@@ -51,7 +51,7 @@ QUrl TileProvider::tileUrl(Point2DTile coor) {
 
 void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
     if(t.isValid() && tObj.isValid()) {
-        TileItem* tile = getTile(t);
+        TileItem* tile = getValidTile(t);
         TileItem* tileObj = getTile(tObj);
         if(!tile->dataGood()) {
 
@@ -100,7 +100,8 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
                 request.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko");
                 QList<QVariant> l = QList<QVariant>();
                 l.push_back(QVariant::fromValue(tile));
-                l.push_back(QVariant::fromValue(tile));
+                l.push_back(QVariant::fromValue(tileObj));
+                //l.push_back(QVariant::fromValue(tile));
                 request.setAttribute(QNetworkRequest::User, l);
                 manager->get(request);
 
@@ -108,7 +109,10 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
 
         } else {
             //tile with data found in tree
-            emit(displayTile(tile, tile));
+            if(tile != tileObj) {    // an ancestor was loaded. inherit its data for tileObj
+                tileObj->setInheritedData();
+            }
+            emit(displayTile(tile, tileObj));
         }
 
     }
@@ -174,18 +178,6 @@ bool TileProvider::load_tile_from_disk(TileItem* item) {
 }
 
 void TileProvider::setZoomLevel(int z) {
-    if(z == _zoomLevel) {
-        return; // nothing change
-    }
-
-    if(z > config->zoomMax) {
-        _zoomLevel = config->zoomMax;
-    } else if(z < config->zoomMin) {
-        _zoomLevel = config->zoomMin;
-    } else {
-        _zoomLevel = z;
-    }
-
     //TODO improve iterator usability (make a C++ standard one)
     TileIterator iter(motherTile);
     while(true) {
@@ -193,7 +185,7 @@ void TileProvider::setZoomLevel(int z) {
         if(tile == nullptr) {
             break;
         }
-        if(tile->hasData() && tile->coordinates().zoom() != _zoomLevel) {
+        if(tile->hasData() && tile->coordinates().zoom() != z) {
             tile->hide();
         }
     }
@@ -228,6 +220,12 @@ TileItem* TileProvider::getTile(Point2DTile p) {
     return current;
 }
 
+TileItem* TileProvider::getValidTile(Point2DTile p) {
+    int zoom = clamp(p.zoom(), config->zoomMin, config->zoomMax);
+    p.changeZoom(zoom);
+    return getTile(p);
+}
+
 void TileProvider::setZValue(int z) {
     z_value = z;
     //iterate over all items in scene
@@ -243,3 +241,16 @@ void TileProvider::setZValue(int z) {
         }
     }
 }
+
+
+//Point2DTile TileProvider::tilePoint(QPointF scenePos, int zoom) {
+//    return tilePoint(scenePos.x()/tileDisplaySize, scenePos.y()/tileDisplaySize, zoom);
+//}
+
+//Point2DTile TileProvider::tilePoint(double x, double y, int zoom) {
+//    return Point2DTile(x, y, zoom, config->zoomMin, config->zoomMax);
+//}
+
+//Point2DTile TileProvider::tilePoint(Point2DLatLon latlon, int zoom) {
+//    return Point2DTile(latlon, zoom, config->zoomMin, config->zoomMax);
+//}

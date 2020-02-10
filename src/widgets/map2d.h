@@ -9,13 +9,15 @@
 #include "tileprovider.h"
 #include "tileproviderconfig.h"
 #include <QMap>
+#include <math.h>
+#include <QResizeEvent>
 
 class Map2D : public QGraphicsView
 {
     Q_OBJECT
 public:
     explicit Map2D(QWidget *parent = nullptr);
-    void setPos(Point2DLatLon latLon, double cx=0, double cy=0);
+    void centerLatLon(Point2DLatLon latLon);
 
 signals:
 
@@ -25,6 +27,7 @@ public slots:
 protected:
     virtual void wheelEvent(QWheelEvent* event);
     virtual void mouseMoveEvent(QMouseEvent *event);
+    virtual void resizeEvent(QResizeEvent *event);
 
 private slots:
     void acChanged(int);
@@ -32,6 +35,12 @@ private slots:
 
 
 private:
+
+    Point2DTile tilePoint(QPointF scenePos, int zoom);
+    QPointF scenePoint(Point2DTile tilePoint);
+    QPointF scenePoint(Point2DLatLon latlon, int zoomLvl);
+
+    int zoomLevel() {return static_cast<int>(ceil(zoom));}
 
     static constexpr double NUMERIC_ZOOM_FACTOR = 0.3;
     std::map<QString, std::unique_ptr<TileProviderConfig>> loadConfig(QString filename);
@@ -41,6 +50,8 @@ private:
     double numericZoom;
     double zoom;
     int tileSize;
+    double minZoom;
+    double maxZoom;
 
     std::map<QString, std::unique_ptr<TileProviderConfig>> sourceConfigs;
     TileProvider* tileProvider;
