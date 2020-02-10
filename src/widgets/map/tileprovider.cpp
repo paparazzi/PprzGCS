@@ -227,3 +227,19 @@ TileItem* TileProvider::getTile(Point2DTile p) {
 
     return current;
 }
+
+void TileProvider::setZValue(int z) {
+    z_value = z;
+    //iterate over all items in scene
+    //TODO improve iterator usability (make a C++ standard one)
+    TileIterator iter(motherTile);
+    while(true) {
+        TileItem* tile = iter.next();
+        if(tile == nullptr) {
+            break;
+        }
+        if(tile->isInScene()) {
+            tile->setZValue(z);
+        }
+    }
+}

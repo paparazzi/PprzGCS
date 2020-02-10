@@ -38,7 +38,9 @@ private:
     void updateTiles();
     QGraphicsScene* scene;
 
-    int numericZoom;
+    double numericZoom;
+    double zoom;
+    int tileSize;
 
     std::map<QString, std::unique_ptr<TileProviderConfig>> sourceConfigs;
     TileProvider* tileProvider;

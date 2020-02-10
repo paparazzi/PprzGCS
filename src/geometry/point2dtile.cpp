@@ -22,6 +22,14 @@ Point2DTile::Point2DTile(Point2DLatLon latLon) {
 
 }
 
+void Point2DTile::changeZoom(int zoom) {
+    int oldZoom = zoomp;
+    zoomp = clamp(zoom, zoomMinp, zoomMaxp);
+    int zoom_delta = zoomp - oldZoom;
+    xp *= pow(2, zoom_delta);
+    yp *= pow(2, zoom_delta);
+}
+
 QString Point2DTile::to_istring() {
     std::string pStr;
     pStr += "X" + std::to_string(xi()) + "Y" + std::to_string(yi()) + "Z" + std::to_string(zoomp);

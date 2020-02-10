@@ -9,6 +9,7 @@
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkDiskCache>
 #include "point2dlatlon.h"
+#include "point2dtile.h"
 #include "tileproviderconfig.h"
 #include <memory>
 
@@ -39,8 +40,12 @@ public:
 
     int zoomLevel() {return _zoomLevel;}
     void setZoomLevel(int z);
+    int zValue() {return z_value;}
+    void setZValue(int z);
 
     std::unique_ptr<TileProviderConfig>& getConfig() {return config;}
+
+    Point2DTile tilePoint(QPointF scenePos);
 
 signals:
     // tileReady is the tile loaded in memory, tileObj is the one to actually display
@@ -53,7 +58,11 @@ private:
 
     std::unique_ptr<TileProviderConfig>& config;
     int _zoomLevel;
+    int z_value;
 
+    /// All displayed tiles must have the same size across tilesProviders
+    /// for the coordinates to be aligned
+    int tileDisplaySize;
 
     std::string tilePath(Point2DTile);
     QUrl tileUrl(Point2DTile);

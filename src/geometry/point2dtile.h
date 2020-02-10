@@ -3,8 +3,10 @@
 
 #include "utils.h"
 #include "QString"
+#include "QPointF"
 
 class Point2DLatLon;
+class TileProvider;
 
 class Point2DTile
 {
@@ -31,7 +33,7 @@ public:
     void setZoomMax(int zoomMax) {zoomMaxp = zoomMax;}
 
     QString to_istring();
-
+    void changeZoom(int zoom);
     Point2DTile childPoint(int i, int j);
 
 private:
