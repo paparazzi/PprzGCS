@@ -11,10 +11,12 @@ public:
 
     TileProviderConfig(QString name, QString dir, QString addr,
                        int posZoom, int posX, int posY,
-                       int zoomMin, int zoomMax, int tileSize, QString format):
+                       int zoomMin, int zoomMax, int xMin, int xMax, int yMin, int yMax,
+                       int tileSize, QString format):
         name(name), dir(dir), addr(addr),
         posZoom(posZoom), posX(posX), posY(posY),
-        zoomMin(zoomMin), zoomMax(zoomMax), tileSize(tileSize), format(format)
+        zoomMin(zoomMin), zoomMax(zoomMax), xMin(xMin), xMax(xMax), yMin(yMin), yMax(yMax),
+        tileSize(tileSize), format(format)
     {
     }
 
@@ -28,6 +30,10 @@ public:
     const int posY;
     const int zoomMin;
     const int zoomMax;
+    const int xMin;
+    const int xMax;
+    const int yMin;
+    const int yMax;
     const int tileSize;
     const QString format;
 };
@@ -43,20 +49,33 @@ public:
     builder& setPosY(int value) { posY = value; return *this;}
     builder& setZoomMin(int value) { zoomMin = value; return *this;}
     builder& setZoomMax(int value) { zoomMax = value; return *this;}
+    builder& setXMin(int value) { xMin = value; return *this;}
+    builder& setXMax(int value) { xMax = value; return *this;}
+    builder& setYMin(int value) { yMin = value; return *this;}
+    builder& setYMax(int value) { yMax = value; return *this;}
     builder& setTileSize(int value) { tileSize = value; return *this;}
     builder& setFormat(QString value) { format = value; return *this;}
 
     TileProviderConfig build() const {
-        return TileProviderConfig(name, dir, addr, posZoom, posX, posY, zoomMin, zoomMax, tileSize, format);
+        return TileProviderConfig(name, dir, addr,
+                posZoom, posX, posY,
+                zoomMin, zoomMax, xMin, xMax, yMin, yMax,
+                tileSize, format);
     }
 
     TileProviderConfig* newBuild() const {
-        return new TileProviderConfig(name, dir, addr, posZoom, posX, posY, zoomMin, zoomMax, tileSize, format);
+        return new TileProviderConfig(name, dir, addr,
+                    posZoom, posX, posY,
+                    zoomMin, zoomMax, xMin, xMax, yMin, yMax,
+                    tileSize, format);
     }
 
     std::unique_ptr<TileProviderConfig> buildUnique() const {
         return std::unique_ptr<TileProviderConfig>(
-                    new TileProviderConfig(name, dir, addr, posZoom, posX, posY, zoomMin, zoomMax, tileSize, format)
+                    new TileProviderConfig(name, dir, addr,
+                        posZoom, posX, posY,
+                        zoomMin, zoomMax, xMin, xMax, yMin, yMax,
+                        tileSize, format)
         );
     }
 
@@ -69,6 +88,10 @@ private:
     int posY;
     int zoomMin;
     int zoomMax;
+    int xMin;
+    int xMax;
+    int yMin;
+    int yMax;
     int tileSize;
     QString format;
 

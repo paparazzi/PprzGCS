@@ -28,6 +28,7 @@ void TileItem::setAltPixmap(const QPixmap &pixmap) {
 bool TileItem::setInheritedData() {
     //std::cout << "setInheritedData " << coordinates().to_istring().toStdString() << std::endl;
     QPixmap altPixmap(tileSize(), tileSize());
+    altPixmap.fill(Qt::transparent);
     bool ancestorsPaint = paintPixmapFromAncestors(&altPixmap);
     bool offspringPaint = paintPixmapFromOffspring(&altPixmap);
     setAltPixmap(altPixmap);
@@ -71,7 +72,6 @@ bool TileItem::paintPixmapFromAncestors(QPixmap* altPixmap) {
 
 
 bool TileItem::paintPixmapFromOffspring(QPixmap* altPixmap) {
-    QPixmap notile("/home/fabien/DEV/test_qt/PprzGCS/data/map/notile.jpeg");
     QPainter painter(altPixmap);
     //std::cout << "seek children" << std::endl;
     for(int i=0; i<2; i++) {

@@ -65,6 +65,11 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
     TileItem* tile = getValidTile(t);
     TileItem* tileObj = getTile(tObj);
 
+    if(t.zoom() < config->zoomMin) {  // no bigger tile
+        tile->setRequestStatus(TILE_ERROR);
+        return;
+    }
+
     // try to load the tile
     if(tile->requestStatus() == TILE_NOT_REQUESTED) {
         load_tile_from_disk(tile);
@@ -118,26 +123,71 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
         }
 
         // then download the tile
-        QUrl url = tileUrl(t);
-        QNetworkRequest request = QNetworkRequest(url);
-        request.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko");
-        QList<QVariant> l = QList<QVariant>();
-        l.push_back(QVariant::fromValue(tile));     // tile being downloaded
-        l.push_back(QVariant::fromValue(tileObj));  // tile to display
-        request.setAttribute(QNetworkRequest::User, l);
-        manager->get(request);
-        tile->setRequestStatus(TILE_REQUESTED);
+        downloadTile(tile, tileObj);
+
     }
     else if(tile->requestStatus() == TILE_REQUESTED) {
+        if(tileObj->hasData()) {
+            sendTile(tileObj, tileObj); // display the previously inherited data
+        }
         return; // request pending
     }
     else if(tile->requestStatus() == TILE_REQUEST_FAILED ||
               tile->requestStatus() == TILE_ERROR) {
-        std::cout << "Already failed, what can we do ?" << std::endl;
+        if(tileObj->hasData()) {
+            sendTile(tileObj, tileObj); // display the previously inherited data
+        }
     }
     else {
         throw "Error: All case should be handled!";
     }
+}
+
+void TileProvider::downloadTile(TileItem* tile, TileItem* tileObj) {
+    int checkPassed = true;
+    if(!tile->coordinates().isValid()) {    // invalid tile coordinate
+        tile->setRequestStatus(TILE_ERROR);
+        checkPassed = false;
+        throw "Tile coordinates invalid, but it should have been checked before!";
+    }
+    if(!tileObj->coordinates().isValid()) { // invalid tile coordinate
+        tile->setRequestStatus(TILE_ERROR);
+        checkPassed = false;
+        throw "Tile coordinates invalid, but it should have been checked before!";
+    }
+
+    if(tile->coordinates().zoom() > config->zoomMax ||
+       tile->coordinates().zoom() < config->zoomMin) {  // zoom imcompatible with this tile source
+        tile->setRequestStatus(TILE_ERROR);
+        checkPassed = false;
+    }
+
+    int dz = tile->coordinates().zoom() - config->zoomMin;
+    int xMin = config->xMin << dz;
+    int yMin = config->yMin << dz;
+    int xMax = ((config->xMax + 1) << dz) - 1;
+    int yMax = ((config->yMax + 1) << dz) - 1;
+
+    if(tile->coordinates().xi() < xMin ||
+       tile->coordinates().xi() > xMax ||
+       tile->coordinates().yi() < yMin ||
+       tile->coordinates().yi() > yMax) {
+        checkPassed = false;
+    }
+
+    if(!checkPassed) {
+        return;
+    }
+
+    QUrl url = tileUrl(tile->coordinates());
+    QNetworkRequest request = QNetworkRequest(url);
+    request.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko");
+    QList<QVariant> l = QList<QVariant>();
+    l.push_back(QVariant::fromValue(tile));     // tile being downloaded
+    l.push_back(QVariant::fromValue(tileObj));  // tile to display
+    request.setAttribute(QNetworkRequest::User, l);
+    manager->get(request);
+    tile->setRequestStatus(TILE_REQUESTED);
 }
 
 void TileProvider::handleReply(QNetworkReply *reply) {

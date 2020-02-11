@@ -79,6 +79,14 @@ std::map<QString, std::unique_ptr<TileProviderConfig>> Map2D::loadConfig(QString
         if(root.childNodes().item(i).isElement()) {
             QDomElement ele = root.childNodes().item(i).toElement();
 
+            int zoomMin = ele.attribute("zoomMin", "0").toInt();
+            int zoomMax = ele.attribute("zoomMax", "19").toInt();
+
+            int xMin = ele.attribute("xMin", "0").toInt();
+            int xMax = ele.attribute("xMax", "0").toInt();
+            int yMin = ele.attribute("yMin", "0").toInt();
+            int yMax = ele.attribute("xMax", "0").toInt();
+
             QString name = ele.attribute("name");
             map[name] = TileProviderConfig::builder{}.
                 setName(name).
@@ -87,8 +95,12 @@ std::map<QString, std::unique_ptr<TileProviderConfig>> Map2D::loadConfig(QString
                 setPosZoom(ele.attribute("posZoom").toInt()).
                 setPosX(ele.attribute("posX").toInt()).
                 setPosY(ele.attribute("posY").toInt()).
-                setZoomMin(ele.attribute("zoomMin").toInt()).
-                setZoomMax(ele.attribute("zoomMax").toInt()).
+                setZoomMin(zoomMin).
+                setZoomMax(zoomMax).
+                setXMin(xMin).
+                setXMax(xMax).
+                setYMin(yMin).
+                setYMax(yMax).
                 setTileSize(ele.attribute("tileSize").toInt()).
                 setFormat(ele.attribute("format"))
                 .buildUnique();
