@@ -11,12 +11,24 @@
 #include <QFile>
 #include "utils.h"
 
-Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(16.0), minZoom(0.0), maxZoom(21.0)
+Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(10.0), minZoom(0.0), maxZoom(21.0)
 {
     sourceConfigs = loadConfig("://tile_sources.xml");
     auto& config = sourceConfigs[QString("Google")];
     config->printConfig();
     tileSize = config->tileSize;
+
+    tileProviders.append(new TileProvider(config, 0, tileSize, this));
+    tileProviders[tileProviders.length()-1]->setZValue(0);
+    tileProviders[tileProviders.length()-1]->setopacity(1);
+
+    auto& config2 = sourceConfigs[QString("OpenStreetMap")];
+    tileProviders.append(new TileProvider(config2, 0, tileSize, this));
+    tileProviders[tileProviders.length()-1]->setZValue(10);
+    tileProviders[tileProviders.length()-1]->setopacity(0.6);
+
+
+
 
     int maxxy = 1 << static_cast<int>(maxZoom);
 
@@ -30,12 +42,13 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(16
     setResizeAnchor(QGraphicsView::AnchorViewCenter);
     setBackgroundBrush(QBrush(Qt::darkGreen));
 
-    tileProvider = new TileProvider(config, 0, tileSize, this);
+
 
     connect(DispatcherUi::get(), SIGNAL(ac_selected(int)), this, SLOT(acChanged(int)));
 
-    connect(tileProvider, SIGNAL(displayTile(TileItem*, TileItem*)), this, SLOT(handleTile(TileItem*, TileItem*)));
-
+    for(TileProvider* tileProvider: tileProviders) {
+        connect(tileProvider, SIGNAL(displayTile(TileItem*, TileItem*)), this, SLOT(handleTile(TileItem*, TileItem*)));
+    }
     Point2DLatLon initLatLon(43.4625, 1.2732);
 
     centerLatLon(initLatLon);
@@ -124,7 +137,10 @@ void Map2D::wheelEvent(QWheelEvent* event) {
     QPointF delta = newPos - poi_scene;
     translate(delta.x(), delta.y());
 
-    tileProvider->setZoomLevel(nextZoomLevel);
+    for(TileProvider* tileProvider: tileProviders) {
+        tileProvider->setZoomLevel(nextZoomLevel);
+    }
+
     updateTiles();
 }
 
@@ -142,21 +158,24 @@ void Map2D::updateTiles() {
     int yCenter = static_cast<int>(center.y()/tileSize);
     int N = std::max(width(), height()) / (tileSize);
 
-    Point2DTile coor = Point2DTile(xCenter, yCenter, zoomLevel());
-    tileProvider->fetch_tile(coor, coor);
+    for(TileProvider* tileProvider: tileProviders) {
 
-    for(int n=0; n<N+1; n++) {
-        for(int i=-n; i<=n; i++) {
-            coor = Point2DTile(xCenter + i, yCenter + n, zoomLevel());
-            tileProvider->fetch_tile(coor, coor);
-            coor = Point2DTile(xCenter + i, yCenter - n, zoomLevel());
-            tileProvider->fetch_tile(coor, coor);
-        }
-        for(int j=1-n; j<n; j++) {
-            coor = Point2DTile(xCenter + n, yCenter + j, zoomLevel());
-            tileProvider->fetch_tile(coor, coor);
-            coor = Point2DTile(xCenter - n, yCenter + j, zoomLevel());
-            tileProvider->fetch_tile(coor, coor);
+        Point2DTile coor = Point2DTile(xCenter, yCenter, zoomLevel());
+        tileProvider->fetch_tile(coor, coor);
+
+        for(int n=0; n<N+1; n++) {
+            for(int i=-n; i<=n; i++) {
+                coor = Point2DTile(xCenter + i, yCenter + n, zoomLevel());
+                tileProvider->fetch_tile(coor, coor);
+                coor = Point2DTile(xCenter + i, yCenter - n, zoomLevel());
+                tileProvider->fetch_tile(coor, coor);
+            }
+            for(int j=1-n; j<n; j++) {
+                coor = Point2DTile(xCenter + n, yCenter + j, zoomLevel());
+                tileProvider->fetch_tile(coor, coor);
+                coor = Point2DTile(xCenter - n, yCenter + j, zoomLevel());
+                tileProvider->fetch_tile(coor, coor);
+            }
         }
     }
 }

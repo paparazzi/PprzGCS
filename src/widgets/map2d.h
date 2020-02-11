@@ -54,7 +54,7 @@ private:
     double maxZoom;
 
     std::map<QString, std::unique_ptr<TileProviderConfig>> sourceConfigs;
-    TileProvider* tileProvider;
+    QList<TileProvider*> tileProviders;
 
 };
 
