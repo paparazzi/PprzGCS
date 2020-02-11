@@ -18,6 +18,7 @@ class Map2D : public QGraphicsView
 public:
     explicit Map2D(QWidget *parent = nullptr);
     void centerLatLon(Point2DLatLon latLon);
+    void addTileProvider(QString providerName, int zValue = 0, qreal opacity = 1);
 
 signals:
 

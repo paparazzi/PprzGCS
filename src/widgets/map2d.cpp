@@ -11,24 +11,11 @@
 #include <QFile>
 #include "utils.h"
 
-Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(10.0), minZoom(0.0), maxZoom(21.0)
+Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(10.0), tileSize(0), minZoom(0.0), maxZoom(21.0)
 {
     sourceConfigs = loadConfig("://tile_sources.xml");
-    auto& config = sourceConfigs[QString("Google")];
-    config->printConfig();
-    tileSize = config->tileSize;
-
-    tileProviders.append(new TileProvider(config, 0, tileSize, this));
-    tileProviders[tileProviders.length()-1]->setZValue(0);
-    tileProviders[tileProviders.length()-1]->setopacity(1);
-
-    auto& config2 = sourceConfigs[QString("OpenStreetMap")];
-    tileProviders.append(new TileProvider(config2, 0, tileSize, this));
-    tileProviders[tileProviders.length()-1]->setZValue(10);
-    tileProviders[tileProviders.length()-1]->setopacity(0.6);
-
-
-
+    addTileProvider(QString("Google"), 0, 1);
+    addTileProvider(QString("DroneRestrict"), 10, 0.8);
 
     int maxxy = 1 << static_cast<int>(maxZoom);
 
@@ -52,6 +39,15 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(10
     Point2DLatLon initLatLon(43.4625, 1.2732);
 
     centerLatLon(initLatLon);
+}
+
+void Map2D::addTileProvider(QString providerName, int zValue, qreal opacity) {
+    auto& config = sourceConfigs[providerName];
+    if(tileSize == 0) {
+        tileSize = config->tileSize;
+    }
+    tileProviders.append(new TileProvider(config, zValue, tileSize, this));
+    tileProviders[tileProviders.length()-1]->setopacity(opacity);
 }
 
 void Map2D::centerLatLon(Point2DLatLon latLon) {
