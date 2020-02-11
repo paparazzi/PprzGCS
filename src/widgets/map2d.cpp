@@ -136,17 +136,26 @@ void Map2D::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void Map2D::updateTiles() {
-    QPointF topLeft = mapToScene(QPoint(0,0));
-    QPointF bottomRight = mapToScene(QPoint(width(),height()));
+    QPointF center = mapToScene(QPoint(width()/2,height()/2));
 
-    int xMin = static_cast<int>(topLeft.x()/tileSize);
-    int yMin = static_cast<int>(topLeft.y()/tileSize);
-    int xMax = static_cast<int>(bottomRight.x()/tileSize)+1;
-    int yMax = static_cast<int>(bottomRight.y()/tileSize)+1;
+    int xCenter = static_cast<int>(center.x()/tileSize);
+    int yCenter = static_cast<int>(center.y()/tileSize);
+    int N = std::max(width(), height()) / (tileSize);
 
-    for(int x=xMin; x<xMax; x++) {
-        for(int y=yMin; y<yMax; y++) {
-            Point2DTile coor = Point2DTile(x, y, zoomLevel());
+    Point2DTile coor = Point2DTile(xCenter, yCenter, zoomLevel());
+    tileProvider->fetch_tile(coor, coor);
+
+    for(int n=0; n<N+1; n++) {
+        for(int i=-n; i<=n; i++) {
+            coor = Point2DTile(xCenter + i, yCenter + n, zoomLevel());
+            tileProvider->fetch_tile(coor, coor);
+            coor = Point2DTile(xCenter + i, yCenter - n, zoomLevel());
+            tileProvider->fetch_tile(coor, coor);
+        }
+        for(int j=1-n; j<n; j++) {
+            coor = Point2DTile(xCenter + n, yCenter + j, zoomLevel());
+            tileProvider->fetch_tile(coor, coor);
+            coor = Point2DTile(xCenter - n, yCenter + j, zoomLevel());
             tileProvider->fetch_tile(coor, coor);
         }
     }
