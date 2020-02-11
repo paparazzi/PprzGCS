@@ -169,7 +169,6 @@ void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {
     if(tileReady->hasData()){
         if(!tileObj->isInScene()) {    // Not in scene, so lets add it
             scene->addItem(tileObj);
-            tileObj->setZValue(tileProvider->zValue());
             tileObj->setInScene(true);
         }
         if(!tileObj->isVisible()) {    // in scene but hidden, lets show it. TODO: what if this slot is called just atfer a zoom change ?

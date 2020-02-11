@@ -60,7 +60,7 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
                 if(/*!tileObj->hasData() && */tile != tileObj) {    // an ancestor was loaded. inherit its data for tileObj
                     tileObj->setInheritedData();
                 }
-                emit(displayTile(tile, tileObj));
+                sendTile(tile, tileObj);
             } else {
                 // tile not on disk, try to load ancestors then direct childs
                 TileItem* current = tile->mother();
@@ -71,7 +71,7 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
                     if(load_tile_from_disk(current)) {
                         // ancestor found
                         tileObj->setInheritedData();
-                        emit(displayTile(current, tileObj));
+                        sendTile(current, tileObj);
                         break;
                     } else {
                         // this tile was not on the disk, so try with its mother
@@ -85,7 +85,7 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
                         TileItem* child = getTile(childPoint);
                         if(load_tile_from_disk(child)) {
                             tileObj->setInheritedData();
-                            emit(displayTile(child, tileObj));
+                            sendTile(child, tileObj);
                         }
                     }
                 }
@@ -109,7 +109,9 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
             if(tile != tileObj) {    // an ancestor was loaded. inherit its data for tileObj
                 tileObj->setInheritedData();
             }
-            emit(displayTile(tile, tileObj));
+            tile->setZValue(zValue());
+            tile->setOpacity(alpha);
+            sendTile(tile, tileObj);
         }
 
     }
@@ -140,7 +142,7 @@ void TileProvider::handleReply(QNetworkReply *reply) {
                     // an ancestor was loaded. inherit its data for tileObj
                     tileObj->setInheritedData();
                 }
-                emit(displayTile(tileCur, tileObj));
+                sendTile(tileCur, tileObj);
             } else {
                 std::cout << "Image just saved, but it could not be loaded!" << std::endl;
             }
@@ -171,6 +173,12 @@ bool TileProvider::load_tile_from_disk(TileItem* item) {
     } else {
         return false;
     }
+}
+
+void TileProvider::sendTile(TileItem* tileReady, TileItem* tileObj) {
+    tileObj->setZValue(zValue());
+    tileObj->setOpacity(alpha);
+    emit(displayTile(tileReady, tileObj));
 }
 
 void TileProvider::setZoomLevel(int z) {
@@ -234,6 +242,21 @@ void TileProvider::setZValue(int z) {
         }
         if(tile->isInScene()) {
             tile->setZValue(z);
+        }
+    }
+}
+
+void TileProvider::setopacity(qreal a) {
+    alpha = a;
+    //TODO improve iterator usability (make a C++ standard one)
+    TileIterator iter(motherTile);
+    while(true) {
+        TileItem* tile = iter.next();
+        if(tile == nullptr) {
+            break;
+        }
+        if(tile->isInScene()) {
+            tile->setOpacity(alpha);
         }
     }
 }

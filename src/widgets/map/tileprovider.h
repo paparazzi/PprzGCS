@@ -48,6 +48,8 @@ public:
     void setZoomLevel(int z);
     int zValue() {return z_value;}
     void setZValue(int z);
+    qreal opacity() {return alpha;}
+    void setopacity(qreal a);
 
 
     std::unique_ptr<TileProviderConfig>& getConfig() {return config;}
@@ -61,8 +63,11 @@ private slots:
 
 private:
 
+    void sendTile(TileItem* tileReady, TileItem* tileObj);
+
     std::unique_ptr<TileProviderConfig>& config;
     int z_value;
+    qreal alpha;
 
     /// All displayed tiles must have the same size across tilesProviders
     /// for the coordinates to be aligned
