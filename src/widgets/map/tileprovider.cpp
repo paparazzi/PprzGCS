@@ -11,7 +11,7 @@
 #include <QFileInfo>
 #include <QNetworkProxy>
 #include <QGraphicsScene>
-
+#include <QDebug>
 
 static const char tilesPath[] = "/home/fabien/DEV/test_qt/PprzGCS/data/map";
 
@@ -94,9 +94,6 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
                 QUrl url = tileUrl(t);
                 QNetworkRequest request = QNetworkRequest(url);
 
-
-                // tuple : what is dl, what we want to display
-                //downloading.append(std::make_tuple(tile, tile));
                 request.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko");
                 QList<QVariant> l = QList<QVariant>();
                 l.push_back(QVariant::fromValue(tile));
@@ -157,8 +154,7 @@ void TileProvider::handleReply(QNetworkReply *reply) {
         if(parentTile != nullptr) {
             fetch_tile(tileCur->mother()->coordinates(), tileObj->coordinates());
         }
-
-        std::cout << "Error " << reply->error() << " ! " << reply->readAll().toStdString() << std::endl;
+        qDebug() << "Error " << reply->errorString() << "! " << QString(reply->readAll());
     }
 
 }
@@ -241,16 +237,3 @@ void TileProvider::setZValue(int z) {
         }
     }
 }
-
-
-//Point2DTile TileProvider::tilePoint(QPointF scenePos, int zoom) {
-//    return tilePoint(scenePos.x()/tileDisplaySize, scenePos.y()/tileDisplaySize, zoom);
-//}
-
-//Point2DTile TileProvider::tilePoint(double x, double y, int zoom) {
-//    return Point2DTile(x, y, zoom, config->zoomMin, config->zoomMax);
-//}
-
-//Point2DTile TileProvider::tilePoint(Point2DLatLon latlon, int zoom) {
-//    return Point2DTile(latlon, zoom, config->zoomMin, config->zoomMax);
-//}

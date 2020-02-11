@@ -90,7 +90,6 @@ void Map2D::resizeEvent(QResizeEvent *event){
     updateTiles();
 }
 
-
 void Map2D::wheelEvent(QWheelEvent* event) {
 
     int curZoom = zoomLevel();
@@ -134,9 +133,6 @@ void Map2D::mouseMoveEvent(QMouseEvent *event) {
     if(event->buttons() & Qt::LeftButton) {
         updateTiles();
     }
-
-    QPointF pos = mapToScene(event->pos());
-    std::cout << pos.x() << " 0 " << pos.y() << std::endl;
 }
 
 void Map2D::updateTiles() {
