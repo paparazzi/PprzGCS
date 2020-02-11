@@ -17,9 +17,9 @@
 	/>
         <source
             name="ICAO" dir="ICAO"
-            addr="https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI&amp;style=normal&amp;tilematrixset=PM&amp;Service=WMTS&amp;Request=GetTile&amp;Version=1.0.0&amp;Format=image%%2Fjpeg&amp;TileMatrix=%d&amp;TileCol=%d&amp;TileRow=%d"
+            addr="http://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI&amp;style=normal&amp;tilematrixset=PM&amp;Service=WMTS&amp;Request=GetTile&amp;Version=1.0.0&amp;Format=image%%2Fjpeg&amp;TileMatrix=%d&amp;TileCol=%d&amp;TileRow=%d"
             posZoom="0" posX="1" posY="2"
-            zoomMin="10" zoomMax="14"
+            zoomMin="6" zoomMax="11" xMin="29" xMax="34" yMin="21" yMax="24"
             tileSize="256"
             format=".jpeg"
         />
