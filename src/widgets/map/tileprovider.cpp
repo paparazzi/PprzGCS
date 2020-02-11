@@ -40,13 +40,21 @@ std::string TileProvider::tilePath(Point2DTile coor) {
 }
 
 QUrl TileProvider::tileUrl(Point2DTile coor) {
-    char plop[300];
+    char url[URL_MAX_LEN];
     int args[3];
+
+    if(URL_MAX_LEN - config->addr.length() < 30) {
+        throw "URL too long!";
+    }
+
     args[config->posX] = coor.xi();
     args[config->posY] = coor.yi();
     args[config->posZoom] = coor.zoom();
-    snprintf(plop, 99, config->addr.toStdString().c_str(), args[0], args[1], args[2]);
-    return QUrl(plop);
+    int written = snprintf(url, URL_MAX_LEN, config->addr.toStdString().c_str(), args[0], args[1], args[2]);
+    if(written >= URL_MAX_LEN) {
+        throw "URL too long!";
+    }
+    return QUrl(url);
 }
 
 void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {

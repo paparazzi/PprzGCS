@@ -13,6 +13,7 @@
 #include "tileproviderconfig.h"
 #include <memory>
 
+#define URL_MAX_LEN 350
 
 enum TileSource {
     GOOGLE,
@@ -62,7 +63,7 @@ private slots:
     void handleReply(QNetworkReply *reply);
 
 private:
-
+    void downloadTile(TileItem* tile, TileItem* tileObj);
     void sendTile(TileItem* tileReady, TileItem* tileObj);
 
     std::unique_ptr<TileProviderConfig>& config;
