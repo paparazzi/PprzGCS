@@ -91,13 +91,13 @@ void Map2D::resizeEvent(QResizeEvent *event){
 }
 
 void Map2D::wheelEvent(QWheelEvent* event) {
-
+    setResizeAnchor(QGraphicsView::NoAnchor);
     int curZoom = zoomLevel();
 
     if(event->delta() > 0) {
-        zoom += 0.4;
+        zoom += 0.5;
     } else {
-        zoom -= 0.4;
+        zoom -= 0.5;
     }
     zoom = clamp(zoom, minZoom, maxZoom);
 
