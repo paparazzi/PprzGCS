@@ -7,7 +7,8 @@
 #include <iostream>
 #include "pprzmain.h"
 #include "strip.h"
-#include "map2d.h"
+//#include "map2d.h"
+#include "pprzmap.h"
 #include "ac_selector.h"
 #include <QLabel>
 
@@ -58,7 +59,7 @@ QWidget* rec_build(QDomNode &node, QSplitter* parent, int* size) {
             } else if (name == "alarms") {
                 widget = new ACSelector(parent);
             } else if(name == "map2d") {
-                widget = new Map2D(parent);
+                widget = new PprzMap(parent);
             } else if (name == "aircraft" or name=="altgraph") {
                 widget = new QWidget(); // dummy widget
             } else {

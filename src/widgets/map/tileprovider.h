@@ -30,7 +30,7 @@ class TileProvider : public QObject
 {
     Q_OBJECT
 public:
-    explicit TileProvider(std::unique_ptr<TileProviderConfig>& config, int z = 0, int tileDisplaySize = 0, QObject *parent = nullptr);
+    explicit TileProvider(TileProviderConfig config, int z = 0, int tileDisplaySize = 0, QObject *parent = nullptr);
     void fetch_tile(Point2DTile t, Point2DTile tObj);
 
     ///
@@ -53,7 +53,7 @@ public:
     void setopacity(qreal a);
 
 
-    std::unique_ptr<TileProviderConfig>& getConfig() {return config;}
+    TileProviderConfig getConfig() {return config;}
 
 signals:
     // tileReady is the tile loaded in memory, tileObj is the one to actually display
@@ -66,7 +66,7 @@ private:
     void downloadTile(TileItem* tile, TileItem* tileObj);
     void sendTile(TileItem* tileReady, TileItem* tileObj);
 
-    std::unique_ptr<TileProviderConfig>& config;
+    TileProviderConfig config;
     int z_value;
     qreal alpha;
 

@@ -19,6 +19,7 @@ public:
     explicit Map2D(QWidget *parent = nullptr);
     void centerLatLon(Point2DLatLon latLon);
     void addTileProvider(QString providerName, int zValue = 0, qreal opacity = 1);
+    std::map<QString, TileProviderConfig*>* tileProviders() {return &sourceConfigs;}
 
 signals:
 
@@ -31,7 +32,6 @@ protected:
     virtual void resizeEvent(QResizeEvent *event);
 
 private slots:
-    void acChanged(int);
     void handleTile(TileItem*, TileItem*);
 
 
@@ -44,7 +44,7 @@ private:
     int zoomLevel() {return static_cast<int>(ceil(zoom));}
 
     static constexpr double NUMERIC_ZOOM_FACTOR = 0.3;
-    std::map<QString, std::unique_ptr<TileProviderConfig>> loadConfig(QString filename);
+    void loadConfig(QString filename);
     void updateTiles();
     QGraphicsScene* scene;
 
@@ -54,8 +54,8 @@ private:
     double minZoom;
     double maxZoom;
 
-    std::map<QString, std::unique_ptr<TileProviderConfig>> sourceConfigs;
-    QList<TileProvider*> tileProviders;
+    std::map<QString, TileProviderConfig*> sourceConfigs;
+    QList<TileProvider*> tile_providers;
 
 };
 

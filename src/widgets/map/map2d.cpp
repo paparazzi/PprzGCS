@@ -2,8 +2,6 @@
 #include <QPixmap>
 #include <QGraphicsPixmapItem>
 #include <string>
-#include "pprz_dispatcher.h"
-#include "dispatcher_ui.h"
 #include <iostream>
 #include "point2dlatlon.h"
 #include "point2dtile.h"
@@ -13,9 +11,11 @@
 
 Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(10.0), tileSize(0), minZoom(0.0), maxZoom(21.0)
 {
-    sourceConfigs = loadConfig("://tile_sources.xml");
+    loadConfig("://tile_sources.xml");
+
     addTileProvider(QString("Google"), 0, 1);
-    addTileProvider(QString("DroneRestrict"), 10, 0.8);
+    addTileProvider(QString("ICAO"), 12, 0.4);
+    addTileProvider(QString("DroneRestrict"), 10, 0.6);
 
     int maxxy = 1 << static_cast<int>(maxZoom);
 
@@ -30,10 +30,7 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(10
     setBackgroundBrush(QBrush(Qt::darkGreen));
 
 
-
-    connect(DispatcherUi::get(), SIGNAL(ac_selected(int)), this, SLOT(acChanged(int)));
-
-    for(TileProvider* tileProvider: tileProviders) {
+    for(TileProvider* tileProvider: tile_providers) {
         connect(tileProvider, SIGNAL(displayTile(TileItem*, TileItem*)), this, SLOT(handleTile(TileItem*, TileItem*)));
     }
     Point2DLatLon initLatLon(43.4625, 1.2732);
@@ -42,21 +39,19 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(10
 }
 
 void Map2D::addTileProvider(QString providerName, int zValue, qreal opacity) {
-    auto& config = sourceConfigs[providerName];
+    auto config = sourceConfigs[providerName];
     if(tileSize == 0) {
         tileSize = config->tileSize;
     }
-    tileProviders.append(new TileProvider(config, zValue, tileSize, this));
-    tileProviders[tileProviders.length()-1]->setopacity(opacity);
+    tile_providers.append(new TileProvider(*config, zValue, tileSize, this));
+    tile_providers[tile_providers.length()-1]->setopacity(opacity);
 }
 
 void Map2D::centerLatLon(Point2DLatLon latLon) {
     centerOn(scenePoint(latLon, zoomLevel()));
 }
 
-std::map<QString, std::unique_ptr<TileProviderConfig>> Map2D::loadConfig(QString filename) {
-    std::map<QString, std::unique_ptr<TileProviderConfig>> map;
-
+void Map2D::loadConfig(QString filename) {
     QDomDocument xmlLayout;
     QFile f(filename);
     if(!f.open(QIODevice::ReadOnly)) {
@@ -84,7 +79,7 @@ std::map<QString, std::unique_ptr<TileProviderConfig>> Map2D::loadConfig(QString
             int yMax = ele.attribute("xMax", "0").toInt();
 
             QString name = ele.attribute("name");
-            map[name] = TileProviderConfig::builder{}.
+            sourceConfigs[name] = TileProviderConfig::builder{}.
                 setName(name).
                 setDir(ele.attribute("dir")).
                 setAddr(ele.attribute("addr")).
@@ -99,11 +94,9 @@ std::map<QString, std::unique_ptr<TileProviderConfig>> Map2D::loadConfig(QString
                 setYMax(yMax).
                 setTileSize(ele.attribute("tileSize").toInt()).
                 setFormat(ele.attribute("format"))
-                .buildUnique();
+                .newBuild();
         }
     }
-
-    return map;
 }
 
 void Map2D::resizeEvent(QResizeEvent *event){
@@ -145,7 +138,7 @@ void Map2D::wheelEvent(QWheelEvent* event) {
     QPointF delta = newPos - poi_scene;
     translate(delta.x(), delta.y());
 
-    for(TileProvider* tileProvider: tileProviders) {
+    for(TileProvider* tileProvider: tile_providers) {
         tileProvider->setZoomLevel(nextZoomLevel);
     }
 
@@ -166,7 +159,7 @@ void Map2D::updateTiles() {
     int yCenter = static_cast<int>(center.y()/tileSize);
     int N = std::max(width(), height()) / (tileSize);
 
-    for(TileProvider* tileProvider: tileProviders) {
+    for(TileProvider* tileProvider: tile_providers) {
 
         Point2DTile coor = Point2DTile(xCenter, yCenter, zoomLevel());
         tileProvider->fetch_tile(coor, coor);
@@ -186,10 +179,6 @@ void Map2D::updateTiles() {
             }
         }
     }
-}
-
-void Map2D::acChanged(int ac_id) {
-    (void)ac_id;
 }
 
 void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {

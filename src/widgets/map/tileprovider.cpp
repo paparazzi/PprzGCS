@@ -15,11 +15,11 @@
 
 static const char tilesPath[] = "/home/fabien/DEV/test_qt/PprzGCS/data/map";
 
-TileProvider::TileProvider(std::unique_ptr<TileProviderConfig>& config, int z, int displaySize, QObject *parent) : QObject (parent),
+TileProvider::TileProvider(TileProviderConfig config, int z, int displaySize, QObject *parent) : QObject (parent),
     config(config), z_value(z), tileDisplaySize(displaySize)
 {
     if(tileDisplaySize == 0) {
-        tileDisplaySize = config->tileSize;
+        tileDisplaySize = config.tileSize;
     }
     motherTile = new TileItem(nullptr, tileDisplaySize, Point2DTile(0, 0, 0));
     manager = new QNetworkAccessManager(this);
@@ -31,10 +31,10 @@ TileProvider::TileProvider(std::unique_ptr<TileProviderConfig>& config, int z, i
 }
 
 std::string TileProvider::tilePath(Point2DTile coor) {
-    std::string path = std::string(tilesPath) + "/" + config->dir.toStdString()+ "/" +
+    std::string path = std::string(tilesPath) + "/" + config.dir.toStdString()+ "/" +
         std::to_string(coor.zoom()) +
         "/X" + std::to_string(coor.xi()) +
-        "_Y" + std::to_string(coor.yi()) + config->format.toStdString();
+        "_Y" + std::to_string(coor.yi()) + config.format.toStdString();
 
     return path;
 }
@@ -43,14 +43,14 @@ QUrl TileProvider::tileUrl(Point2DTile coor) {
     char url[URL_MAX_LEN];
     int args[3];
 
-    if(URL_MAX_LEN - config->addr.length() < 30) {
+    if(URL_MAX_LEN - config.addr.length() < 30) {
         throw "URL too long!";
     }
 
-    args[config->posX] = coor.xi();
-    args[config->posY] = coor.yi();
-    args[config->posZoom] = coor.zoom();
-    int written = snprintf(url, URL_MAX_LEN, config->addr.toStdString().c_str(), args[0], args[1], args[2]);
+    args[config.posX] = coor.xi();
+    args[config.posY] = coor.yi();
+    args[config.posZoom] = coor.zoom();
+    int written = snprintf(url, URL_MAX_LEN, config.addr.toStdString().c_str(), args[0], args[1], args[2]);
     if(written >= URL_MAX_LEN) {
         throw "URL too long!";
     }
@@ -65,7 +65,7 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
     TileItem* tile = getValidTile(t);
     TileItem* tileObj = getTile(tObj);
 
-    if(t.zoom() < config->zoomMin) {  // no bigger tile
+    if(t.zoom() < config.zoomMin) {  // no bigger tile
         tile->setRequestStatus(TILE_ERROR);
         return;
     }
@@ -156,17 +156,17 @@ void TileProvider::downloadTile(TileItem* tile, TileItem* tileObj) {
         throw "Tile coordinates invalid, but it should have been checked before!";
     }
 
-    if(tile->coordinates().zoom() > config->zoomMax ||
-       tile->coordinates().zoom() < config->zoomMin) {  // zoom imcompatible with this tile source
+    if(tile->coordinates().zoom() > config.zoomMax ||
+       tile->coordinates().zoom() < config.zoomMin) {  // zoom imcompatible with this tile source
         tile->setRequestStatus(TILE_ERROR);
         checkPassed = false;
     }
 
-    int dz = tile->coordinates().zoom() - config->zoomMin;
-    int xMin = config->xMin << dz;
-    int yMin = config->yMin << dz;
-    int xMax = ((config->xMax + 1) << dz) - 1;
-    int yMax = ((config->yMax + 1) << dz) - 1;
+    int dz = tile->coordinates().zoom() - config.zoomMin;
+    int xMin = config.xMin << dz;
+    int yMin = config.yMin << dz;
+    int xMax = ((config.xMax + 1) << dz) - 1;
+    int yMax = ((config.yMax + 1) << dz) - 1;
 
     if(tile->coordinates().xi() < xMin ||
        tile->coordinates().xi() > xMax ||
@@ -303,7 +303,7 @@ TileItem* TileProvider::getTile(Point2DTile p) {
 }
 
 TileItem* TileProvider::getValidTile(Point2DTile p) {
-    int zoom = clamp(p.zoom(), config->zoomMin, config->zoomMax);
+    int zoom = clamp(p.zoom(), config.zoomMin, config.zoomMax);
     p.changeZoom(zoom);
     return getTile(p);
 }
