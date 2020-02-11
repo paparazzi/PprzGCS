@@ -30,7 +30,11 @@
       </spacer>
      </item>
      <item>
-      <widget class="QComboBox" name="tileProvidersCombo"/>
+      <widget class="QPushButton" name="tileSourcesButton">
+       <property name="text">
+        <string>Tile Sources</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

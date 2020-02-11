@@ -41,7 +41,7 @@
         />
         <source
             name="Hiking" dir="HIKING"
-            addr="https://tile.waymarkedtrails.org/hiking/%d/%d/%d.png"
+            addr="http://tile.waymarkedtrails.org/hiking/%d/%d/%d.png"
             posZoom="0" posX="1" posY="2"
             zoomMin="0" zoomMax="19"
             tileSize="256"

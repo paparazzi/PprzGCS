@@ -15,6 +15,9 @@ public:
     explicit PprzMap(QWidget *parent = nullptr);
     ~PprzMap();
 
+protected slots:
+    void toggleTileProvider(bool);
+
 private:
     Ui::PprzMap *ui;
 };

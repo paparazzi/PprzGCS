@@ -30,13 +30,14 @@ set(SOURCE
     src/widgets/ac_selector.ui
     src/widgets/ac_selector.cpp
     src/widgets/pprzmap.cpp
+    src/widgets/pprzmap.ui
     src/widgets/map/tileprovider.cpp
     src/widgets/map/tileproviderconfig.cpp
     src/widgets/map/tileitem.cpp
     src/widgets/map/map2d.cpp
     src/layout_builder.cpp
     src/pprz_dispatcher.cpp
-    src/pprzmain.ui
+    #src/pprzmain.ui
     src/pprzmain.cpp
     src/dispatcher_ui.cpp
     src/geometry/coordinates.cpp
