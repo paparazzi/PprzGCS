@@ -5,6 +5,15 @@
 #include "point2dtile.h"
 #include <QPixmap>
 
+enum TileRequestStatus {
+    TILE_NOT_REQUESTED,     // tile has not been loaded yet
+    TILE_NOT_ON_DISK,       // tile not on disk
+    TILE_REQUESTED,         // tile was not on disk, request sent
+    TILE_REQUEST_FAILED,    // network request failed
+    TILE_OK,                // tile loaded
+    TILE_ERROR,             // other generic error
+};
+
 class TileItem : public QGraphicsPixmapItem
 {
 
@@ -14,8 +23,10 @@ public:
     int tileSize() {return SIZE;}
     bool isInScene() { return inScene;}
     bool hasData() {return _hasData;}
-    bool dataGood() {return _dataGood;}
     void setInScene(bool in_s) {inScene = in_s;}
+    TileRequestStatus requestStatus() {return request_status;}
+    void setRequestStatus(TileRequestStatus rs) {request_status = rs;}
+
     Point2DTile coordinates() {return _coordinates;}
     TileItem* child(int x, int y) {return _childs[x][y];}
     void setChild(TileItem* t, int x, int y) {_childs[x][y] = t;}
@@ -32,7 +43,7 @@ private:
     const int SIZE;
     bool inScene;
     bool _hasData;
-    bool _dataGood;
+    TileRequestStatus request_status;
     const Point2DTile _coordinates;
     TileItem* _childs[2][2];
     TileItem* _mother;

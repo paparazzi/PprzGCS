@@ -50,76 +50,90 @@ QUrl TileProvider::tileUrl(Point2DTile coor) {
 }
 
 void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
-    if(t.isValid() && tObj.isValid()) {
-        TileItem* tile = getValidTile(t);
-        TileItem* tileObj = getTile(tObj);
-        if(!tile->dataGood()) {
+    if(!t.isValid() || !tObj.isValid()) {
+        return;     // position of one of requested tile is not valid
+    }
 
-            // try to load the tile
-            if(load_tile_from_disk(tile)) {
-                if(/*!tileObj->hasData() && */tile != tileObj) {    // an ancestor was loaded. inherit its data for tileObj
-                    tileObj->setInheritedData();
+    TileItem* tile = getValidTile(t);
+    TileItem* tileObj = getTile(tObj);
+
+    // try to load the tile
+    if(tile->requestStatus() == TILE_NOT_REQUESTED) {
+        load_tile_from_disk(tile);
+    }
+
+    if(tile->requestStatus() == TILE_NOT_REQUESTED) {
+        throw "Never tried to load the tile???";
+    }
+    else if(tile->requestStatus() == TILE_OK) {
+
+
+        if(tile != tileObj) {   // an ancestor was loaded
+            assert(tileObj->requestStatus() != TILE_OK);
+            tileObj->setInheritedData();
+        }
+        sendTile(tile, tileObj);
+        return;
+    }
+    else if(tile->requestStatus() == TILE_NOT_ON_DISK) {
+        // Will try to download the tile.
+        // But first, if the tile that will be downloaded is the one that will be displayed,
+        // and if it have not yet inherited data, then inherit data.
+        if(tile == tileObj && !tileObj->hasData()) {
+            TileItem* current = tile;//->mother();  ///////////////////////////////////////////////
+            bool hasFamily = false;
+            // fist, load ancestors
+            while(current != nullptr) {
+                if(load_tile_from_disk(current)) {
+                    hasFamily = true;
+                    break;
+                } else {
+                    // this tile was not on the disk, so try with its mother
+                    current = current->mother();
                 }
-                sendTile(tile, tileObj);
-            } else {
-                // tile not on disk, try to load ancestors then direct childs
-                TileItem* current = tile->mother();
-
-                // fist, load ancestors
-                while(current != nullptr) {
-                    // tile found on disk
-                    if(load_tile_from_disk(current)) {
-                        // ancestor found
-                        tileObj->setInheritedData();
-                        sendTile(current, tileObj);
-                        break;
-                    } else {
-                        // this tile was not on the disk, so try with its mother
-                        current = current->mother();
+            }
+            // second, load direct childs
+            for(int i=0; i<2; i++) {
+                for(int j=0; j<2; j++) {
+                    Point2DTile childPoint = tile->coordinates().childPoint(i, j);
+                    TileItem* child = getTile(childPoint);
+                    if(load_tile_from_disk(child)) {
+                        hasFamily = true;
                     }
                 }
-                // second, load direct childs
-                for(int i=0; i<2; i++) {
-                    for(int j=0; j<2; j++) {
-                        Point2DTile childPoint = tile->coordinates().childPoint(i, j);
-                        TileItem* child = getTile(childPoint);
-                        if(load_tile_from_disk(child)) {
-                            tileObj->setInheritedData();
-                            sendTile(child, tileObj);
-                        }
-                    }
-                }
-
-                // now, dl the right tile
-                QUrl url = tileUrl(t);
-                QNetworkRequest request = QNetworkRequest(url);
-
-                request.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko");
-                QList<QVariant> l = QList<QVariant>();
-                l.push_back(QVariant::fromValue(tile));
-                l.push_back(QVariant::fromValue(tileObj));
-                //l.push_back(QVariant::fromValue(tile));
-                request.setAttribute(QNetworkRequest::User, l);
-                manager->get(request);
-
             }
 
-        } else {
-            //tile with data found in tree
-            if(tile != tileObj) {    // an ancestor was loaded. inherit its data for tileObj
+            if(hasFamily) {
                 tileObj->setInheritedData();
+                sendTile(tile, tileObj);
             }
-            tile->setZValue(zValue());
-            tile->setOpacity(alpha);
-            sendTile(tile, tileObj);
         }
 
+        // then download the tile
+        QUrl url = tileUrl(t);
+        QNetworkRequest request = QNetworkRequest(url);
+        request.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko");
+        QList<QVariant> l = QList<QVariant>();
+        l.push_back(QVariant::fromValue(tile));     // tile being downloaded
+        l.push_back(QVariant::fromValue(tileObj));  // tile to display
+        request.setAttribute(QNetworkRequest::User, l);
+        manager->get(request);
+        tile->setRequestStatus(TILE_REQUESTED);
+    }
+    else if(tile->requestStatus() == TILE_REQUESTED) {
+        return; // request pending
+    }
+    else if(tile->requestStatus() == TILE_REQUEST_FAILED ||
+              tile->requestStatus() == TILE_ERROR) {
+        std::cout << "Already failed, what can we do ?" << std::endl;
+    }
+    else {
+        throw "Error: All case should be handled!";
     }
 }
 
 void TileProvider::handleReply(QNetworkReply *reply) {
     QList<QVariant> l = reply->request().attribute(QNetworkRequest::User).toList();
-
     TileItem* tileCur = l.takeFirst().value<TileItem*>();
     TileItem* tileObj = l.takeFirst().value<TileItem*>();
 
@@ -142,19 +156,23 @@ void TileProvider::handleReply(QNetworkReply *reply) {
                     // an ancestor was loaded. inherit its data for tileObj
                     tileObj->setInheritedData();
                 }
+                tileCur->setRequestStatus(TILE_OK);
                 sendTile(tileCur, tileObj);
             } else {
+                tileCur->setRequestStatus(TILE_ERROR);
                 std::cout << "Image just saved, but it could not be loaded!" << std::endl;
             }
         } else {
+            tileCur->setRequestStatus(TILE_ERROR);
             std::cout << "Could not save image on the disk!" << std::endl;
         }
 
     } else {
         //tile dl failed. try the parent tile ?
+        tileCur->setRequestStatus(TILE_REQUEST_FAILED);
         TileItem* parentTile = tileCur->mother();
         if(parentTile != nullptr) {
-            fetch_tile(tileCur->mother()->coordinates(), tileObj->coordinates());
+            fetch_tile(parentTile->coordinates(), tileObj->coordinates());
         }
         qDebug() << "Error " << reply->errorString() << "! " << QString(reply->readAll());
     }
@@ -169,8 +187,10 @@ bool TileProvider::load_tile_from_disk(TileItem* item) {
         // tile found on disk
         QPixmap pixmap(path.c_str());
         item->setPixmap(pixmap.scaled(tileDisplaySize, tileDisplaySize));
+        item->setRequestStatus(TILE_OK);
         return true;
     } else {
+        item->setRequestStatus(TILE_NOT_ON_DISK);
         return false;
     }
 }
