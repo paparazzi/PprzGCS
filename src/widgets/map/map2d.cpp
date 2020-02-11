@@ -12,10 +12,7 @@
 Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(10.0), tileSize(0), minZoom(0.0), maxZoom(21.0)
 {
     loadConfig("://tile_sources.xml");
-
-    addTileProvider(QString("Google"), 0, 1);
-    addTileProvider(QString("ICAO"), 12, 0.4);
-    addTileProvider(QString("DroneRestrict"), 10, 0.6);
+    toggleTileProvider(QString("Google"), true, 0, 1);
 
     int maxxy = 1 << static_cast<int>(maxZoom);
 
@@ -30,21 +27,36 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(10
     setBackgroundBrush(QBrush(Qt::darkGreen));
 
 
-    for(TileProvider* tileProvider: tile_providers) {
-        connect(tileProvider, SIGNAL(displayTile(TileItem*, TileItem*)), this, SLOT(handleTile(TileItem*, TileItem*)));
-    }
     Point2DLatLon initLatLon(43.4625, 1.2732);
 
     centerLatLon(initLatLon);
+
+
 }
 
-void Map2D::addTileProvider(QString providerName, int zValue, qreal opacity) {
-    auto config = sourceConfigs[providerName];
-    if(tileSize == 0) {
-        tileSize = config->tileSize;
+void Map2D::toggleTileProvider(QString providerName, bool enable, int zValue, qreal opacity) {
+    if(enable) {
+        if(tile_providers.find(providerName) != tile_providers.end()) {
+            // reactivate
+            //tile_providers[providerName]->
+        } else {
+            // create it
+            if(tileSize == 0) {
+                tileSize = sourceConfigs[providerName]->tileSize;
+            }
+            tile_providers[providerName] = new TileProvider(*sourceConfigs[providerName], zValue, tileSize, this);
+            tile_providers[providerName]->setopacity(opacity);
+            connect(tile_providers[providerName], SIGNAL(displayTile(TileItem*, TileItem*)), this, SLOT(handleTile(TileItem*, TileItem*)));
+            //updateTiles();
+        }
     }
-    tile_providers.append(new TileProvider(*config, zValue, tileSize, this));
-    tile_providers[tile_providers.length()-1]->setopacity(opacity);
+    else {
+        if(tile_providers.find(providerName) != tile_providers.end()) {
+            // desactivate it
+        } else {
+            throw std::runtime_error("Can't desactivate something that don't exists!");
+        }
+    }
 }
 
 void Map2D::centerLatLon(Point2DLatLon latLon) {
@@ -138,8 +150,8 @@ void Map2D::wheelEvent(QWheelEvent* event) {
     QPointF delta = newPos - poi_scene;
     translate(delta.x(), delta.y());
 
-    for(TileProvider* tileProvider: tile_providers) {
-        tileProvider->setZoomLevel(nextZoomLevel);
+    for(auto elt: tile_providers) {
+        elt.second->setZoomLevel(nextZoomLevel);
     }
 
     updateTiles();
@@ -159,23 +171,23 @@ void Map2D::updateTiles() {
     int yCenter = static_cast<int>(center.y()/tileSize);
     int N = std::max(width(), height()) / (tileSize);
 
-    for(TileProvider* tileProvider: tile_providers) {
+    for(auto elt: tile_providers) {
 
         Point2DTile coor = Point2DTile(xCenter, yCenter, zoomLevel());
-        tileProvider->fetch_tile(coor, coor);
+        elt.second->fetch_tile(coor, coor);
 
         for(int n=0; n<N+1; n++) {
             for(int i=-n; i<=n; i++) {
                 coor = Point2DTile(xCenter + i, yCenter + n, zoomLevel());
-                tileProvider->fetch_tile(coor, coor);
+                elt.second->fetch_tile(coor, coor);
                 coor = Point2DTile(xCenter + i, yCenter - n, zoomLevel());
-                tileProvider->fetch_tile(coor, coor);
+                elt.second->fetch_tile(coor, coor);
             }
             for(int j=1-n; j<n; j++) {
                 coor = Point2DTile(xCenter + n, yCenter + j, zoomLevel());
-                tileProvider->fetch_tile(coor, coor);
+                elt.second->fetch_tile(coor, coor);
                 coor = Point2DTile(xCenter - n, yCenter + j, zoomLevel());
-                tileProvider->fetch_tile(coor, coor);
+                elt.second->fetch_tile(coor, coor);
             }
         }
     }

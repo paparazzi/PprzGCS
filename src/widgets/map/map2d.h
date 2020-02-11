@@ -18,8 +18,9 @@ class Map2D : public QGraphicsView
 public:
     explicit Map2D(QWidget *parent = nullptr);
     void centerLatLon(Point2DLatLon latLon);
-    void addTileProvider(QString providerName, int zValue = 0, qreal opacity = 1);
+    void toggleTileProvider(QString providerName, bool enable, int zValue = 0, qreal opacity = 1);
     std::map<QString, TileProviderConfig*>* tileProviders() {return &sourceConfigs;}
+    void updateTiles();
 
 signals:
 
@@ -45,7 +46,7 @@ private:
 
     static constexpr double NUMERIC_ZOOM_FACTOR = 0.3;
     void loadConfig(QString filename);
-    void updateTiles();
+
     QGraphicsScene* scene;
 
     double numericZoom;
@@ -55,7 +56,7 @@ private:
     double maxZoom;
 
     std::map<QString, TileProviderConfig*> sourceConfigs;
-    QList<TileProvider*> tile_providers;
+    std::map<QString, TileProvider*> tile_providers;
 
 };
 
