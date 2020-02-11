@@ -1,7 +1,7 @@
 <sources>
 	<source
 	    name="Google" dir="GOOGLE"
-	    addr="https://khms3.google.com/kh/v=863?x=%d&amp;y=%d&amp;z=%d"
+            addr="http://khms3.google.com/kh/v=863?x=%d&amp;y=%d&amp;z=%d"
 	    posZoom="2" posX="0" posY="1"
 	    zoomMin="0" zoomMax="19"
 	    tileSize="256"
@@ -17,15 +17,39 @@
 	/>
         <source
             name="ICAO" dir="ICAO"
-            addr="https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI&amp;style=normal&amp;tilematrixset=PM&amp;Service=WMTS&amp;Request=GetTile&amp;Version=1.0.0&amp;Format=image%2Fjpeg&amp;TileMatrix=%d&amp;TileCol=%d&amp;TileRow=%d"
+            addr="https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI&amp;style=normal&amp;tilematrixset=PM&amp;Service=WMTS&amp;Request=GetTile&amp;Version=1.0.0&amp;Format=image%%2Fjpeg&amp;TileMatrix=%d&amp;TileCol=%d&amp;TileRow=%d"
             posZoom="0" posX="1" posY="2"
             zoomMin="10" zoomMax="14"
             tileSize="256"
             format=".jpeg"
         />
         <source
+            name="DroneRestrict" dir="FR_UAV_RESTRICT"
+            addr="http://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=TRANSPORTS.DRONES.RESTRICTIONS&amp;style=normal&amp;tilematrixset=PM&amp;Service=WMTS&amp;Request=GetTile&amp;Version=1.0.0&amp;Format=image%%2Fpng&amp;TileMatrix=%d&amp;TileCol=%d&amp;TileRow=%d"
+            posZoom="0" posX="1" posY="2"
+            zoomMin="7" zoomMax="14" xMin="60" xMax="67" yMin="42" yMax="47"
+            tileSize="256"
+            format=".png"
+        />
+        <source
             name="OpenStreetMap" dir="OSM_CLASSIC"
             addr="http://tile.openstreetmap.org/%d/%d/%d.png"
+            posZoom="0" posX="1" posY="2"
+            zoomMin="0" zoomMax="19"
+            tileSize="256"
+            format=".png"
+        />
+        <source
+            name="Hiking" dir="HIKING"
+            addr="https://tile.waymarkedtrails.org/hiking/%d/%d/%d.png"
+            posZoom="0" posX="1" posY="2"
+            zoomMin="0" zoomMax="19"
+            tileSize="256"
+            format=".png"
+        />
+        <source
+            name="Dark Matter" dir="DARK_MATTER"
+            addr="http://cartodb-basemaps-d.global.ssl.fastly.net/dark_all/%d/%d/%d.png"
             posZoom="0" posX="1" posY="2"
             zoomMin="0" zoomMax="19"
             tileSize="256"
