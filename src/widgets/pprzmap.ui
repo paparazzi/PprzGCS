@@ -39,15 +39,15 @@
     </layout>
    </item>
    <item>
-    <widget class="Map2D" name="map"/>
+    <widget class="MapWidget" name="map"/>
    </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Map2D</class>
+   <class>MapWidget</class>
    <extends>QGraphicsView</extends>
-   <header>map2d.h</header>
+   <header>mapwidget.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

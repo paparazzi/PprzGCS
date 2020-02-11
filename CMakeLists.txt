@@ -35,6 +35,7 @@ set(SOURCE
     src/widgets/map/tileproviderconfig.cpp
     src/widgets/map/tileitem.cpp
     src/widgets/map/map2d.cpp
+    src/widgets/map/mapwidget.cpp
     src/layout_builder.cpp
     src/pprz_dispatcher.cpp
     #src/pprzmain.ui

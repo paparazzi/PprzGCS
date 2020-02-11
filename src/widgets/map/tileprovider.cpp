@@ -16,7 +16,7 @@
 static const char tilesPath[] = "/home/fabien/DEV/test_qt/PprzGCS/data/map";
 
 TileProvider::TileProvider(TileProviderConfig config, int z, int displaySize, QObject *parent) : QObject (parent),
-    config(config), z_value(z), tileDisplaySize(displaySize)
+    config(config), z_value(z), alpha(1), visibility(true), tileDisplaySize(displaySize)
 {
     if(tileDisplaySize == 0) {
         tileDisplaySize = config.tileSize;
@@ -65,7 +65,7 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
     TileItem* tile = getValidTile(t);
     TileItem* tileObj = getTile(tObj);
 
-    if(t.zoom() < config.zoomMin) {  // no bigger tile
+    if(t.zoom() < config.zoomMin - 1) {  // no bigger tile
         tile->setRequestStatus(TILE_ERROR);
         return;
     }
@@ -335,6 +335,24 @@ void TileProvider::setopacity(qreal a) {
         }
         if(tile->isInScene()) {
             tile->setOpacity(alpha);
+        }
+    }
+}
+
+void TileProvider::setVisible(bool v) {
+    if(visibility == v) {
+        return;
+    }
+    visibility = v;
+    //TODO improve iterator usability (make a C++ standard one)
+    TileIterator iter(motherTile);
+    while(true) {
+        TileItem* tile = iter.next();
+        if(tile == nullptr) {
+            break;
+        }
+        if(tile->isInScene()) {
+            tile->setVisible(visibility);
         }
     }
 }

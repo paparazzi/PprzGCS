@@ -16,11 +16,13 @@ class Map2D : public QGraphicsView
 {
     Q_OBJECT
 public:
-    explicit Map2D(QWidget *parent = nullptr);
+    explicit Map2D(QString configFile, QWidget *parent = nullptr);
     void centerLatLon(Point2DLatLon latLon);
     void toggleTileProvider(QString providerName, bool enable, int zValue = 0, qreal opacity = 1);
     std::map<QString, TileProviderConfig*>* tileProviders() {return &sourceConfigs;}
     void updateTiles();
+    int zoomLevel() {return static_cast<int>(ceil(zoom));}
+    void setZoom(double z);
 
 signals:
 
@@ -32,6 +34,8 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
 
+    QGraphicsScene* scene;
+
 private slots:
     void handleTile(TileItem*, TileItem*);
 
@@ -42,12 +46,10 @@ private:
     QPointF scenePoint(Point2DTile tilePoint);
     QPointF scenePoint(Point2DLatLon latlon, int zoomLvl);
 
-    int zoomLevel() {return static_cast<int>(ceil(zoom));}
+
 
     static constexpr double NUMERIC_ZOOM_FACTOR = 0.3;
     void loadConfig(QString filename);
-
-    QGraphicsScene* scene;
 
     double numericZoom;
     double zoom;

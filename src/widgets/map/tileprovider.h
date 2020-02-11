@@ -51,6 +51,8 @@ public:
     void setZValue(int z);
     qreal opacity() {return alpha;}
     void setopacity(qreal a);
+    bool isVisible() {return visibility;}
+    void setVisible(bool v);
 
 
     TileProviderConfig getConfig() {return config;}
@@ -65,18 +67,18 @@ private slots:
 private:
     void downloadTile(TileItem* tile, TileItem* tileObj);
     void sendTile(TileItem* tileReady, TileItem* tileObj);
+    std::string tilePath(Point2DTile);
+    QUrl tileUrl(Point2DTile);
+    bool load_tile_from_disk(TileItem*);
 
     TileProviderConfig config;
     int z_value;
     qreal alpha;
+    bool visibility;
 
     /// All displayed tiles must have the same size across tilesProviders
     /// for the coordinates to be aligned
     int tileDisplaySize;
-
-    std::string tilePath(Point2DTile);
-    QUrl tileUrl(Point2DTile);
-    bool load_tile_from_disk(TileItem*);
 
     TileItem* motherTile;
     QNetworkAccessManager* manager;
