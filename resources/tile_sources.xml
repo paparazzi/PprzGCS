@@ -15,5 +15,21 @@
 	    tileSize="256"
 	    format=".jpg"
 	/>
+        <source
+            name="ICAO" dir="ICAO"
+            addr="https://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI&amp;style=normal&amp;tilematrixset=PM&amp;Service=WMTS&amp;Request=GetTile&amp;Version=1.0.0&amp;Format=image%2Fjpeg&amp;TileMatrix=%d&amp;TileCol=%d&amp;TileRow=%d"
+            posZoom="0" posX="1" posY="2"
+            zoomMin="10" zoomMax="14"
+            tileSize="256"
+            format=".jpeg"
+        />
+        <source
+            name="OpenStreetMap" dir="OSM_CLASSIC"
+            addr="http://tile.openstreetmap.org/%d/%d/%d.png"
+            posZoom="0" posX="1" posY="2"
+            zoomMin="0" zoomMax="19"
+            tileSize="256"
+            format=".png"
+        />
 </sources>
 
