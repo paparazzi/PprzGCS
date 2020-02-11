@@ -12,7 +12,7 @@
 Map2D::Map2D(QString configFile, QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(5.0), tileSize(256), minZoom(0.0), maxZoom(21.0)
 {
     loadConfig(configFile);
-    int maxxy = 1 << static_cast<int>(maxZoom);
+    qreal maxxy = pow(2, maxZoom);
 
     scene = new QGraphicsScene(-500, -500, tileSize*maxxy, tileSize*maxxy, parent);
     setScene(scene);
