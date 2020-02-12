@@ -30,7 +30,7 @@ class TileProvider : public QObject
 {
     Q_OBJECT
 public:
-    explicit TileProvider(TileProviderConfig config, int z = 0, int tileDisplaySize = 0, QObject *parent = nullptr);
+    explicit TileProvider(TileProviderConfig config, int z, int tileDisplaySize, QString tiles_path, QObject *parent = nullptr);
     void fetch_tile(Point2DTile t, Point2DTile tObj);
 
     ///
@@ -53,6 +53,7 @@ public:
     void setopacity(qreal a);
     bool isVisible() {return visibility;}
     void setVisible(bool v);
+    void setTilesPath(QString path) {tiles_path = path;}
 
 
     TileProviderConfig getConfig() {return config;}
@@ -67,7 +68,7 @@ private slots:
 private:
     void downloadTile(TileItem* tile, TileItem* tileObj);
     void sendTile(TileItem* tileReady, TileItem* tileObj);
-    std::string tilePath(Point2DTile);
+    QString tilePath(Point2DTile);
     QUrl tileUrl(Point2DTile);
     bool load_tile_from_disk(TileItem*);
 
@@ -79,6 +80,8 @@ private:
     /// All displayed tiles must have the same size across tilesProviders
     /// for the coordinates to be aligned
     int tileDisplaySize;
+
+    QString tiles_path;
 
     TileItem* motherTile;
     QNetworkAccessManager* manager;

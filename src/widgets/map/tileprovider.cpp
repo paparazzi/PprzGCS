@@ -13,10 +13,8 @@
 #include <QGraphicsScene>
 #include <QDebug>
 
-static const char tilesPath[] = "/home/fabien/DEV/test_qt/PprzGCS/data/map";
-
-TileProvider::TileProvider(TileProviderConfig config, int z, int displaySize, QObject *parent) : QObject (parent),
-    config(config), z_value(z), alpha(1), visibility(true), tileDisplaySize(displaySize)
+TileProvider::TileProvider(TileProviderConfig config, int z, int displaySize, QString tiles_path, QObject *parent) : QObject (parent),
+    config(config), z_value(z), alpha(1), visibility(true), tileDisplaySize(displaySize), tiles_path(tiles_path)
 {
     if(tileDisplaySize == 0) {
         tileDisplaySize = config.tileSize;
@@ -30,12 +28,13 @@ TileProvider::TileProvider(TileProviderConfig config, int z, int displaySize, QO
     connect(manager, &QNetworkAccessManager::finished, this, &TileProvider::handleReply);
 }
 
-std::string TileProvider::tilePath(Point2DTile coor) {
-    std::string path = std::string(tilesPath) + "/" + config.dir.toStdString()+ "/" +
-        std::to_string(coor.zoom()) +
-        "/X" + std::to_string(coor.xi()) +
-        "_Y" + std::to_string(coor.yi()) + config.format.toStdString();
-
+QString TileProvider::tilePath(Point2DTile coor) {
+    if(tiles_path == QString()) {
+        throw std::runtime_error("Tiles path not set!");
+    }
+    QString path = tiles_path + "/" + config.dir + "/" +
+            QString::number(coor.zoom()) + "/X" + QString::number(coor.xi()) +
+            "_Y" + QString::number(coor.yi()) + config.format;
     return path;
 }
 
@@ -196,9 +195,9 @@ void TileProvider::handleReply(QNetworkReply *reply) {
     TileItem* tileObj = l.takeFirst().value<TileItem*>();
 
     if(reply->error() == QNetworkReply::NetworkError::NoError) {
-        std::string path = tilePath(tileCur->coordinates());
-        QFile file(path.c_str());
-        QFileInfo fi(path.c_str());
+        QString path = tilePath(tileCur->coordinates());
+        QFile file(path);
+        QFileInfo fi(path);
         QDir dirName = fi.dir();
         if(!dirName.exists()) {
             dirName.mkpath(dirName.path());
@@ -239,11 +238,11 @@ void TileProvider::handleReply(QNetworkReply *reply) {
 
 
 bool TileProvider::load_tile_from_disk(TileItem* item) {
-    std::string path = tilePath(item->coordinates());
-    std::ifstream f(path);
+    QString path = tilePath(item->coordinates());
+    std::ifstream f(path.toStdString());
     if(f.good()) {
         // tile found on disk
-        QPixmap pixmap(path.c_str());
+        QPixmap pixmap(path);
         item->setPixmap(pixmap.scaled(tileDisplaySize, tileDisplaySize));
         item->setRequestStatus(TILE_OK);
         return true;

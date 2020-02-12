@@ -26,6 +26,20 @@ public:
     int zoomLevel() {return static_cast<int>(ceil(_zoom));}
     void setZoom(double z);
 
+    ///
+    /// \brief setTilesPath set directory under which tiles are stored for all tiles providers
+    /// \param path
+    ///
+    void setTilesPath(QString path);
+
+    ///
+    /// \brief setTilesPath set directory under which tiles are stored for a specific tiles providers
+    /// \param path
+    /// \param providerName
+    /// \return
+    ///
+    bool setTilesPath(QString path, QString providerName);
+
 signals:
 
 public slots:
@@ -44,6 +58,8 @@ protected:
 
     QGraphicsScene* _scene;
 
+
+
 private slots:
     void handleTile(TileItem*, TileItem*);
 
@@ -56,6 +72,7 @@ private:
     int tileSize;
     double minZoom;
     double maxZoom;
+    QString tiles_path;
 
     std::map<QString, TileProviderConfig*> sourceConfigs;
     std::map<QString, TileProvider*> tile_providers;

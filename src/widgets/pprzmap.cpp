@@ -16,7 +16,7 @@ PprzMap::PprzMap(QWidget *parent) :
 
     ui->map->setZoom(17);
     ui->map->centerLatLon(Point2DLatLon(43.462344,1.273044));
-
+    ui->map->setTilesPath(QString("/home/fabien/DEV/test_qt/PprzGCS/data/map"));
     auto tileProviders = ui->map->tileProvidersNames();
     if(tileProviders.length() > 0) {
 
@@ -37,17 +37,12 @@ PprzMap::PprzMap(QWidget *parent) :
             ui->tileSourcesButton->menu()->addAction(a);
             connect(a,SIGNAL(toggled(bool)),this,SLOT(toggleTileProvider(bool)));
         }
-
-
     }
-
-
 }
 
 void PprzMap::toggleTileProvider(bool trig) {
     QAction* a = qobject_cast<QAction*>(QObject::sender());
     if(a != nullptr) {
-        std::cout << a->text().toStdString() << " : " << trig << std::endl;
         ui->map->toggleTileProvider(a->text(), trig, 10, 0.3);
         ui->map->updateTiles();
     }
