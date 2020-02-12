@@ -8,17 +8,22 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), pa
 {
 }
 
-void MapWidget::addCircle(Point2DLatLon latlon, int size) {
-    QGraphicsEllipseItem *circle = new QGraphicsEllipseItem(- size/2,- size/2, size, size);
-     circle->setBrush(QBrush(Qt::red));
+void MapWidget::addItem(QGraphicsItem* graphicItem, Point2DLatLon latlon, int zValue, double zoomFactor) {
+    MapItem* map_item = new MapItem(graphicItem, latlon);
+    QPointF point = scenePoint(latlon, zoomLevel());
+    map_item->setPos(point);
+    map_item->setScale(1/scaleFactor());
+    scene()->addItem(map_item);
+    map_item->setZValue(zValue);
+    map_item->setZoomFactor(zoomFactor);
+    map_item->scaleToZoom(zoom(), scaleFactor());
+    _items.append(map_item);
+}
 
-     MapItem* item = new MapItem(circle, latlon);
-     QPointF point = scenePoint(latlon, zoomLevel());
-     item->setPos(point);
-     item->setScale(1/scaleFactor());
-     scene()->addItem(item);
-     item->setZValue(30);
-     _items.append(item);
+void MapWidget::addCircle(Point2DLatLon latlon, int size, QBrush brush) {
+    QGraphicsEllipseItem *circle = new QGraphicsEllipseItem(- size/2,- size/2, size, size);
+    circle->setBrush(brush);
+     addItem(circle, latlon, 10, 1.15);
 }
 
 void MapWidget::mousePressEvent(QMouseEvent *event) {
@@ -35,6 +40,6 @@ void MapWidget::wheelEvent(QWheelEvent* event) {
     for(auto item: _items) {
         QPointF point = scenePoint(item->position(), zoomLevel());
         item->setPos(point);
-        item->setScale(1/scaleFactor());
+        item->scaleToZoom(zoom(), scaleFactor());
     }
 }

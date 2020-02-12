@@ -12,7 +12,9 @@ class MapWidget : public Map2D
 public:
     explicit MapWidget(QWidget *parent = nullptr);
 
-    void addCircle(Point2DLatLon latlon, int size);
+    void addItem(QGraphicsItem* graphicItem, Point2DLatLon latlon, int zValue = 10, double zoomFactor = 1);
+
+    void addCircle(Point2DLatLon latlon, int size, QBrush brush = QBrush(Qt::red));
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event);
