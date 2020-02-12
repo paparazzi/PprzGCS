@@ -20,8 +20,9 @@ public:
     void centerLatLon(Point2DLatLon latLon);
     void toggleTileProvider(QString providerName, bool enable, int zValue = 0, qreal opacity = 1);
     std::map<QString, TileProviderConfig*>* tileProviders() {return &sourceConfigs;}
+    QList<QString> tileProvidersNames();
     void updateTiles();
-    float zoom() {return _zoom;}
+    double zoom() {return _zoom;}
     int zoomLevel() {return static_cast<int>(ceil(_zoom));}
     void setZoom(double z);
 

@@ -14,29 +14,34 @@ PprzMap::PprzMap(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    auto tileProviders = ui->map->tileProviders();
-
     ui->map->setZoom(17);
     ui->map->centerLatLon(Point2DLatLon(43.462344,1.273044));
 
-    QString default_provider = tileProviders->begin()->first;
-    if(tileProviders->find(QString("Google")) != tileProviders->end()) {
-        default_provider = QString("Google");
-    }
-    ui->map->toggleTileProvider(default_provider, true, 0, 1);
+    auto tileProviders = ui->map->tileProvidersNames();
+    if(tileProviders.length() > 0) {
 
-
-    ui->tileSourcesButton->setMenu(new QMenu);
-
-    for(auto conf: *tileProviders) {
-        QAction* a = new QAction(conf.first);
-        a->setCheckable(true);
-        if(conf.first == default_provider) {
-            a->setChecked(true);
+        QString default_provider = tileProviders[0];
+        if(tileProviders.contains(QString("Google"))) {
+            default_provider = QString("Google");
         }
-        ui->tileSourcesButton->menu()->addAction(a);
-        connect(a,SIGNAL(toggled(bool)),this,SLOT(toggleTileProvider(bool)));
+        ui->map->toggleTileProvider(default_provider, true, 0, 1);
+
+
+        ui->tileSourcesButton->setMenu(new QMenu);
+        for(auto name: tileProviders) {
+            QAction* a = new QAction(name);
+            a->setCheckable(true);
+            if(name == default_provider) {
+                a->setChecked(true);
+            }
+            ui->tileSourcesButton->menu()->addAction(a);
+            connect(a,SIGNAL(toggled(bool)),this,SLOT(toggleTileProvider(bool)));
+        }
+
+
     }
+
+
 }
 
 void PprzMap::toggleTileProvider(bool trig) {

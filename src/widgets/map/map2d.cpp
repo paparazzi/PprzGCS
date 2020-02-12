@@ -151,7 +151,7 @@ void Map2D::wheelEvent(QWheelEvent* event) {
 
 void Map2D::setZoom(double z) {
     QPointF center = mapToScene(QPoint(width()/2, height()/2));
-    Point2DLatLon latLon(tilePoint(center, _zoom));
+    Point2DLatLon latLon(tilePoint(center, zoomLevel()));
     _zoom = z;
     updateTiles();
     centerLatLon(latLon);
@@ -216,6 +216,14 @@ void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {
     } else {
         std::cout << "WHAAAAT ? Why I am receiving this signal but I have no data ?" << std::endl;
     }
+}
+
+QList<QString> Map2D::tileProvidersNames() {
+    QList<QString> names;
+    for(auto tp:sourceConfigs) {
+        names.append(tp.first);
+    }
+    return names;
 }
 
 Point2DTile Map2D::tilePoint(QPointF scenePos, int zoom) {
