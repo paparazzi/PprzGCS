@@ -9,13 +9,13 @@
 #include <QFile>
 #include "utils.h"
 
-Map2D::Map2D(QString configFile, QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), zoom(5.0), tileSize(256), minZoom(0.0), maxZoom(21.0)
+Map2D::Map2D(QString configFile, QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), _zoom(5.0), tileSize(256), minZoom(0.0), maxZoom(25.0)
 {
     loadConfig(configFile);
     qreal maxxy = pow(2, maxZoom);
 
-    scene = new QGraphicsScene(-500, -500, tileSize*maxxy, tileSize*maxxy, parent);
-    setScene(scene);
+    _scene = new QGraphicsScene(-500, -500, tileSize*maxxy, tileSize*maxxy, parent);
+    setScene(_scene);
 
     setDragMode(QGraphicsView::ScrollHandDrag);
     setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
@@ -113,18 +113,18 @@ void Map2D::wheelEvent(QWheelEvent* event) {
     int curZoom = zoomLevel();
 
     if(event->delta() > 0) {
-        zoom += 0.5;
+        _zoom += 0.5;
     } else {
-        zoom -= 0.5;
+        _zoom -= 0.5;
     }
-    zoom = clamp(zoom, minZoom, maxZoom);
+    _zoom = clamp(_zoom, minZoom, maxZoom);
 
     // save initial numericZoom
     double  numZoomIni = numericZoom;
 
     // for tileProvider in tileProviders...
     int nextZoomLevel = zoomLevel();
-    numericZoom = zoom - nextZoomLevel;
+    numericZoom = _zoom - nextZoomLevel;
 
     double scaleFactor = pow(2, numericZoom) / pow(2, numZoomIni);
 
@@ -151,8 +151,8 @@ void Map2D::wheelEvent(QWheelEvent* event) {
 
 void Map2D::setZoom(double z) {
     QPointF center = mapToScene(QPoint(width()/2, height()/2));
-    Point2DLatLon latLon(tilePoint(center, zoom));
-    zoom = z;
+    Point2DLatLon latLon(tilePoint(center, _zoom));
+    _zoom = z;
     updateTiles();
     centerLatLon(latLon);
 }
@@ -199,7 +199,7 @@ void Map2D::updateTiles() {
 void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {
     if(tileReady->hasData()){
         if(!tileObj->isInScene()) {    // Not in scene, so lets add it
-            scene->addItem(tileObj);
+            _scene->addItem(tileObj);
             tileObj->setInScene(true);
         }
         if(!tileObj->isVisible()) {    // in scene but hidden, lets show it. TODO: what if this slot is called just atfer a zoom change ?

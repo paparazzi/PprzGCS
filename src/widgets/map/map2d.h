@@ -21,7 +21,8 @@ public:
     void toggleTileProvider(QString providerName, bool enable, int zValue = 0, qreal opacity = 1);
     std::map<QString, TileProviderConfig*>* tileProviders() {return &sourceConfigs;}
     void updateTiles();
-    int zoomLevel() {return static_cast<int>(ceil(zoom));}
+    float zoom() {return _zoom;}
+    int zoomLevel() {return static_cast<int>(ceil(_zoom));}
     void setZoom(double z);
 
 signals:
@@ -33,26 +34,22 @@ protected:
     virtual void wheelEvent(QWheelEvent* event);
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
+    Point2DTile tilePoint(QPointF scenePos, int _zoom);
+    QPointF scenePoint(Point2DTile tilePoint);
+    QPointF scenePoint(Point2DLatLon latlon, int zoomLvl);
+    double scaleFactor() {return pow(2, _zoom - zoomLevel());}
 
-    QGraphicsScene* scene;
+    QGraphicsScene* _scene;
 
 private slots:
     void handleTile(TileItem*, TileItem*);
 
 
 private:
-
-    Point2DTile tilePoint(QPointF scenePos, int zoom);
-    QPointF scenePoint(Point2DTile tilePoint);
-    QPointF scenePoint(Point2DLatLon latlon, int zoomLvl);
-
-
-
-    static constexpr double NUMERIC_ZOOM_FACTOR = 0.3;
     void loadConfig(QString filename);
 
     double numericZoom;
-    double zoom;
+    double _zoom;
     int tileSize;
     double minZoom;
     double maxZoom;
