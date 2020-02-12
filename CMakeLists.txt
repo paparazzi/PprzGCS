@@ -30,6 +30,7 @@ set(SOURCE
     src/widgets/ac_selector.ui
     src/widgets/ac_selector.cpp
     src/widgets/pprzmap.cpp
+    src/widgets/map/mapitem.cpp
     src/widgets/pprzmap.ui
     src/widgets/map/tileprovider.cpp
     src/widgets/map/tileproviderconfig.cpp

@@ -230,3 +230,11 @@ QPointF Map2D::scenePoint(Point2DLatLon latlon, int zoomLvl) {
     Point2DTile tile_pos = Point2DTile(latlon, zoomLvl);
     return scenePoint(tile_pos);
 }
+
+Point2DLatLon Map2D::latlonPoint(QPointF scenePos, int zoom) {
+    return Point2DLatLon(tilePoint(scenePos, zoom));
+}
+
+Point2DLatLon Map2D::latlonFromView(QPoint viewPos, int zoom) {
+    return Point2DLatLon(tilePoint(mapToScene(viewPos), zoom));
+}

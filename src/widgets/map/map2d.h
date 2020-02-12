@@ -34,9 +34,11 @@ protected:
     virtual void wheelEvent(QWheelEvent* event);
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
-    Point2DTile tilePoint(QPointF scenePos, int _zoom);
+    Point2DTile tilePoint(QPointF scenePos, int zoom);
     QPointF scenePoint(Point2DTile tilePoint);
     QPointF scenePoint(Point2DLatLon latlon, int zoomLvl);
+    Point2DLatLon latlonPoint(QPointF scenePos, int zoom);
+    Point2DLatLon latlonFromView(QPoint viewPos, int zoom);
     double scaleFactor() {return pow(2, _zoom - zoomLevel());}
 
     QGraphicsScene* _scene;
