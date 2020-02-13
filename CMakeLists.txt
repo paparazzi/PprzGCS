@@ -37,9 +37,9 @@ set(SOURCE
     src/widgets/map/tileitem.cpp
     src/widgets/map/map2d.cpp
     src/widgets/map/mapwidget.cpp
+    src/widgets/basics/imagebutton.cpp
     src/layout_builder.cpp
     src/pprz_dispatcher.cpp
-    #src/pprzmain.ui
     src/pprzmain.cpp
     src/dispatcher_ui.cpp
     src/geometry/coordinates.cpp
@@ -52,6 +52,7 @@ include_directories(src
         src/widgets
         src/geometry
         src/widgets/map/
+        src/widgets/basics/
 )
 
 #set(HEADERS
