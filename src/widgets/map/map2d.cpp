@@ -38,7 +38,7 @@ void Map2D::toggleTileProvider(QString providerName, bool enable, int zValue, qr
                 tileSize = sourceConfigs[providerName]->tileSize;
             }
             tile_providers[providerName] = new TileProvider(*sourceConfigs[providerName], zValue, tileSize, tiles_path, this);
-            tile_providers[providerName]->setopacity(opacity);
+            tile_providers[providerName]->setOpacity(opacity);
             connect(tile_providers[providerName], SIGNAL(displayTile(TileItem*, TileItem*)), this, SLOT(handleTile(TileItem*, TileItem*)));
         }
     }
@@ -48,6 +48,18 @@ void Map2D::toggleTileProvider(QString providerName, bool enable, int zValue, qr
         } else {
             throw std::runtime_error("Can't desactivate something that don't exists!");
         }
+    }
+}
+
+void Map2D::setLayerOpacity(QString providerName, qreal opacity) {
+    if(tile_providers.find(providerName) != tile_providers.end()) {
+        tile_providers[providerName]->setOpacity(opacity);
+    }
+}
+
+void Map2D::setLayerZ(QString providerName, int z) {
+    if(tile_providers.find(providerName) != tile_providers.end()) {
+        tile_providers[providerName]->setZValue(z);
     }
 }
 

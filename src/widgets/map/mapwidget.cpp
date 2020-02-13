@@ -27,22 +27,45 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), pa
     );
     columnLeft->addWidget(layers_button);
 
+
+
+    setZoom(17);
+    centerLatLon(Point2DLatLon(43.462344,1.273044));
+    setTilesPath(qApp->property("APP_DATA_PATH").toString() + "/map");
+    int i = tileProvidersNames().length();
     for(auto tp: tileProvidersNames() ) {
-        addLayerControl(tp);
+        bool shown = false;
+        if(tp == "Google") {
+            toggleTileProvider(tp, true, i, 1);
+            shown = true;
+        }
+        addLayerControl(tp, shown);
+        map_layer_controls[tp]->setZValue(i--);
     }
+
+    setZoom(17);
+    centerLatLon(Point2DLatLon(43.462344,1.273044));
 }
 
-void MapWidget::addLayerControl(QString name) {
+void MapWidget::addLayerControl(QString name, bool initialState) {
     QString path = qApp->property("APP_DATA_PATH").toString() + "/pictures/" + name + ".png";
     QPixmap thumbnail = QPixmap(path);
-    MapLayerControl* layer_control = new MapLayerControl(name, thumbnail, widgetTabLeft);
+    MapLayerControl* layer_control = new MapLayerControl(name, thumbnail, initialState, widgetTabLeft);
+    map_layer_controls[name] = layer_control;
     layoutTabLeft->addWidget(layer_control);
 
     connect(
         layer_control, &MapLayerControl::showLayer,
         [=](bool state) {
-            this->toggleTileProvider(name, state, 2);
-            this->update();
+            this->toggleTileProvider(name, state, layer_control->zValue(), layer_control->opacity());
+            this->updateTiles();
+        }
+    );
+
+    connect(
+        layer_control, &MapLayerControl::layerOpacityChanged,
+        [=](qreal opacity) {
+            this->setLayerOpacity(name, opacity);
         }
     );
 }
@@ -62,7 +85,6 @@ void MapWidget::setupUi() {
     horizontalLayout->addWidget(leftScrollArea);
     // mysterious magic to make the scrollArea semi-transparent
     QPalette pal;
-    //pal.setColor(QPalette::Window,QColor(11, 107, 167, 100));
     pal.setColor(QPalette::Window,QColor(74, 169, 228, 100));
     leftScrollArea->setPalette(pal);
     leftScrollArea->setBackgroundRole(QPalette::Window);

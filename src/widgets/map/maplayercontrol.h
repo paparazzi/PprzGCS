@@ -11,14 +11,19 @@ class MapLayerControl : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MapLayerControl(QString name, QPixmap pixmap, QWidget *parent = nullptr);
+    explicit MapLayerControl(QString name, QPixmap pixmap, bool initialState, QWidget *parent = nullptr);
 
     void setShowState(bool state);
+    void setOpacitySlider(qreal opacity);
+    qreal opacity() {return static_cast<qreal>(opacitySlider->value())/opacitySlider->maximum();}
+    int zValue() {return z_value;}
+    void setZValue(int z) {z_value = z;}
 
     //ImageButton* button() {return show_button;}
 
 signals:
     void showLayer(bool);
+    void layerOpacityChanged(qreal);
 
 public slots:
 
@@ -32,6 +37,7 @@ private:
     ImageButton *show_button;
 
     bool showState;
+    int z_value;
 };
 
 #endif // MAPLAYERCONTROL_H

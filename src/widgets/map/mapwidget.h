@@ -10,7 +10,7 @@
 #include "map2d.h"
 #include "mapitem.h"
 #include "tileprovider.h"
-//#include "tileproviderconfig.h"
+#include "maplayercontrol.h"
 
 class MapWidget : public Map2D
 {
@@ -22,7 +22,7 @@ public:
 
     void addCircle(Point2DLatLon latlon, int size, QBrush brush = QBrush(Qt::red));
 
-    void addLayerControl(QString name);
+    void addLayerControl(QString name, bool initialState = false);
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event);
@@ -39,6 +39,8 @@ private:
     QVBoxLayout* columnRight;
     QSpacerItem* spacer;
     QScrollArea* leftScrollArea;
+
+    std::map<QString, MapLayerControl*> map_layer_controls;
 
 signals:
 

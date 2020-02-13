@@ -4,7 +4,8 @@
 #include <QPaintEvent>
 
 
-MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, QWidget *parent) : QWidget(parent)
+MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState, QWidget *parent) : QWidget(parent),
+    showState(initialState), z_value(0)
 {
     verticalLayout = new QVBoxLayout(this);
     verticalLayout->setSpacing(0);
@@ -19,7 +20,12 @@ MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, QWidget *parent) 
     verticalLayout->setAlignment(imageLabel, Qt::AlignHCenter);
     imageLabel->setPixmap(pixmap);
 
-    show_button = new ImageButton(QIcon(":/pictures/show"), QSize(60, 60), false, imageLabel);
+    QIcon icon(":/pictures/show");
+    if(showState) {
+        icon = QIcon(":/pictures/hide");
+    }
+
+    show_button = new ImageButton(icon, QSize(60, 60), false, imageLabel);
     QVBoxLayout* image_layout = new QVBoxLayout(imageLabel);
     image_layout->addWidget(show_button);
     connect(
@@ -29,9 +35,16 @@ MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, QWidget *parent) 
         });
 
     opacitySlider = new QSlider(Qt::Horizontal, this);
+    opacitySlider->setValue(opacitySlider->maximum());
     verticalLayout->addWidget(opacitySlider);
     //verticalLayout->setAlignment(opacitySlider, Qt::AlignHCenter);
     //opacitySlider->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    connect(
+        opacitySlider, &QSlider::valueChanged,
+        [=](int value) {
+            (void) value;
+            emit(layerOpacityChanged(opacity()));
+        });
 
 }
 
@@ -43,6 +56,12 @@ void MapLayerControl::setShowState(bool state) {
     } else {
         show_button->setNormalIcon(QIcon(":/pictures/show"));
     }
+}
+
+void MapLayerControl::setOpacitySlider(qreal opacity) {
+    opacity = qMax(0., qMin(opacity, 1.));
+    int value = static_cast<int>(opacity * opacitySlider->maximum());
+    opacitySlider->setValue(value);
 }
 
 void MapLayerControl::toggleShowState() {

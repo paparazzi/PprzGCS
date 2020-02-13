@@ -323,7 +323,7 @@ void TileProvider::setZValue(int z) {
     }
 }
 
-void TileProvider::setopacity(qreal a) {
+void TileProvider::setOpacity(qreal a) {
     alpha = a;
     //TODO improve iterator usability (make a C++ standard one)
     TileIterator iter(motherTile);

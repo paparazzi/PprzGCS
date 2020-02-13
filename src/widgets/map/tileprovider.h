@@ -50,7 +50,7 @@ public:
     int zValue() {return z_value;}
     void setZValue(int z);
     qreal opacity() {return alpha;}
-    void setopacity(qreal a);
+    void setOpacity(qreal a);
     bool isVisible() {return visibility;}
     void setVisible(bool v);
     void setTilesPath(QString path) {tiles_path = path;}

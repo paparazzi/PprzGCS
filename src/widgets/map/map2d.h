@@ -26,6 +26,9 @@ public:
     int zoomLevel() {return static_cast<int>(ceil(_zoom));}
     void setZoom(double z);
 
+    void setLayerOpacity(QString providerName, qreal opacity);
+    void setLayerZ(QString providerName, int z);
+
     ///
     /// \brief setTilesPath set directory under which tiles are stored for all tiles providers
     /// \param path
