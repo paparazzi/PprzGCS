@@ -15,11 +15,6 @@ PprzMain::PprzMain(int width, int height, QWidget* centralWidget, QWidget *paren
     //connect(ui->select_btn, SIGNAL(clicked()), this, SLOT(select_ac()));
 }
 
-//void PprzMain::setupUi(int width, int height, QWidget* centralWidget) {
-//    centralWidget->setParent(this);
-//    ui->setupUi(this, width, height, centralWidget);
-//}
-
 PprzMain::~PprzMain()
 {
     delete ui;

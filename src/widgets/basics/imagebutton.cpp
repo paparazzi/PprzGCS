@@ -5,14 +5,16 @@
 #include <QPixmap>
 #include <QBitmap>
 
-ImageButton::ImageButton(QIcon normal, QSize size, QWidget *parent) : QPushButton(parent)
+ImageButton::ImageButton(QIcon normal, QSize size, bool mask, QWidget *parent) : QPushButton(parent)
 {
     icon_normal = normal;
     setIcon(icon_normal);
     setIconSize(size);
 
-    QPixmap p = icon().pixmap(iconSize());
-    setMask(p.mask());
+    if(mask) {
+        QPixmap p = icon().pixmap(iconSize());
+        setMask(p.mask());
+    }
 }
 
 void ImageButton::enterEvent(QEvent* e) {

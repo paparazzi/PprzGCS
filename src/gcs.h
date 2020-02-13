@@ -10,7 +10,6 @@
 class Gcs
 {
 public:
-    QWidget *centralWidget;
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;

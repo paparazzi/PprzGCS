@@ -9,8 +9,9 @@ class ImageButton : public QPushButton
 {
     Q_OBJECT
 public:
-    explicit ImageButton(QIcon normal, QSize size, QWidget *parent = nullptr);
+    explicit ImageButton(QIcon normal, QSize size, bool mask, QWidget *parent = nullptr);
 
+    void setNormalIcon(QIcon ic) {icon_normal = ic;}
     void setHoverIcon(QIcon ic) {icon_hover = ic;}
     void setPressedIcon(QIcon ic) {icon_pressed = ic;}
 

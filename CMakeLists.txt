@@ -37,6 +37,7 @@ set(SOURCE
     src/widgets/map/tileitem.cpp
     src/widgets/map/map2d.cpp
     src/widgets/map/mapwidget.cpp
+    src/widgets/map/maplayercontrol.cpp
     src/widgets/basics/imagebutton.cpp
     src/layout_builder.cpp
     src/pprz_dispatcher.cpp
@@ -48,11 +49,12 @@ set(SOURCE
     resources/ressources.qrc
 )
 
-include_directories(src
-        src/widgets
-        src/geometry
-        src/widgets/map/
-        src/widgets/basics/
+include_directories(
+    src/
+    src/widgets/
+    src/geometry/
+    src/widgets/map/
+    src/widgets/basics/
 )
 
 #set(HEADERS

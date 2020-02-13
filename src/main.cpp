@@ -8,6 +8,8 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
+    a.setProperty("APP_DATA_PATH", "/home/fabien/DEV/test_qt/PprzGCS/data");
+
 //    QNetworkProxy proxy;
 //    proxy.setType(QNetworkProxy::DefaultProxy);
 //    proxy.setHostName("http://proxy");
