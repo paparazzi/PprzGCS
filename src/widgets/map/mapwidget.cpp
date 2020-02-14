@@ -40,7 +40,7 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), pa
             shown = true;
         }
         addLayerControl(tp, shown);
-        map_layer_controls[tp]->setZValue(i--);
+        layer_tab->layerControl(tp)->setZValue(i--);
     }
 
     setZoom(17);
@@ -50,9 +50,10 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), pa
 void MapWidget::addLayerControl(QString name, bool initialState) {
     QString path = qApp->property("APP_DATA_PATH").toString() + "/pictures/" + name + ".png";
     QPixmap thumbnail = QPixmap(path);
-    MapLayerControl* layer_control = new MapLayerControl(name, thumbnail, initialState, widgetTabLeft);
-    map_layer_controls[name] = layer_control;
-    layoutTabLeft->addWidget(layer_control);
+    MapLayerControl* layer_control = new MapLayerControl(name, thumbnail, initialState, layer_tab);
+    layer_tab->addLayerControl(name, layer_control);
+    //map_layer_controls[name] = layer_control;
+    //layoutTabLeft->addWidget(layer_control);
 
     connect(
         layer_control, &MapLayerControl::showLayer,
@@ -72,7 +73,7 @@ void MapWidget::addLayerControl(QString name, bool initialState) {
 
 void MapWidget::setupUi() {
     horizontalLayout = new QHBoxLayout(this);   // main layout
-    widgetTabLeft = new QWidget(this);              // widget for the left tab
+    layer_tab = new LayerTab(this);              // widget for the left tab
     columnLeft = new QVBoxLayout();             // left icons column
     columnRight = new QVBoxLayout();            // right icons column
     spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
@@ -81,7 +82,7 @@ void MapWidget::setupUi() {
     leftScrollArea->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     leftScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     leftScrollArea->setWidgetResizable(true);
-    leftScrollArea->setWidget(widgetTabLeft);
+    leftScrollArea->setWidget(layer_tab);
     horizontalLayout->addWidget(leftScrollArea);
     // mysterious magic to make the scrollArea semi-transparent
     QPalette pal;
@@ -95,7 +96,7 @@ void MapWidget::setupUi() {
     horizontalLayout->addItem(spacer);
     horizontalLayout->addLayout(columnRight);
 
-    layoutTabLeft = new QVBoxLayout(widgetTabLeft); // layout for the widgets in the left tab
+    //layoutTabLeft = new QVBoxLayout(widgetTabLeft); // layout for the widgets in the left tab
 
     // start the application with the tabs closed.
     leftScrollArea->hide();

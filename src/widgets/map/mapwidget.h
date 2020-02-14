@@ -11,6 +11,7 @@
 #include "mapitem.h"
 #include "tileprovider.h"
 #include "maplayercontrol.h"
+#include "layertab.h"
 
 class MapWidget : public Map2D
 {
@@ -33,14 +34,11 @@ private:
 
     QList<MapItem*> _items;
     QHBoxLayout* horizontalLayout;
-    QWidget* widgetTabLeft;
-    QVBoxLayout* layoutTabLeft;
+    LayerTab* layer_tab;
     QVBoxLayout* columnLeft;
     QVBoxLayout* columnRight;
     QSpacerItem* spacer;
     QScrollArea* leftScrollArea;
-
-    std::map<QString, MapLayerControl*> map_layer_controls;
 
 signals:
 

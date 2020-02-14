@@ -38,6 +38,7 @@ set(SOURCE
     src/widgets/map/map2d.cpp
     src/widgets/map/mapwidget.cpp
     src/widgets/map/maplayercontrol.cpp
+    src/widgets/map/layertab.cpp
     src/widgets/basics/imagebutton.cpp
     src/layout_builder.cpp
     src/pprz_dispatcher.cpp

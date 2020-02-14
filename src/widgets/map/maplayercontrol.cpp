@@ -25,9 +25,10 @@ MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState
         icon = QIcon(":/pictures/hide");
     }
 
-    show_button = new ImageButton(icon, QSize(60, 60), false, imageLabel);
+    show_button = new ImageButton(icon, QSize(60, 60), true, imageLabel);
     QVBoxLayout* image_layout = new QVBoxLayout(imageLabel);
     image_layout->addWidget(show_button);
+    image_layout->setAlignment(show_button, Qt::AlignHCenter);
     connect(
         show_button, &QPushButton::clicked,
         [=]() {
@@ -71,4 +72,9 @@ void MapLayerControl::toggleShowState() {
         setShowState(true);
     }
     emit(showLayer(showState));
+}
+
+void MapLayerControl::setZValue(int z) {
+    z_value = z;
+    emit(zValueChanged(z));
 }

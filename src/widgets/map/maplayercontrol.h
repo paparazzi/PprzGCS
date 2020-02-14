@@ -17,13 +17,16 @@ public:
     void setOpacitySlider(qreal opacity);
     qreal opacity() {return static_cast<qreal>(opacitySlider->value())/opacitySlider->maximum();}
     int zValue() {return z_value;}
-    void setZValue(int z) {z_value = z;}
+    void setZValue(int z);
+    const QPixmap* pixmap() {return imageLabel->pixmap();}
 
     //ImageButton* button() {return show_button;}
 
 signals:
     void showLayer(bool);
     void layerOpacityChanged(qreal);
+    void zValueChanged(int);
+
 
 public slots:
 
