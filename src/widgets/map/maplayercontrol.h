@@ -11,7 +11,7 @@ class MapLayerControl : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MapLayerControl(QString name, QPixmap pixmap, bool initialState, QWidget *parent = nullptr);
+    explicit MapLayerControl(QString name, QPixmap pixmap, bool initialState, int z, QWidget *parent = nullptr);
 
     void setShowState(bool state);
     void setOpacitySlider(qreal opacity);
@@ -19,6 +19,12 @@ public:
     int zValue() {return z_value;}
     void setZValue(int z);
     const QPixmap* pixmap() {return imageLabel->pixmap();}
+    QString name() {return _name;}
+
+    bool operator <(const MapLayerControl& mlc) const
+    {
+        return (z_value < mlc.z_value);
+    }
 
     //ImageButton* button() {return show_button;}
 
@@ -39,6 +45,7 @@ private:
     QSlider* opacitySlider;
     ImageButton *show_button;
 
+    QString _name;
     bool showState;
     int z_value;
 };

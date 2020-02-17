@@ -39,21 +39,19 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), pa
             toggleTileProvider(tp, true, i, 1);
             shown = true;
         }
-        addLayerControl(tp, shown);
-        layer_tab->layerControl(tp)->setZValue(i--);
+        addLayerControl(tp, shown, i);
+        i--;
     }
 
     setZoom(17);
     centerLatLon(Point2DLatLon(43.462344,1.273044));
 }
 
-void MapWidget::addLayerControl(QString name, bool initialState) {
+void MapWidget::addLayerControl(QString name, bool initialState, int z) {
     QString path = qApp->property("APP_DATA_PATH").toString() + "/pictures/" + name + ".png";
     QPixmap thumbnail = QPixmap(path);
-    MapLayerControl* layer_control = new MapLayerControl(name, thumbnail, initialState, layer_tab);
-    layer_tab->addLayerControl(name, layer_control);
-    //map_layer_controls[name] = layer_control;
-    //layoutTabLeft->addWidget(layer_control);
+    MapLayerControl* layer_control = new MapLayerControl(name, thumbnail, initialState, z, layer_tab);
+    layer_tab->addLayerControl(layer_control);
 
     connect(
         layer_control, &MapLayerControl::showLayer,
@@ -67,6 +65,13 @@ void MapWidget::addLayerControl(QString name, bool initialState) {
         layer_control, &MapLayerControl::layerOpacityChanged,
         [=](qreal opacity) {
             this->setLayerOpacity(name, opacity);
+        }
+    );
+
+    connect(
+        layer_control, &MapLayerControl::zValueChanged,
+        [=](int z) {
+            this->setLayerZ(name, z);
         }
     );
 }

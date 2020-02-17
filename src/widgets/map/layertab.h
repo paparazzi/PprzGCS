@@ -11,9 +11,9 @@ class LayerTab : public QWidget
 public:
     explicit LayerTab(QWidget *parent = nullptr);
 
-    void addLayerControl(QString name, MapLayerControl* layerControl);
+    void addLayerControl(MapLayerControl* layerControl);
     MapLayerControl* layerControl(QString name);
-    std::map<QString, MapLayerControl*>& layerControls() {return map_layer_controls;}
+    QList<MapLayerControl*>& layerControls() {return map_layer_controls;}
 
 protected:
     virtual void mouseMoveEvent(QMouseEvent* e);
@@ -26,7 +26,7 @@ public slots:
 
 private:
     QVBoxLayout* vbox_layout;
-    std::map<QString, MapLayerControl*> map_layer_controls;
+    QList<MapLayerControl*> map_layer_controls;
 
     MapLayerControl* moved_layer_control;
     QPoint press_pos;

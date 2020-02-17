@@ -23,7 +23,7 @@ public:
 
     void addCircle(Point2DLatLon latlon, int size, QBrush brush = QBrush(Qt::red));
 
-    void addLayerControl(QString name, bool initialState = false);
+    void addLayerControl(QString name, bool initialState, int z);
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event);

@@ -4,8 +4,8 @@
 #include <QPaintEvent>
 
 
-MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState, QWidget *parent) : QWidget(parent),
-    showState(initialState), z_value(0)
+MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState, int z, QWidget *parent) : QWidget(parent),
+    _name(name), showState(initialState), z_value(z)
 {
     verticalLayout = new QVBoxLayout(this);
     verticalLayout->setSpacing(0);
@@ -78,3 +78,4 @@ void MapLayerControl::setZValue(int z) {
     z_value = z;
     emit(zValueChanged(z));
 }
+
