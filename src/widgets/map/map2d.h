@@ -11,6 +11,7 @@
 #include <QMap>
 #include <math.h>
 #include <QResizeEvent>
+#include "mapscene.h"
 
 class Map2D : public QGraphicsView
 {
@@ -28,6 +29,8 @@ public:
 
     void setLayerOpacity(QString providerName, qreal opacity);
     void setLayerZ(QString providerName, int z);
+
+    Point2DLatLon latlonPoint(QPointF scenePos, int zoom);
 
     ///
     /// \brief setTilesPath set directory under which tiles are stored for all tiles providers
@@ -55,11 +58,11 @@ protected:
     Point2DTile tilePoint(QPointF scenePos, int zoom);
     QPointF scenePoint(Point2DTile tilePoint);
     QPointF scenePoint(Point2DLatLon latlon, int zoomLvl);
-    Point2DLatLon latlonPoint(QPointF scenePos, int zoom);
     Point2DLatLon latlonFromView(QPoint viewPos, int zoom);
     double scaleFactor() {return pow(2, _zoom - zoomLevel());}
 
-    QGraphicsScene* _scene;
+    //QGraphicsScene* _scene;
+    MapScene* _scene;
 
 
 

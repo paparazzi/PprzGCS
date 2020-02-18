@@ -7,7 +7,6 @@
 #include <iostream>
 #include "pprzmain.h"
 #include "strip.h"
-//#include "map2d.h"
 #include "pprzmap.h"
 #include "ac_selector.h"
 #include <QLabel>

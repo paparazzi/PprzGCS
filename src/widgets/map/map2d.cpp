@@ -14,7 +14,7 @@ Map2D::Map2D(QString configFile, QWidget *parent) : QGraphicsView(parent), numer
     loadConfig(configFile);
     qreal maxxy = pow(2, maxZoom);
 
-    _scene = new QGraphicsScene(-500, -500, tileSize*maxxy, tileSize*maxxy, parent);
+    _scene = new MapScene(-500, -500, tileSize*maxxy, tileSize*maxxy, parent);
     setScene(_scene);
 
     setDragMode(QGraphicsView::ScrollHandDrag);

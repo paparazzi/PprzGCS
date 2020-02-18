@@ -20,27 +20,28 @@ public:
     explicit MapWidget(QWidget *parent = nullptr);
 
     void addItem(QGraphicsItem* graphicItem, Point2DLatLon latlon, int zValue = 10, double zoomFactor = 1);
-
-    void addCircle(Point2DLatLon latlon, int size, QBrush brush = QBrush(Qt::red));
-
     void addLayerControl(QString name, bool initialState, int z);
+
+signals:
+    void rightClick(QMouseEvent *event);
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event);
+    virtual void mouseMoveEvent(QMouseEvent *event);
+    virtual void mouseReleaseEvent(QMouseEvent *event);
     virtual void wheelEvent(QWheelEvent* event);
 
 private:
     void setupUi();
 
     QList<MapItem*> _items;
+
     QHBoxLayout* horizontalLayout;
     LayerTab* layer_tab;
     QVBoxLayout* columnLeft;
     QVBoxLayout* columnRight;
     QSpacerItem* spacer;
     QScrollArea* leftScrollArea;
-
-signals:
 
 };
 

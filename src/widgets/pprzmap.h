@@ -16,7 +16,6 @@ public:
     ~PprzMap();
 
 protected slots:
-    void toggleTileProvider(bool);
 
 private:
     Ui::PprzMap *ui;

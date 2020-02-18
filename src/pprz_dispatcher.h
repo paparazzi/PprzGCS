@@ -2,8 +2,8 @@
 #define DISPATCHER_H
 
 #include <QObject>
-
-class PprzMessage {};
+#include <pprzlink/IvyLink.h>
+#include <memory>
 
 class PprzDispatcher : public QObject
 {
@@ -21,13 +21,17 @@ public:
     }
 
 signals:
-    void gps(PprzMessage);
-    void alive(PprzMessage);
-    void takeoff(PprzMessage);
-    void attitude(PprzMessage);
-    void pprz_mode(PprzMessage);
+    void gps(pprzlink::Message);
+    void alive(pprzlink::Message);
+    void takeoff(pprzlink::Message);
+    void attitude(pprzlink::Message);
+    void pprz_mode(pprzlink::Message);
 
 public slots:
+
+private:
+    std::unique_ptr<pprzlink::MessageDictionary> dict;
+    std::unique_ptr<pprzlink::IvyLink> link;
 
 };
 
