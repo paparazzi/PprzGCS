@@ -46,5 +46,5 @@ void MapScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) {
 }
 
 void MapScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent) {
-
+    (void)mouseEvent;
 }

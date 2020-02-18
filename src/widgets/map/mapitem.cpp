@@ -3,8 +3,6 @@
 #include <QApplication>
 #include <QDebug>
 
-constexpr double MOVE_HYSTERESIS = 100;
-
 MapItem::MapItem(Point2DLatLon pt, QGraphicsItem *parent) : QGraphicsItemGroup(parent),
     move_state(MIS_IDLE), movable(true), latlon(pt), zoom_factor(1), neutral_scale_zoom(15)
 {

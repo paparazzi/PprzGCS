@@ -12,7 +12,7 @@
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::PprzMap)
+    ui(new Ui::PprzMap), drawState(false)
 {
     ui->setupUi(this);
     MapScene* scene = static_cast<MapScene*>(ui->map->scene());
@@ -35,3 +35,20 @@ PprzMap::~PprzMap()
     delete ui;
 }
 
+
+void PprzMap::keyPressEvent(QKeyEvent *event) {
+    (void)event;
+}
+
+void PprzMap::keyReleaseEvent(QKeyEvent *event) {
+    (void)event;
+    if(event->key() == Qt::Key_Space) {
+        if(!drawState) {
+            ui->map->setDragMode(QGraphicsView::NoDrag);
+        } else {
+            ui->map->setDragMode(QGraphicsView::ScrollHandDrag);
+        }
+        drawState = !drawState;
+        qDebug() << "SPAAAAAACE!";
+    }
+}

@@ -171,14 +171,6 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *event) {
     else if (event->button() == Qt::RightButton)   // Right button...
     {
       std::cout << "Right button released" << std::endl;
-//      if(dragMode() == NoDrag) {
-//          setDragMode(QGraphicsView::ScrollHandDrag);
-//      } else if(dragMode() == ScrollHandDrag) {
-//          setDragMode(QGraphicsView::RubberBandDrag);
-//      } else if(dragMode() == RubberBandDrag) {
-//          setDragMode(QGraphicsView::NoDrag);
-//      }
-
     }
     else if (event->button() == Qt::MidButton)   // Middle button...
     {
