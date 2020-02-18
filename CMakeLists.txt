@@ -44,6 +44,9 @@ set(SOURCE
     src/widgets/map/maplayercontrol.cpp
     src/widgets/map/layertab.cpp
     src/widgets/map/mapscene.cpp
+    src/widgets/map/waypointitem.cpp
+    src/widgets/map/maputils.cpp
+    src/widgets/map/circleitem.cpp
     src/widgets/basics/imagebutton.cpp
     src/layout_builder.cpp
     src/pprz_dispatcher.cpp

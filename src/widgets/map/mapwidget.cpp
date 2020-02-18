@@ -13,6 +13,7 @@
 #include "maplayercontrol.h"
 #include <QApplication>
 #include "pprz_dispatcher.h"
+#include "maputils.h"
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), parent)
 {
@@ -117,23 +118,14 @@ void MapWidget::setupUi() {
     leftScrollArea->hide();
 }
 
-void MapWidget::addItem(QGraphicsItem* graphicItem, Point2DLatLon latlon, int zValue, double zoomFactor) {
-    MapItem* map_item = new MapItem(graphicItem, latlon);
-    QPointF point = scenePoint(latlon, zoomLevel());
-    map_item->setPos(point);
-    map_item->setScale(1/scaleFactor());
+void MapWidget::addItem(MapItem* map_item, Point2DLatLon latlon, int zValue) {
+    //QPointF point = scenePoint(latlon, zoomLevel(zoom()), tileSize());
+    //map_item->setPos(point);
+    //map_item->setScale(1/scaleFactor());
     scene()->addItem(map_item);
     map_item->setZValue(zValue);
-    map_item->setZoomFactor(zoomFactor);
     map_item->scaleToZoom(zoom(), scaleFactor());
     _items.append(map_item);
-
-    connect(
-        map_item, &MapItem::itemMoved,
-        [=](QPointF scenePos) {
-            map_item->setPosition(latlonPoint(scenePos, zoomLevel()));
-        }
-    );
 }
 
 void MapWidget::mousePressEvent(QMouseEvent *event) {
@@ -171,14 +163,6 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *event) {
     else if (event->button() == Qt::RightButton)   // Right button...
     {
       std::cout << "Right button released" << std::endl;
-//      if(dragMode() == NoDrag) {
-//          setDragMode(QGraphicsView::ScrollHandDrag);
-//      } else if(dragMode() == ScrollHandDrag) {
-//          setDragMode(QGraphicsView::RubberBandDrag);
-//      } else if(dragMode() == RubberBandDrag) {
-//          setDragMode(QGraphicsView::NoDrag);
-//      }
-
     }
     else if (event->button() == Qt::MidButton)   // Middle button...
     {
@@ -190,8 +174,8 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *event) {
 void MapWidget::wheelEvent(QWheelEvent* event) {
     Map2D::wheelEvent(event);
     for(auto item: _items) {
-        QPointF point = scenePoint(item->position(), zoomLevel());
-        item->setPos(point);
+//        QPointF point = scenePoint(item->position(), zoomLevel(), tileSize());
+//        item->setPos(point);
         item->scaleToZoom(zoom(), scaleFactor());
     }
 }
