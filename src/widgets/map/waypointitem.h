@@ -3,33 +3,28 @@
 
 #include "mapitem.h"
 #include <QBrush>
-#include <QGraphicsEllipseItem>
+#include "graphicspoint.h"
 
 class WaypointItem : public MapItem
 {
         Q_OBJECT
 public:
-    WaypointItem(Point2DLatLon pt, int size, QColor color, int tile_size, double neutral_scale_zoom = 15, QGraphicsItem *parent = nullptr);
+    WaypointItem(Point2DLatLon pt, int size, QColor color, int tile_size, double zoom, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     void scaleToZoom(double zoom, double viewScale);
+    void add_to_scene(QGraphicsScene* scene);
     Point2DLatLon position() {return latlon;}
-    void setPosition(Point2DLatLon ll) {latlon = ll;}
+    void setPosition(Point2DLatLon ll);
 
 signals:
-    void waypointMoved(Point2DLatLon scenePos);
-
-protected:
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    void waypointMoved(Point2DLatLon latlon_pos);
 
 private:
-    QGraphicsEllipseItem * ellipse;
-
-    QPointF pressPos;
-    MoveState move_state;
-    bool movable;
-
+    GraphicsPoint * point;
     Point2DLatLon latlon;
+    int altitude;
+    //bool movable;
+
+
 //    double zoom_factor;
 //    double neutral_scale_zoom;
 //    int tile_size;

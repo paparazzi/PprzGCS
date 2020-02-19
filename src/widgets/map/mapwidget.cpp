@@ -118,13 +118,9 @@ void MapWidget::setupUi() {
     leftScrollArea->hide();
 }
 
-void MapWidget::addItem(MapItem* map_item, Point2DLatLon latlon, int zValue) {
-    //QPointF point = scenePoint(latlon, zoomLevel(zoom()), tileSize());
-    //map_item->setPos(point);
-    //map_item->setScale(1/scaleFactor());
-    scene()->addItem(map_item);
-    map_item->setZValue(zValue);
+void MapWidget::addItem(MapItem* map_item) {
     map_item->scaleToZoom(zoom(), scaleFactor());
+    map_item->add_to_scene(scene());
     _items.append(map_item);
 }
 
@@ -174,8 +170,6 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *event) {
 void MapWidget::wheelEvent(QWheelEvent* event) {
     Map2D::wheelEvent(event);
     for(auto item: _items) {
-//        QPointF point = scenePoint(item->position(), zoomLevel(), tileSize());
-//        item->setPos(point);
         item->scaleToZoom(zoom(), scaleFactor());
     }
 }
