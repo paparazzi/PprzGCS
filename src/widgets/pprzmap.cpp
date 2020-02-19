@@ -9,6 +9,9 @@
 #include <QAction>
 #include "mapscene.h"
 #include <QGraphicsSceneMouseEvent>
+#include "waypointitem.h"
+#include "circleitem.h"
+#include "maputils.h"
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
@@ -19,11 +22,13 @@ PprzMap::PprzMap(QWidget *parent) :
     connect(
        scene, &MapScene::rightClick,
         [=](QGraphicsSceneMouseEvent *mouseEvent) {
-        int size = 30;
-        QGraphicsEllipseItem *circle = new QGraphicsEllipseItem(- size/2,- size/2, size, size);
-        circle->setBrush(QBrush(Qt::blue));
-        Point2DLatLon latlon = ui->map->latlonPoint(mouseEvent->scenePos(), ui->map->zoomLevel());
-        ui->map->addItem(circle, latlon, 10, 1.15);
+        int size = 50;
+
+        Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
+        //WaypointItem* map_item = new WaypointItem(latlon, size, Qt::blue,  ui->map->tileSize());
+        CircleItem* map_item = new CircleItem(latlon, size, Qt::blue, ui->map->zoom(), ui->map->tileSize());
+        map_item->setZoomFactor(1);
+        ui->map->addItem(map_item, latlon, 10);
             qDebug() << mouseEvent->scenePos();
         }
     );

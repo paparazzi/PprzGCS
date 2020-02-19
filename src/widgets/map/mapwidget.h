@@ -19,7 +19,7 @@ class MapWidget : public Map2D
 public:
     explicit MapWidget(QWidget *parent = nullptr);
 
-    void addItem(QGraphicsItem* graphicItem, Point2DLatLon latlon, int zValue = 10, double zoomFactor = 1);
+    void addItem(MapItem* map_item, Point2DLatLon latlon, int zValue = 10);
     void addLayerControl(QString name, bool initialState, int z);
 
 signals:
