@@ -13,7 +13,8 @@
 #include "circleitem.h"
 #include "maputils.h"
 #include "graphicspoint.h"
-#include "segment.h"
+#include "path.h"
+#include "graphicscircle.h"
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
@@ -27,12 +28,17 @@ PprzMap::PprzMap(QWidget *parent) :
             if(drawState) {
                 Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
                 Point2DLatLon latlon2 = latlonPoint(mouseEvent->scenePos() + QPointF(100, 100), zoomLevel(ui->map->zoom()), ui->map->tileSize());
-                Segment* s = new Segment(latlon, latlon2, Qt::blue, ui->map->tileSize(), ui->map->zoom(), 15);
+                Point2DLatLon latlon3 = latlonPoint(mouseEvent->scenePos() + QPointF(100, -100), zoomLevel(ui->map->zoom()), ui->map->tileSize());
+                Path* s = new Path(latlon, Qt::blue, ui->map->tileSize(), ui->map->zoom(), 15);
+                s->addPoint(latlon2);
+                s->addPoint(latlon3);
                 ui->map->addItem(s);
             } else {
                 Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
-                WaypointItem* w = new WaypointItem(latlon, 50, Qt::red, ui->map->tileSize(), ui->map->zoom(), 15);
-                ui->map->addItem(w);
+//                WaypointItem* w = new WaypointItem(latlon, 50, Qt::red, ui->map->tileSize(), ui->map->zoom(), 15);
+//                ui->map->addItem(w);
+                CircleItem* ci = new CircleItem(latlon, 100, Qt::magenta, ui->map->zoom(), ui->map->tileSize());
+                ui->map->addItem(ci);
             }
         }
     );

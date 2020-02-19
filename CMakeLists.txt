@@ -46,6 +46,10 @@ set(SOURCE
     src/widgets/map/mapscene.cpp
     src/widgets/map/waypointitem.cpp
     src/widgets/map/maputils.cpp
+    src/widgets/map/graphicspoint.cpp
+    src/widgets/map/path.cpp
+    src/widgets/map/graphicsline.cpp
+    src/widgets/map/graphicscircle.cpp
     src/widgets/map/circleitem.cpp
     src/widgets/basics/imagebutton.cpp
     src/layout_builder.cpp

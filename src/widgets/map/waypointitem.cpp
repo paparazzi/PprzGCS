@@ -39,3 +39,10 @@ void WaypointItem::scaleToZoom(double zoom, double viewScale) {
     double s = pow(zoom_factor, zoom - neutral_scale_zoom)/viewScale;
     point->setScale(s);
 }
+
+void WaypointItem::setPosition(Point2DLatLon ll) {
+    latlon = ll;
+    QPointF scene_pos = scenePoint(latlon, zoomLevel(_zoom), tile_size);
+    point->setPos(scene_pos);
+    emit(waypointMoved(latlon));
+}

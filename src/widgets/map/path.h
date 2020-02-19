@@ -6,11 +6,12 @@
 #include "waypointitem.h"
 #include "graphicsline.h"
 
-class Segment : public MapItem
+class Path : public MapItem
 {
     Q_OBJECT
 public:
-    explicit Segment(Point2DLatLon start, Point2DLatLon end, QColor color, int tile_size, double zoom, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    explicit Path(Point2DLatLon start, QColor color, int tile_size, double zoom, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    void addPoint(Point2DLatLon pos);
     void add_to_scene(QGraphicsScene* scene);
     void scaleToZoom(double zoom, double viewScale);
     void updateGraphics();
@@ -19,11 +20,10 @@ signals:
 public slots:
 
 private:
-    WaypointItem* wpStart;
-    WaypointItem* wpEnd;
-
-    GraphicsLine* line;
+    QList<WaypointItem*> waypoints;
+    QList<GraphicsLine*> lines;
     int line_widht;
+    QColor line_color;
     //QGraphicsLineItem* line;
 };
 

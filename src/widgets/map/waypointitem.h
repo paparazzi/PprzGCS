@@ -23,12 +23,6 @@ private:
     Point2DLatLon latlon;
     int altitude;
     //bool movable;
-
-
-//    double zoom_factor;
-//    double neutral_scale_zoom;
-//    int tile_size;
-//    double _zoom;
 };
 
 #endif // WAYPOINTITEM_H

@@ -11,6 +11,8 @@ QPointF scenePoint(Point2DTile tilePoint, int tileSize);
 QPointF scenePoint(Point2DLatLon latlon, int zoomLvl, int tileSize);
 Point2DLatLon latlonPoint(QPointF scenePos, int zoom, int tileSize);
 int zoomLevel(double zoom);
+double distMeters2Tile(double distance, double lat, int zoom);
+double distTile2Meters(double y, double d, int zoom);
 //Point2DLatLon latlonFromView(QPoint viewPos, int zoom);
 
 
