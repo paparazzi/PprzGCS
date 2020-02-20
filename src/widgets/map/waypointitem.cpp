@@ -6,8 +6,8 @@
 #include <QGraphicsScene>
 
 
-WaypointItem::WaypointItem(Point2DLatLon pt, int size, QColor color, int tile_size, double zoom, double neutral_scale_zoom, QObject *parent) :
-    MapItem(zoom, tile_size, neutral_scale_zoom, parent),
+WaypointItem::WaypointItem(Point2DLatLon pt, int size, QColor color, int tile_size, double zoom, qreal z_value, double neutral_scale_zoom, QObject *parent) :
+    MapItem(zoom, tile_size, z_value, neutral_scale_zoom, parent),
     latlon(pt)
 {
     QPointF scene_pos = scenePoint(latlon, zoomLevel(zoom), tile_size);
@@ -15,7 +15,7 @@ WaypointItem::WaypointItem(Point2DLatLon pt, int size, QColor color, int tile_si
     QList<QColor> color_variants = makeColorVariants(color);
     point->setColors(color_variants[0], color_variants[1], color_variants[2]);
     point->setPos(scene_pos);
-    point->setZValue(100);
+    point->setZValue(z_value);
     setZoomFactor(1.1);
 
     connect(
@@ -52,12 +52,16 @@ void WaypointItem::add_to_scene(QGraphicsScene* scene) {
     scene->addItem(point);
 }
 
-void WaypointItem::scaleToZoom(double zoom, double viewScale) {
-    _zoom = zoom;
-    QPointF scene_pos = scenePoint(latlon, zoomLevel(zoom), tile_size);
+void WaypointItem::setZValue(qreal z) {
+    z_value = z;
+    point->setZValue(z);
+}
+
+void WaypointItem::updateGraphics() {
+    QPointF scene_pos = scenePoint(latlon, zoomLevel(_zoom), tile_size);
     point->setPos(scene_pos);
 
-    double s = pow(zoom_factor, zoom - neutral_scale_zoom)/viewScale;
+    double s = getScale();
     point->setScale(s);
 }
 

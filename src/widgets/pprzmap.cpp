@@ -27,7 +27,7 @@ PprzMap::PprzMap(QWidget *parent) :
                 Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
                 Point2DLatLon latlon2 = latlonPoint(mouseEvent->scenePos() + QPointF(100, 100), zoomLevel(ui->map->zoom()), ui->map->tileSize());
                 Point2DLatLon latlon3 = latlonPoint(mouseEvent->scenePos() + QPointF(100, -100), zoomLevel(ui->map->zoom()), ui->map->tileSize());
-                Path* s = new Path(latlon, Qt::blue, ui->map->tileSize(), ui->map->zoom(), 15);
+                Path* s = new Path(latlon, Qt::blue, ui->map->tileSize(), ui->map->zoom(), 50);
                 s->addPoint(latlon2);
                 s->addPoint(latlon3);
                 ui->map->addItem(s);
@@ -36,12 +36,12 @@ PprzMap::PprzMap(QWidget *parent) :
                 Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
 //                WaypointItem* w = new WaypointItem(latlon, 50, Qt::red, ui->map->tileSize(), ui->map->zoom(), 15);
 //                ui->map->addItem(w);
-                CircleItem* ci = new CircleItem(latlon, 100, Qt::magenta, ui->map->zoom(), ui->map->tileSize());
+                CircleItem* ci = new CircleItem(latlon, 100, Qt::magenta, ui->map->tileSize(), ui->map->zoom(), 50);
                 ui->map->addItem(ci);
                 items.append(ci);
             } else {
                 Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
-                WaypointItem* w = new WaypointItem(latlon, 50, Qt::red, ui->map->tileSize(), ui->map->zoom(), 15);
+                WaypointItem* w = new WaypointItem(latlon, 50, Qt::red, ui->map->tileSize(), ui->map->zoom(), 50);
                 ui->map->addItem(w);
                 items.append(w);
             }

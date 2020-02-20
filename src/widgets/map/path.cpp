@@ -2,11 +2,11 @@
 #include "maputils.h"
 #include <QGraphicsScene>
 
-Path::Path(Point2DLatLon start, QColor color, int tile_size, double zoom, double neutral_scale_zoom, QObject *parent) :
-    MapItem(zoom, tile_size, neutral_scale_zoom, parent),
+Path::Path(Point2DLatLon start, QColor color, int tile_size, double zoom, qreal z_value, double neutral_scale_zoom, QObject *parent) :
+    MapItem(zoom, tile_size, z_value, neutral_scale_zoom, parent),
     line_widht(5), line_color(color)
 {
-    WaypointItem* wpStart = new WaypointItem(start, 20, Qt::green, tile_size, zoom, neutral_scale_zoom, parent);
+    WaypointItem* wpStart = new WaypointItem(start, 20, Qt::green, tile_size, zoom, z_value, neutral_scale_zoom, parent);
 
     waypoints.append(wpStart);
 
@@ -29,7 +29,7 @@ Path::Path(Point2DLatLon start, QColor color, int tile_size, double zoom, double
 
 void Path::addPoint(Point2DLatLon pos) {
     WaypointItem* last_wp = waypoints.last();
-    WaypointItem* wp = new WaypointItem(pos, 20, Qt::green, tile_size, _zoom, neutral_scale_zoom, parent());
+    WaypointItem* wp = new WaypointItem(pos, 20, Qt::green, tile_size, _zoom, z_value, neutral_scale_zoom, parent());
     waypoints.append(wp);
 
     QPointF start_pos = scenePoint(last_wp->position(), zoomLevel(_zoom), tile_size);
@@ -41,7 +41,7 @@ void Path::addPoint(Point2DLatLon pos) {
     line->setColors(color_variants[2]);
 
     lines.append(line);
-    line->setZValue(100);
+    line->setZValue(z_value - 0.5);
 
     connect(
         wp, &WaypointItem::waypointMoved,
@@ -87,10 +87,15 @@ void Path::add_to_scene(QGraphicsScene* scene) {
     }
 }
 
-void Path::scaleToZoom(double zoom, double viewScale) {
-    _zoom = zoom;
-    _view_scale = viewScale;
-    updateGraphics();
+void Path::setZValue(qreal z) {
+    z_value = z;
+    //waypoints above lines
+    for(auto w:waypoints) {
+        w->setZValue(z);
+    }
+    for(auto l:lines) {
+        l->setZValue(z-0.5);
+    }
 }
 
 void Path::updateGraphics() {
@@ -100,7 +105,7 @@ void Path::updateGraphics() {
         w->scaleToZoom(_zoom, _view_scale);
     }
 
-    double s = pow(zoom_factor, _zoom - neutral_scale_zoom)/_view_scale;
+    double s = getScale();
 
     for(int i=0; i<lines.length(); i++) {
         QPointF start_scene_pos = scenePoint(waypoints[i]->position(), zoomLevel(_zoom), tile_size);
@@ -111,5 +116,4 @@ void Path::updateGraphics() {
         p.setWidth(static_cast<int>(line_widht * s));
         lines[i]->setPen(p);
     }
-
 }
