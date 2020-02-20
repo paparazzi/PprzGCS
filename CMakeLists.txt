@@ -48,6 +48,8 @@ set(SOURCE
     src/widgets/map/maputils.cpp
     src/widgets/map/graphicspoint.cpp
     src/widgets/map/graphicsobject.cpp
+    src/widgets/map/fpedit_statemachines/fpeditstatemachine.cpp
+    src/widgets/map/fpedit_statemachines/smwaypointitem.cpp
     src/widgets/map/path.cpp
     src/widgets/map/graphicsline.cpp
     src/widgets/map/graphicscircle.cpp
@@ -68,6 +70,7 @@ include_directories(
     src/widgets/
     src/geometry/
     src/widgets/map/
+    src/widgets/map/fpedit_statemachines/
     src/widgets/basics/
     ${INCLUDE_PPRZLINK}
 )

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QGraphicsScene>
 #include <QGraphicsSceneMouseEvent>
+#include "fpeditstatemachine.h"
 
 class MapScene : public QGraphicsScene
 {
@@ -20,7 +21,7 @@ protected:
     virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent);
 
 signals:
-    void rightClick(QGraphicsSceneMouseEvent*);
+    void eventScene(FPEditEvent, QGraphicsSceneMouseEvent*);
 
 public slots:
 };
