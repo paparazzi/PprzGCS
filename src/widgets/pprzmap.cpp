@@ -12,9 +12,7 @@
 #include "waypointitem.h"
 #include "circleitem.h"
 #include "maputils.h"
-#include "graphicspoint.h"
 #include "path.h"
-#include "graphicscircle.h"
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
@@ -25,7 +23,7 @@ PprzMap::PprzMap(QWidget *parent) :
     connect(
        scene, &MapScene::rightClick,
         [=](QGraphicsSceneMouseEvent *mouseEvent) {
-            if(drawState) {
+            if(drawState == 0) {
                 Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
                 Point2DLatLon latlon2 = latlonPoint(mouseEvent->scenePos() + QPointF(100, 100), zoomLevel(ui->map->zoom()), ui->map->tileSize());
                 Point2DLatLon latlon3 = latlonPoint(mouseEvent->scenePos() + QPointF(100, -100), zoomLevel(ui->map->zoom()), ui->map->tileSize());
@@ -33,12 +31,19 @@ PprzMap::PprzMap(QWidget *parent) :
                 s->addPoint(latlon2);
                 s->addPoint(latlon3);
                 ui->map->addItem(s);
-            } else {
+                items.append(s);
+            } else if(drawState == 1){
                 Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
 //                WaypointItem* w = new WaypointItem(latlon, 50, Qt::red, ui->map->tileSize(), ui->map->zoom(), 15);
 //                ui->map->addItem(w);
                 CircleItem* ci = new CircleItem(latlon, 100, Qt::magenta, ui->map->zoom(), ui->map->tileSize());
                 ui->map->addItem(ci);
+                items.append(ci);
+            } else {
+                Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
+                WaypointItem* w = new WaypointItem(latlon, 50, Qt::red, ui->map->tileSize(), ui->map->zoom(), 15);
+                ui->map->addItem(w);
+                items.append(w);
             }
         }
     );
@@ -58,12 +63,12 @@ void PprzMap::keyPressEvent(QKeyEvent *event) {
 void PprzMap::keyReleaseEvent(QKeyEvent *event) {
     (void)event;
     if(event->key() == Qt::Key_Space) {
-        if(!drawState) {
-            ui->map->setDragMode(QGraphicsView::NoDrag);
-        } else {
-            ui->map->setDragMode(QGraphicsView::ScrollHandDrag);
-        }
-        drawState = !drawState;
+        drawState = (drawState + 1) % 3;
         qDebug() << "SPAAAAAACE!";
+    }
+    else if (event->key() == Qt::Key_H) {
+        for(auto mp: items) {
+            mp->setHighlighted(false);
+        }
     }
 }

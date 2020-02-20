@@ -14,6 +14,7 @@ public:
     void add_to_scene(QGraphicsScene* scene);
     Point2DLatLon position() {return latlon;}
     void setPosition(Point2DLatLon ll);
+    virtual void setHighlighted(bool h);
 
 signals:
     void waypointMoved(Point2DLatLon latlon_pos);
@@ -22,6 +23,7 @@ private:
     GraphicsPoint * point;
     Point2DLatLon latlon;
     int altitude;
+    bool highlighted;
     //bool movable;
 };
 

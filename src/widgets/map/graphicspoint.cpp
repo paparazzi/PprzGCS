@@ -3,18 +3,27 @@
 #include <QApplication>
 #include <QGraphicsSceneMouseEvent>
 
-GraphicsPoint::GraphicsPoint(qreal size, QObject *parent) :
-    QObject(parent),
+GraphicsPoint::GraphicsPoint(qreal size, QColor color, QObject *parent) :
+    GraphicsObject(parent),
     QGraphicsEllipseItem (-size/2, -size/2, size, size),
     move_state(PMS_IDLE), movable(true)
 {
+    brush_idle = QBrush(color);
+    setBrush(brush_idle);
+}
 
+void GraphicsPoint::setColors(QColor colPressed, QColor colMoving, QColor colUnfocused) {
+    brush_pressed = QBrush(colPressed);
+    brush_moved = QBrush(colMoving);
+    brush_unfocused = QBrush(colUnfocused);
 }
 
 
 void GraphicsPoint::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    GraphicsObject::mousePressEvent(event);
     pressPos = QPointF(event->pos().x() * scale(), event->pos().y() * scale());
     move_state = PMS_PRESSED;
+    setBrush(brush_pressed);
 }
 
 void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
@@ -23,6 +32,7 @@ void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());
         if(d > qApp->property("MAP_MOVE_HYSTERESIS").toInt()) {
             move_state = PMS_MOVED;
+            setBrush(brush_moved);
         }
     } else if(move_state == PMS_MOVED) {
         if(movable) {
@@ -34,10 +44,29 @@ void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 
 void GraphicsPoint::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if(move_state == PMS_PRESSED) {
-        //emit(itemClicked());
+        emit(objectClicked(event->scenePos()));
     }
     else if(move_state == PMS_MOVED) {
-        emit(pointMoved(event->scenePos() - pressPos));
+        emit(pointMoveFinished());
     }
     move_state = PMS_IDLE;
+    setBrush(brush_idle);
+}
+
+void GraphicsPoint::changeFocus() {
+    if(!isHighlighted()) {
+        setBrush(brush_unfocused);
+    } else {
+        switch (move_state) {
+        case PMS_IDLE:
+            setBrush(brush_idle);
+            break;
+        case PMS_PRESSED:
+            setBrush(brush_pressed);
+            break;
+        case PMS_MOVED:
+            setBrush(brush_moved);
+            break;
+        }
+    }
 }

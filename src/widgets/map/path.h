@@ -15,6 +15,7 @@ public:
     void add_to_scene(QGraphicsScene* scene);
     void scaleToZoom(double zoom, double viewScale);
     void updateGraphics();
+    virtual void setHighlighted(bool h);
 signals:
 
 public slots:
@@ -24,6 +25,7 @@ private:
     QList<GraphicsLine*> lines;
     int line_widht;
     QColor line_color;
+    bool highlighted;
     //QGraphicsLineItem* line;
 };
 

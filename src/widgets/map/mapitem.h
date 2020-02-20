@@ -18,12 +18,18 @@ class MapItem : public QObject
     Q_OBJECT
 public:
     MapItem(double zoom, int tile_size, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    QList<QColor> makeColorVariants(QColor);
     virtual void scaleToZoom(double zoom, double viewScale) = 0;
     virtual void add_to_scene(QGraphicsScene* scene) = 0;
+    virtual void setHighlighted(bool h) = 0;
 
     double zoomFactor() {return zoom_factor;}
     double neutralScaleZoom() {return neutral_scale_zoom;}
     void setZoomFactor(double zf) {zoom_factor = zf;}
+
+signals:
+    void itemClicked(QPointF scene_pos);
+    void itemGainedHighlight();
 
 protected:
     double zoom_factor;
@@ -32,7 +38,7 @@ protected:
     double _zoom;
     double _view_scale;
 
-signals:
+
 
 };
 

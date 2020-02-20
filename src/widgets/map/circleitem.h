@@ -14,6 +14,7 @@ public:
     void add_to_scene(QGraphicsScene* scene);
     Point2DLatLon position() {return center->position();}
     void setPosition(Point2DLatLon ll) {center->setPosition(ll);};
+    virtual void setHighlighted(bool h);
 
 signals:
     void circleMoved(Point2DLatLon latlon_pos);
@@ -25,6 +26,8 @@ private:
     double _radius;
     int altitude;
     int stroke;
+
+    bool highlighted;
     //bool scalable
     //bool movable
 };

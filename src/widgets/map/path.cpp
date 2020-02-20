@@ -17,6 +17,14 @@ Path::Path(Point2DLatLon start, QColor color, int tile_size, double zoom, double
             this->updateGraphics();
         }
     );
+
+    connect(
+        wpStart, &MapItem::itemGainedHighlight,
+        [=]() {
+            setHighlighted(true);
+            emit(itemGainedHighlight());
+        }
+    );
 }
 
 void Path::addPoint(Point2DLatLon pos) {
@@ -27,10 +35,13 @@ void Path::addPoint(Point2DLatLon pos) {
     QPointF start_pos = scenePoint(last_wp->position(), zoomLevel(_zoom), tile_size);
     QPointF end_pos = scenePoint(wp->position(), zoomLevel(_zoom), tile_size);
 
-    GraphicsLine* line = new GraphicsLine(QLineF(start_pos, end_pos));
+    GraphicsLine* line = new GraphicsLine(QLineF(start_pos, end_pos), QPen(QBrush(line_color), line_widht));
+
+    QList<QColor> color_variants = makeColorVariants(line_color);
+    line->setColors(color_variants[2]);
+
     lines.append(line);
     line->setZValue(100);
-    line->setPen(QPen(QBrush(line_color), line_widht));
 
     connect(
         wp, &WaypointItem::waypointMoved,
@@ -39,6 +50,32 @@ void Path::addPoint(Point2DLatLon pos) {
             this->updateGraphics();
         }
     );
+
+    connect(
+        wp, &MapItem::itemGainedHighlight,
+        [=]() {
+            setHighlighted(true);
+            emit(itemGainedHighlight());
+        }
+    );
+
+    connect(
+        line, &GraphicsObject::objectGainedHighlight,
+        [=]() {
+            setHighlighted(true);
+            emit(itemGainedHighlight());
+        }
+    );
+}
+
+void Path::setHighlighted(bool h) {
+    highlighted = h;
+    for(auto wp: waypoints) {
+        wp->setHighlighted(h);
+    }
+    for(auto line: lines) {
+        line->setHighlighted(h);
+    }
 }
 
 void Path::add_to_scene(QGraphicsScene* scene) {

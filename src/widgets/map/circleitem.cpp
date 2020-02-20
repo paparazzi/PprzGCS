@@ -11,13 +11,16 @@ CircleItem::CircleItem(Point2DLatLon pt, double radius, QColor color, double zoo
     _radius(radius), stroke(5)
 {
     QPointF scene_pos = scenePoint(pt, zoomLevel(zoom), tile_size);
-    center = new WaypointItem(pt, 20, Qt::blue, tile_size, zoom, neutral_scale_zoom, parent);
+
+    center = new WaypointItem(pt, 20, color, tile_size, zoom, neutral_scale_zoom, parent);
     center->setZoomFactor(1.1);
     double pixelRadius = distMeters2Tile(radius, pt.lat(), zoomLevel(_zoom)) * tile_size;
-    circle = new GraphicsCircle(pixelRadius);
+    circle = new GraphicsCircle(pixelRadius, QPen(QBrush(color), stroke));
     circle->setPos(scene_pos);
-    circle->setPen(QPen(QBrush(color), stroke));
     circle->setZValue(100);
+
+    QList<QColor> color_variants = makeColorVariants(color);
+    circle->setColors(color_variants[0], color_variants[1], color_variants[2]);
 
     connect(
         center, &WaypointItem::waypointMoved,
@@ -35,6 +38,35 @@ CircleItem::CircleItem(Point2DLatLon pt, double radius, QColor color, double zoo
             emit(circleScaled(_radius));
         }
     );
+
+    connect(
+        circle, &GraphicsCircle::objectClicked,
+        [=](QPointF scene_pos) {
+            qDebug() << "circle clicked at " << scene_pos;
+        }
+    );
+
+    connect(
+        circle, &GraphicsCircle::objectGainedHighlight,
+        [=]() {
+            setHighlighted(true);
+            emit(itemGainedHighlight());
+        }
+    );
+
+    connect(
+        center, &MapItem::itemGainedHighlight,
+        [=]() {
+            setHighlighted(true);
+            emit(itemGainedHighlight());
+        }
+    );
+}
+
+void CircleItem::setHighlighted(bool h) {
+    highlighted = h;
+    center->setHighlighted(h);
+    circle->setHighlighted(h);
 }
 
 void CircleItem::add_to_scene(QGraphicsScene* scene) {

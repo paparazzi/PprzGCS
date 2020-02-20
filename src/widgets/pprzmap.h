@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QKeyEvent>
+#include "mapitem.h"
 
 namespace Ui {
 class PprzMap;
@@ -24,7 +25,10 @@ protected slots:
 
 private:
     Ui::PprzMap *ui;
-    bool drawState;
+    int drawState;
+
+    QList<MapItem*> items;
+
 };
 
 #endif // PPRZMAP_H

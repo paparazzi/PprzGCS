@@ -11,9 +11,10 @@ WaypointItem::WaypointItem(Point2DLatLon pt, int size, QColor color, int tile_si
     latlon(pt)
 {
     QPointF scene_pos = scenePoint(latlon, zoomLevel(zoom), tile_size);
-    point = new GraphicsPoint(size);
+    point = new GraphicsPoint(size, color);
+    QList<QColor> color_variants = makeColorVariants(color);
+    point->setColors(color_variants[0], color_variants[1], color_variants[2]);
     point->setPos(scene_pos);
-    point->setBrush(QBrush(color));
     point->setZValue(100);
     setZoomFactor(1.1);
 
@@ -25,6 +26,26 @@ WaypointItem::WaypointItem(Point2DLatLon pt, int size, QColor color, int tile_si
         }
     );
 
+    connect(
+        point, &GraphicsPoint::objectClicked,
+        [=](QPointF scene_pos) {
+            emit(itemClicked(scene_pos));
+        }
+    );
+
+    connect(
+        point, &GraphicsPoint::objectGainedHighlight,
+        [=]() {
+            setHighlighted(true);
+            emit(itemGainedHighlight());
+        }
+    );
+
+}
+
+void WaypointItem::setHighlighted(bool h) {
+    highlighted = h;
+    point->setHighlighted(h);
 }
 
 void WaypointItem::add_to_scene(QGraphicsScene* scene) {
