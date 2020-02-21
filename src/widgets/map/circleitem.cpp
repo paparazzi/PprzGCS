@@ -95,15 +95,23 @@ void CircleItem::setZValue(qreal z) {
 }
 
 void CircleItem::updateGraphics() {
-    double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(map->zoom()))*map->tileSize();
+    //double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(map->zoom()))*map->tileSize();
 
     QPointF scene_pos = scenePoint(center->position(), zoomLevel(map->zoom()), map->tileSize());
     circle->setPos(scene_pos);
-    circle->setRadius(pixelRadius);
+
+    setRadius(_radius);
+    //circle->setRadius(pixelRadius);
 
     double s = getScale();
 
     QPen p = circle->pen();
     p.setWidth(static_cast<int>(stroke * s));
     circle->setPen(p);
+}
+
+void CircleItem::setRadius(double radius) {
+    _radius = radius;
+    double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(map->zoom()))*map->tileSize();
+    circle->setRadius(pixelRadius);
 }

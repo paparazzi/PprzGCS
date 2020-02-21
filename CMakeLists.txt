@@ -50,6 +50,7 @@ set(SOURCE
     src/widgets/map/graphicsobject.cpp
     src/widgets/map/fpedit_statemachines/fpeditstatemachine.cpp
     src/widgets/map/fpedit_statemachines/smwaypointitem.cpp
+    src/widgets/map/fpedit_statemachines/smcircleitem.cpp
     src/widgets/map/path.cpp
     src/widgets/map/graphicsline.cpp
     src/widgets/map/graphicscircle.cpp

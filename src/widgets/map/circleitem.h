@@ -18,6 +18,11 @@ public:
     virtual void setHighlighted(bool h);
     virtual void setZValue(qreal z);
     virtual ItemType getType() {return ITEM_CIRCLE;}
+    ///
+    /// \brief setRadius
+    /// \param radius in meters
+    ///
+    void setRadius(double radius);
 
 signals:
     void circleMoved(Point2DLatLon latlon_pos);

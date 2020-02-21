@@ -14,6 +14,7 @@
 #include "maputils.h"
 #include "path.h"
 #include "smwaypointitem.h"
+#include "smcircleitem.h"
 #include <QCursor>
 
 PprzMap::PprzMap(QWidget *parent) :
@@ -73,7 +74,7 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
             ui->map->setCursor(QCursor(QPixmap(":/pictures/cursor_waypoint_black.svg"),0, 0));
             break;
         case 1:
-            fp_edit_sm = nullptr;
+            fp_edit_sm = new SmCircleItem(ui->map);
             ui->map->setCursor(QCursor(QPixmap(":/pictures/cursor_circle_black.svg"),0, 0));
             break;
         case 2:
