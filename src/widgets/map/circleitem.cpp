@@ -110,6 +110,12 @@ void CircleItem::updateGraphics() {
     circle->setPen(p);
 }
 
+void CircleItem::removeFromScene() {
+    map->scene()->removeItem(circle);
+    delete circle;
+    // do not remove the waypoint. It still lives !
+}
+
 void CircleItem::setRadius(double radius) {
     _radius = radius;
     double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(map->zoom()))*map->tileSize();

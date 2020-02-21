@@ -17,7 +17,10 @@ public:
     void setPosition(Point2DLatLon ll) {center->setPosition(ll);};
     virtual void setHighlighted(bool h);
     virtual void setZValue(qreal z);
+    virtual void updateGraphics();
+    virtual void removeFromScene();
     virtual ItemType getType() {return ITEM_CIRCLE;}
+    double radius() {return _radius;}
     ///
     /// \brief setRadius
     /// \param radius in meters
@@ -29,7 +32,6 @@ signals:
     void circleScaled(double radius);
 
 protected:
-    virtual void updateGraphics();
 
 private:
     void init(WaypointItem* center, double radius, QColor color, MapWidget* map);

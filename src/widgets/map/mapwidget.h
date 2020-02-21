@@ -29,6 +29,7 @@ public:
     explicit MapWidget(QWidget *parent = nullptr);
 
     void addItem(MapItem* map_item);
+    void removeItem(MapItem* item);
     void addLayerControl(QString name, bool initialState, int z);
     virtual void setCursor(const QCursor &);
     void setPanMask(int mask) {pan_mouse_mask = mask;}
@@ -37,6 +38,7 @@ public:
 signals:
     //void rightClick(QMouseEvent *event);
     void itemAdded(MapItem* map_item);
+    void itemRemoved(MapItem* item);
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event);

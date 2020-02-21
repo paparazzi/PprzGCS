@@ -130,6 +130,14 @@ void MapWidget::addItem(MapItem* map_item) {
     emit(itemAdded(map_item));
 }
 
+// TODO Use shared_ptr ?
+void MapWidget::removeItem(MapItem* item) {
+    item->removeFromScene();
+    _items.removeAll(item);
+    emit(itemRemoved(item));
+    //the one that receive this signal shall delete the item
+}
+
 void MapWidget::mousePressEvent(QMouseEvent *event) {
     Map2D::mousePressEvent(event);
     if(event->buttons() & pan_mouse_mask && !event->isAccepted()) {

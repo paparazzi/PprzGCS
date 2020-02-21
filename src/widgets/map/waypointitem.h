@@ -15,6 +15,7 @@ public:
     QPointF scenePos();
     virtual void setHighlighted(bool h);
     virtual void setZValue(qreal z);
+    virtual void removeFromScene();
     virtual ItemType getType() {return ITEM_WAYPOINT;}
 
 signals:

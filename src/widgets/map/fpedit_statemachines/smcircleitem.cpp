@@ -2,6 +2,7 @@
 #include "mapwidget.h"
 #include <QApplication>
 #include <QDebug>
+#include <iostream>
 
 SmCircleItem::SmCircleItem(MapWidget* map) :
     FpEditStateMachine (map),
@@ -79,6 +80,10 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
             mouseEvent->accept();
             break;
         case FPEE_SC_RELEASE:
+            if(cir->radius() < qApp->property("CIRCLE_CREATE_MIN_RADIUS").toDouble()) {
+                std::cout << "can't create circle with radius < CIRCLE_CREATE_MIN_RADIUS. Please change this parameter." << std::endl;
+                map->removeItem(cir);
+            }
             // back to normal color ?
             state = FPECSMS_IDLE;
             break;
@@ -91,7 +96,6 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
         case FPEE_SC_PRESS:
             map->setMouseTracking(false);
             map->scene()->setShortcutItems(false);
-            adjustCircleRadius(mouseEvent);
             state = FPECSMS_DRAGING;
             mouseEvent->accept();
             break;

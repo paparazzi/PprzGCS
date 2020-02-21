@@ -65,6 +65,11 @@ void WaypointItem::updateGraphics() {
     point->setScale(s);
 }
 
+void WaypointItem::removeFromScene() {
+    map->scene()->removeItem(point);
+    delete point;
+}
+
 void WaypointItem::setPosition(Point2DLatLon ll) {
     latlon = ll;
     QPointF scene_pos = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());

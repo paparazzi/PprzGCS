@@ -110,3 +110,11 @@ void Path::updateGraphics() {
         lines[i]->setPen(p);
     }
 }
+
+void Path::removeFromScene() {
+    for(auto l:lines) {
+        map->scene()->removeItem(l);
+        delete l;
+    }
+    lines.clear();
+}

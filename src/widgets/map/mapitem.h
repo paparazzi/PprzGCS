@@ -29,6 +29,7 @@ public:
     MapItem(qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     QList<QColor> makeColorVariants(QColor);
     virtual void updateGraphics() = 0;
+    virtual void removeFromScene() = 0;
     virtual void setHighlighted(bool h) = 0;
     virtual ItemType getType() = 0;
     double zoomFactor() {return zoom_factor;}

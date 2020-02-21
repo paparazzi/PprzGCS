@@ -26,6 +26,12 @@ PprzMap::PprzMap(QWidget *parent) :
     ui->setupUi(this);
     MapScene* scene = static_cast<MapScene*>(ui->map->scene());
 
+    connect(ui->map, &MapWidget::itemRemoved,
+        [=](MapItem* item) {
+            //remove this item from everywhere, inclluding dependencies
+            delete item;
+        });
+
     connect(ui->map, &MapWidget::itemAdded,
         [=](MapItem* map_item) {
             if(map_item->getType() == ITEM_WAYPOINT) {
@@ -87,6 +93,8 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
         drawState = (drawState + 1) % 3;
     }
     else if(event->key() == Qt::Key_Escape) {
+        ui->map->setMouseTracking(false);
+        ui->map->scene()->setShortcutItems(false);
         interaction_state = PMIS_OTHER;
         ui->map->setCursor(Qt::ArrowCursor);
         //ui->map->setPanMask(Qt::LeftButton | Qt::MiddleButton);
