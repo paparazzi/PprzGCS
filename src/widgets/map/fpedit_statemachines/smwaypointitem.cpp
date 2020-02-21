@@ -3,8 +3,8 @@
 #include <QDebug>
 #include <QApplication>
 
-SmWaypointItem::SmWaypointItem(int tile_size) :
-    FpEditStateMachine (tile_size),
+SmWaypointItem::SmWaypointItem(int tile_size, MapWidget* map) :
+    FpEditStateMachine (tile_size, map),
     wp(nullptr), state(FPEWSMS_IDLE)
 {
 
@@ -27,7 +27,7 @@ MapItem* SmWaypointItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent
         switch (event_type) {
         case FPEE_SC_PRESS:
             if(mouseEvent->button() == Qt::LeftButton) {
-                wp = new WaypointItem(latlon, 20, color, tile_size, zoom, 50);
+                wp = new WaypointItem(latlon, 20, color, tile_size, zoom, 50, map);
                 state = FPEWSMS_MOVING;
                 mouseEvent->accept();
                 return wp;

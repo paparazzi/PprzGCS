@@ -5,6 +5,8 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QColor>
 
+class MapWidget;
+
 enum FPEditEvent {
     FPEE_SC_PRESS,
     FPEE_SC_MOVE,
@@ -16,7 +18,7 @@ enum FPEditEvent {
 class FpEditStateMachine
 {
 public:
-    FpEditStateMachine(int tile_size);
+    FpEditStateMachine(int tile_size, MapWidget* map);
     virtual ~FpEditStateMachine();
     ///
     /// \brief update
@@ -31,6 +33,7 @@ public:
 
 protected:
     int tile_size;
+    MapWidget* map;
 };
 
 #endif // FPEDITSTATEMACHINE_H

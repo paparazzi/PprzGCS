@@ -8,12 +8,13 @@
 #include <QVBoxLayout>
 #include <QSpacerItem>
 #include "map2d.h"
-#include "mapitem.h"
 #include "tileprovider.h"
 #include "maplayercontrol.h"
 #include "imagebutton.h"
 #include "layertab.h"
 #include <QCursor>
+
+class MapItem;
 
 enum PanState {
     PAN_IDLE,

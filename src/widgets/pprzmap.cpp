@@ -29,11 +29,7 @@ PprzMap::PprzMap(QWidget *parent) :
         [=](FPEditEvent eventType, QGraphicsSceneMouseEvent *mouseEvent) {
         if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
             MapItem* item = fp_edit_sm->update(eventType, mouseEvent, ui->map->zoom(), Qt::green);
-
-            if(item != nullptr) {
-                ui->map->addItem(item);
-                items.append(item);
-            }
+            (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
         }
 //            if(drawState == 0) {
 //                Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
@@ -76,7 +72,7 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
         interaction_state = PMIS_FLIGHT_PLAN_EDIT;
         switch (drawState) {
         case 0:
-            fp_edit_sm = new SmWaypointItem(ui->map->tileSize());
+            fp_edit_sm = new SmWaypointItem(ui->map->tileSize(), ui->map);
             ui->map->setCursor(QCursor(QPixmap(":/pictures/cursor_waypoint_black.svg"),0, 0));
             break;
         case 1:
@@ -86,6 +82,7 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
         case 2:
             fp_edit_sm = nullptr;
             ui->map->setCursor(QCursor(QPixmap(":/pictures/cursor_path_black.svg"),0, 0));
+            break;
         default:
             break;
         }

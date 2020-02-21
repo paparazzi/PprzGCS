@@ -9,10 +9,10 @@ class WaypointItem : public MapItem
 {
         Q_OBJECT
 public:
-    WaypointItem(Point2DLatLon pt, int size, QColor color, int tile_size, double zoom, qreal z_value, double neutral_scale_zoom = 15, QObject *parent = nullptr);
-    void add_to_scene(QGraphicsScene* scene);
+    WaypointItem(Point2DLatLon pt, int size, QColor color, int tile_size, double zoom, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     Point2DLatLon position() {return latlon;}
     void setPosition(Point2DLatLon ll);
+    QPointF scenePos();
     virtual void setHighlighted(bool h);
     virtual void setZValue(qreal z);
 

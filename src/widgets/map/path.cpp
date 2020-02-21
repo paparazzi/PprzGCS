@@ -1,12 +1,13 @@
 #include "path.h"
 #include "maputils.h"
 #include <QGraphicsScene>
+#include "mapwidget.h"
 
-Path::Path(Point2DLatLon start, QColor color, int tile_size, double zoom, qreal z_value, double neutral_scale_zoom, QObject *parent) :
-    MapItem(zoom, tile_size, z_value, neutral_scale_zoom, parent),
+Path::Path(Point2DLatLon start, QColor color, int tile_size, double zoom, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+    MapItem(zoom, tile_size, z_value, map, neutral_scale_zoom, parent),
     line_widht(5), line_color(color)
 {
-    WaypointItem* wpStart = new WaypointItem(start, 20, Qt::green, tile_size, zoom, z_value, neutral_scale_zoom, parent);
+    WaypointItem* wpStart = new WaypointItem(start, 20, Qt::green, tile_size, zoom, z_value, map, neutral_scale_zoom, parent);
 
     waypoints.append(wpStart);
 
@@ -25,23 +26,27 @@ Path::Path(Point2DLatLon start, QColor color, int tile_size, double zoom, qreal 
             emit(itemGainedHighlight());
         }
     );
+
+    map->addItem(this);
 }
 
 void Path::addPoint(Point2DLatLon pos) {
     WaypointItem* last_wp = waypoints.last();
-    WaypointItem* wp = new WaypointItem(pos, 20, Qt::green, tile_size, _zoom, z_value, neutral_scale_zoom, parent());
+    WaypointItem* wp = new WaypointItem(pos, 20, Qt::green, tile_size, _zoom, z_value, map, neutral_scale_zoom, parent());
     waypoints.append(wp);
 
     QPointF start_pos = scenePoint(last_wp->position(), zoomLevel(_zoom), tile_size);
     QPointF end_pos = scenePoint(wp->position(), zoomLevel(_zoom), tile_size);
 
-    GraphicsLine* line = new GraphicsLine(QLineF(start_pos, end_pos), QPen(QBrush(line_color), line_widht));
+    GraphicsLine* line = new GraphicsLine(QLineF(start_pos, end_pos), QPen(QBrush(line_color), line_widht), this);
 
     QList<QColor> color_variants = makeColorVariants(line_color);
     line->setColors(color_variants[2]);
 
     lines.append(line);
     line->setZValue(z_value - 0.5);
+
+    map->scene()->addItem(line);
 
     connect(
         wp, &WaypointItem::waypointMoved,
@@ -75,15 +80,6 @@ void Path::setHighlighted(bool h) {
     }
     for(auto line: lines) {
         line->setHighlighted(h);
-    }
-}
-
-void Path::add_to_scene(QGraphicsScene* scene) {
-    for(auto w:waypoints) {
-        w->add_to_scene(scene);
-    }
-    for(auto l:lines) {
-        scene->addItem(l);
     }
 }
 
