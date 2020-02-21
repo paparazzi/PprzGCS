@@ -6,7 +6,7 @@
 
 SmCircleItem::SmCircleItem(MapWidget* map) :
     FpEditStateMachine (map),
-    cir(nullptr), state(FPECSMS_IDLE)
+    cir(nullptr), state(IDLE)
 {
 
 }
@@ -30,14 +30,14 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
     double d;
 
     switch (state) {
-    case FPECSMS_IDLE:
+    case IDLE:
         switch (event_type) {
         case FPEE_SC_PRESS:
             if(mouseEvent->button() == Qt::LeftButton) {
                 pressPos = mouseEvent->scenePos();
                 cir = new CircleItem(latlon, 0, color, 50, map);
                 mouseEvent->accept();
-                state = FPECSMS_PRESSED;
+                state = PRESSED;
                 // set moving color ?
                 return cir;
             }
@@ -46,33 +46,33 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
             cir = new CircleItem(waypoint, 0, color, 50, map);
             map->setMouseTracking(true);
             map->scene()->setShortcutItems(true);
-            state = FPECSMS_RELEASED;
+            state = RELEASED;
             return cir;
         default:
             break;
         }
         break;
-    case FPECSMS_PRESSED:
+    case PRESSED:
         switch (event_type) {
         case FPEE_SC_MOVE:
             dp = mouseEvent->scenePos()-pressPos;
             d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());
             if(d > qApp->property("MAP_MOVE_HYSTERESIS").toInt()) {
-                state = FPECSMS_DRAGING;
+                state = DRAGING;
             }
             mouseEvent->accept();
             break;
         case FPEE_SC_RELEASE:
             map->setMouseTracking(true);
             map->scene()->setShortcutItems(true);
-            state = FPECSMS_RELEASED;
+            state = RELEASED;
             mouseEvent->accept();
             break;
         default:
             break;
         }
         break;
-    case FPECSMS_DRAGING:
+    case DRAGING:
         switch (event_type) {
         case FPEE_SC_MOVE:
             assert(cir != nullptr);
@@ -85,18 +85,18 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
                 map->removeItem(cir);
             }
             // back to normal color ?
-            state = FPECSMS_IDLE;
+            state = IDLE;
             break;
         default:
             break;
         }
         break;
-    case FPECSMS_RELEASED:
+    case RELEASED:
         switch (event_type) {
         case FPEE_SC_PRESS:
             map->setMouseTracking(false);
             map->scene()->setShortcutItems(false);
-            state = FPECSMS_DRAGING;
+            state = DRAGING;
             mouseEvent->accept();
             break;
         case FPEE_SC_MOVE:

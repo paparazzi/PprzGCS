@@ -6,7 +6,7 @@
 
 SmWaypointItem::SmWaypointItem(MapWidget* map) :
     FpEditStateMachine (map),
-    wp(nullptr), state(FPEWSMS_IDLE)
+    wp(nullptr), state(IDLE)
 {
 
 }
@@ -32,31 +32,31 @@ MapItem* SmWaypointItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent
     }
 
     switch (state) {
-    case FPEWSMS_IDLE:
+    case IDLE:
         switch (event_type) {
         case FPEE_SC_PRESS:
             if(mouseEvent->button() == Qt::LeftButton) {
                 wp = new WaypointItem(latlon, 20, color, 50, map);
-                state = FPEWSMS_MOVING;
+                state = MOVING;
                 mouseEvent->accept();
                 return wp;
             }
             break;
         case FPEE_SC_DOUBLE_CLICK:
-            state = FPEWSMS_IDLE;
+            state = IDLE;
             break;
         default:
             break;
         }
         break;
-    case FPEWSMS_MOVING:
+    case MOVING:
         switch (event_type) {
         case FPEE_SC_MOVE:
             assert(wp != nullptr);
             wp->setPosition(latlon);
             break;
         case FPEE_SC_RELEASE:
-            state = FPEWSMS_IDLE;
+            state = IDLE;
             break;
         default:
             break;

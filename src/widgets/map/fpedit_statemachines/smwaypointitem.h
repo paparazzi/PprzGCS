@@ -4,11 +4,6 @@
 #include "fpeditstatemachine.h"
 #include "waypointitem.h"
 
-enum FPEditWaypointSMState {
-    FPEWSMS_IDLE,
-    FPEWSMS_MOVING,
-};
-
 class SmWaypointItem : public FpEditStateMachine
 {
 public:
@@ -17,8 +12,14 @@ public:
     virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QColor color, MapItem* item = nullptr);
 
 private:
+
+    enum State {
+        IDLE,
+        MOVING,
+    };
+
     WaypointItem* wp;
-    FPEditWaypointSMState state;
+    State state;
 };
 
 #endif // SMWAYPOINTITEM_H
