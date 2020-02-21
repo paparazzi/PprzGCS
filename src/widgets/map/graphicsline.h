@@ -13,6 +13,7 @@ public:
     explicit GraphicsLine(QLineF linef, QPen pen_idle, QObject *parent = nullptr);
     void setColors(QColor color_unfocused);
     virtual void changeFocus();
+    void setIgnoreEvent(bool ignore) {ignore_events = ignore;}
 
 signals:
 
@@ -24,6 +25,8 @@ protected:
 private:
     QPen pen_idle;
     QPen pen_unfocused;
+
+    bool ignore_events;
 
 };
 

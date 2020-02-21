@@ -2,11 +2,12 @@
 #include "math.h"
 #include <QApplication>
 #include <QGraphicsSceneMouseEvent>
+#include <QDebug>
 
 GraphicsPoint::GraphicsPoint(qreal size, QColor color, QObject *parent) :
     GraphicsObject(parent),
     QGraphicsEllipseItem (-size/2, -size/2, size, size),
-    move_state(PMS_IDLE), movable(true)
+    move_state(PMS_IDLE), movable(true), ignore_events(false)
 {
     brush_idle = QBrush(color);
     setBrush(brush_idle);
@@ -20,6 +21,10 @@ void GraphicsPoint::setColors(QColor colPressed, QColor colMoving, QColor colUnf
 
 
 void GraphicsPoint::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    if(ignore_events) {
+        event->ignore();
+        return;
+    }
     GraphicsObject::mousePressEvent(event);
     pressPos = QPointF(event->pos().x() * scale(), event->pos().y() * scale());
     move_state = PMS_PRESSED;
@@ -27,6 +32,10 @@ void GraphicsPoint::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    if(ignore_events) {
+        event->ignore();
+        return;
+    }
     if(move_state == PMS_PRESSED) {
         QPointF dp = event->pos() - pressPos;
         double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());
@@ -43,6 +52,10 @@ void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void GraphicsPoint::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    if(ignore_events) {
+        event->ignore();
+        return;
+    }
     if(move_state == PMS_PRESSED) {
         emit(objectClicked(event->scenePos()));
     }

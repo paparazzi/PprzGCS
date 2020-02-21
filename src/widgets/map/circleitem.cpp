@@ -14,17 +14,17 @@ CircleItem::CircleItem(Point2DLatLon pt, double radius, QColor color, qreal z_va
 {
     center = new WaypointItem(pt, 20, color, z_value, map, neutral_scale_zoom, parent);
     center->setZoomFactor(1.1);
-    init(center, radius, color, map);
+    init(center, radius, color);
 }
 
 CircleItem::CircleItem(WaypointItem* center, double radius, QColor color, qreal z_value, MapWidget* map, double neutral_scale_zoom):
   MapItem(z_value, map, neutral_scale_zoom),
   center(center), _radius(radius), stroke(5)
 {
-    init(center, radius, color, map);
+    init(center, radius, color);
 }
 
-void CircleItem::init(WaypointItem* center, double radius, QColor color, MapWidget* map) {
+void CircleItem::init(WaypointItem* center, double radius, QColor color) {
     double pixelRadius = distMeters2Tile(radius, center->position().lat(), zoomLevel(map->zoom())) * map->tileSize();
     circle = new GraphicsCircle(pixelRadius, QPen(QBrush(color), stroke), this);
     circle->setPos(center->scenePos());

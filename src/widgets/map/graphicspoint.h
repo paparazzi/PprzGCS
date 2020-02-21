@@ -18,7 +18,7 @@ class GraphicsPoint : public GraphicsObject, public QGraphicsEllipseItem
 public:
     explicit GraphicsPoint(qreal size, QColor color, QObject *parent = nullptr);
     void setColors(QColor colPressed, QColor colMoving, QColor colUnfocused);
-
+    void setIgnoreEvent(bool ignore) {ignore_events = ignore;}
 
 signals:
     void pointMoved(QPointF scenePos);
@@ -45,6 +45,7 @@ private:
     QBrush brush_moved;
     QBrush brush_unfocused;
 
+    bool ignore_events;
 };
 
 #endif // GRAPHICSPOINT_H

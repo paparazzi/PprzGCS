@@ -15,6 +15,7 @@
 #include "path.h"
 #include "smwaypointitem.h"
 #include "smcircleitem.h"
+#include "smpathitem.h"
 #include <QCursor>
 
 PprzMap::PprzMap(QWidget *parent) :
@@ -28,7 +29,8 @@ PprzMap::PprzMap(QWidget *parent) :
 
     connect(ui->map, &MapWidget::itemRemoved,
         [=](MapItem* item) {
-            //remove this item from everywhere, inclluding dependencies
+            //remove this item from everywhere, including dependencies
+            //if nobody know it recursively, delete it !
             delete item;
         });
 
@@ -84,7 +86,7 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
             ui->map->setCursor(QCursor(QPixmap(":/pictures/cursor_circle_black.svg"),0, 0));
             break;
         case 2:
-            fp_edit_sm = nullptr;
+            fp_edit_sm = new SmPathItem(ui->map);
             ui->map->setCursor(QCursor(QPixmap(":/pictures/cursor_path_black.svg"),0, 0));
             break;
         default:
@@ -93,11 +95,16 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
         drawState = (drawState + 1) % 3;
     }
     else if(event->key() == Qt::Key_Escape) {
+        if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
+            MapItem* item = fp_edit_sm->update(FPEE_CANCEL, nullptr, nullptr, Qt::green);
+            (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
+        }
+
         ui->map->setMouseTracking(false);
         ui->map->scene()->setShortcutItems(false);
         interaction_state = PMIS_OTHER;
+        drawState = 0;
         ui->map->setCursor(Qt::ArrowCursor);
-        //ui->map->setPanMask(Qt::LeftButton | Qt::MiddleButton);
     }
     else if (event->key() == Qt::Key_H) {
         for(auto mp: items) {

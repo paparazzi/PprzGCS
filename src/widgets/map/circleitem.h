@@ -34,7 +34,7 @@ signals:
 protected:
 
 private:
-    void init(WaypointItem* center, double radius, QColor color, MapWidget* map);
+    void init(WaypointItem* center, double radius, QColor color);
     WaypointItem* center;
     GraphicsCircle* circle;
     double _radius;

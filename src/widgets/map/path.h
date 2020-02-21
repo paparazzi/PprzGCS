@@ -11,20 +11,28 @@ class Path : public MapItem
     Q_OBJECT
 public:
     explicit Path(Point2DLatLon start, QColor color, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    explicit Path(WaypointItem* wpStart, QColor color, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     void addPoint(Point2DLatLon pos);
+    void addPoint(WaypointItem* waypoint);
     virtual void setHighlighted(bool h);
     virtual void setZValue(qreal z);
+    virtual void updateGraphics();
     virtual void removeFromScene();
     virtual ItemType getType() {return ITEM_PATH;}
+    WaypointItem* getLastWaypoint() {return waypoints.last();}
+    void setLinesIgnoreEvents(bool ignore);
+    void setLastLineIgnoreEvents(bool ignore);
+    void removeLastWaypoint();
 
 signals:
 
 public slots:
 
 protected:
-    virtual void updateGraphics();
+
 
 private:
+    void init(WaypointItem* startWp);
     QList<WaypointItem*> waypoints;
     QList<GraphicsLine*> lines;
     int line_widht;

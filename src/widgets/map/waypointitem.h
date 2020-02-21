@@ -17,6 +17,7 @@ public:
     virtual void setZValue(qreal z);
     virtual void removeFromScene();
     virtual ItemType getType() {return ITEM_WAYPOINT;}
+    void setIgnoreEvent(bool ignore);
 
 signals:
     void waypointMoved(Point2DLatLon latlon_pos);

@@ -20,6 +20,8 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
     Point2DLatLon latlon(0, 0);
     if(event_type == FPEE_WP_CLICKED) {
         assert(waypoint != nullptr);
+    } else if(event_type == FPEE_CANCEL) {
+        assert(waypoint == nullptr && mouseEvent == nullptr);
     } else {
         assert(mouseEvent != nullptr);
         latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(map->zoom()), map->tileSize());

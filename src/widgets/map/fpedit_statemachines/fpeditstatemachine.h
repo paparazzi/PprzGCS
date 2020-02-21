@@ -14,6 +14,7 @@ enum FPEditEvent {
     FPEE_SC_RELEASE,
     FPEE_SC_DOUBLE_CLICK,
     FPEE_WP_CLICKED,
+    FPEE_CANCEL,
 };
 
 class FpEditStateMachine

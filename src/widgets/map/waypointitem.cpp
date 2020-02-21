@@ -83,3 +83,8 @@ QPointF WaypointItem::scenePos() {
     }
     return QPointF(0,0);
 }
+
+
+void WaypointItem::setIgnoreEvent(bool ignore) {
+    point->setIgnoreEvent(ignore);
+}
