@@ -9,18 +9,18 @@
 #include <QSpacerItem>
 #include <QScrollArea>
 #include <QDebug>
-#include "imagebutton.h"
 #include "maplayercontrol.h"
 #include <QApplication>
 #include "pprz_dispatcher.h"
 #include "maputils.h"
 
-MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), parent)
+MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), parent),
+    pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton)
 {
     setupUi();
-
+    setDragMode(QGraphicsView::NoDrag);
     // Create and add button(s) in the left column
-    ImageButton* layers_button = new ImageButton(QIcon(":/pictures/map_layers_normal.svg"), QSize(60,60), true);
+    layers_button = new ImageButton(QIcon(":/pictures/map_layers_normal.svg"), QSize(60,60), true);
     layers_button->setHoverIcon(QIcon(":/pictures/map_layers_hover.svg"));
     layers_button->setPressedIcon(QIcon(":/pictures/map_layers_pressed.svg"));
     connect(
@@ -118,6 +118,12 @@ void MapWidget::setupUi() {
     leftScrollArea->hide();
 }
 
+void MapWidget::setCursor(const QCursor &cur) {
+    QGraphicsView::setCursor(cur);
+    leftScrollArea->setCursor(Qt::ArrowCursor);
+    layers_button->setCursor(Qt::ArrowCursor);
+}
+
 void MapWidget::addItem(MapItem* map_item) {
     map_item->scaleToZoom(zoom(), scaleFactor());
     map_item->add_to_scene(scene());
@@ -126,45 +132,32 @@ void MapWidget::addItem(MapItem* map_item) {
 
 void MapWidget::mousePressEvent(QMouseEvent *event) {
     Map2D::mousePressEvent(event);
-    if(event->isAccepted()) {
-        std::cout << "ACCEPTED" << std::endl;
-    } else {
-        std::cout << "NOT ACCEPTED" << std::endl;
-    }
-    if (event->button() == Qt::LeftButton)    // Left button...
-    {
-      std::cout << "Left button pressed" << std::endl;
-    }
-    else if (event->button() == Qt::RightButton)   // Right button...
-    {
-      std::cout << "Right button pressed" << std::endl;
-    }
-    else if (event->button() == Qt::MidButton)   // Middle button...
-    {
-      std::cout << "Middle button pressed" << std::endl;
+    if(event->buttons() & pan_mouse_mask && !event->isAccepted()) {
+        pan_state = PAN_PRESSED;
+        lastPos = event->pos();
     }
 }
 
 void MapWidget::mouseMoveEvent(QMouseEvent *event) {
     Map2D::mouseMoveEvent(event);
-    std::cout << "mouse moved" << std::endl;
+    if(event->buttons() & pan_mouse_mask) {
+        if(pan_state == PAN_PRESSED) {
+            QPoint dp = event->pos()-lastPos;
+            double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());
+            if(d > qApp->property("MAP_MOVE_HYSTERESIS").toInt()) {
+                pan_state = PAN_MOVE;
+            }
+        } else if(pan_state == PAN_MOVE) {
+            QPoint dp = event->pos()-lastPos;
+            translate(dp.x(), dp.y());
+            lastPos = event->pos();
+        }
+    }
 }
 
 void MapWidget::mouseReleaseEvent(QMouseEvent *event) {
     Map2D::mouseReleaseEvent(event);
-    if (event->button() == Qt::LeftButton)    // Left button...
-    {
-      std::cout << "Left button released" << std::endl;
-    }
-    else if (event->button() == Qt::RightButton)   // Right button...
-    {
-      std::cout << "Right button released" << std::endl;
-    }
-    else if (event->button() == Qt::MidButton)   // Middle button...
-    {
-      std::cout << "Middle button released" << std::endl;
-    }
-
+    pan_state = PAN_IDLE;
 }
 
 void MapWidget::wheelEvent(QWheelEvent* event) {

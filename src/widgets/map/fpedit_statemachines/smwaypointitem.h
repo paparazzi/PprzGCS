@@ -14,7 +14,7 @@ class SmWaypointItem : public FpEditStateMachine
 public:
     SmWaypointItem(int tile_size);
     ~SmWaypointItem();
-    virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, double zoom, QColor color);
+    virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, double zoom, QColor color, MapItem* item = nullptr);
 
 private:
     WaypointItem* wp;

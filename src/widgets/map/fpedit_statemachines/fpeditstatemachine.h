@@ -18,7 +18,16 @@ class FpEditStateMachine
 public:
     FpEditStateMachine(int tile_size);
     virtual ~FpEditStateMachine();
-    virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, double zoom, QColor color) = 0;
+    ///
+    /// \brief update
+    /// \param event_type
+    /// \param mouseEvent
+    /// \param zoom
+    /// \param color
+    /// \param item: item to edit (only applicable for the path?)
+    /// \return
+    ///
+    virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, double zoom, QColor color, MapItem* item = nullptr) = 0;
 
 protected:
     int tile_size;

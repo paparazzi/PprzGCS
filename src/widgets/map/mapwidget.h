@@ -11,7 +11,15 @@
 #include "mapitem.h"
 #include "tileprovider.h"
 #include "maplayercontrol.h"
+#include "imagebutton.h"
 #include "layertab.h"
+#include <QCursor>
+
+enum PanState {
+    PAN_IDLE,
+    PAN_PRESSED,
+    PAN_MOVE
+};
 
 class MapWidget : public Map2D
 {
@@ -21,6 +29,8 @@ public:
 
     void addItem(MapItem* map_item);
     void addLayerControl(QString name, bool initialState, int z);
+    virtual void setCursor(const QCursor &);
+    void setPanMask(int mask) {pan_mouse_mask = mask;}
 
 signals:
     void rightClick(QMouseEvent *event);
@@ -42,6 +52,11 @@ private:
     QVBoxLayout* columnRight;
     QSpacerItem* spacer;
     QScrollArea* leftScrollArea;
+    ImageButton* layers_button;
+
+    QPoint lastPos;
+    PanState pan_state;
+    int pan_mouse_mask;
 
 };
 

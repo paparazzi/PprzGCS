@@ -14,6 +14,7 @@
 #include "maputils.h"
 #include "path.h"
 #include "smwaypointitem.h"
+#include <QCursor>
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
@@ -28,11 +29,11 @@ PprzMap::PprzMap(QWidget *parent) :
         [=](FPEditEvent eventType, QGraphicsSceneMouseEvent *mouseEvent) {
         if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
             MapItem* item = fp_edit_sm->update(eventType, mouseEvent, ui->map->zoom(), Qt::green);
+
             if(item != nullptr) {
                 ui->map->addItem(item);
                 items.append(item);
             }
-            qDebug() << "UPDAAATE !!!";
         }
 //            if(drawState == 0) {
 //                Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
@@ -73,20 +74,27 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
     (void)event;
     if(event->key() == Qt::Key_Space) {
         interaction_state = PMIS_FLIGHT_PLAN_EDIT;
-        drawState = (drawState + 1) % 3;
         switch (drawState) {
         case 0:
             fp_edit_sm = new SmWaypointItem(ui->map->tileSize());
+            ui->map->setCursor(QCursor(QPixmap(":/pictures/cursor_waypoint_black.svg"),0, 0));
             break;
         case 1:
-            //fp_edit_sm
+            fp_edit_sm = nullptr;
+            ui->map->setCursor(QCursor(QPixmap(":/pictures/cursor_circle_black.svg"),0, 0));
+            break;
+        case 2:
+            fp_edit_sm = nullptr;
+            ui->map->setCursor(QCursor(QPixmap(":/pictures/cursor_path_black.svg"),0, 0));
         default:
             break;
         }
-        qDebug() << "SPAAAAAACE!";
+        drawState = (drawState + 1) % 3;
     }
     else if(event->key() == Qt::Key_Escape) {
         interaction_state = PMIS_OTHER;
+        ui->map->setCursor(Qt::ArrowCursor);
+        //ui->map->setPanMask(Qt::LeftButton | Qt::MiddleButton);
     }
     else if (event->key() == Qt::Key_H) {
         for(auto mp: items) {
