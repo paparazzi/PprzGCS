@@ -32,6 +32,7 @@ public:
     void addLayerControl(QString name, bool initialState, int z);
     virtual void setCursor(const QCursor &);
     void setPanMask(int mask) {pan_mouse_mask = mask;}
+    MapScene* scene() {return _scene;}
 
 signals:
     //void rightClick(QMouseEvent *event);

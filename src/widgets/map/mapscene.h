@@ -14,6 +14,8 @@ public:
     explicit MapScene(qreal x, qreal y, qreal width, qreal height, QObject *parent = nullptr);
     explicit MapScene(const QRectF &sceneRect, QObject *parent = nullptr);
 
+    void setShortcutItems(bool si) {shortcut_items = si;}
+
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent);
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent);
@@ -24,6 +26,9 @@ signals:
     void eventScene(FPEditEvent, QGraphicsSceneMouseEvent*);
 
 public slots:
+
+private:
+    bool shortcut_items;
 };
 
 #endif // MAPSCENE_H

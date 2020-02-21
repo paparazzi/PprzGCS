@@ -43,8 +43,9 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
             break;
         case FPEE_WP_CLICKED:
             cir = new CircleItem(waypoint, 0, color, 50, map);
+            map->setMouseTracking(true);
+            map->scene()->setShortcutItems(true);
             state = FPECSMS_RELEASED;
-            qDebug() << "Circle state machine: waypoint clicked!";
             return cir;
         default:
             break;
@@ -61,6 +62,8 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
             mouseEvent->accept();
             break;
         case FPEE_SC_RELEASE:
+            map->setMouseTracking(true);
+            map->scene()->setShortcutItems(true);
             state = FPECSMS_RELEASED;
             mouseEvent->accept();
             break;
@@ -86,8 +89,14 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
     case FPECSMS_RELEASED:
         switch (event_type) {
         case FPEE_SC_PRESS:
+            map->setMouseTracking(false);
+            map->scene()->setShortcutItems(false);
             adjustCircleRadius(mouseEvent);
             state = FPECSMS_DRAGING;
+            mouseEvent->accept();
+            break;
+        case FPEE_SC_MOVE:
+            adjustCircleRadius(mouseEvent);
             mouseEvent->accept();
             break;
         default:
