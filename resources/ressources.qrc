@@ -6,7 +6,10 @@
         <file>pictures/map_layers_hover.svg</file>
         <file>pictures/map_layers_normal.svg</file>
         <file>pictures/map_layers_pressed.svg</file>
-        <file>pictures/hide.svg</file>
-        <file>pictures/show.svg</file>
+        <file>pictures/hidden.svg</file>
+        <file>pictures/displayed.svg</file>
+        <file>pictures/cursor_waypoint_black.svg</file>
+        <file>pictures/cursor_circle_black.svg</file>
+        <file>pictures/cursor_path_black.svg</file>
     </qresource>
 </RCC>
