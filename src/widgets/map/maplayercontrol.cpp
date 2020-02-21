@@ -20,9 +20,9 @@ MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState
     verticalLayout->setAlignment(imageLabel, Qt::AlignHCenter);
     imageLabel->setPixmap(pixmap);
 
-    QIcon icon(":/pictures/show");
+    QIcon icon(":/pictures/displayed.svg");
     if(showState) {
-        icon = QIcon(":/pictures/hide");
+        icon = QIcon(":/pictures/hidden.svg");
     }
 
     show_button = new ImageButton(icon, QSize(60, 60), true, imageLabel);
@@ -53,9 +53,9 @@ MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState
 void MapLayerControl::setShowState(bool state) {
     showState = state;
     if(showState) {
-        show_button->setNormalIcon(QIcon(":/pictures/hide"));
+        show_button->setNormalIcon(QIcon(":/pictures/hidden.svg"));
     } else {
-        show_button->setNormalIcon(QIcon(":/pictures/show"));
+        show_button->setNormalIcon(QIcon(":/pictures/displayed.svg"));
     }
 }
 
