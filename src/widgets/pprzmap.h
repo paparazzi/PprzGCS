@@ -22,6 +22,7 @@ class PprzMap : public QWidget
 public:
     explicit PprzMap(QWidget *parent = nullptr);
     ~PprzMap();
+    void registerWaypoint(WaypointItem* waypoint);
 
 protected:
     virtual void keyPressEvent(QKeyEvent *event);

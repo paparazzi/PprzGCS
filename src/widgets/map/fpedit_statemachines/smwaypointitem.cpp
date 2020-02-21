@@ -2,6 +2,7 @@
 #include "maputils.h"
 #include <QDebug>
 #include <QApplication>
+#include "mapwidget.h"
 
 SmWaypointItem::SmWaypointItem(int tile_size, MapWidget* map) :
     FpEditStateMachine (tile_size, map),
@@ -19,9 +20,17 @@ SmWaypointItem::~SmWaypointItem(){
 //SE_RELEASE,
 //SE_DOUBLE_CLICK,
 
-MapItem* SmWaypointItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, double zoom, QColor color, MapItem* item) {
+MapItem* SmWaypointItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QColor color, MapItem* item) {
     (void) item;    // A waypoint can't be edited (just move it!)
-    Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(zoom), tile_size);
+    (void) waypoint;    //TODO : use the waypoint to create a waypoint at the same position for another drone ?
+    Point2DLatLon latlon(0, 0);
+    if(event_type == FPEE_WP_CLICKED) {
+        assert(waypoint != nullptr);
+    } else {
+        assert(mouseEvent != nullptr);
+        latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(map->zoom()), tile_size);
+    }
+
     switch (state) {
     case FPEWSMS_IDLE:
         switch (event_type) {

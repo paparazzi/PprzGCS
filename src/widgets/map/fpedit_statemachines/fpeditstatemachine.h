@@ -6,6 +6,7 @@
 #include <QColor>
 
 class MapWidget;
+class WaypointItem;
 
 enum FPEditEvent {
     FPEE_SC_PRESS,
@@ -23,13 +24,13 @@ public:
     ///
     /// \brief update
     /// \param event_type
-    /// \param mouseEvent
-    /// \param zoom
+    /// \param mouseEvent: mouse event if applicable. Must point to valid data if @event_type is FPEE_SC_*. (can be null otherwise)
+    /// \param waypoint: base waypoint for the item (eg. center of a circle, waypoint in a path...). Must point to valid data if @event_type is FPEE_WP_CLICKED. (can be null otherwise)
     /// \param color
     /// \param item: item to edit (only applicable for the path?)
     /// \return
     ///
-    virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, double zoom, QColor color, MapItem* item = nullptr) = 0;
+    virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QColor color, MapItem* item = nullptr) = 0;
 
 protected:
     int tile_size;

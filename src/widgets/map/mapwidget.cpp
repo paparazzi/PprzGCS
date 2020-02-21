@@ -127,6 +127,7 @@ void MapWidget::setCursor(const QCursor &cur) {
 void MapWidget::addItem(MapItem* map_item) {
     map_item->updateGraphics();
     _items.append(map_item);
+    emit(itemAdded(map_item));
 }
 
 void MapWidget::mousePressEvent(QMouseEvent *event) {

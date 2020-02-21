@@ -24,36 +24,33 @@ PprzMap::PprzMap(QWidget *parent) :
 {
     ui->setupUi(this);
     MapScene* scene = static_cast<MapScene*>(ui->map->scene());
-    connect(
-       scene, &MapScene::eventScene,
-        [=](FPEditEvent eventType, QGraphicsSceneMouseEvent *mouseEvent) {
-        if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
-            MapItem* item = fp_edit_sm->update(eventType, mouseEvent, ui->map->zoom(), Qt::green);
-            (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
-        }
-//            if(drawState == 0) {
-//                Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
-//                Point2DLatLon latlon2 = latlonPoint(mouseEvent->scenePos() + QPointF(100, 100), zoomLevel(ui->map->zoom()), ui->map->tileSize());
-//                Point2DLatLon latlon3 = latlonPoint(mouseEvent->scenePos() + QPointF(100, -100), zoomLevel(ui->map->zoom()), ui->map->tileSize());
-//                Path* s = new Path(latlon, Qt::blue, ui->map->tileSize(), ui->map->zoom(), 50);
-//                s->addPoint(latlon2);
-//                s->addPoint(latlon3);
-//                ui->map->addItem(s);
-//                items.append(s);
-//            } else if(drawState == 1){
-//                Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
-//                CircleItem* ci = new CircleItem(latlon, 100, Qt::magenta, ui->map->tileSize(), ui->map->zoom(), 50);
-//                ui->map->addItem(ci);
-//                items.append(ci);
-//            } else {
-//                Point2DLatLon latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(ui->map->zoom()), ui->map->tileSize());
-//                WaypointItem* w = new WaypointItem(latlon, 50, Qt::red, ui->map->tileSize(), ui->map->zoom(), 50);
-//                ui->map->addItem(w);
-//                items.append(w);
-//            }
-        }
-    );
 
+    connect(ui->map, &MapWidget::itemAdded,
+        [=](MapItem* map_item) {
+            if(map_item->getType() == ITEM_WAYPOINT) {
+                registerWaypoint(dynamic_cast<WaypointItem*>(map_item));
+            }
+        });
+
+    connect(scene, &MapScene::eventScene,
+        [=](FPEditEvent eventType, QGraphicsSceneMouseEvent *mouseEvent) {
+            if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
+                MapItem* item = fp_edit_sm->update(eventType, mouseEvent, nullptr, Qt::green);
+                (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
+            }
+        });
+
+}
+
+void PprzMap::registerWaypoint(WaypointItem* waypoint) {
+    connect(waypoint, &WaypointItem::itemClicked,
+        [=](QPointF pos) {
+            (void)pos;
+            if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
+                MapItem* item = fp_edit_sm->update(FPEE_WP_CLICKED, nullptr, waypoint, Qt::green);
+                (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
+            }
+        });
 }
 
 PprzMap::~PprzMap()

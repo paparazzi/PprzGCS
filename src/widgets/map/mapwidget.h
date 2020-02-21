@@ -34,7 +34,8 @@ public:
     void setPanMask(int mask) {pan_mouse_mask = mask;}
 
 signals:
-    void rightClick(QMouseEvent *event);
+    //void rightClick(QMouseEvent *event);
+    void itemAdded(MapItem* map_item);
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event);

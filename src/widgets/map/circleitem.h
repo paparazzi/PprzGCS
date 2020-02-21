@@ -17,6 +17,7 @@ public:
     void setPosition(Point2DLatLon ll) {center->setPosition(ll);};
     virtual void setHighlighted(bool h);
     virtual void setZValue(qreal z);
+    virtual ItemType getType() {return ITEM_CIRCLE;}
 
 signals:
     void circleMoved(Point2DLatLon latlon_pos);

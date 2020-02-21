@@ -14,6 +14,8 @@ public:
     void addPoint(Point2DLatLon pos);
     virtual void setHighlighted(bool h);
     virtual void setZValue(qreal z);
+    virtual ItemType getType() {return ITEM_PATH;}
+
 signals:
 
 public slots:

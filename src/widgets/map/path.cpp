@@ -2,6 +2,7 @@
 #include "maputils.h"
 #include <QGraphicsScene>
 #include "mapwidget.h"
+#include "mapitem.h"
 
 Path::Path(Point2DLatLon start, QColor color, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     MapItem(z_value, map, neutral_scale_zoom, parent),

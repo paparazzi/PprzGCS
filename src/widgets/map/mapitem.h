@@ -15,6 +15,13 @@ enum MoveState {
     MIS_MOVED,
 };
 
+enum ItemType {
+    ITEM_WAYPOINT,
+    ITEM_CIRCLE,
+    ITEM_PATH,
+    //ITEM_OVAL,
+};
+
 class MapItem : public QObject
 {
     Q_OBJECT
@@ -23,6 +30,7 @@ public:
     QList<QColor> makeColorVariants(QColor);
     virtual void updateGraphics() = 0;
     virtual void setHighlighted(bool h) = 0;
+    virtual ItemType getType() = 0;
     double zoomFactor() {return zoom_factor;}
     double neutralScaleZoom() {return neutral_scale_zoom;}
     void setZoomFactor(double zf) {zoom_factor = zf;}
