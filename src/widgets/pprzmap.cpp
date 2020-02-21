@@ -69,7 +69,7 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
         interaction_state = PMIS_FLIGHT_PLAN_EDIT;
         switch (drawState) {
         case 0:
-            fp_edit_sm = new SmWaypointItem(ui->map->tileSize(), ui->map);
+            fp_edit_sm = new SmWaypointItem(ui->map);
             ui->map->setCursor(QCursor(QPixmap(":/pictures/cursor_waypoint_black.svg"),0, 0));
             break;
         case 1:

@@ -12,7 +12,7 @@ enum FPEditWaypointSMState {
 class SmWaypointItem : public FpEditStateMachine
 {
 public:
-    SmWaypointItem(int tile_size, MapWidget* map);
+    SmWaypointItem(MapWidget* map);
     ~SmWaypointItem();
     virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QColor color, MapItem* item = nullptr);
 

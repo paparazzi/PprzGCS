@@ -19,7 +19,7 @@ enum FPEditEvent {
 class FpEditStateMachine
 {
 public:
-    FpEditStateMachine(int tile_size, MapWidget* map);
+    FpEditStateMachine(MapWidget* map);
     virtual ~FpEditStateMachine();
     ///
     /// \brief update
@@ -33,7 +33,6 @@ public:
     virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QColor color, MapItem* item = nullptr) = 0;
 
 protected:
-    int tile_size;
     MapWidget* map;
 };
 

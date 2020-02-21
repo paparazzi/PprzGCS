@@ -4,8 +4,8 @@
 #include <QApplication>
 #include "mapwidget.h"
 
-SmWaypointItem::SmWaypointItem(int tile_size, MapWidget* map) :
-    FpEditStateMachine (tile_size, map),
+SmWaypointItem::SmWaypointItem(MapWidget* map) :
+    FpEditStateMachine (map),
     wp(nullptr), state(FPEWSMS_IDLE)
 {
 
@@ -28,7 +28,7 @@ MapItem* SmWaypointItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent
         assert(waypoint != nullptr);
     } else {
         assert(mouseEvent != nullptr);
-        latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(map->zoom()), tile_size);
+        latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(map->zoom()), map->tileSize());
     }
 
     switch (state) {
