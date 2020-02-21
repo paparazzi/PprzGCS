@@ -31,6 +31,7 @@ public:
 
     void setLayerOpacity(QString providerName, qreal opacity);
     void setLayerZ(QString providerName, int z);
+    double scaleFactor() {return pow(2, _zoom - zoomLevel(_zoom));}
 
     //Point2DLatLon latlonPoint(QPointF scenePos, int zoom);
 
@@ -59,7 +60,7 @@ protected:
     virtual void resizeEvent(QResizeEvent *event);
 
     Point2DLatLon latlonFromView(QPoint viewPos, int zoom);
-    double scaleFactor() {return pow(2, _zoom - zoomLevel(_zoom));}
+
 
     //QGraphicsScene* _scene;
     MapScene* _scene;

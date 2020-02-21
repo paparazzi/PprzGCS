@@ -125,7 +125,7 @@ void MapWidget::setCursor(const QCursor &cur) {
 }
 
 void MapWidget::addItem(MapItem* map_item) {
-    map_item->scaleToZoom(zoom(), scaleFactor());
+    map_item->updateGraphics();
     _items.append(map_item);
 }
 
@@ -162,6 +162,6 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *event) {
 void MapWidget::wheelEvent(QWheelEvent* event) {
     Map2D::wheelEvent(event);
     for(auto item: _items) {
-        item->scaleToZoom(zoom(), scaleFactor());
+        item->updateGraphics();
     }
 }

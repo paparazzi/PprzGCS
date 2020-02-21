@@ -27,7 +27,7 @@ MapItem* SmWaypointItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent
         switch (event_type) {
         case FPEE_SC_PRESS:
             if(mouseEvent->button() == Qt::LeftButton) {
-                wp = new WaypointItem(latlon, 20, color, tile_size, zoom, 50, map);
+                wp = new WaypointItem(latlon, 20, color, 50, map);
                 state = FPEWSMS_MOVING;
                 mouseEvent->accept();
                 return wp;

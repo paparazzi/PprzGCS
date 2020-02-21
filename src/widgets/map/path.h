@@ -10,7 +10,7 @@ class Path : public MapItem
 {
     Q_OBJECT
 public:
-    explicit Path(Point2DLatLon start, QColor color, int tile_size, double zoom, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    explicit Path(Point2DLatLon start, QColor color, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     void addPoint(Point2DLatLon pos);
     virtual void setHighlighted(bool h);
     virtual void setZValue(qreal z);

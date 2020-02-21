@@ -19,9 +19,9 @@ class MapItem : public QObject
 {
     Q_OBJECT
 public:
-    MapItem(double zoom, int tile_size, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    MapItem(qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     QList<QColor> makeColorVariants(QColor);
-    virtual void scaleToZoom(double zoom, double viewScale);
+    virtual void updateGraphics() = 0;
     virtual void setHighlighted(bool h) = 0;
     double zoomFactor() {return zoom_factor;}
     double neutralScaleZoom() {return neutral_scale_zoom;}
@@ -34,15 +34,10 @@ signals:
     void itemGainedHighlight();
 
 protected:
-    virtual void updateGraphics() = 0;
     double getScale();
 
     double zoom_factor;
     double neutral_scale_zoom;
-    int tile_size;
-    double _zoom;
-    double _view_scale;
-
     qreal z_value;
 
     MapWidget* map;

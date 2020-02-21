@@ -7,24 +7,24 @@
 #include <QGraphicsScene>
 #include "mapwidget.h"
 
-CircleItem::CircleItem(Point2DLatLon pt, double radius, QColor color, int tile_size, double zoom, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
-    MapItem(zoom, tile_size, z_value, map, neutral_scale_zoom, parent),
+CircleItem::CircleItem(Point2DLatLon pt, double radius, QColor color, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+    MapItem(z_value, map, neutral_scale_zoom, parent),
     _radius(radius), stroke(5)
 {
-    center = new WaypointItem(pt, 20, color, tile_size, zoom, z_value, map, neutral_scale_zoom, parent);
+    center = new WaypointItem(pt, 20, color, z_value, map, neutral_scale_zoom, parent);
     center->setZoomFactor(1.1);
-    init(center, radius, color, tile_size, map);
+    init(center, radius, color, map);
 }
 
-CircleItem::CircleItem(WaypointItem* center, double radius, QColor color, int tile_size, double zoom, qreal z_value, MapWidget* map, double neutral_scale_zoom):
-  MapItem(zoom, tile_size, z_value, map, neutral_scale_zoom),
+CircleItem::CircleItem(WaypointItem* center, double radius, QColor color, qreal z_value, MapWidget* map, double neutral_scale_zoom):
+  MapItem(z_value, map, neutral_scale_zoom),
   center(center), _radius(radius), stroke(5)
 {
-    init(center, radius, color, tile_size, map);
+    init(center, radius, color, map);
 }
 
-void CircleItem::init(WaypointItem* center, double radius, QColor color, int tile_size, MapWidget* map) {
-    double pixelRadius = distMeters2Tile(radius, center->position().lat(), zoomLevel(_zoom)) * tile_size;
+void CircleItem::init(WaypointItem* center, double radius, QColor color, MapWidget* map) {
+    double pixelRadius = distMeters2Tile(radius, center->position().lat(), zoomLevel(map->zoom())) * map->tileSize();
     circle = new GraphicsCircle(pixelRadius, QPen(QBrush(color), stroke), this);
     circle->setPos(center->scenePos());
     circle->setZValue(center->zValue() + 0.5);
@@ -37,7 +37,7 @@ void CircleItem::init(WaypointItem* center, double radius, QColor color, int til
     connect(
         center, &WaypointItem::waypointMoved,
         [=](Point2DLatLon latlon) {
-            QPointF p = scenePoint(latlon, zoomLevel(_zoom), tile_size);
+            QPointF p = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());
             circle->setPos(p);
             emit(circleMoved(latlon));
         }
@@ -46,7 +46,7 @@ void CircleItem::init(WaypointItem* center, double radius, QColor color, int til
     connect(
         circle, &GraphicsCircle::circleScaled,
         [=](qreal size) {
-            _radius = distTile2Meters(circle->pos().y()/tile_size, size/tile_size, zoomLevel(_zoom));
+            _radius = distTile2Meters(circle->pos().y()/map->tileSize(), size/map->tileSize(), zoomLevel(map->zoom()));
             emit(circleScaled(_radius));
         }
     );
@@ -94,9 +94,9 @@ void CircleItem::setZValue(qreal z) {
 }
 
 void CircleItem::updateGraphics() {
-    double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(_zoom))*tile_size;
+    double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(map->zoom()))*map->tileSize();
 
-    QPointF scene_pos = scenePoint(center->position(), zoomLevel(_zoom), tile_size);
+    QPointF scene_pos = scenePoint(center->position(), zoomLevel(map->zoom()), map->tileSize());
     circle->setPos(scene_pos);
     circle->setRadius(pixelRadius);
 
