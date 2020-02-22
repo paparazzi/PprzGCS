@@ -71,10 +71,12 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
             mouseEvent->accept();
             break;
         case FPEE_SC_RELEASE:
-            map->setMouseTracking(true);
-            map->scene()->setShortcutItems(true);
-            state = RELEASED;
-            mouseEvent->accept();
+            if(mouseEvent->button() == Qt::LeftButton) {
+                map->setMouseTracking(true);
+                map->scene()->setShortcutItems(true);
+                state = RELEASED;
+                mouseEvent->accept();
+            }
             break;
         default:
             break;
@@ -88,12 +90,16 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
             mouseEvent->accept();
             break;
         case FPEE_SC_RELEASE:
-            if(cir->radius() < qApp->property("CIRCLE_CREATE_MIN_RADIUS").toDouble()) {
-                std::cout << "can't create circle with radius < CIRCLE_CREATE_MIN_RADIUS. Please change this parameter." << std::endl;
-                map->removeItem(cir);
+            if(mouseEvent->button() == Qt::LeftButton) {
+                if (cir->radius() < qApp->property("CIRCLE_CREATE_MIN_RADIUS").toDouble()) {
+                    std::cout
+                            << "can't create circle with radius < CIRCLE_CREATE_MIN_RADIUS. Please change this parameter."
+                            << std::endl;
+                    map->removeItem(cir);
+                }
+                // back to normal color ?
+                state = IDLE;
             }
-            // back to normal color ?
-            state = IDLE;
             break;
         default:
             break;
@@ -102,10 +108,12 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
     case RELEASED:
         switch (event_type) {
         case FPEE_SC_PRESS:
-            map->setMouseTracking(false);
-            map->scene()->setShortcutItems(false);
-            state = DRAGING;
-            mouseEvent->accept();
+            if(mouseEvent->button() == Qt::LeftButton) {
+                map->setMouseTracking(false);
+                map->scene()->setShortcutItems(false);
+                state = DRAGING;
+                mouseEvent->accept();
+            }
             break;
         case FPEE_SC_MOVE:
             adjustCircleRadius(mouseEvent);

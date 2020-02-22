@@ -11,17 +11,19 @@
 
 CircleItem::CircleItem(Point2DLatLon pt, double radius, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
-    _radius(radius), stroke(5)
+    _radius(radius)
 {
     center = new WaypointItem(pt, 20, ac_id, z_value, map, neutral_scale_zoom, parent);
     center->setZoomFactor(1.1);
+    stroke = qApp->property("CIRCLE_STROKE").toInt();
     init(center, radius);
 }
 
 CircleItem::CircleItem(WaypointItem* center, double radius, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom):
   MapItem(ac_id, z_value, map, neutral_scale_zoom),
-  center(center), _radius(radius), stroke(5)
+  center(center), _radius(radius)
 {
+    stroke = qApp->property("CIRCLE_STROKE").toInt();
     init(center, radius);
 }
 
@@ -33,7 +35,7 @@ void CircleItem::init(WaypointItem* center, double radius) {
     QColor color = colorOption.value();
 
     double pixelRadius = distMeters2Tile(radius, center->position().lat(), zoomLevel(map->zoom())) * map->tileSize();
-    circle = new GraphicsCircle(pixelRadius, QPen(QBrush(color), stroke), this);
+    circle = new GraphicsCircle(pixelRadius, color, stroke, this);
     circle->setPos(center->scenePos());
     circle->setZValue(center->zValue() + 0.5);
 
@@ -113,18 +115,12 @@ void CircleItem::setZValue(qreal z) {
 
 void CircleItem::updateGraphics() {
     //double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(map->zoom()))*map->tileSize();
+    double s = getScale();
+    circle->setScaleFactor(s);
 
     QPointF scene_pos = scenePoint(center->position(), zoomLevel(map->zoom()), map->tileSize());
     circle->setPos(scene_pos);
-
     setRadius(_radius);
-    //circle->setRadius(pixelRadius);
-
-    double s = getScale();
-
-    QPen p = circle->pen();
-    p.setWidth(static_cast<int>(stroke * s));
-    circle->setPen(p);
 }
 
 void CircleItem::removeFromScene() {

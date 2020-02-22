@@ -151,6 +151,8 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
 
 void PprzMap::saveItem(MapItem* item) {
     items.append(item);
+    item->setForbidHighlight(true);
+    item->setEditable(false);
 
     connect(item, &MapItem::itemGainedHighlight,
         [=]() {

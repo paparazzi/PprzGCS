@@ -17,6 +17,8 @@ int main(int argc, char *argv[])
     a.setProperty("PPRZLINK_PATH", "/home/fabien/DEV/test_qt/pprzlink");
     a.setProperty("MAP_MOVE_HYSTERESIS", 20);
     a.setProperty("CIRCLE_CREATE_MIN_RADIUS", 1.0);
+    a.setProperty("CIRCLE_STROKE", 4);
+    a.setProperty("SIZE_HIGHLIGHT_FACTOR", 1.5);
 
 //    QNetworkProxy proxy;
 //    proxy.setType(QNetworkProxy::DefaultProxy);

@@ -2,7 +2,7 @@
 #define GRAPHICSCIRCLE_H
 
 #include <QObject>
-#include <QGraphicsEllipseItem>
+#include <QGraphicsItem>
 #include <QPen>
 #include "graphicsobject.h"
 
@@ -12,13 +12,17 @@ enum CircleScaleState {
     CSS_SCALED,
 };
 
-class GraphicsCircle : public GraphicsObject, public QGraphicsEllipseItem
+class GraphicsCircle : public GraphicsObject, public QGraphicsItem
 {
     Q_OBJECT
 public:
-    explicit GraphicsCircle(double radius, QPen pen_idle, QObject *parent = nullptr);
+    explicit GraphicsCircle(double radius, QColor color, int stroke, QObject *parent = nullptr);
     void setRadius(double r);
     void setColors(QColor colPressed, QColor colScaling, QColor colUnfocused);
+
+    QRectF boundingRect() const override;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+    QPainterPath shape() const override;
 
 signals:
     void circleScaled(qreal size);
@@ -38,10 +42,17 @@ private:
     double radius;
     CircleScaleState scale_state;
 
-    QPen pen_idle;
-    QPen pen_pressed;
-    QPen pen_scaling;
-    QPen pen_unfocused;
+    QColor* current_color;
+
+    QColor color_idle;
+    QColor color_pressed;
+    QColor color_scaling;
+    QColor color_unfocused;
+
+    int base_stroke;
+    int stroke;
+    QPainterPath path_draw;
+    QPainterPath path_shape;
 };
 
 #endif // GRAPHICSCIRCLE_H
