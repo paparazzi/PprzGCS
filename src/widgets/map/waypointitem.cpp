@@ -5,12 +5,19 @@
 #include "maputils.h"
 #include <QGraphicsScene>
 #include "mapwidget.h"
+#include "AircraftManager.h"
 
 
-WaypointItem::WaypointItem(Point2DLatLon pt, int size, QColor color, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
-    MapItem(z_value, map, neutral_scale_zoom, parent),
+WaypointItem::WaypointItem(Point2DLatLon pt, int size, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+    MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
     latlon(pt)
 {
+    std::optional<QColor> colorOption = AircraftManager::get()->getColor(ac_id);
+    if(!colorOption.has_value()) {
+        throw std::runtime_error("AcId not found!");
+    }
+    QColor color = colorOption.value();
+
     QPointF scene_pos = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());
     point = new GraphicsPoint(size, color, this);
     QList<QColor> color_variants = makeColorVariants(color);

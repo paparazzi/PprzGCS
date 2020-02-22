@@ -15,7 +15,7 @@ SmCircleItem::~SmCircleItem() {
 
 }
 
-MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QColor color, MapItem* item) {
+MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item) {
     (void)item;
     Point2DLatLon latlon(0, 0);
     if(event_type == FPEE_WP_CLICKED) {
@@ -30,6 +30,7 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
     // some variables used later, cause switch are so prehistoric...
     QPointF dp;
     double d;
+    WaypointItem* wp;
 
     switch (state) {
     case IDLE:
@@ -37,7 +38,7 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
         case FPEE_SC_PRESS:
             if(mouseEvent->button() == Qt::LeftButton) {
                 pressPos = mouseEvent->scenePos();
-                cir = new CircleItem(latlon, 0, color, 50, map);
+                cir = new CircleItem(latlon, 0, ac_id, 50, map);
                 mouseEvent->accept();
                 state = PRESSED;
                 // set moving color ?
@@ -45,7 +46,12 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
             }
             break;
         case FPEE_WP_CLICKED:
-            cir = new CircleItem(waypoint, 0, color, 50, map);
+            if(waypoint->acId() == ac_id) {
+                wp = waypoint;
+            } else {
+                wp = new WaypointItem(waypoint->position(), 20, ac_id, 50, map);
+            }
+            cir = new CircleItem(wp, 0, ac_id, 50, map);
             map->setMouseTracking(true);
             map->scene()->setShortcutItems(true);
             state = RELEASED;

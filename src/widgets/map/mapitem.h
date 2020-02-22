@@ -26,7 +26,7 @@ class MapItem : public QObject
 {
     Q_OBJECT
 public:
-    MapItem(qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    MapItem(int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     QList<QColor> makeColorVariants(QColor);
     virtual void updateGraphics() = 0;
     virtual void removeFromScene() = 0;
@@ -37,6 +37,7 @@ public:
     void setZoomFactor(double zf) {zoom_factor = zf;}
     virtual void setZValue(qreal z) = 0;
     qreal zValue() {return z_value;}
+    int acId() {return ac_id;}
 
 signals:
     void itemClicked(QPointF scene_pos);
@@ -44,6 +45,8 @@ signals:
 
 protected:
     double getScale();
+
+    const int ac_id;
 
     double zoom_factor;
     double neutral_scale_zoom;

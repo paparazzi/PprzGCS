@@ -17,12 +17,13 @@
 #include "smcircleitem.h"
 #include "smpathitem.h"
 #include <QCursor>
+#include "AircraftManager.h"
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::PprzMap),
     drawState(false),
-    interaction_state(PMIS_OTHER), fp_edit_sm(nullptr)
+    interaction_state(PMIS_OTHER), fp_edit_sm(nullptr), current_ac(0)
 {
     ui->setupUi(this);
     MapScene* scene = static_cast<MapScene*>(ui->map->scene());
@@ -44,10 +45,25 @@ PprzMap::PprzMap(QWidget *parent) :
     connect(scene, &MapScene::eventScene,
         [=](FPEditEvent eventType, QGraphicsSceneMouseEvent *mouseEvent) {
             if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
-                MapItem* item = fp_edit_sm->update(eventType, mouseEvent, nullptr, Qt::green);
+                MapItem* item = fp_edit_sm->update(eventType, mouseEvent, nullptr, current_ac);
                 (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
+                if(item != nullptr) {
+                    items.append(item);
+                }
             }
         });
+
+//    connect(DispatcherUi::get(), SIGNAL(ac_selected(int)), this, SLOT(changeColor(int)));
+
+    connect(DispatcherUi::get(), &DispatcherUi::ac_selected,
+        [=](int id) {
+            current_ac = id;
+        }
+    );
+
+    AircraftManager::get()->addAircraft(0, Qt::green);
+    AircraftManager::get()->addAircraft(1, Qt::red);
+    AircraftManager::get()->addAircraft(2, Qt::yellow);
 
 }
 
@@ -56,8 +72,11 @@ void PprzMap::registerWaypoint(WaypointItem* waypoint) {
         [=](QPointF pos) {
             (void)pos;
             if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
-                MapItem* item = fp_edit_sm->update(FPEE_WP_CLICKED, nullptr, waypoint, Qt::green);
+                MapItem* item = fp_edit_sm->update(FPEE_WP_CLICKED, nullptr, waypoint, current_ac);
                 (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
+                if(item != nullptr) {
+                    items.append(item);
+                }
             }
         });
 }
@@ -96,8 +115,11 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
     }
     else if(event->key() == Qt::Key_Escape) {
         if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
-            MapItem* item = fp_edit_sm->update(FPEE_CANCEL, nullptr, nullptr, Qt::green);
+            MapItem* item = fp_edit_sm->update(FPEE_CANCEL, nullptr, nullptr, current_ac);
             (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
+            if(item != nullptr) {
+                items.append(item);
+            }
         }
 
         ui->map->setMouseTracking(false);
@@ -112,3 +134,4 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
         }
     }
 }
+//itemGainedHighlight

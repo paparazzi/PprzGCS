@@ -1,30 +1,37 @@
 #include "circleitem.h"
 #include <QPen>
-#include "math.h"
+#include <cmath>
 #include <QApplication>
 #include <QDebug>
 #include "maputils.h"
 #include <QGraphicsScene>
 #include "mapwidget.h"
 #include "mapitem.h"
+#include "AircraftManager.h"
 
-CircleItem::CircleItem(Point2DLatLon pt, double radius, QColor color, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
-    MapItem(z_value, map, neutral_scale_zoom, parent),
+CircleItem::CircleItem(Point2DLatLon pt, double radius, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+    MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
     _radius(radius), stroke(5)
 {
-    center = new WaypointItem(pt, 20, color, z_value, map, neutral_scale_zoom, parent);
+    center = new WaypointItem(pt, 20, ac_id, z_value, map, neutral_scale_zoom, parent);
     center->setZoomFactor(1.1);
-    init(center, radius, color);
+    init(center, radius);
 }
 
-CircleItem::CircleItem(WaypointItem* center, double radius, QColor color, qreal z_value, MapWidget* map, double neutral_scale_zoom):
-  MapItem(z_value, map, neutral_scale_zoom),
+CircleItem::CircleItem(WaypointItem* center, double radius, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom):
+  MapItem(ac_id, z_value, map, neutral_scale_zoom),
   center(center), _radius(radius), stroke(5)
 {
-    init(center, radius, color);
+    init(center, radius);
 }
 
-void CircleItem::init(WaypointItem* center, double radius, QColor color) {
+void CircleItem::init(WaypointItem* center, double radius) {
+    std::optional<QColor> colorOption = AircraftManager::get()->getColor(ac_id);
+    if(!colorOption.has_value()) {
+        throw std::runtime_error("AcId not found!");
+    }
+    QColor color = colorOption.value();
+
     double pixelRadius = distMeters2Tile(radius, center->position().lat(), zoomLevel(map->zoom())) * map->tileSize();
     circle = new GraphicsCircle(pixelRadius, QPen(QBrush(color), stroke), this);
     circle->setPos(center->scenePos());

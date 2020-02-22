@@ -35,12 +35,16 @@ protected:
 protected slots:
 
 private:
+    void saveItem(MapItem* item);
     Ui::PprzMap *ui;
     int drawState;
     InteractionState interaction_state;
     FpEditStateMachine* fp_edit_sm;
 
     QList<MapItem*> items;
+
+    int current_ac;
+
 
 };
 

@@ -3,10 +3,11 @@
 #include <QApplication>
 #include <QDebug>
 #include <iostream>
+#include "dispatcher_ui.h"
 
 SmPathItem::SmPathItem(MapWidget* map) :
     FpEditStateMachine (map),
-    path(nullptr), lastWp(nullptr), previousWp(nullptr), state(IDLE)
+    path(nullptr), lastWp(nullptr), previousWp(nullptr), state(IDLE), ac_id(0)
 {
 
 }
@@ -15,10 +16,16 @@ SmPathItem::~SmPathItem() {
 
 }
 
-MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QColor color, MapItem* item) {
+MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int current_ac_id, MapItem* item) {
     QPointF dp;
     double d;
     WaypointItem* nextWp = nullptr;
+
+    if(state != IDLE) {
+        if(ac_id != current_ac_id) {
+            emit(DispatcherUi::get()->ac_selected(ac_id));
+        }
+    }
 
     Point2DLatLon latlon(0, 0);
     if(event_type == FPEE_WP_CLICKED) {
@@ -37,8 +44,9 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
             std::runtime_error("Can't edit something else than paths!");
         }
         path = static_cast<Path*>(item);
+        ac_id = path->acId();
         previousWp = path->getLastWaypoint();
-        lastWp = new WaypointItem(latlon, 20, color, 50, map);
+        lastWp = new WaypointItem(latlon, 20, ac_id, 50, map);
         path->addPoint(lastWp);
         lastWp->setIgnoreEvent(true);
         previousWp->setIgnoreEvent(false);
@@ -54,10 +62,11 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
                 if(item != nullptr) {
                     std::runtime_error("Editing path should not be IDLE state!");
                 }
+                ac_id = current_ac_id;
                 pressPos = mouseEvent->scenePos();
                 previousWp = nullptr;
-                lastWp = new WaypointItem(latlon, 20, color, 50, map);
-                path = new Path(lastWp, color, 50, map);
+                lastWp = new WaypointItem(latlon, 20, ac_id, 50, map);
+                path = new Path(lastWp, ac_id, 50, map);
                 mouseEvent->accept();
                 state = PRESS_INI;
                 return path;
@@ -67,9 +76,11 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
             if(item != nullptr) {
                 std::runtime_error("Editing path should not be IDLE state!");
             }
-            path = static_cast<Path*>(item);
+            ac_id = waypoint->acId();
+            emit(DispatcherUi::get()->ac_selected(ac_id));
+            path = new Path(waypoint, ac_id, 50, map);
             previousWp = nullptr;
-            lastWp = new WaypointItem(waypoint->position(), 20, color, 50, map);
+            lastWp = new WaypointItem(waypoint->position(), 20, ac_id, 50, map);
             path->addPoint(lastWp);
             path->setLastLineIgnoreEvents(true);
             lastWp->setIgnoreEvent(true);
@@ -92,7 +103,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
             break;
         case FPEE_SC_RELEASE:
             if(mouseEvent->button() == Qt::LeftButton) {
-                nextWp = new WaypointItem(latlon, 20, color, 50, map);
+                nextWp = new WaypointItem(latlon, 20, ac_id, 50, map);
                 path->addPoint(nextWp);
                 path->setLastLineIgnoreEvents(true);
                 previousWp = lastWp;
@@ -116,7 +127,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
             break;
         case FPEE_SC_RELEASE:
             if(mouseEvent->button() == Qt::LeftButton) {
-                nextWp = new WaypointItem(latlon, 20, color, 50, map);
+                nextWp = new WaypointItem(latlon, 20, ac_id, 50, map);
                 path->addPoint(nextWp);
                 path->setLastLineIgnoreEvents(true);
                 previousWp = lastWp;
@@ -156,7 +167,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
             break;
         case FPEE_SC_RELEASE:
             if(mouseEvent->button() == Qt::LeftButton) {
-                nextWp = new WaypointItem(latlon, 20, color, 50, map);
+                nextWp = new WaypointItem(latlon, 20, ac_id, 50, map);
                 path->addPoint(nextWp);
                 path->setLastLineIgnoreEvents(true);
                 previousWp = lastWp;
@@ -177,12 +188,18 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
             break;
         case FPEE_WP_CLICKED:
             if(waypoint != previousWp) {
+                if(waypoint->acId() == ac_id) {
+                    nextWp = waypoint;
+                } else {
+                    qDebug() << "Wrong Ac_Id! New waypoint created at the same position.";
+                    nextWp = new WaypointItem(waypoint->position(), 20, ac_id, 50, map);
+                }
                 //waypoint must be of the same A/C ! (but should be handled before, in PprzMap)
                 //delete last waypoint and last segment
                 path->removeLastWaypoint();
-                path->addPoint(waypoint);
+                path->addPoint(nextWp);
                 path->addPoint(lastWp);
-                previousWp = waypoint;
+                previousWp = nextWp;
                 path->setLastLineIgnoreEvents(true);
                 lastWp->setIgnoreEvent(true);
                 previousWp->setIgnoreEvent(false);

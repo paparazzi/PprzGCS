@@ -3,18 +3,19 @@
 #include <QGraphicsScene>
 #include "mapwidget.h"
 #include "mapitem.h"
+#include "AircraftManager.h"
 
-Path::Path(Point2DLatLon start, QColor color, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
-    MapItem(z_value, map, neutral_scale_zoom, parent),
-    line_widht(5), line_color(color)
+Path::Path(Point2DLatLon start, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+    MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
+    line_widht(5)
 {
-    WaypointItem* wpStart = new WaypointItem(start, 20, Qt::green, z_value, map, neutral_scale_zoom, parent);
+    WaypointItem* wpStart = new WaypointItem(start, 20, ac_id, z_value, map, neutral_scale_zoom, parent);
     init(wpStart);
 }
 
-Path::Path(WaypointItem* wpStart, QColor color, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
-    MapItem(z_value, map, neutral_scale_zoom, parent),
-    line_widht(5), line_color(color)
+Path::Path(WaypointItem* wpStart, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+    MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
+    line_widht(5)
 {
     assert(wpStart != nullptr);
     init(wpStart);
@@ -50,15 +51,20 @@ void Path::addPoint(Point2DLatLon pos) {
 void Path::addPoint(WaypointItem* wp) {
     assert(wp != nullptr);
     WaypointItem* last_wp = waypoints.last();
-
     waypoints.append(wp);
+
+    std::optional<QColor> colorOption = AircraftManager::get()->getColor(ac_id);
+    if(!colorOption.has_value()) {
+        throw std::runtime_error("AcId not found!");
+    }
+    QColor color = colorOption.value();
 
     QPointF start_pos = scenePoint(last_wp->position(), zoomLevel(map->zoom()), map->tileSize());
     QPointF end_pos = scenePoint(wp->position(), zoomLevel(map->zoom()), map->tileSize());
 
-    GraphicsLine* line = new GraphicsLine(QLineF(start_pos, end_pos), QPen(QBrush(line_color), line_widht), this);
+    GraphicsLine* line = new GraphicsLine(QLineF(start_pos, end_pos), QPen(QBrush(color), line_widht), this);
 
-    QList<QColor> color_variants = makeColorVariants(line_color);
+    QList<QColor> color_variants = makeColorVariants(color);
     line->setColors(color_variants[2]);
 
     lines.append(line);

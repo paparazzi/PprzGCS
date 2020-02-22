@@ -10,7 +10,7 @@ class SmPathItem : public FpEditStateMachine
 public:
     SmPathItem(MapWidget* map);
     ~SmPathItem();
-    virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QColor color, MapItem* item = nullptr);
+    virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item = nullptr);
 
 private:
 
@@ -26,6 +26,8 @@ private:
     WaypointItem* previousWp;
     State state;
     QPointF pressPos;
+
+    int ac_id;
 
 };
 

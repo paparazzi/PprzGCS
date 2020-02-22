@@ -20,9 +20,9 @@ SmWaypointItem::~SmWaypointItem(){
 //SE_RELEASE,
 //SE_DOUBLE_CLICK,
 
-MapItem* SmWaypointItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QColor color, MapItem* item) {
+MapItem* SmWaypointItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item) {
     (void) item;    // A waypoint can't be edited (just move it!)
-    (void) waypoint;    //TODO : use the waypoint to create a waypoint at the same position for another drone ?
+    //(void) waypoint;    //TODO : use the waypoint to create a waypoint at the same position for another drone ?
     Point2DLatLon latlon(0, 0);
     if(event_type == FPEE_WP_CLICKED) {
         assert(waypoint != nullptr);
@@ -38,7 +38,7 @@ MapItem* SmWaypointItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent
         switch (event_type) {
         case FPEE_SC_PRESS:
             if(mouseEvent->button() == Qt::LeftButton) {
-                wp = new WaypointItem(latlon, 20, color, 50, map);
+                wp = new WaypointItem(latlon, 20, ac_id, 50, map);
                 state = MOVING;
                 mouseEvent->accept();
                 return wp;
@@ -46,6 +46,12 @@ MapItem* SmWaypointItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent
             break;
         case FPEE_SC_DOUBLE_CLICK:
             state = IDLE;
+            break;
+        case FPEE_WP_CLICKED:
+            if(waypoint->acId() != ac_id) {
+                wp = new WaypointItem(waypoint->position(), 20, ac_id, 50, map);
+                return wp;
+            }
             break;
         default:
             break;
