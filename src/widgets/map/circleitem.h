@@ -16,6 +16,8 @@ public:
     Point2DLatLon position() {return center->position();}
     void setPosition(Point2DLatLon ll) {center->setPosition(ll);};
     virtual void setHighlighted(bool h);
+    void setForbidHighlight(bool fh);
+    virtual void setEditable(bool ed);
     virtual void setZValue(qreal z);
     virtual void updateGraphics();
     virtual void removeFromScene();
@@ -42,8 +44,6 @@ private:
     int stroke;
 
     bool highlighted;
-    //bool scalable
-    //bool movable
 };
 
 #endif // CIRCLEITEM_H

@@ -12,6 +12,7 @@ class PprzMap;
 
 enum InteractionState {
     PMIS_FLIGHT_PLAN_EDIT,
+    PMIS_FROZEN,
     PMIS_OTHER,
 };
 
@@ -36,6 +37,7 @@ protected slots:
 
 private:
     void saveItem(MapItem* item);
+    void setEditorMode();
     Ui::PprzMap *ui;
     int drawState;
     InteractionState interaction_state;

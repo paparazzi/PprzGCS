@@ -15,6 +15,8 @@ public:
     QPointF scenePos();
     virtual void setHighlighted(bool h);
     virtual void setZValue(qreal z);
+    virtual void setForbidHighlight(bool fh);
+    virtual void setEditable(bool ed);
     virtual void removeFromScene();
     virtual ItemType getType() {return ITEM_WAYPOINT;}
     void setIgnoreEvent(bool ignore);
@@ -30,7 +32,6 @@ private:
     Point2DLatLon latlon;
     int altitude;
     bool highlighted;
-    //bool movable;
 };
 
 #endif // WAYPOINTITEM_H

@@ -94,6 +94,16 @@ void CircleItem::setHighlighted(bool h) {
     circle->setHighlighted(h);
 }
 
+void CircleItem::setForbidHighlight(bool fh) {
+    center->setForbidHighlight(fh);
+    circle->setForbidHighlight(fh);
+}
+
+void CircleItem::setEditable(bool ed) {
+    center->setEditable(ed);
+    circle->setEditable(ed);
+}
+
 void CircleItem::setZValue(qreal z) {
     z_value = z;
     //the circle is above the waypoint

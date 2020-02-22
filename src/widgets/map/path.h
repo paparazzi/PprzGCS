@@ -15,6 +15,8 @@ public:
     void addPoint(Point2DLatLon pos);
     void addPoint(WaypointItem* waypoint);
     virtual void setHighlighted(bool h);
+    virtual void setForbidHighlight(bool sh);
+    virtual void setEditable(bool ed);
     virtual void setZValue(qreal z);
     virtual void updateGraphics();
     virtual void removeFromScene();

@@ -59,6 +59,14 @@ void WaypointItem::setHighlighted(bool h) {
     point->setHighlighted(h);
 }
 
+void WaypointItem::setForbidHighlight(bool fh) {
+    point->setForbidHighlight(fh);
+}
+
+void WaypointItem::setEditable(bool ed) {
+    point->setEditable(ed);
+}
+
 void WaypointItem::setZValue(qreal z) {
     z_value = z;
     point->setZValue(z);

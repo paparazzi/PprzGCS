@@ -65,6 +65,7 @@ set(SOURCE
     src/geometry/point2dlatlon.cpp
     src/geometry/point2dtile.cpp
     resources/ressources.qrc
+    src/AircraftManager.cpp src/AircraftManager.h
 )
 
 include_directories(

@@ -48,7 +48,7 @@ PprzMap::PprzMap(QWidget *parent) :
                 MapItem* item = fp_edit_sm->update(eventType, mouseEvent, nullptr, current_ac);
                 (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
                 if(item != nullptr) {
-                    items.append(item);
+                    saveItem(item);
                 }
             }
         });
@@ -58,6 +58,15 @@ PprzMap::PprzMap(QWidget *parent) :
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected,
         [=](int id) {
             current_ac = id;
+            for(auto item: items) {
+                if(item->acId() == id) {
+                    item->setHighlighted(true);
+                    item->setZValue(100);
+                } else {
+                    item->setHighlighted(false);
+                    item->setZValue(50);
+                }
+            }
         }
     );
 
@@ -75,7 +84,7 @@ void PprzMap::registerWaypoint(WaypointItem* waypoint) {
                 MapItem* item = fp_edit_sm->update(FPEE_WP_CLICKED, nullptr, waypoint, current_ac);
                 (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
                 if(item != nullptr) {
-                    items.append(item);
+                    saveItem(item);
                 }
             }
         });
@@ -95,6 +104,7 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
     (void)event;
     if(event->key() == Qt::Key_Space) {
         interaction_state = PMIS_FLIGHT_PLAN_EDIT;
+        setEditorMode();
         switch (drawState) {
         case 0:
             fp_edit_sm = new SmWaypointItem(ui->map);
@@ -118,15 +128,18 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
             MapItem* item = fp_edit_sm->update(FPEE_CANCEL, nullptr, nullptr, current_ac);
             (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
             if(item != nullptr) {
-                items.append(item);
+                saveItem(item);
             }
         }
-
+        setEditorMode();
         ui->map->setMouseTracking(false);
         ui->map->scene()->setShortcutItems(false);
         interaction_state = PMIS_OTHER;
         drawState = 0;
         ui->map->setCursor(Qt::ArrowCursor);
+    } else if(event->key() == Qt::Key_F) {
+        interaction_state = PMIS_FROZEN;
+        setEditorMode();
     }
     else if (event->key() == Qt::Key_H) {
         for(auto mp: items) {
@@ -134,4 +147,34 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
         }
     }
 }
-//itemGainedHighlight
+
+
+void PprzMap::saveItem(MapItem* item) {
+    items.append(item);
+
+    connect(item, &MapItem::itemGainedHighlight,
+        [=]() {
+            int ac_id = item->acId();
+            emit(DispatcherUi::get()->ac_selected(ac_id));
+        });
+}
+
+void PprzMap::setEditorMode() {
+    for(auto item: items) {
+        switch(interaction_state) {
+            case PMIS_FLIGHT_PLAN_EDIT:
+                item->setForbidHighlight(true);
+                item->setEditable(false);
+                break;
+            case PMIS_FROZEN:
+                item->setForbidHighlight(false);
+                item->setEditable(false);
+                break;
+            default:
+                item->setForbidHighlight(false);
+                item->setEditable(true);
+                break;
+        }
+    }
+}
+

@@ -38,7 +38,6 @@ private:
     //QPointF scene_pos;
     QPointF pressPos;
     PointMoveState move_state;
-    bool movable;
 
     QBrush brush_idle;
     QBrush brush_pressed;

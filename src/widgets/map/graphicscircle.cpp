@@ -9,7 +9,7 @@
 GraphicsCircle::GraphicsCircle(double radius, QPen pen_idle, QObject *parent) :
     GraphicsObject(parent),
     QGraphicsEllipseItem (-radius, -radius, radius*2, radius*2),
-    radius(radius), scalable(true), scale_state(CSS_IDLE),
+    radius(radius), scale_state(CSS_IDLE),
     pen_idle(pen_idle), pen_pressed(pen_idle), pen_scaling(pen_idle), pen_unfocused(pen_idle)
 
 {
@@ -47,7 +47,7 @@ void GraphicsCircle::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     double r = sqrt(p.x()*p.x() + p.y()*p.y()) - dr;
 
     if(scale_state == CSS_PRESSED) {
-        if(qAbs(radius - r) > qApp->property("MAP_MOVE_HYSTERESIS").toInt() && scalable) {
+        if(qAbs(radius - r) > qApp->property("MAP_MOVE_HYSTERESIS").toInt() && editable) {
             scale_state = CSS_SCALED;
             setPen(pen_scaling);
         }
@@ -67,7 +67,7 @@ void GraphicsCircle::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         emit(circleScaleFinished());
     }
     scale_state = CSS_IDLE;
-    setPen(pen_idle);
+    changeFocus();
 }
 
 void GraphicsCircle::setRadius(double r) {

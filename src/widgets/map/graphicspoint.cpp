@@ -7,7 +7,7 @@
 GraphicsPoint::GraphicsPoint(qreal size, QColor color, QObject *parent) :
     GraphicsObject(parent),
     QGraphicsEllipseItem (-size/2, -size/2, size, size),
-    move_state(PMS_IDLE), movable(true), ignore_events(false)
+    move_state(PMS_IDLE), ignore_events(false)
 {
     brush_idle = QBrush(color);
     setBrush(brush_idle);
@@ -39,15 +39,13 @@ void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if(move_state == PMS_PRESSED) {
         QPointF dp = event->pos() - pressPos;
         double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());
-        if(d > qApp->property("MAP_MOVE_HYSTERESIS").toInt()) {
+        if(d > qApp->property("MAP_MOVE_HYSTERESIS").toInt() && editable) {
             move_state = PMS_MOVED;
             setBrush(brush_moved);
         }
     } else if(move_state == PMS_MOVED) {
-        if(movable) {
-            setPos(event->scenePos() - pressPos);
-            emit(pointMoved(event->scenePos() - pressPos));
-        }
+        setPos(event->scenePos() - pressPos);
+        emit(pointMoved(event->scenePos() - pressPos));
     }
 }
 
@@ -63,7 +61,7 @@ void GraphicsPoint::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         emit(pointMoveFinished());
     }
     move_state = PMS_IDLE;
-    setBrush(brush_idle);
+    changeFocus();
 }
 
 void GraphicsPoint::changeFocus() {

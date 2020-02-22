@@ -31,6 +31,8 @@ public:
     virtual void updateGraphics() = 0;
     virtual void removeFromScene() = 0;
     virtual void setHighlighted(bool h) = 0;
+    virtual void setForbidHighlight(bool fh) = 0;
+    virtual void setEditable(bool ed) = 0;
     virtual ItemType getType() = 0;
     double zoomFactor() {return zoom_factor;}
     double neutralScaleZoom() {return neutral_scale_zoom;}
@@ -53,8 +55,6 @@ protected:
     qreal z_value;
 
     MapWidget* map;
-
-
 
 };
 

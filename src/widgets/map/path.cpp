@@ -107,6 +107,24 @@ void Path::setHighlighted(bool h) {
     }
 }
 
+void Path::setForbidHighlight(bool sh) {
+    for(auto wp: waypoints) {
+        wp->setForbidHighlight(sh);
+    }
+    for(auto line: lines) {
+        line->setForbidHighlight(sh);
+    }
+}
+
+void Path::setEditable(bool ed) {
+    for(auto wp: waypoints) {
+        wp->setEditable(ed);
+    }
+    for(auto line: lines) {
+        line->setEditable(ed);
+    }
+}
+
 void Path::setZValue(qreal z) {
     z_value = z;
     //waypoints above lines

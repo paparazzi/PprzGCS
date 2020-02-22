@@ -86,7 +86,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
             lastWp->setIgnoreEvent(true);
             map->setMouseTracking(true);
             state = MOVING;
-            break;
+            return path;
         default:
             break;
         }

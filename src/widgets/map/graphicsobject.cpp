@@ -1,7 +1,7 @@
 #include "graphicsobject.h"
 #include <QDebug>
 
-GraphicsObject::GraphicsObject(QObject *parent) : QObject(parent), highlighted(true)
+GraphicsObject::GraphicsObject(QObject *parent) : QObject(parent), highlighted(true), editable(true)
 {
 
 }
@@ -9,7 +9,7 @@ GraphicsObject::GraphicsObject(QObject *parent) : QObject(parent), highlighted(t
 
 void GraphicsObject::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     (void)event;
-    if(!highlighted) {
+    if(!highlighted && !forbid_highlight) {
         highlighted = true;
         emit(objectGainedHighlight());
     }

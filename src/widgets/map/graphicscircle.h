@@ -18,7 +18,6 @@ class GraphicsCircle : public GraphicsObject, public QGraphicsEllipseItem
 public:
     explicit GraphicsCircle(double radius, QPen pen_idle, QObject *parent = nullptr);
     void setRadius(double r);
-    void setScalable(bool sc) {scalable = sc;}
     void setColors(QColor colPressed, QColor colScaling, QColor colUnfocused);
 
 signals:
@@ -37,7 +36,6 @@ public slots:
 private:
     double dr;
     double radius;
-    bool scalable;
     CircleScaleState scale_state;
 
     QPen pen_idle;
