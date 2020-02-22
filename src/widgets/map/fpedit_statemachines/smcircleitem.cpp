@@ -49,7 +49,7 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
             if(waypoint->acId() == ac_id) {
                 wp = waypoint;
             } else {
-                wp = new WaypointItem(waypoint->position(), 20, ac_id, 50, map);
+                wp = new WaypointItem(waypoint->position(), ac_id, 50, map);
             }
             cir = new CircleItem(wp, 0, ac_id, 50, map);
             map->setMouseTracking(true);

@@ -46,7 +46,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
         path = static_cast<Path*>(item);
         ac_id = path->acId();
         previousWp = path->getLastWaypoint();
-        lastWp = new WaypointItem(latlon, 20, ac_id, 50, map);
+        lastWp = new WaypointItem(latlon, ac_id, 50, map);
         path->addPoint(lastWp);
         lastWp->setIgnoreEvent(true);
         previousWp->setIgnoreEvent(false);
@@ -65,7 +65,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
                 ac_id = current_ac_id;
                 pressPos = mouseEvent->scenePos();
                 previousWp = nullptr;
-                lastWp = new WaypointItem(latlon, 20, ac_id, 50, map);
+                lastWp = new WaypointItem(latlon, ac_id, 50, map);
                 path = new Path(lastWp, ac_id, 50, map);
                 mouseEvent->accept();
                 state = PRESS_INI;
@@ -80,7 +80,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
             emit(DispatcherUi::get()->ac_selected(ac_id));
             path = new Path(waypoint, ac_id, 50, map);
             previousWp = nullptr;
-            lastWp = new WaypointItem(waypoint->position(), 20, ac_id, 50, map);
+            lastWp = new WaypointItem(waypoint->position(), ac_id, 50, map);
             path->addPoint(lastWp);
             path->setLastLineIgnoreEvents(true);
             lastWp->setIgnoreEvent(true);
@@ -103,7 +103,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
             break;
         case FPEE_SC_RELEASE:
             if(mouseEvent->button() == Qt::LeftButton) {
-                nextWp = new WaypointItem(latlon, 20, ac_id, 50, map);
+                nextWp = new WaypointItem(latlon, ac_id, 50, map);
                 path->addPoint(nextWp);
                 path->setLastLineIgnoreEvents(true);
                 previousWp = lastWp;
@@ -127,7 +127,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
             break;
         case FPEE_SC_RELEASE:
             if(mouseEvent->button() == Qt::LeftButton) {
-                nextWp = new WaypointItem(latlon, 20, ac_id, 50, map);
+                nextWp = new WaypointItem(latlon, ac_id, 50, map);
                 path->addPoint(nextWp);
                 path->setLastLineIgnoreEvents(true);
                 previousWp = lastWp;
@@ -167,7 +167,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
             break;
         case FPEE_SC_RELEASE:
             if(mouseEvent->button() == Qt::LeftButton) {
-                nextWp = new WaypointItem(latlon, 20, ac_id, 50, map);
+                nextWp = new WaypointItem(latlon, ac_id, 50, map);
                 path->addPoint(nextWp);
                 path->setLastLineIgnoreEvents(true);
                 previousWp = lastWp;
@@ -192,7 +192,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
                     nextWp = waypoint;
                 } else {
                     qDebug() << "Wrong Ac_Id! New waypoint created at the same position.";
-                    nextWp = new WaypointItem(waypoint->position(), 20, ac_id, 50, map);
+                    nextWp = new WaypointItem(waypoint->position(), ac_id, 50, map);
                 }
                 //waypoint must be of the same A/C ! (but should be handled before, in PprzMap)
                 //delete last waypoint and last segment

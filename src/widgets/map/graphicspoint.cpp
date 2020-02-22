@@ -3,20 +3,51 @@
 #include <QApplication>
 #include <QGraphicsSceneMouseEvent>
 #include <QDebug>
+#include <QPainter>
+#include <QPainterPath>
 
-GraphicsPoint::GraphicsPoint(qreal size, QColor color, QObject *parent) :
+GraphicsPoint::GraphicsPoint(int size, QColor color, QObject *parent) :
     GraphicsObject(parent),
-    QGraphicsEllipseItem (-size/2, -size/2, size, size),
-    move_state(PMS_IDLE), ignore_events(false)
+    QGraphicsItem (),
+    halfSize(size), move_state(PMS_IDLE), ignore_events(false), current_color(nullptr)
 {
-    brush_idle = QBrush(color);
-    setBrush(brush_idle);
+    color_idle = color;
+    current_color = &color_idle;
 }
 
 void GraphicsPoint::setColors(QColor colPressed, QColor colMoving, QColor colUnfocused) {
-    brush_pressed = QBrush(colPressed);
-    brush_moved = QBrush(colMoving);
-    brush_unfocused = QBrush(colUnfocused);
+    color_pressed = colPressed;
+    color_moved = colMoving;
+    color_unfocused = colUnfocused;
+}
+
+
+QRectF GraphicsPoint::boundingRect() const {
+    return QRectF(-halfSize-1, -halfSize-1, 2*halfSize+2, 2*halfSize+2);
+}
+
+
+void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+
+    QPainterPath path;
+    double fx = 0.8;
+    double fy = 1.0;
+    if(!isHighlighted()) {
+        current_color = &color_unfocused;
+        fx /= qApp->property("SIZE_HIGHLIGHT_FACTOR").toDouble();
+        fy /= qApp->property("SIZE_HIGHLIGHT_FACTOR").toDouble();
+    }
+
+    QPolygonF poly;
+    poly.append(QPointF(0, halfSize*fy));
+    poly.append(QPointF(halfSize*fx, 0));
+    poly.append(QPointF(0, -halfSize*fy));
+    poly.append(QPointF(-halfSize*fx, 0));
+    path.addPolygon(poly);
+
+    painter->setBrush(QBrush(*current_color));
+    painter->setPen(Qt::NoPen);
+    painter->drawPath(path);
 }
 
 
@@ -28,7 +59,7 @@ void GraphicsPoint::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     GraphicsObject::mousePressEvent(event);
     pressPos = QPointF(event->pos().x() * scale(), event->pos().y() * scale());
     move_state = PMS_PRESSED;
-    setBrush(brush_pressed);
+    changeFocus();
 }
 
 void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
@@ -41,7 +72,7 @@ void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());
         if(d > qApp->property("MAP_MOVE_HYSTERESIS").toInt() && editable) {
             move_state = PMS_MOVED;
-            setBrush(brush_moved);
+            changeFocus();
         }
     } else if(move_state == PMS_MOVED) {
         setPos(event->scenePos() - pressPos);
@@ -66,18 +97,19 @@ void GraphicsPoint::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 
 void GraphicsPoint::changeFocus() {
     if(!isHighlighted()) {
-        setBrush(brush_unfocused);
+        current_color = &color_unfocused;
     } else {
         switch (move_state) {
         case PMS_IDLE:
-            setBrush(brush_idle);
+            current_color = &color_idle;
             break;
         case PMS_PRESSED:
-            setBrush(brush_pressed);
+            current_color = &color_pressed;
             break;
         case PMS_MOVED:
-            setBrush(brush_moved);
+            current_color = &color_moved;
             break;
         }
     }
+    update();
 }

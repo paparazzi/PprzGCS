@@ -2,7 +2,7 @@
 #define GRAPHICSPOINT_H
 
 #include <QObject>
-#include <QGraphicsEllipseItem>
+#include <QGraphicsItem>
 #include "graphicsobject.h"
 #include <QBrush>
 
@@ -12,13 +12,16 @@ enum PointMoveState {
     PMS_MOVED,
 };
 
-class GraphicsPoint : public GraphicsObject, public QGraphicsEllipseItem
+class GraphicsPoint : public GraphicsObject, public QGraphicsItem
 {
     Q_OBJECT
 public:
-    explicit GraphicsPoint(qreal size, QColor color, QObject *parent = nullptr);
+    explicit GraphicsPoint(int size, QColor color, QObject *parent = nullptr);
     void setColors(QColor colPressed, QColor colMoving, QColor colUnfocused);
     void setIgnoreEvent(bool ignore) {ignore_events = ignore;}
+
+    QRectF boundingRect() const override;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
 signals:
     void pointMoved(QPointF scenePos);
@@ -35,14 +38,15 @@ protected:
 public slots:
 
 private:
-    //QPointF scene_pos;
+    int halfSize;
     QPointF pressPos;
     PointMoveState move_state;
 
-    QBrush brush_idle;
-    QBrush brush_pressed;
-    QBrush brush_moved;
-    QBrush brush_unfocused;
+    QColor* current_color;
+    QColor color_idle;
+    QColor color_pressed;
+    QColor color_moved;
+    QColor color_unfocused;
 
     bool ignore_events;
 };

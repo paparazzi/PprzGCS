@@ -9,7 +9,7 @@ Path::Path(Point2DLatLon start, int ac_id, qreal z_value, MapWidget* map, double
     MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
     line_widht(5)
 {
-    WaypointItem* wpStart = new WaypointItem(start, 20, ac_id, z_value, map, neutral_scale_zoom, parent);
+    WaypointItem* wpStart = new WaypointItem(start, ac_id, z_value, map, neutral_scale_zoom, parent);
     init(wpStart);
 }
 
@@ -44,7 +44,7 @@ void Path::init(WaypointItem* wpStart) {
 }
 
 void Path::addPoint(Point2DLatLon pos) {
-    WaypointItem* wp = new WaypointItem(pos, 20, Qt::green, z_value, map, neutral_scale_zoom, parent());
+    WaypointItem* wp = new WaypointItem(pos, Qt::green, z_value, map, neutral_scale_zoom, parent());
     addPoint(wp);
 }
 

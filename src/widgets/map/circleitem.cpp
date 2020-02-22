@@ -13,7 +13,7 @@ CircleItem::CircleItem(Point2DLatLon pt, double radius, int ac_id, qreal z_value
     MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
     _radius(radius)
 {
-    center = new WaypointItem(pt, 20, ac_id, z_value, map, neutral_scale_zoom, parent);
+    center = new WaypointItem(pt, ac_id, z_value, map, neutral_scale_zoom, parent);
     center->setZoomFactor(1.1);
     stroke = qApp->property("CIRCLE_STROKE").toInt();
     init(center, radius);

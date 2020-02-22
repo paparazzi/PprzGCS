@@ -38,7 +38,7 @@ MapItem* SmWaypointItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent
         switch (event_type) {
         case FPEE_SC_PRESS:
             if(mouseEvent->button() == Qt::LeftButton) {
-                wp = new WaypointItem(latlon, 20, ac_id, 50, map);
+                wp = new WaypointItem(latlon, ac_id, 50, map);
                 state = MOVING;
                 mouseEvent->accept();
                 return wp;
@@ -49,7 +49,7 @@ MapItem* SmWaypointItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent
             break;
         case FPEE_WP_CLICKED:
             if(waypoint->acId() != ac_id) {
-                wp = new WaypointItem(waypoint->position(), 20, ac_id, 50, map);
+                wp = new WaypointItem(waypoint->position(), ac_id, 50, map);
                 return wp;
             }
             break;
