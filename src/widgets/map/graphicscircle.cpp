@@ -30,10 +30,10 @@ void GraphicsCircle::setColors(QColor colPressed, QColor colScaling, QColor colU
 
 
 void GraphicsCircle::mousePressEvent(QGraphicsSceneMouseEvent *event) {
-    GraphicsObject::mousePressEvent(event);
     QPointF pressPos = QPointF(event->pos().x() * scale(), event->pos().y() * scale());
     dr = sqrt(pressPos.x()*pressPos.x() + pressPos.y()*pressPos.y()) - radius;
     if(qAbs(dr) < pen().width()*2) {
+        GraphicsObject::mousePressEvent(event);
         scale_state = CSS_PRESSED;
         setPen(pen_pressed);
         qDebug() << "Circle Pressed ! " << dr;
