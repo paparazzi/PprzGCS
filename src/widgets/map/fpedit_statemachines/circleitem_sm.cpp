@@ -1,12 +1,12 @@
-#include "smcircleitem.h"
+#include "circleitem_sm.h"
 #include "mapwidget.h"
 #include <QApplication>
 #include <QDebug>
 #include <iostream>
 
 SmCircleItem::SmCircleItem(MapWidget* map) :
-    FpEditStateMachine (map),
-    cir(nullptr), state(IDLE)
+        ItemEditStateMachine (map),
+        cir(nullptr), state(IDLE)
 {
 
 }
@@ -15,7 +15,7 @@ SmCircleItem::~SmCircleItem() {
 
 }
 
-MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item) {
+MapItem* SmCircleItem::update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item) {
     (void)item;
     Point2DLatLon latlon(0, 0);
     if(event_type == FPEE_WP_CLICKED) {

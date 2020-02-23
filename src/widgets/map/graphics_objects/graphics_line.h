@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QGraphicsLineItem>
-#include "graphicsobject.h"
+#include "graphics_object.h"
 #include <QPen>
 
 class GraphicsLine : public GraphicsObject, public QGraphicsLineItem

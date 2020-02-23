@@ -3,8 +3,8 @@
 
 #include <QWidget>
 #include <QKeyEvent>
-#include "mapitem.h"
-#include "fpeditstatemachine.h"
+#include "map_item.h"
+#include "item_edit_state_machine.h"
 
 namespace Ui {
 class PprzMap;
@@ -41,7 +41,7 @@ private:
     Ui::PprzMap *ui;
     int drawState;
     InteractionState interaction_state;
-    FpEditStateMachine* fp_edit_sm;
+    ItemEditStateMachine* fp_edit_sm;
 
     //QList<MapItem*> items;
 

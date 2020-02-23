@@ -1,4 +1,4 @@
-#include "circleitem.h"
+#include "circle_item.h"
 #include <QPen>
 #include <cmath>
 #include <QApplication>
@@ -6,7 +6,7 @@
 #include "maputils.h"
 #include <QGraphicsScene>
 #include "mapwidget.h"
-#include "mapitem.h"
+#include "map_item.h"
 #include "AircraftManager.h"
 
 CircleItem::CircleItem(Point2DLatLon pt, double radius, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :

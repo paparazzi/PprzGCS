@@ -1,15 +1,15 @@
 #ifndef SMCIRCLEITEM_H
 #define SMCIRCLEITEM_H
 
-#include "fpeditstatemachine.h"
-#include "circleitem.h"
+#include "item_edit_state_machine.h"
+#include "circle_item.h"
 
-class SmCircleItem : public FpEditStateMachine
+class SmCircleItem : public ItemEditStateMachine
 {
 public:
     SmCircleItem(MapWidget* map);
     ~SmCircleItem();
-    virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item = nullptr);
+    virtual MapItem* update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item = nullptr);
 
 private:
     enum State {

@@ -1,4 +1,4 @@
-#include "smpathitem.h"
+#include "pathitem_sm.h"
 #include "mapwidget.h"
 #include <QApplication>
 #include <QDebug>
@@ -6,8 +6,8 @@
 #include "dispatcher_ui.h"
 
 SmPathItem::SmPathItem(MapWidget* map) :
-    FpEditStateMachine (map),
-    path(nullptr), lastWp(nullptr), previousWp(nullptr), state(IDLE), ac_id(0)
+        ItemEditStateMachine (map),
+        path(nullptr), lastWp(nullptr), previousWp(nullptr), state(IDLE), ac_id(0)
 {
 
 }
@@ -16,7 +16,7 @@ SmPathItem::~SmPathItem() {
 
 }
 
-MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int current_ac_id, MapItem* item) {
+MapItem* SmPathItem::update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int current_ac_id, MapItem* item) {
     QPointF dp;
     double d;
     WaypointItem* nextWp = nullptr;
@@ -43,7 +43,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
         if(item->getType() != ITEM_PATH) {
             std::runtime_error("Can't edit something else than paths!");
         }
-        path = static_cast<Path*>(item);
+        path = static_cast<PathItem*>(item);
         ac_id = path->acId();
         previousWp = path->getLastWaypoint();
         lastWp = new WaypointItem(latlon, ac_id, 50, map);
@@ -66,7 +66,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
                 pressPos = mouseEvent->scenePos();
                 previousWp = nullptr;
                 lastWp = new WaypointItem(latlon, ac_id, 50, map);
-                path = new Path(lastWp, ac_id, 50, map);
+                path = new PathItem(lastWp, ac_id, 50, map);
                 mouseEvent->accept();
                 state = PRESS_INI;
                 return path;
@@ -78,7 +78,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
             }
             ac_id = waypoint->acId();
             emit(DispatcherUi::get()->ac_selected(ac_id));
-            path = new Path(waypoint, ac_id, 50, map);
+            path = new PathItem(waypoint, ac_id, 50, map);
             previousWp = nullptr;
             lastWp = new WaypointItem(waypoint->position(), ac_id, 50, map);
             path->addPoint(lastWp);
@@ -204,7 +204,7 @@ MapItem* SmPathItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mo
                 lastWp->setIgnoreEvent(true);
                 previousWp->setIgnoreEvent(false);
             } else {
-                std::cout << "Waypoints following each other in Path must be different!" << std::endl;
+                std::cout << "Waypoints following each other in PathItem must be different!" << std::endl;
             }
             break;
         case FPEE_CANCEL:

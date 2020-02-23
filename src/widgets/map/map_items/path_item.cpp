@@ -1,11 +1,11 @@
-#include "path.h"
+#include "path_item.h"
 #include "maputils.h"
 #include <QGraphicsScene>
 #include "mapwidget.h"
-#include "mapitem.h"
+#include "map_item.h"
 #include "AircraftManager.h"
 
-Path::Path(Point2DLatLon start, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+PathItem::PathItem(Point2DLatLon start, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
     line_widht(5)
 {
@@ -13,7 +13,7 @@ Path::Path(Point2DLatLon start, int ac_id, qreal z_value, MapWidget* map, double
     init(wpStart);
 }
 
-Path::Path(WaypointItem* wpStart, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+PathItem::PathItem(WaypointItem* wpStart, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
     line_widht(5)
 {
@@ -21,7 +21,7 @@ Path::Path(WaypointItem* wpStart, int ac_id, qreal z_value, MapWidget* map, doub
     init(wpStart);
 }
 
-void Path::init(WaypointItem* wpStart) {
+void PathItem::init(WaypointItem* wpStart) {
     waypoints.append(wpStart);
 
     connect(
@@ -43,12 +43,12 @@ void Path::init(WaypointItem* wpStart) {
     map->addItem(this);
 }
 
-void Path::addPoint(Point2DLatLon pos) {
+void PathItem::addPoint(Point2DLatLon pos) {
     WaypointItem* wp = new WaypointItem(pos, Qt::green, z_value, map, neutral_scale_zoom, parent());
     addPoint(wp);
 }
 
-void Path::addPoint(WaypointItem* wp) {
+void PathItem::addPoint(WaypointItem* wp) {
     assert(wp != nullptr);
     WaypointItem* last_wp = waypoints.last();
     waypoints.append(wp);
@@ -97,7 +97,7 @@ void Path::addPoint(WaypointItem* wp) {
     );
 }
 
-void Path::setHighlighted(bool h) {
+void PathItem::setHighlighted(bool h) {
     highlighted = h;
     for(auto wp: waypoints) {
         wp->setHighlighted(h);
@@ -107,7 +107,7 @@ void Path::setHighlighted(bool h) {
     }
 }
 
-void Path::setForbidHighlight(bool sh) {
+void PathItem::setForbidHighlight(bool sh) {
     for(auto wp: waypoints) {
         wp->setForbidHighlight(sh);
     }
@@ -116,7 +116,7 @@ void Path::setForbidHighlight(bool sh) {
     }
 }
 
-void Path::setEditable(bool ed) {
+void PathItem::setEditable(bool ed) {
     for(auto wp: waypoints) {
         wp->setEditable(ed);
     }
@@ -125,7 +125,7 @@ void Path::setEditable(bool ed) {
     }
 }
 
-void Path::setZValue(qreal z) {
+void PathItem::setZValue(qreal z) {
     z_value = z;
     //waypoints above lines
     for(auto w:waypoints) {
@@ -136,7 +136,7 @@ void Path::setZValue(qreal z) {
     }
 }
 
-void Path::updateGraphics() {
+void PathItem::updateGraphics() {
     assert(waypoints.length() == lines.length() + 1);
 
     double s = getScale();
@@ -152,7 +152,7 @@ void Path::updateGraphics() {
     }
 }
 
-void Path::removeFromScene() {
+void PathItem::removeFromScene() {
     for(auto l:lines) {
         map->scene()->removeItem(l);
         delete l;
@@ -160,19 +160,19 @@ void Path::removeFromScene() {
     lines.clear();
 }
 
-void Path::setLastLineIgnoreEvents(bool ignore) {
+void PathItem::setLastLineIgnoreEvents(bool ignore) {
     if(lines.length() > 0) {
         lines.last()->setIgnoreEvent(ignore);
     }
 }
 
-void Path::setLinesIgnoreEvents(bool ignore) {
+void PathItem::setLinesIgnoreEvents(bool ignore) {
     for(auto line: lines) {
         line->setIgnoreEvent(ignore);
     }
 }
 
-void Path::removeLastWaypoint() {
+void PathItem::removeLastWaypoint() {
     auto lastLine = lines.takeLast();
     waypoints.removeLast();
     map->scene()->removeItem(lastLine);

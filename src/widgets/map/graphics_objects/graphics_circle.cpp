@@ -1,4 +1,4 @@
-#include "graphicscircle.h"
+#include "graphics_circle.h"
 #include "math.h"
 #include <QApplication>
 #include <QGraphicsSceneMouseEvent>

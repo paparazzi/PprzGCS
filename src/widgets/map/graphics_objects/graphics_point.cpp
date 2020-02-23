@@ -1,4 +1,4 @@
-#include "graphicspoint.h"
+#include "graphics_point.h"
 #include "math.h"
 #include <QApplication>
 #include <QGraphicsSceneMouseEvent>

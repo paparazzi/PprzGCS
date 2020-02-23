@@ -9,13 +9,13 @@
 #include <QAction>
 #include "mapscene.h"
 #include <QGraphicsSceneMouseEvent>
-#include "waypointitem.h"
-#include "circleitem.h"
+#include "waypoint_item.h"
+#include "circle_item.h"
 #include "maputils.h"
-#include "path.h"
-#include "smwaypointitem.h"
-#include "smcircleitem.h"
-#include "smpathitem.h"
+#include "path_item.h"
+#include "waypointitem_sm.h"
+#include "circleitem_sm.h"
+#include "pathitem_sm.h"
 #include <QCursor>
 #include "AircraftManager.h"
 
@@ -44,7 +44,7 @@ PprzMap::PprzMap(QWidget *parent) :
         });
 
     connect(scene, &MapScene::eventScene,
-        [=](FPEditEvent eventType, QGraphicsSceneMouseEvent *mouseEvent) {
+        [=](SmEditEvent eventType, QGraphicsSceneMouseEvent *mouseEvent) {
             if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
                 MapItem* item = fp_edit_sm->update(eventType, mouseEvent, nullptr, current_ac);
                 (void)item; //put item in a list relative to the drone (in a drone FP, in a block)

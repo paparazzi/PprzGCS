@@ -1,4 +1,4 @@
-#include "waypointitem.h"
+#include "waypoint_item.h"
 #include "math.h"
 #include <QApplication>
 #include <QDebug>

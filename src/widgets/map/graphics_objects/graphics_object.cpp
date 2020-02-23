@@ -1,4 +1,4 @@
-#include "graphicsobject.h"
+#include "graphics_object.h"
 #include <QDebug>
 
 GraphicsObject::GraphicsObject(QObject *parent) : QObject(parent), highlighted(true), editable(true), scale_factor(1.0)

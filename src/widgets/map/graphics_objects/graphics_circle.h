@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QGraphicsItem>
 #include <QFont>
-#include "graphicsobject.h"
+#include "graphics_object.h"
 
 enum CircleScaleState {
     CSS_IDLE,

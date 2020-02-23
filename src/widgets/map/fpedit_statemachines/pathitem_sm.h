@@ -1,16 +1,16 @@
 #ifndef SMPATHITEM_H
 #define SMPATHITEM_H
 
-#include "fpeditstatemachine.h"
-#include "path.h"
-#include "waypointitem.h"
+#include "item_edit_state_machine.h"
+#include "path_item.h"
+#include "waypoint_item.h"
 
-class SmPathItem : public FpEditStateMachine
+class SmPathItem : public ItemEditStateMachine
 {
 public:
     SmPathItem(MapWidget* map);
     ~SmPathItem();
-    virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item = nullptr);
+    virtual MapItem* update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item = nullptr);
 
 private:
 
@@ -21,7 +21,7 @@ private:
         MOVING,
     };
 
-    Path* path;
+    PathItem* path;
     WaypointItem* lastWp;
     WaypointItem* previousWp;
     State state;

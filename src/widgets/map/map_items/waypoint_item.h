@@ -1,9 +1,9 @@
 #ifndef WAYPOINTITEM_H
 #define WAYPOINTITEM_H
 
-#include "mapitem.h"
+#include "map_item.h"
 #include <QBrush>
-#include "graphicspoint.h"
+#include "graphics_point.h"
 
 class WaypointItem : public MapItem
 {

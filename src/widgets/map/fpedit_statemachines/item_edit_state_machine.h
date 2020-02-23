@@ -1,14 +1,14 @@
 #ifndef FPEDITSTATEMACHINE_H
 #define FPEDITSTATEMACHINE_H
 
-#include "mapitem.h"
+#include "map_item.h"
 #include <QGraphicsSceneMouseEvent>
 #include <QColor>
 
 class MapWidget;
 class WaypointItem;
 
-enum FPEditEvent {
+enum SmEditEvent {
     FPEE_SC_PRESS,
     FPEE_SC_MOVE,
     FPEE_SC_RELEASE,
@@ -17,11 +17,11 @@ enum FPEditEvent {
     FPEE_CANCEL,
 };
 
-class FpEditStateMachine
+class ItemEditStateMachine
 {
 public:
-    FpEditStateMachine(MapWidget* map);
-    virtual ~FpEditStateMachine();
+    ItemEditStateMachine(MapWidget* map);
+    virtual ~ItemEditStateMachine();
     ///
     /// \brief update
     /// \param event_type
@@ -31,7 +31,7 @@ public:
     /// \param item: item to edit (only applicable for the path?)
     /// \return
     ///
-    virtual MapItem* update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item = nullptr) = 0;
+    virtual MapItem* update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item = nullptr) = 0;
 
 protected:
     MapWidget* map;

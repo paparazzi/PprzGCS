@@ -1,12 +1,12 @@
-#include "smwaypointitem.h"
+#include "waypointitem_sm.h"
 #include "maputils.h"
 #include <QDebug>
 #include <QApplication>
 #include "mapwidget.h"
 
 SmWaypointItem::SmWaypointItem(MapWidget* map) :
-    FpEditStateMachine (map),
-    wp(nullptr), state(IDLE)
+        ItemEditStateMachine (map),
+        wp(nullptr), state(IDLE)
 {
 
 }
@@ -20,7 +20,7 @@ SmWaypointItem::~SmWaypointItem(){
 //SE_RELEASE,
 //SE_DOUBLE_CLICK,
 
-MapItem* SmWaypointItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item) {
+MapItem* SmWaypointItem::update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item) {
     (void) item;    // A waypoint can't be edited (just move it!)
     //(void) waypoint;    //TODO : use the waypoint to create a waypoint at the same position for another drone ?
     Point2DLatLon latlon(0, 0);

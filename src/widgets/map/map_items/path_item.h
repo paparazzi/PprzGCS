@@ -1,17 +1,17 @@
 #ifndef SEGMENT_H
 #define SEGMENT_H
 
-#include "mapitem.h"
+#include "map_item.h"
 #include <QBrush>
-#include "waypointitem.h"
-#include "graphicsline.h"
+#include "waypoint_item.h"
+#include "graphics_line.h"
 
-class Path : public MapItem
+class PathItem : public MapItem
 {
     Q_OBJECT
 public:
-    explicit Path(Point2DLatLon start, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
-    explicit Path(WaypointItem* wpStart, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    explicit PathItem(Point2DLatLon start, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    explicit PathItem(WaypointItem* wpStart, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     void addPoint(Point2DLatLon pos);
     void addPoint(WaypointItem* waypoint);
     virtual void setHighlighted(bool h);

@@ -1,9 +1,9 @@
 #ifndef CIRCLEITEM_H
 #define CIRCLEITEM_H
 
-#include "mapitem.h"
-#include "waypointitem.h"
-#include "graphicscircle.h"
+#include "map_item.h"
+#include "waypoint_item.h"
+#include "graphics_circle.h"
 
 class MapWidget;
 

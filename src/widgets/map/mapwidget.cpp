@@ -1,7 +1,7 @@
 #include "mapwidget.h"
 #include <QGraphicsEllipseItem>
 #include <QGraphicsScene>
-#include "mapitem.h"
+#include "map_item.h"
 #include <iostream>
 #include <QPushButton>
 #include <QLayout>

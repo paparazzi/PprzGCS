@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QGraphicsItem>
-#include "graphicsobject.h"
+#include "graphics_object.h"
 #include <QBrush>
 
 enum PointMoveState {

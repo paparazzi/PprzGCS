@@ -34,7 +34,7 @@ set(SOURCE
     src/widgets/ac_selector.ui
     src/widgets/ac_selector.cpp
     src/widgets/pprzmap.cpp
-    src/widgets/map/mapitem.cpp
+
     src/widgets/pprzmap.ui
     src/widgets/map/tileprovider.cpp
     src/widgets/map/tileproviderconfig.cpp
@@ -44,18 +44,21 @@ set(SOURCE
     src/widgets/map/maplayercontrol.cpp
     src/widgets/map/layertab.cpp
     src/widgets/map/mapscene.cpp
-    src/widgets/map/waypointitem.cpp
     src/widgets/map/maputils.cpp
-    src/widgets/map/graphicspoint.cpp
-    src/widgets/map/graphicsobject.cpp
-    src/widgets/map/fpedit_statemachines/fpeditstatemachine.cpp
-    src/widgets/map/fpedit_statemachines/smwaypointitem.cpp
-    src/widgets/map/fpedit_statemachines/smcircleitem.cpp
-    src/widgets/map/fpedit_statemachines/smpathitem.cpp
-    src/widgets/map/path.cpp
-    src/widgets/map/graphicsline.cpp
-    src/widgets/map/graphicscircle.cpp
-    src/widgets/map/circleitem.cpp
+
+    src/widgets/map/map_items/map_item.cpp
+    src/widgets/map/map_items/waypoint_item.cpp
+    src/widgets/map/map_items/path_item.cpp
+    src/widgets/map/map_items/circle_item.cpp
+    src/widgets/map/graphics_objects/graphics_object.cpp
+    src/widgets/map/graphics_objects/graphics_point.cpp
+    src/widgets/map/graphics_objects/graphics_line.cpp
+    src/widgets/map/graphics_objects/graphics_circle.cpp
+    src/widgets/map/fpedit_statemachines/item_edit_state_machine.cpp
+    src/widgets/map/fpedit_statemachines/waypointitem_sm.cpp
+    src/widgets/map/fpedit_statemachines/circleitem_sm.cpp
+    src/widgets/map/fpedit_statemachines/pathitem_sm.cpp
+
     src/widgets/basics/imagebutton.cpp
     src/layout_builder.cpp
     src/pprz_dispatcher.cpp
@@ -73,7 +76,9 @@ include_directories(
     src/widgets/
     src/geometry/
     src/widgets/map/
+    src/widgets/map/map_items/
     src/widgets/map/fpedit_statemachines/
+    src/widgets/map/graphics_objects/
     src/widgets/basics/
     ${INCLUDE_PPRZLINK}
 )
