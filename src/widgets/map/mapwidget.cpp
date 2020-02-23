@@ -19,6 +19,7 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), pa
 {
     setupUi();
     setDragMode(QGraphicsView::NoDrag);
+    setMouseLoadTileMask(Qt::MiddleButton | Qt::LeftButton);
     // Create and add button(s) in the left column
     layers_button = new ImageButton(QIcon(":/pictures/map_layers_normal.svg"), QSize(60,60), true);
     layers_button->setHoverIcon(QIcon(":/pictures/map_layers_hover.svg"));

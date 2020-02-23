@@ -188,7 +188,7 @@ void Map2D::setZoom(double z) {
 
 void Map2D::mouseMoveEvent(QMouseEvent *event) {
     QGraphicsView::mouseMoveEvent(event);
-    if(event->buttons() & Qt::LeftButton) {
+    if(event->buttons() & mouse_load_tiles_mask) {
         updateTiles();
     }
 }

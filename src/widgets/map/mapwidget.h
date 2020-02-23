@@ -32,7 +32,7 @@ public:
     void removeItem(MapItem* item);
     void addLayerControl(QString name, bool initialState, int z);
     virtual void setCursor(const QCursor &);
-    void setPanMask(int mask) {pan_mouse_mask = mask;}
+    void setPanMask(int mask) {pan_mouse_mask = mask; setMouseLoadTileMask(mask);}
     void itemsForbidHighlight(bool fh);
     void itemsEditable(bool ed);
     void updateHighlights(int ac_id);

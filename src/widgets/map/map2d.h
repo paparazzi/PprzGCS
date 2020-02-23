@@ -32,6 +32,7 @@ public:
     void setLayerOpacity(QString providerName, qreal opacity);
     void setLayerZ(QString providerName, int z);
     double scaleFactor() {return pow(2, _zoom - zoomLevel(_zoom));}
+    void setMouseLoadTileMask(int mask) {mouse_load_tiles_mask = mask;}
 
     //Point2DLatLon latlonPoint(QPointF scenePos, int zoom);
 
@@ -74,6 +75,7 @@ private slots:
 private:
     void loadConfig(QString filename);
 
+    int mouse_load_tiles_mask;
     double numericZoom;
     double _zoom;
     int tile_size;
