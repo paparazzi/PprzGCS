@@ -37,6 +37,7 @@ PprzMap::PprzMap(QWidget *parent) :
 
     connect(ui->map, &MapWidget::itemAdded,
         [=](MapItem* map_item) {
+            saveItem(map_item);
             if(map_item->getType() == ITEM_WAYPOINT) {
                 registerWaypoint(dynamic_cast<WaypointItem*>(map_item));
             }
@@ -47,26 +48,13 @@ PprzMap::PprzMap(QWidget *parent) :
             if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
                 MapItem* item = fp_edit_sm->update(eventType, mouseEvent, nullptr, current_ac);
                 (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
-                if(item != nullptr) {
-                    saveItem(item);
-                }
             }
         });
-
-//    connect(DispatcherUi::get(), SIGNAL(ac_selected(int)), this, SLOT(changeColor(int)));
 
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected,
         [=](int id) {
             current_ac = id;
-            for(auto item: items) {
-                if(item->acId() == id) {
-                    item->setHighlighted(true);
-                    item->setZValue(100);
-                } else {
-                    item->setHighlighted(false);
-                    item->setZValue(50);
-                }
-            }
+            ui->map->updateHighlights(id);
         }
     );
 
@@ -83,9 +71,6 @@ void PprzMap::registerWaypoint(WaypointItem* waypoint) {
             if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
                 MapItem* item = fp_edit_sm->update(FPEE_WP_CLICKED, nullptr, waypoint, current_ac);
                 (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
-                if(item != nullptr) {
-                    saveItem(item);
-                }
             }
         });
 }
@@ -127,14 +112,11 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
         if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
             MapItem* item = fp_edit_sm->update(FPEE_CANCEL, nullptr, nullptr, current_ac);
             (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
-            if(item != nullptr) {
-                saveItem(item);
-            }
         }
-        setEditorMode();
         ui->map->setMouseTracking(false);
         ui->map->scene()->setShortcutItems(false);
         interaction_state = PMIS_OTHER;
+        setEditorMode();
         drawState = 0;
         ui->map->setCursor(Qt::ArrowCursor);
     } else if(event->key() == Qt::Key_F) {
@@ -142,15 +124,12 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
         setEditorMode();
     }
     else if (event->key() == Qt::Key_H) {
-        for(auto mp: items) {
-            mp->setHighlighted(false);
-        }
+        ui->map->itemsForbidHighlight(false);
     }
 }
 
 
 void PprzMap::saveItem(MapItem* item) {
-    items.append(item);
     item->setForbidHighlight(true);
     item->setEditable(false);
 
@@ -162,21 +141,19 @@ void PprzMap::saveItem(MapItem* item) {
 }
 
 void PprzMap::setEditorMode() {
-    for(auto item: items) {
-        switch(interaction_state) {
-            case PMIS_FLIGHT_PLAN_EDIT:
-                item->setForbidHighlight(true);
-                item->setEditable(false);
-                break;
-            case PMIS_FROZEN:
-                item->setForbidHighlight(false);
-                item->setEditable(false);
-                break;
-            default:
-                item->setForbidHighlight(false);
-                item->setEditable(true);
-                break;
-        }
+    switch(interaction_state) {
+        case PMIS_FLIGHT_PLAN_EDIT:
+            ui->map->itemsForbidHighlight(true);
+            ui->map->itemsEditable(false);
+            break;
+        case PMIS_FROZEN:
+            ui->map->itemsForbidHighlight(false);
+            ui->map->itemsEditable(false);
+            break;
+        default:
+            ui->map->itemsForbidHighlight(false);
+            ui->map->itemsEditable(true);
+            break;
     }
 }
 

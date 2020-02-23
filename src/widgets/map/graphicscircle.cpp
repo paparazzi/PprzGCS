@@ -13,7 +13,7 @@ GraphicsCircle::GraphicsCircle(double radius, QColor color, int stroke, QObject 
         QGraphicsItem (),
         radius(radius), scale_state(CSS_IDLE),
         current_color(nullptr), color_idle(color), color_pressed(color), color_scaling(color), color_unfocused(color),
-        base_stroke(stroke), stroke(stroke)
+        base_stroke(stroke), stroke(stroke), text(), display_radius(true)
 {
     current_color = &color_idle;
 }
@@ -27,7 +27,20 @@ void GraphicsCircle::setColors(QColor colPressed, QColor colScaling, QColor colU
 
 QRectF GraphicsCircle::boundingRect() const {
     double recthalf = radius + (stroke + 10)*scale_factor;
-    return QRectF(-recthalf, -recthalf, 2*recthalf, 2*recthalf);
+
+    QRectF brect;
+    if(display_radius) {
+        double maxWidth = qMax(2*recthalf, 2*textPos.x() + 100);
+        brect = QRectF(-recthalf, -recthalf, maxWidth, 2*recthalf);
+    } else {
+        brect = QRectF(-recthalf, -recthalf, 2*recthalf, 2*recthalf);
+    }
+
+    if(brect.width() > last_bounding_rect.width()) {
+        return brect;
+    } else {
+        return last_bounding_rect;
+    }
 }
 
 
@@ -53,6 +66,25 @@ void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
     painter->setBrush(QBrush(*current_color));
     painter->setPen(Qt::NoPen);
     painter->drawPath(path_draw);
+
+    double recthalf = radius + (stroke + 10)*scale_factor;
+    if(display_radius) {
+        path_draw.clear();
+        QFont font;
+        font.setPointSize (qApp->property("MAPITEMS_FONT").toInt()*scale_factor);
+        font.setWeight(QFont::DemiBold);
+        path_draw.addText(textPos.x()+10, textPos.y(), font, text);
+        painter->setBrush(QBrush(color_idle));
+        painter->setPen(Qt::NoPen);
+        painter->drawPath(path_draw);
+
+        QFontMetrics fm(font);
+
+        double maxWidth = qMax(2*recthalf, 2*textPos.x() + fm.width(text) + 100);
+        last_bounding_rect = QRectF(-recthalf, -recthalf, maxWidth, 2*recthalf);
+    } else {
+        last_bounding_rect = QRectF(-recthalf, -recthalf, 2*recthalf, 2*recthalf);
+    }
 }
 
 QPainterPath GraphicsCircle::shape() const
@@ -63,16 +95,18 @@ QPainterPath GraphicsCircle::shape() const
 
 
 void GraphicsCircle::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    textPos = event->pos();
     QPointF pressPos = QPointF(event->pos().x() * scale(), event->pos().y() * scale());
     dr = sqrt(pressPos.x()*pressPos.x() + pressPos.y()*pressPos.y()) - radius;
     GraphicsObject::mousePressEvent(event);
     scale_state = CSS_PRESSED;
+    display_radius = true;
     changeFocus();
 }
 
 void GraphicsCircle::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-    QPointF p = event->pos();
-    double r = sqrt(p.x()*p.x() + p.y()*p.y()) - dr;
+    QPointF mousePos = event->pos();
+    double r = sqrt(mousePos.x()*mousePos.x() + mousePos.y()*mousePos.y()) - dr;
 
     if(scale_state == CSS_PRESSED) {
         if(qAbs(radius - r) > qApp->property("MAP_MOVE_HYSTERESIS").toInt() && editable) {
@@ -82,6 +116,7 @@ void GraphicsCircle::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     } else if(scale_state == CSS_SCALED) {
         prepareGeometryChange();
         radius = static_cast<int>(r);
+        textPos = mousePos;
         update();
         emit(circleScaled(radius));
     }
@@ -96,6 +131,7 @@ void GraphicsCircle::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         emit(circleScaleFinished());
     }
     scale_state = CSS_IDLE;
+    display_radius = false;
     changeFocus();
     update();
 }

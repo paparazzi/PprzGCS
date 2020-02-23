@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QGraphicsItem>
-#include <QPen>
+#include <QFont>
 #include "graphicsobject.h"
 
 enum CircleScaleState {
@@ -19,6 +19,9 @@ public:
     explicit GraphicsCircle(double radius, QColor color, int stroke, QObject *parent = nullptr);
     void setRadius(double r);
     void setColors(QColor colPressed, QColor colScaling, QColor colUnfocused);
+    void displayRadius(bool dpr) {display_radius = dpr; update();}
+    void setTextPos(QPointF pos) {textPos = pos;}
+    void setText(QString t) {text = t;}
 
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -39,6 +42,7 @@ public slots:
 
 private:
     double dr;
+    QPointF textPos;
     double radius;
     CircleScaleState scale_state;
 
@@ -53,6 +57,10 @@ private:
     int stroke;
     QPainterPath path_draw;
     QPainterPath path_shape;
+    QString text;
+
+    bool display_radius;
+    QRectF last_bounding_rect;
 };
 
 #endif // GRAPHICSCIRCLE_H

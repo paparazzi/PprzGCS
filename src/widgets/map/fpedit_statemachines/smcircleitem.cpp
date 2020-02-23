@@ -29,6 +29,7 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
 
     // some variables used later, cause switch are so prehistoric...
     QPointF dp;
+    QPointF pos;
     double d;
     WaypointItem* wp;
 
@@ -39,6 +40,7 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
             if(mouseEvent->button() == Qt::LeftButton) {
                 pressPos = mouseEvent->scenePos();
                 cir = new CircleItem(latlon, 0, ac_id, 50, map);
+                cir->getGraphicsCircle()->displayRadius(true);
                 mouseEvent->accept();
                 state = PRESSED;
                 // set moving color ?
@@ -52,6 +54,7 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
                 wp = new WaypointItem(waypoint->position(), ac_id, 50, map);
             }
             cir = new CircleItem(wp, 0, ac_id, 50, map);
+            cir->getGraphicsCircle()->displayRadius(true);
             map->setMouseTracking(true);
             map->scene()->setShortcutItems(true);
             state = RELEASED;
@@ -87,6 +90,8 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
         case FPEE_SC_MOVE:
             assert(cir != nullptr);
             adjustCircleRadius(mouseEvent);
+            pos = mouseEvent->scenePos() - cir->getGraphicsCircle()->pos();
+            cir->getGraphicsCircle()->setTextPos(pos);
             mouseEvent->accept();
             break;
         case FPEE_SC_RELEASE:
@@ -96,8 +101,11 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
                             << "can't create circle with radius < CIRCLE_CREATE_MIN_RADIUS. Please change this parameter."
                             << std::endl;
                     map->removeItem(cir);
+                } else {
+                    // back to normal color ?
+                    cir->getGraphicsCircle()->displayRadius(false);
                 }
-                // back to normal color ?
+
                 state = IDLE;
             }
             break;
@@ -117,6 +125,8 @@ MapItem* SmCircleItem::update(FPEditEvent event_type, QGraphicsSceneMouseEvent* 
             break;
         case FPEE_SC_MOVE:
             adjustCircleRadius(mouseEvent);
+            pos = mouseEvent->scenePos() - cir->getGraphicsCircle()->pos();
+            cir->getGraphicsCircle()->setTextPos(pos);
             mouseEvent->accept();
             break;
         default:
@@ -140,4 +150,5 @@ void SmCircleItem::adjustCircleRadius(QGraphicsSceneMouseEvent* mouseEvent) {
     double d_meters = distTile2Meters(center_tile.y(), d_tile, zoomLevel(map->zoom()));
     //qDebug() << "Circle state machine: moved: " << d << "   " << d2;
     cir->setRadius(d_meters);
+    cir->getGraphicsCircle()->setText(QString::number(static_cast<int>(d_meters)) + "m");
 }

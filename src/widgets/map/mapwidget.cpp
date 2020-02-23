@@ -138,6 +138,30 @@ void MapWidget::removeItem(MapItem* item) {
     //the one that receive this signal shall delete the item
 }
 
+void MapWidget::itemsForbidHighlight(bool fh) {
+    for(auto item: _items) {
+        item->setForbidHighlight(fh);
+    }
+}
+
+void MapWidget::itemsEditable(bool ed) {
+    for(auto item: _items) {
+        item->setEditable(ed);
+    }
+}
+
+void MapWidget::updateHighlights(int ac_id) {
+    for(auto item: _items) {
+        if(item->acId() == ac_id) {
+            item->setHighlighted(true);
+            item->setZValue(qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toInt());
+        } else {
+            item->setHighlighted(false);
+            item->setZValue(qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toInt());
+        }
+    }
+}
+
 void MapWidget::mousePressEvent(QMouseEvent *event) {
     Map2D::mousePressEvent(event);
     if(event->buttons() & pan_mouse_mask && !event->isAccepted()) {

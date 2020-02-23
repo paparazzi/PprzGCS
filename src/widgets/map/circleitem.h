@@ -15,6 +15,7 @@ public:
     explicit CircleItem(WaypointItem* center, double radius, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15);
     Point2DLatLon position() {return center->position();}
     void setPosition(Point2DLatLon ll) {center->setPosition(ll);};
+    GraphicsCircle* getGraphicsCircle() {return circle;}
     virtual void setHighlighted(bool h);
     void setForbidHighlight(bool fh);
     virtual void setEditable(bool ed);

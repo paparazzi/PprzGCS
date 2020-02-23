@@ -43,7 +43,7 @@ private:
     InteractionState interaction_state;
     FpEditStateMachine* fp_edit_sm;
 
-    QList<MapItem*> items;
+    //QList<MapItem*> items;
 
     int current_ac;
 

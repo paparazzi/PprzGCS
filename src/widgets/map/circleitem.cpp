@@ -57,6 +57,7 @@ void CircleItem::init(WaypointItem* center, double radius) {
         circle, &GraphicsCircle::circleScaled, this,
         [=](qreal size) {
             _radius = distTile2Meters(circle->pos().y()/map->tileSize(), size/map->tileSize(), zoomLevel(map->zoom()));
+            circle->setText(QString::number(static_cast<int>(_radius)) + "m");
             emit(circleScaled(_radius));
         }
     );
