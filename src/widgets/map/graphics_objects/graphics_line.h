@@ -14,6 +14,11 @@ public:
     void setColors(QColor color_unfocused);
     virtual void changeFocus();
     void setIgnoreEvent(bool ignore) {ignore_events = ignore;}
+    void setText(QString t) {text = t;}
+
+    QRectF boundingRect() const override;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+
 
 signals:
 
@@ -27,7 +32,7 @@ private:
     QPen pen_unfocused;
 
     bool ignore_events;
-
+    QString text;
 };
 
 #endif // GRAPHICSLINE_H

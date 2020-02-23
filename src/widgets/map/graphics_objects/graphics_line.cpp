@@ -10,6 +10,19 @@ GraphicsLine::GraphicsLine(QLineF linef, QPen pen_idle, QObject *parent) :
     setPen(pen_idle);
 }
 
+
+QRectF GraphicsLine::boundingRect() const {
+    QRectF rect = QGraphicsLineItem::boundingRect();
+    qDebug() << rect;
+    return rect;
+}
+
+
+void GraphicsLine::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
+    QGraphicsLineItem::paint(painter, option, widget);
+}
+
+
 void GraphicsLine::changeFocus() {
     if(!isHighlighted()) {
         setPen(pen_unfocused);
