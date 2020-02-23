@@ -29,7 +29,7 @@ WaypointItem::WaypointItem(Point2DLatLon pt, int ac_id, qreal z_value, MapWidget
     setZoomFactor(1.1);
 
     connect(
-        point, &GraphicsPoint::pointMoved,
+        point, &GraphicsPoint::pointMoved, this,
         [=](QPointF scenePos) {
             latlon = latlonPoint(scenePos, zoomLevel(map->zoom()), map->tileSize());
             emit(waypointMoved(latlon));
@@ -37,14 +37,14 @@ WaypointItem::WaypointItem(Point2DLatLon pt, int ac_id, qreal z_value, MapWidget
     );
 
     connect(
-        point, &GraphicsPoint::objectClicked,
+        point, &GraphicsPoint::objectClicked, this,
         [=](QPointF scene_pos) {
             emit(itemClicked(scene_pos));
         }
     );
 
     connect(
-        point, &GraphicsPoint::objectGainedHighlight,
+        point, &GraphicsPoint::objectGainedHighlight, this,
         [=]() {
             setHighlighted(true);
             emit(itemGainedHighlight());

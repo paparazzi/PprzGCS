@@ -45,7 +45,7 @@ void CircleItem::init(WaypointItem* center, double radius) {
     map->scene()->addItem(circle);
 
     connect(
-        center, &WaypointItem::waypointMoved,
+        center, &WaypointItem::waypointMoved, this,
         [=](Point2DLatLon latlon) {
             QPointF p = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());
             circle->setPos(p);
@@ -54,7 +54,7 @@ void CircleItem::init(WaypointItem* center, double radius) {
     );
 
     connect(
-        circle, &GraphicsCircle::circleScaled,
+        circle, &GraphicsCircle::circleScaled, this,
         [=](qreal size) {
             _radius = distTile2Meters(circle->pos().y()/map->tileSize(), size/map->tileSize(), zoomLevel(map->zoom()));
             emit(circleScaled(_radius));
@@ -62,14 +62,14 @@ void CircleItem::init(WaypointItem* center, double radius) {
     );
 
     connect(
-        circle, &GraphicsCircle::objectClicked,
+        circle, &GraphicsCircle::objectClicked, this,
         [=](QPointF scene_pos) {
             qDebug() << "circle clicked at " << scene_pos;
         }
     );
 
     connect(
-        circle, &GraphicsCircle::objectGainedHighlight,
+        circle, &GraphicsCircle::objectGainedHighlight, this,
         [=]() {
             setHighlighted(true);
             emit(itemGainedHighlight());
@@ -77,7 +77,7 @@ void CircleItem::init(WaypointItem* center, double radius) {
     );
 
     connect(
-        center, &MapItem::itemGainedHighlight,
+        center, &MapItem::itemGainedHighlight, this,
         [=]() {
             setHighlighted(true);
             emit(itemGainedHighlight());

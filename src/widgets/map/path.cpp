@@ -25,7 +25,7 @@ void Path::init(WaypointItem* wpStart) {
     waypoints.append(wpStart);
 
     connect(
-        wpStart, &WaypointItem::waypointMoved,
+        wpStart, &WaypointItem::waypointMoved, this,
         [=](Point2DLatLon newPos) {
             (void) newPos;
             this->updateGraphics();
@@ -33,7 +33,7 @@ void Path::init(WaypointItem* wpStart) {
     );
 
     connect(
-        wpStart, &MapItem::itemGainedHighlight,
+        wpStart, &MapItem::itemGainedHighlight, this,
         [=]() {
             setHighlighted(true);
             emit(itemGainedHighlight());
@@ -73,7 +73,7 @@ void Path::addPoint(WaypointItem* wp) {
     map->scene()->addItem(line);
 
     connect(
-        wp, &WaypointItem::waypointMoved,
+        wp, &WaypointItem::waypointMoved, this,
         [=](Point2DLatLon newPos) {
             (void) newPos;
             this->updateGraphics();
@@ -81,7 +81,7 @@ void Path::addPoint(WaypointItem* wp) {
     );
 
     connect(
-        wp, &MapItem::itemGainedHighlight,
+        wp, &MapItem::itemGainedHighlight, this,
         [=]() {
             setHighlighted(true);
             emit(itemGainedHighlight());
@@ -89,7 +89,7 @@ void Path::addPoint(WaypointItem* wp) {
     );
 
     connect(
-        line, &GraphicsObject::objectGainedHighlight,
+        line, &GraphicsObject::objectGainedHighlight, this,
         [=]() {
             setHighlighted(true);
             emit(itemGainedHighlight());
