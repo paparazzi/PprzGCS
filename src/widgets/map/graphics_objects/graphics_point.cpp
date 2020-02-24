@@ -9,7 +9,7 @@
 GraphicsPoint::GraphicsPoint(int size, QColor color, QObject *parent) :
     GraphicsObject(parent),
     QGraphicsItem (),
-    halfSize(size), move_state(PMS_IDLE), ignore_events(false), current_color(nullptr)
+    halfSize(size), move_state(PMS_IDLE), current_color(nullptr), ignore_events(false)
 {
     color_idle = color;
     current_color = &color_idle;
@@ -28,7 +28,8 @@ QRectF GraphicsPoint::boundingRect() const {
 
 
 void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-
+    (void)option;
+    (void)widget;
     QPainterPath path;
     double fx = 0.8;
     double fy = 1.0;

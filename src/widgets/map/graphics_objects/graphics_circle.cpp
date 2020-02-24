@@ -45,8 +45,9 @@ QRectF GraphicsCircle::boundingRect() const {
 
 
 void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-
-    path_draw.clear();
+    (void)option;
+    (void)widget;
+    path_draw = QPainterPath();
     double out_draw = radius + stroke*scale_factor;
     double in_draw = radius - stroke*scale_factor;
     QRectF outter_draw = QRectF(-out_draw, -out_draw, 2*out_draw, 2*out_draw);
@@ -54,7 +55,7 @@ void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
     path_draw.addEllipse(outter_draw);
     path_draw.addEllipse(inner_draw);
 
-    path_shape.clear();
+    path_shape = QPainterPath();
     double out_path = radius + (stroke + 5)*scale_factor;
     double in_path = radius - (stroke - 1)*scale_factor;
     QRectF outter_shape = QRectF(-out_path, -out_path, 2*out_path, 2*out_path);
@@ -69,7 +70,7 @@ void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
 
     double recthalf = radius + (stroke + 10)*scale_factor;
     if(display_radius) {
-        path_draw.clear();
+        path_draw = QPainterPath();
         QFont font;
         font.setPointSize (qApp->property("MAPITEMS_FONT").toInt()*scale_factor);
         font.setWeight(QFont::DemiBold);
