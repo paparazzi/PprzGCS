@@ -20,7 +20,7 @@ SmWaypointItem::~SmWaypointItem(){
 //SE_RELEASE,
 //SE_DOUBLE_CLICK,
 
-MapItem* SmWaypointItem::update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item) {
+MapItem* SmWaypointItem::update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QString ac_id, MapItem* item) {
     (void) item;    // A waypoint can't be edited (just move it!)
     //(void) waypoint;    //TODO : use the waypoint to create a waypoint at the same position for another drone ?
     Point2DLatLon latlon(0, 0);

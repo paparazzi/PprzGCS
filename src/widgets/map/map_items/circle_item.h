@@ -11,8 +11,8 @@ class CircleItem : public MapItem
 {
     Q_OBJECT
 public:
-    explicit CircleItem(Point2DLatLon pt, double radius, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
-    explicit CircleItem(WaypointItem* center, double radius, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15);
+    explicit CircleItem(Point2DLatLon pt, double radius, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    explicit CircleItem(WaypointItem* center, double radius, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15);
     Point2DLatLon position() {return center->position();}
     void setPosition(Point2DLatLon ll) {center->setPosition(ll);};
     GraphicsCircle* getGraphicsCircle() {return circle;}

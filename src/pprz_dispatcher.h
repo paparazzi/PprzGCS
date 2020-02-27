@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <pprzlink/IvyLink.h>
+#include <pprzlink/Message.h>
 #include <memory>
 
 class PprzDispatcher : public QObject
@@ -26,13 +27,23 @@ signals:
     void takeoff(pprzlink::Message);
     void attitude(pprzlink::Message);
     void pprz_mode(pprzlink::Message);
+    void flight_param(pprzlink::Message);
 
 public slots:
 
 private:
+
+    void requestConfig(std::string ac_id);
+
     std::unique_ptr<pprzlink::MessageDictionary> dict;
     std::unique_ptr<pprzlink::IvyLink> link;
 
+    std::string pprzlink_id;
+
+    bool first_msg;
 };
+
+
+
 
 #endif // DISPATCHER_H

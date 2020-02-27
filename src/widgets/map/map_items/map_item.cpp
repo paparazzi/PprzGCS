@@ -2,11 +2,12 @@
 #include "math.h"
 #include <QApplication>
 #include <QDebug>
+#include <utility>
 #include "mapwidget.h"
 
-MapItem::MapItem(int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+MapItem::MapItem(QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     QObject(parent),
-    ac_id(ac_id),
+    ac_id(std::move(ac_id)),
     zoom_factor(1), neutral_scale_zoom(neutral_scale_zoom),
     z_value(z_value),
     map(map)

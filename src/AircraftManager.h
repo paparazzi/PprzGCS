@@ -6,7 +6,10 @@
 #define PPRZGCS_AIRCRAFTMANAGER_H
 
 #include <QColor>
-#include <QMap>
+#include "aircraft.h"
+#include <optional>
+#include <map>
+#include <pprzlink/Message.h>
 
 class AircraftManager {
 public:
@@ -17,14 +20,17 @@ public:
         return singleton;
     }
 
-    std::optional<QColor> getColor(int id);
-    void addAircraft(int id, QColor color);
+    std::optional<Aircraft> getAircraft(QString id);
+    void addAircraft(QString id);
+    void addAircraft(pprzlink::Message msg);
+    bool aircraftExists(QString id);
 
 private:
     static AircraftManager* singleton;
     explicit AircraftManager();
+    static QColor parseColor(std::string str);
 
-    std::map<int, QColor> colors;
+    std::map<QString, Aircraft> aircrafts;
 
 };
 

@@ -9,7 +9,7 @@ class WaypointItem : public MapItem
 {
         Q_OBJECT
 public:
-    WaypointItem(Point2DLatLon pt, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    WaypointItem(Point2DLatLon pt, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     Point2DLatLon position() {return latlon;}
     void setPosition(Point2DLatLon ll);
     QPointF scenePos();

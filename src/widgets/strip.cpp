@@ -11,7 +11,7 @@ Strip::Strip(QWidget *parent) :
     ui(new Ui::Strip)
 {
     ui->setupUi(this);
-    connect(DispatcherUi::get(), SIGNAL(ac_selected(int)), this, SLOT(changeColor(int)));
+    connect(DispatcherUi::get(), SIGNAL(ac_selected(QString)), this, SLOT(changeColor(QString)));
 }
 
 Strip::~Strip()
@@ -19,6 +19,6 @@ Strip::~Strip()
     delete ui;
 }
 
-void Strip::changeColor(int ac_id) {
-    ui->ac_id_label->setText(QString::number(ac_id));
+void Strip::changeColor(QString ac_id) {
+    ui->ac_id_label->setText(ac_id);
 }

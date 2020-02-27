@@ -9,7 +9,7 @@
 #include "map_item.h"
 #include "AircraftManager.h"
 
-CircleItem::CircleItem(Point2DLatLon pt, double radius, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+CircleItem::CircleItem(Point2DLatLon pt, double radius, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
     _radius(radius)
 {
@@ -19,7 +19,7 @@ CircleItem::CircleItem(Point2DLatLon pt, double radius, int ac_id, qreal z_value
     init(center, radius);
 }
 
-CircleItem::CircleItem(WaypointItem* center, double radius, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom):
+CircleItem::CircleItem(WaypointItem* center, double radius, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom):
   MapItem(ac_id, z_value, map, neutral_scale_zoom),
   center(center), _radius(radius)
 {
@@ -28,18 +28,18 @@ CircleItem::CircleItem(WaypointItem* center, double radius, int ac_id, qreal z_v
 }
 
 void CircleItem::init(WaypointItem* center, double radius) {
-    std::optional<QColor> colorOption = AircraftManager::get()->getColor(ac_id);
-    if(!colorOption.has_value()) {
+    std::optional<Aircraft> aircraftOption = AircraftManager::get()->getAircraft(ac_id);
+    if(!aircraftOption.has_value()) {
         throw std::runtime_error("AcId not found!");
     }
-    QColor color = colorOption.value();
+    Aircraft aircraft = aircraftOption.value();
 
     double pixelRadius = distMeters2Tile(radius, center->position().lat(), zoomLevel(map->zoom())) * map->tileSize();
-    circle = new GraphicsCircle(pixelRadius, color, stroke, this);
+    circle = new GraphicsCircle(pixelRadius, aircraft.getColor(), stroke, this);
     circle->setPos(center->scenePos());
     circle->setZValue(center->zValue() + 0.5);
 
-    QList<QColor> color_variants = makeColorVariants(color);
+    QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
     circle->setColors(color_variants[0], color_variants[1], color_variants[2]);
 
     map->scene()->addItem(circle);

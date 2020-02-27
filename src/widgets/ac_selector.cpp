@@ -18,5 +18,5 @@ ACSelector::~ACSelector()
 }
 
 void ACSelector::changeAC(int ac_id) {
-    emit(DispatcherUi::get()->ac_selected(ac_id));
+    emit(DispatcherUi::get()->ac_selected(QString::number(ac_id)));
 }

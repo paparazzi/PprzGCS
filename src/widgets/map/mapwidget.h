@@ -35,7 +35,7 @@ public:
     void setPanMask(int mask) {pan_mouse_mask = mask; setMouseLoadTileMask(mask);}
     void itemsForbidHighlight(bool fh);
     void itemsEditable(bool ed);
-    void updateHighlights(int ac_id);
+    void updateHighlights(QString ac_id);
     MapScene* scene() {return _scene;}
 
 signals:

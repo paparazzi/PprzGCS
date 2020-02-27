@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   height="249.84"
+   width="248.25"
+   version="1.0"
+   id="svg4"
+   sodipodi:docname="aircraft_fixedwing1.svg"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)">
+  <defs
+     id="defs8" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1680"
+     inkscape:window-height="1014"
+     id="namedview6"
+     showgrid="false"
+     inkscape:zoom="2.6717452"
+     inkscape:cx="94.742084"
+     inkscape:cy="99.764304"
+     inkscape:window-x="1680"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4" />
+  <metadata
+     id="metadata9">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <path
+     pprz="ac_color"
+     fill="#ff0000"
+     id="path5724"
+     d="M 247.79793,151.0955 138.4949,71.645909 c 0.67088,-12.459647 0.8987,-40.268034 0.37406,-45.424101 -4.39794,-43.222354 -31.48905,-24.2982852 -31.53789,-4.986937 -0.0134,5.281797 -0.67003,32.607305 -0.56673,50.845463 L 0.60288184,155.68436 0.59183873,181.50605 110.55206,129.85725 l 4.84269,80.24488 -31.79806,23.27593 -0.02504,16.89814 42.146707,-12.0423 0.009,0.1394 42.82626,10.46622 -0.6879,-16.87579 -32.68893,-22.05438 1.76094,-80.37518 111.86698,47.32506 -1.00762,-25.76373 z"
+     inkscape:connector-curvature="0"
+     style="fill-rule:evenodd;fill-opacity:0.8;stroke:#000000;stroke-opacity:1" />
+</svg>

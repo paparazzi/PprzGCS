@@ -15,7 +15,7 @@ SmCircleItem::~SmCircleItem() {
 
 }
 
-MapItem* SmCircleItem::update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item) {
+MapItem* SmCircleItem::update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QString ac_id, MapItem* item) {
     (void)item;
     Point2DLatLon latlon(0, 0);
     if(event_type == FPEE_WP_CLICKED) {

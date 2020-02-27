@@ -14,6 +14,8 @@
 #include "pprz_dispatcher.h"
 #include "maputils.h"
 
+#include "aircraft_item.h"
+
 MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), parent),
     pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton)
 {
@@ -151,7 +153,7 @@ void MapWidget::itemsEditable(bool ed) {
     }
 }
 
-void MapWidget::updateHighlights(int ac_id) {
+void MapWidget::updateHighlights(QString ac_id) {
     for(auto item: _items) {
         if(item->acId() == ac_id) {
             item->setHighlighted(true);
@@ -181,6 +183,9 @@ void MapWidget::mouseMoveEvent(QMouseEvent *event) {
                 pan_state = PAN_MOVE;
             }
         } else if(pan_state == PAN_MOVE) {
+
+
+
             QPoint dp = event->pos()-lastPos;
             translate(dp.x(), dp.y());
             lastPos = event->pos();

@@ -2,13 +2,12 @@ cmake_minimum_required(VERSION 2.8)
 
 project(PprzGCS)
 
-set(LIB_PPRZLINK "/home/fabien/local/lib")
-set(INCLUDE_PPRZLINK "/home/fabien/local/include/pprzlink")
+set(Qt5_DIR "/home/fabien/Qt/5.12.0/gcc_64/lib/cmake/Qt5")
 
-set(CMAKE_PREFIX_PATH  "${CMAKE_PREFIX_PATH};/home/fabien/local/lib")
+#set(CMAKE_PREFIX_PATH  "${CMAKE_PREFIX_PATH};/home/fabien/local/lib")
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -18,12 +17,12 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
-find_package(Qt5 COMPONENTS Widgets Xml Network REQUIRED)
-find_package(tinyxml2 REQUIRED )
-find_package(Boost COMPONENTS system)
 
-find_library(PPRZLINK_LIB NAMES pprzlink++ PATH ${LIB_PPRZLINK})
-find_library(IVY_LIB NAMES ivy)
+find_package(Qt5 COMPONENTS Widgets Xml Network Svg REQUIRED)
+
+set(PPRZLINK_PATH ../pprzlink/lib/v2.0/C++)
+
+add_subdirectory(${PPRZLINK_PATH} pprzlink)
 
 
 set(SOURCE
@@ -50,14 +49,17 @@ set(SOURCE
     src/widgets/map/map_items/waypoint_item.cpp
     src/widgets/map/map_items/path_item.cpp
     src/widgets/map/map_items/circle_item.cpp
+    src/widgets/map/map_items/aircraft_item.cpp
     src/widgets/map/graphics_objects/graphics_object.cpp
     src/widgets/map/graphics_objects/graphics_point.cpp
     src/widgets/map/graphics_objects/graphics_line.cpp
     src/widgets/map/graphics_objects/graphics_circle.cpp
+    src/widgets/map/graphics_objects/graphics_aircraft.cpp
     src/widgets/map/fpedit_statemachines/item_edit_state_machine.cpp
     src/widgets/map/fpedit_statemachines/waypointitem_sm.cpp
     src/widgets/map/fpedit_statemachines/circleitem_sm.cpp
     src/widgets/map/fpedit_statemachines/pathitem_sm.cpp
+
 
     src/widgets/basics/imagebutton.cpp
     src/layout_builder.cpp
@@ -68,7 +70,8 @@ set(SOURCE
     src/geometry/point2dlatlon.cpp
     src/geometry/point2dtile.cpp
     resources/ressources.qrc
-    src/AircraftManager.cpp src/AircraftManager.h
+    src/AircraftManager.cpp
+    src/aircraft.cpp
 )
 
 include_directories(
@@ -80,19 +83,17 @@ include_directories(
     src/widgets/map/fpedit_statemachines/
     src/widgets/map/graphics_objects/
     src/widgets/basics/
-    ${INCLUDE_PPRZLINK}
+    ${PPRZLINK_PATH}
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE})
 
 target_link_libraries(${PROJECT_NAME}
+    pprzlink++
     Qt5::Widgets
     Qt5::Xml
     Qt5::Network
+    Qt5::Svg
     ${Boost_LIBRARIES}
-    ${PPRZLINK_LIB}
-    ${IVY_LIB}
-    tinyxml2
-    Boost::system
 )
 

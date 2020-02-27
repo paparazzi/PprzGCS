@@ -5,6 +5,8 @@
 #include <QKeyEvent>
 #include "map_item.h"
 #include "item_edit_state_machine.h"
+#include "aircraft_item.h"
+#include <pprzlink/Message.h>
 
 namespace Ui {
 class PprzMap;
@@ -33,9 +35,11 @@ protected:
     void sceneMoveEvent(QGraphicsSceneMouseEvent *mouseEvent);
     void sceneReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent);
 
+
 protected slots:
 
 private:
+    void updateAircraftItem(pprzlink::Message msg);
     void saveItem(MapItem* item);
     void setEditorMode();
     Ui::PprzMap *ui;
@@ -43,9 +47,9 @@ private:
     InteractionState interaction_state;
     ItemEditStateMachine* fp_edit_sm;
 
-    //QList<MapItem*> items;
+    std::map<QString, AircraftItem*> aircraft_items;
 
-    int current_ac;
+    QString current_ac;
 
 
 };

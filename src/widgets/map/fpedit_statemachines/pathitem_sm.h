@@ -10,7 +10,7 @@ class SmPathItem : public ItemEditStateMachine
 public:
     SmPathItem(MapWidget* map);
     ~SmPathItem();
-    virtual MapItem* update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item = nullptr);
+    virtual MapItem* update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QString ac_id, MapItem* item = nullptr);
 
 private:
 
@@ -27,7 +27,7 @@ private:
     State state;
     QPointF pressPos;
 
-    int ac_id;
+    QString ac_id;
 
 };
 

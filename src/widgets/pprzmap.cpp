@@ -23,7 +23,7 @@ PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::PprzMap),
     drawState(false),
-    interaction_state(PMIS_OTHER), fp_edit_sm(nullptr), current_ac(0)
+    interaction_state(PMIS_OTHER), fp_edit_sm(nullptr), current_ac("0")
 {
     ui->setupUi(this);
     MapScene* scene = static_cast<MapScene*>(ui->map->scene());
@@ -51,17 +51,14 @@ PprzMap::PprzMap(QWidget *parent) :
             }
         });
 
+    connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &PprzMap::updateAircraftItem);
+
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected,
-        [=](int id) {
+        [=](QString id) {
             current_ac = id;
             ui->map->updateHighlights(id);
         }
     );
-
-    AircraftManager::get()->addAircraft(0, Qt::green);
-    AircraftManager::get()->addAircraft(1, Qt::red);
-    AircraftManager::get()->addAircraft(2, Qt::yellow);
-
 }
 
 void PprzMap::registerWaypoint(WaypointItem* waypoint) {
@@ -135,7 +132,7 @@ void PprzMap::saveItem(MapItem* item) {
 
     connect(item, &MapItem::itemGainedHighlight,
         [=]() {
-            int ac_id = item->acId();
+            QString ac_id = item->acId();
             emit(DispatcherUi::get()->ac_selected(ac_id));
         });
 }
@@ -155,5 +152,27 @@ void PprzMap::setEditorMode() {
             ui->map->itemsEditable(true);
             break;
     }
+}
+
+void PprzMap::updateAircraftItem(pprzlink::Message msg) {
+    std::string ac_id;
+    float lat, lon, course;
+    msg.getField("ac_id", ac_id);
+    msg.getField("lat", lat);
+    msg.getField("long", lon);
+    msg.getField("course", course);
+
+    QString id = QString(ac_id.c_str());
+    AircraftItem* ai;
+
+    if(aircraft_items.find(id) != aircraft_items.end()) {
+        ai = aircraft_items[id];
+    } else {
+        ai = new AircraftItem(Point2DLatLon(static_cast<double>(lat), static_cast<double>(lon)), id, ui->map, 16);
+        ai->setZValue(300);
+        aircraft_items[id] = ai;
+    }
+    ai->setPosition(Point2DLatLon(static_cast<double>(lat), static_cast<double>(lon)));
+    ai->setHeading(static_cast<double>(course));
 }
 

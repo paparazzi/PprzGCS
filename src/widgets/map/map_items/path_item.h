@@ -10,8 +10,8 @@ class PathItem : public MapItem
 {
     Q_OBJECT
 public:
-    explicit PathItem(Point2DLatLon start, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
-    explicit PathItem(WaypointItem* wpStart, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    explicit PathItem(Point2DLatLon start, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    explicit PathItem(WaypointItem* wpStart, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     void addPoint(Point2DLatLon pos);
     void addPoint(WaypointItem* waypoint);
     virtual void setHighlighted(bool h);

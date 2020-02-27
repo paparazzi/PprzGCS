@@ -13,6 +13,12 @@ int main(int argc, char *argv[])
     //QCoreApplication
     //QCommandLineParser
 
+    a.setProperty("IVY_NAME", "QPprzControl");
+    a.setProperty("IVY_BUS", "127.255.255.255:2010");
+    a.setProperty("PPRZLINK_ID", "pprzcontrol");
+    a.setProperty("PPRZLINK_MESSAGES", "/home/fabien/paparazzi/var/messages.xml");
+
+
     a.setProperty("APP_DATA_PATH", "/home/fabien/DEV/test_qt/PprzGCS/data");
     a.setProperty("PPRZLINK_PATH", "/home/fabien/DEV/test_qt/pprzlink");
     a.setProperty("MAP_MOVE_HYSTERESIS", 20);
@@ -23,6 +29,10 @@ int main(int argc, char *argv[])
     a.setProperty("ITEM_Z_VALUE_HIGHLIGHTED", 100);
     a.setProperty("ITEM_Z_VALUE_UNHIGHLIGHTED", 50);
     a.setProperty("MAPITEMS_FONT", 18);
+    a.setProperty("AIRCRAFTS_SIZE", 25);
+
+    a.setProperty("DEFAULT_COLOR", "red");
+    a.setProperty("DEFAULT_AIRCRAFT_ICON", ":/pictures/aircraft_fixedwing1.svg");
 
 //    QNetworkProxy proxy;
 //    proxy.setType(QNetworkProxy::DefaultProxy);

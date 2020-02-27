@@ -31,7 +31,7 @@ public:
     /// \param item: item to edit (only applicable for the path?)
     /// \return
     ///
-    virtual MapItem* update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item = nullptr) = 0;
+    virtual MapItem* update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QString ac_id, MapItem* item = nullptr) = 0;
 
 protected:
     MapWidget* map;

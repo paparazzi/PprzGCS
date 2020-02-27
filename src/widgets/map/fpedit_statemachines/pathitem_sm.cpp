@@ -7,7 +7,7 @@
 
 SmPathItem::SmPathItem(MapWidget* map) :
         ItemEditStateMachine (map),
-        path(nullptr), lastWp(nullptr), previousWp(nullptr), state(IDLE), ac_id(0)
+        path(nullptr), lastWp(nullptr), previousWp(nullptr), state(IDLE), ac_id(QString())
 {
 
 }
@@ -16,7 +16,7 @@ SmPathItem::~SmPathItem() {
 
 }
 
-MapItem* SmPathItem::update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int current_ac_id, MapItem* item) {
+MapItem* SmPathItem::update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QString current_ac_id, MapItem* item) {
     QPointF dp;
     double d;
     WaypointItem* nextWp = nullptr;

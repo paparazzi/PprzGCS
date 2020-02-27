@@ -21,7 +21,7 @@ public:
     }
 
 signals:
-    void ac_selected(int);
+    void ac_selected(QString);
     void create_waypoint(Waypoint*);
 
 public slots:

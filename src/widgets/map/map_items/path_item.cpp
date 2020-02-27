@@ -5,7 +5,7 @@
 #include "map_item.h"
 #include "AircraftManager.h"
 
-PathItem::PathItem(Point2DLatLon start, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+PathItem::PathItem(Point2DLatLon start, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
     line_widht(5)
 {
@@ -13,7 +13,7 @@ PathItem::PathItem(Point2DLatLon start, int ac_id, qreal z_value, MapWidget* map
     init(wpStart);
 }
 
-PathItem::PathItem(WaypointItem* wpStart, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+PathItem::PathItem(WaypointItem* wpStart, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
     line_widht(5)
 {
@@ -44,7 +44,7 @@ void PathItem::init(WaypointItem* wpStart) {
 }
 
 void PathItem::addPoint(Point2DLatLon pos) {
-    WaypointItem* wp = new WaypointItem(pos, Qt::green, z_value, map, neutral_scale_zoom, parent());
+    WaypointItem* wp = new WaypointItem(pos, ac_id, z_value, map, neutral_scale_zoom, parent());
     addPoint(wp);
 }
 
@@ -53,18 +53,18 @@ void PathItem::addPoint(WaypointItem* wp) {
     WaypointItem* last_wp = waypoints.last();
     waypoints.append(wp);
 
-    std::optional<QColor> colorOption = AircraftManager::get()->getColor(ac_id);
-    if(!colorOption.has_value()) {
+    std::optional<Aircraft> aircraftOption = AircraftManager::get()->getAircraft(ac_id);
+    if(!aircraftOption.has_value()) {
         throw std::runtime_error("AcId not found!");
     }
-    QColor color = colorOption.value();
+    Aircraft aircraft = aircraftOption.value();
 
     QPointF start_pos = scenePoint(last_wp->position(), zoomLevel(map->zoom()), map->tileSize());
     QPointF end_pos = scenePoint(wp->position(), zoomLevel(map->zoom()), map->tileSize());
 
-    GraphicsLine* line = new GraphicsLine(QLineF(start_pos, end_pos), QPen(QBrush(color), line_widht), this);
+    GraphicsLine* line = new GraphicsLine(QLineF(start_pos, end_pos), QPen(QBrush(aircraft.getColor()), line_widht), this);
 
-    QList<QColor> color_variants = makeColorVariants(color);
+    QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
     line->setColors(color_variants[2]);
 
     lines.append(line);

@@ -19,7 +19,7 @@ private:
     Ui::Strip *ui;
 
 private slots:
-    void changeColor(int ac_id);
+    void changeColor(QString ac_id);
 };
 
 #endif // STRIP_H

@@ -9,7 +9,7 @@ class SmCircleItem : public ItemEditStateMachine
 public:
     SmCircleItem(MapWidget* map);
     ~SmCircleItem();
-    virtual MapItem* update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, int ac_id, MapItem* item = nullptr);
+    virtual MapItem* update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mouseEvent, WaypointItem* waypoint, QString ac_id, MapItem* item = nullptr);
 
 private:
     enum State {

@@ -8,20 +8,21 @@
 #include "AircraftManager.h"
 
 
-WaypointItem::WaypointItem(Point2DLatLon pt, int ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
     latlon(pt)
 {
-    std::optional<QColor> colorOption = AircraftManager::get()->getColor(ac_id);
-    if(!colorOption.has_value()) {
+    std::optional<Aircraft> aircraftOption = AircraftManager::get()->getAircraft(ac_id);
+    if(!aircraftOption.has_value()) {
         throw std::runtime_error("AcId not found!");
     }
-    QColor color = colorOption.value();
+    Aircraft aircraft = aircraftOption.value();
+
     int size = qApp->property("WAYPOINTS_SIZE").toInt();
 
     QPointF scene_pos = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());
-    point = new GraphicsPoint(size, color, this);
-    QList<QColor> color_variants = makeColorVariants(color);
+    point = new GraphicsPoint(size, aircraft.getColor(), this);
+    QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
     point->setColors(color_variants[0], color_variants[1], color_variants[2]);
     point->setPos(scene_pos);
     point->setZValue(z_value);
