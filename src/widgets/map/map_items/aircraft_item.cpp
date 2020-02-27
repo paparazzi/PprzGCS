@@ -18,10 +18,13 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, MapWidget* map, doub
 
     graphics_aircraft = new GraphicsAircraft(aircraft.getColor(), aircraft.getIcon(), size);
     graphics_text = new QGraphicsTextItem(aircraft.name());
+    graphics_text->setDefaultTextColor(aircraft.getColor());
     setZoomFactor(1.1);
     updateGraphics();
     map->scene()->addItem(graphics_aircraft);
     map->scene()->addItem(graphics_text);
+
+    map->addItem(this);
 }
 
 void AircraftItem::updateGraphics() {
@@ -30,6 +33,9 @@ void AircraftItem::updateGraphics() {
     double s = getScale();
     graphics_aircraft->setScale(s);
     graphics_aircraft->setRotation(heading);
+
+    graphics_text->setScale(s);
+    graphics_text->setPos(scene_pos + QPointF(10, 10));
 }
 
 void AircraftItem::setPosition(Point2DLatLon pt) {
@@ -44,10 +50,13 @@ void AircraftItem::setHeading(double h) {
 
 void AircraftItem::setHighlighted(bool h) {
     graphics_aircraft->setHighlighted(h);
+    graphics_text->setVisible(h);
 }
 
 void AircraftItem::setZValue(qreal z) {
-    graphics_aircraft->setZValue(z);
+    //aircrafts are on top of everything else
+    graphics_aircraft->setZValue(z + 100);
+    graphics_text->setZValue(z);
 }
 
 void AircraftItem::setForbidHighlight(bool fh) {

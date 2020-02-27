@@ -26,7 +26,7 @@ void GraphicsAircraft::paint(QPainter *painter, const QStyleOptionGraphicsItem *
 }
 
 void GraphicsAircraft::changeFocus() {
-
+    update();
 }
 
 void GraphicsAircraft::loadSvg(QString path) {

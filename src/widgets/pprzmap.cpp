@@ -38,6 +38,8 @@ PprzMap::PprzMap(QWidget *parent) :
     connect(ui->map, &MapWidget::itemAdded,
         [=](MapItem* map_item) {
             saveItem(map_item);
+            map_item->setHighlighted(map_item->acId() == current_ac);
+
             if(map_item->getType() == ITEM_WAYPOINT) {
                 registerWaypoint(dynamic_cast<WaypointItem*>(map_item));
             }

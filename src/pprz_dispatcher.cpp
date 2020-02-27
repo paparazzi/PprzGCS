@@ -27,13 +27,12 @@ PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(fa
             std::string id;
             msg.getField("ac_id", id);
 
-            if(!first_msg) {
-                first_msg = true;
-                emit(DispatcherUi::get()->ac_selected(QString(id.c_str())));
-            }
-
             if(AircraftManager::get()->aircraftExists(id.c_str())) {
                 emit(flight_param(msg));
+                if(!first_msg) {
+                    first_msg = true;
+                    emit(DispatcherUi::get()->ac_selected(QString(id.c_str())));
+                }
             }
         }
     );
