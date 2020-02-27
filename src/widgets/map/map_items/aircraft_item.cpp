@@ -16,13 +16,21 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, MapWidget* map, doub
     Aircraft aircraft = aircraftOption.value();
     int size = qApp->property("AIRCRAFTS_SIZE").toInt();
 
+    color_idle = aircraft.getColor();
+    color_unfocused = labelUnfocusedColor(aircraft.getColor());
+
+    QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
+
     graphics_aircraft = new GraphicsAircraft(aircraft.getColor(), aircraft.getIcon(), size);
     graphics_text = new QGraphicsTextItem(aircraft.name());
     graphics_text->setDefaultTextColor(aircraft.getColor());
+    graphics_track = new GraphicsTrack(aircraft.getColor(), trackUnfocusedColor(aircraft.getColor()));
+
     setZoomFactor(1.1);
     updateGraphics();
     map->scene()->addItem(graphics_aircraft);
     map->scene()->addItem(graphics_text);
+    map->scene()->addItem(graphics_track);
 
     map->addItem(this);
 }
@@ -36,10 +44,17 @@ void AircraftItem::updateGraphics() {
 
     graphics_text->setScale(s);
     graphics_text->setPos(scene_pos + QPointF(10, 10));
+
+    QPolygonF scenePoints;
+    for(auto ll: track) {
+        scenePoints.append(scenePoint(ll, zoomLevel(map->zoom()), map->tileSize()));
+    }
+    graphics_track->setPoints(scenePoints);
 }
 
 void AircraftItem::setPosition(Point2DLatLon pt) {
     latlon = pt;
+    track.append(pt);
     updateGraphics();
 }
 
@@ -50,13 +65,19 @@ void AircraftItem::setHeading(double h) {
 
 void AircraftItem::setHighlighted(bool h) {
     graphics_aircraft->setHighlighted(h);
-    graphics_text->setVisible(h);
+    graphics_track->setHighlighted(h);
+    if(h) {
+        graphics_text->setDefaultTextColor(color_idle);
+    } else {
+        graphics_text->setDefaultTextColor(color_unfocused);
+    }
 }
 
 void AircraftItem::setZValue(qreal z) {
     //aircrafts are on top of everything else
     graphics_aircraft->setZValue(z + 100);
     graphics_text->setZValue(z);
+    graphics_track->setZValue(z);
 }
 
 void AircraftItem::setForbidHighlight(bool fh) {

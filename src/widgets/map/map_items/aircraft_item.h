@@ -4,6 +4,7 @@
 #include "map_item.h"
 #include "graphics_aircraft.h"
 #include "QGraphicsTextItem"
+#include "graphics_track.h"
 
 class AircraftItem : public MapItem
 {
@@ -33,6 +34,12 @@ private:
     QGraphicsTextItem* graphics_text;
     Point2DLatLon latlon;
     double heading;
+    GraphicsTrack* graphics_track;
+
+    QColor color_idle;
+    QColor color_unfocused;
+
+    QList<Point2DLatLon> track;
 };
 
 #endif // AIRCRAFT_ITEM_H

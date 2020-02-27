@@ -14,6 +14,39 @@ MapItem::MapItem(QString ac_id, qreal z_value, MapWidget* map, double neutral_sc
 {
 }
 
+QColor MapItem::unfocusedColor(const QColor &color) {
+    int h, s, v, a;
+    color.getHsv(&h, &s, &v, &a);
+
+    int a2 = qMin(static_cast<int>(a/2), 255);
+    int s3 = static_cast<int>(s/2);
+    QColor c = QColor(color);
+    c.setHsv(h, s3, v, a2);
+
+    return c;
+}
+
+QColor MapItem::trackUnfocusedColor(const QColor &color) {
+    int h, s, v, a;
+    color.getHsv(&h, &s, &v, &a);
+
+    int s3 = static_cast<int>(s/2);
+    QColor c = QColor(color);
+    c.setHsv(h, s3, v, a);
+
+    return c;
+}
+
+QColor MapItem::labelUnfocusedColor(const QColor &color) {
+    int h, s, v, a;
+    color.getHsv(&h, &s, &v, &a);
+
+    int v2 = static_cast<int>(v/2);
+    QColor c = QColor(color);
+    c.setHsv(h, s, v2, a);
+
+    return c;
+}
 
 QList<QColor> MapItem::makeColorVariants(QColor color) {
     QList<QColor> list;

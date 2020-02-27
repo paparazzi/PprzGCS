@@ -29,6 +29,9 @@ class MapItem : public QObject
 public:
     MapItem(QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     QList<QColor> makeColorVariants(QColor);
+    QColor unfocusedColor(const QColor&);
+    QColor trackUnfocusedColor(const QColor&);
+    QColor labelUnfocusedColor(const QColor&);
     virtual void updateGraphics() = 0;
     virtual void removeFromScene() = 0;
     virtual void setHighlighted(bool h) = 0;
