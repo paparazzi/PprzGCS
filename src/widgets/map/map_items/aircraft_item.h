@@ -6,6 +6,8 @@
 #include "QGraphicsTextItem"
 #include "graphics_track.h"
 
+#define TRACK_CHUNCK_SIZE 20
+
 class AircraftItem : public MapItem
 {
     Q_OBJECT
@@ -21,6 +23,7 @@ public:
 
     void setPosition(Point2DLatLon pt);
     void setHeading(double h);
+    void clearTrack();
 
 signals:
 
@@ -34,12 +37,14 @@ private:
     QGraphicsTextItem* graphics_text;
     Point2DLatLon latlon;
     double heading;
-    GraphicsTrack* graphics_track;
+    QList<GraphicsTrack*> graphics_tracks;
 
     QColor color_idle;
     QColor color_unfocused;
 
-    QList<Point2DLatLon> track;
+    QList<QList<Point2DLatLon>> track_chuncks;
+
+    int last_chunk_index;
 };
 
 #endif // AIRCRAFT_ITEM_H

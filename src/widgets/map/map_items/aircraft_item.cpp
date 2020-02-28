@@ -7,7 +7,7 @@
 
 AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, 200, map, neutral_scale_zoom, parent),
-    latlon(pt)
+    latlon(pt), last_chunk_index(0)
 {
     std::optional<Aircraft> aircraftOption = AircraftManager::get()->getAircraft(ac_id);
     if(!aircraftOption.has_value()) {
@@ -24,13 +24,20 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, MapWidget* map, doub
     graphics_aircraft = new GraphicsAircraft(aircraft.getColor(), aircraft.getIcon(), size);
     graphics_text = new QGraphicsTextItem(aircraft.name());
     graphics_text->setDefaultTextColor(aircraft.getColor());
-    graphics_track = new GraphicsTrack(aircraft.getColor(), trackUnfocusedColor(aircraft.getColor()));
+
+    int nbChuncksMax = static_cast<int>(ceil(qApp->property("TRACK_MAX_POINTS").toDouble() / TRACK_CHUNCK_SIZE));
+    for(int i=0; i<nbChuncksMax; i++) {
+        auto gt = new GraphicsTrack(aircraft.getColor(), trackUnfocusedColor(aircraft.getColor()));
+        graphics_tracks.append(gt);
+        map->scene()->addItem(gt);
+        QList<Point2DLatLon> l;
+        track_chuncks.append(l);
+    }
 
     setZoomFactor(1.1);
     updateGraphics();
     map->scene()->addItem(graphics_aircraft);
     map->scene()->addItem(graphics_text);
-    map->scene()->addItem(graphics_track);
 
     map->addItem(this);
 }
@@ -45,16 +52,43 @@ void AircraftItem::updateGraphics() {
     graphics_text->setScale(s);
     graphics_text->setPos(scene_pos + QPointF(10, 10));
 
-    QPolygonF scenePoints;
-    for(auto ll: track) {
-        scenePoints.append(scenePoint(ll, zoomLevel(map->zoom()), map->tileSize()));
+
+    for(int i = 0; i<track_chuncks.size(); i++) {
+        QPolygonF scenePoints;
+        for(auto pt: track_chuncks[i]) {
+            scenePoints.append(scenePoint(pt, zoomLevel(map->zoom()), map->tileSize()));
+        }
+        graphics_tracks[i]->setPoints(scenePoints);
     }
-    graphics_track->setPoints(scenePoints);
 }
 
 void AircraftItem::setPosition(Point2DLatLon pt) {
     latlon = pt;
-    track.append(pt);
+
+    track_chuncks[last_chunk_index].append(pt);
+
+    if(track_chuncks[last_chunk_index].size() >= TRACK_CHUNCK_SIZE) {
+        last_chunk_index = (last_chunk_index + 1) % track_chuncks.size();
+        assert(track_chuncks[last_chunk_index].size() == 0 || track_chuncks[last_chunk_index].size() == 1);
+        if(!track_chuncks[last_chunk_index].isEmpty()) {
+            track_chuncks[last_chunk_index].clear();
+        }
+        track_chuncks[last_chunk_index].append(pt);
+    }
+
+    int first_chunk_index = (last_chunk_index + 1) % track_chuncks.size();
+    if(!track_chuncks[first_chunk_index].isEmpty()) {
+        track_chuncks[first_chunk_index].removeFirst();
+    }
+
+    updateGraphics();
+}
+
+void AircraftItem::clearTrack() {
+    for(auto tc : track_chuncks) {
+        tc.clear();
+        last_chunk_index = 0;
+    }
     updateGraphics();
 }
 
@@ -65,7 +99,9 @@ void AircraftItem::setHeading(double h) {
 
 void AircraftItem::setHighlighted(bool h) {
     graphics_aircraft->setHighlighted(h);
-    graphics_track->setHighlighted(h);
+    for(auto gt: graphics_tracks) {
+        gt->setHighlighted(h);
+    }
     if(h) {
         graphics_text->setDefaultTextColor(color_idle);
     } else {
@@ -77,7 +113,10 @@ void AircraftItem::setZValue(qreal z) {
     //aircrafts are on top of everything else
     graphics_aircraft->setZValue(z + 100);
     graphics_text->setZValue(z);
-    graphics_track->setZValue(z);
+    for(auto gt: graphics_tracks) {
+        gt->setZValue(z);
+    }
+
 }
 
 void AircraftItem::setForbidHighlight(bool fh) {

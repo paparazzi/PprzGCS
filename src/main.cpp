@@ -34,6 +34,8 @@ int main(int argc, char *argv[])
     a.setProperty("DEFAULT_COLOR", "red");
     a.setProperty("DEFAULT_AIRCRAFT_ICON", ":/pictures/aircraft_fixedwing1.svg");
 
+    a.setProperty("TRACK_MAX_POINTS", 400);
+
 //    QNetworkProxy proxy;
 //    proxy.setType(QNetworkProxy::DefaultProxy);
 //    proxy.setHostName("http://proxy");
