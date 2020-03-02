@@ -6,7 +6,6 @@
 #include "QGraphicsTextItem"
 #include "graphics_track.h"
 
-#define TRACK_CHUNCK_SIZE 20
 
 class AircraftItem : public MapItem
 {

@@ -25,8 +25,7 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, MapWidget* map, doub
     graphics_text = new QGraphicsTextItem(aircraft.name());
     graphics_text->setDefaultTextColor(aircraft.getColor());
 
-    int nbChuncksMax = static_cast<int>(ceil(qApp->property("TRACK_MAX_POINTS").toDouble() / TRACK_CHUNCK_SIZE));
-    for(int i=0; i<nbChuncksMax; i++) {
+    for(int i=0; i<qApp->property("TRACK_MAX_CHUNKS").toInt(); i++) {
         auto gt = new GraphicsTrack(aircraft.getColor(), trackUnfocusedColor(aircraft.getColor()));
         graphics_tracks.append(gt);
         map->scene()->addItem(gt);
@@ -67,7 +66,7 @@ void AircraftItem::setPosition(Point2DLatLon pt) {
 
     track_chuncks[last_chunk_index].append(pt);
 
-    if(track_chuncks[last_chunk_index].size() >= TRACK_CHUNCK_SIZE) {
+    if(track_chuncks[last_chunk_index].size() >= qApp->property("TRACK_CHUNCK_SIZE").toInt()) {
         last_chunk_index = (last_chunk_index + 1) % track_chuncks.size();
         assert(track_chuncks[last_chunk_index].size() == 0 || track_chuncks[last_chunk_index].size() == 1);
         if(!track_chuncks[last_chunk_index].isEmpty()) {
