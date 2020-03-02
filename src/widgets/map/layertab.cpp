@@ -2,9 +2,10 @@
 #include <QDebug>
 #include <QMouseEvent>
 #include <QApplication>
+#include <QScrollBar>
 
-LayerTab::LayerTab(QWidget *parent) : QWidget(parent),
-    moved_layer_control(nullptr)
+LayerTab::LayerTab(QScrollArea* scroll_area, QWidget *parent) : QWidget(parent),
+    moved_layer_control(nullptr), scroll_container(scroll_area)
 {
     vbox_layout = new QVBoxLayout(this);
     moved_thumbnail = new QLabel();
@@ -58,6 +59,17 @@ void LayerTab::mouseMoveEvent(QMouseEvent* e) {
         QPoint pos(globalPos.x()-pixSize.width()/2, globalPos.y()-pixSize.height()/2);
         moved_thumbnail->move(pos);
         //qDebug() << "moved at " << e->pos();
+        int scroll_y = mapTo(scroll_container, e->pos()).y();
+        int scroll_value = scroll_container->verticalScrollBar()->value();
+        if(scroll_y < 30) {
+            scroll_value = qMax(scroll_value - scroll_y, scroll_container->verticalScrollBar()->minimum());
+            qDebug() << "scroll up";
+            scroll_container->verticalScrollBar()->setValue(scroll_value);
+        } else if(scroll_container->height() - scroll_y < 30) {
+            qDebug() << "scroll down";
+            scroll_value = qMin(scroll_value + scroll_container->height() - scroll_y, scroll_container->verticalScrollBar()->maximum());
+            scroll_container->verticalScrollBar()->setValue(scroll_value);
+        }
     }
 
 }

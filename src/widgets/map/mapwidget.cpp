@@ -92,12 +92,12 @@ void MapWidget::addLayerControl(QString name, bool initialState, int z) {
 
 void MapWidget::setupUi() {
     horizontalLayout = new QHBoxLayout(this);   // main layout
-    layer_tab = new LayerTab(this);              // widget for the left tab
     columnLeft = new QVBoxLayout();             // left icons column
     columnRight = new QVBoxLayout();            // right icons column
     spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     leftScrollArea = new QScrollArea(this);     //scroll area for the left tab
+    layer_tab = new LayerTab(leftScrollArea, this); // widget for the left tab
     leftScrollArea->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     leftScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     leftScrollArea->setWidgetResizable(true);
