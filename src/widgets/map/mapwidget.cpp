@@ -187,7 +187,7 @@ void MapWidget::mouseMoveEvent(QMouseEvent *event) {
 
 
             QPoint dp = event->pos()-lastPos;
-            translate(dp.x(), dp.y());
+            translate(dp.x()/scaleFactor(), dp.y()/scaleFactor());
             lastPos = event->pos();
         }
     }
