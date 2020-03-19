@@ -42,34 +42,25 @@ PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(fa
         [=](std::string ac_id, pprzlink::Message msg) {
             (void)ac_id;
             std::string id;
-            uint8_t wp_id = 200;
-            float lat, lon, alt, ground_alt;
+            uint8_t wp_id = 0;
             msg.getField("ac_id", id);
             msg.getField("wp_id", wp_id);
-            msg.getField("lat", lat);
-            msg.getField("long", lon);
-            msg.getField("alt", alt);
-            msg.getField("ground_alt", ground_alt);
             if(AircraftManager::get()->aircraftExists(id.c_str()) && wp_id != 0) {
-                Waypoint& wp = AircraftManager::get()->getAircraft(id.c_str()).getFlightPlan().getWaypoint(wp_id);
-                wp.setLat(static_cast<double>(lat));
-                wp.setLon(static_cast<double>(lon));
-                wp.setAlt(static_cast<double>(alt));
-                emit(waypoint_moved(id.c_str(), wp_id));
+                emit(waypoint_moved(msg));
             }
     });
 
 
 
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint,
-        [=](const Waypoint& wp, QString ac_id) {
+        [=](shared_ptr<Waypoint> wp, QString ac_id) {
             pprzlink::Message msg(dict->getDefinition("MOVE_WAYPOINT"));
             msg.setSenderId(pprzlink_id);
             msg.addField("ac_id", ac_id.toStdString());
-            msg.addField("wp_id", wp.getId());
-            msg.addField("lat", wp.getLat());
-            msg.addField("long", wp.getLon());
-            msg.addField("alt", wp.getAlt());
+            msg.addField("wp_id", wp->getId());
+            msg.addField("lat", wp->getLat());
+            msg.addField("long", wp->getLon());
+            msg.addField("alt", wp->getAlt());
             link->sendMessage(msg);
         });
 

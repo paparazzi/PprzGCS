@@ -90,7 +90,7 @@ void GraphicsPoint::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         emit(objectClicked(event->scenePos()));
     }
     else if(move_state == PMS_MOVED) {
-        emit(pointMoveFinished());
+        emit(pointMoveFinished(event->scenePos() - pressPos));
     }
     move_state = PMS_IDLE;
     changeFocus();

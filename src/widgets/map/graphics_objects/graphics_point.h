@@ -25,7 +25,7 @@ public:
 
 signals:
     void pointMoved(QPointF scenePos);
-    void pointMoveFinished();
+    void pointMoveFinished(QPointF scenePos);
 
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);

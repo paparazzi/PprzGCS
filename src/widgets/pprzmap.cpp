@@ -54,6 +54,7 @@ PprzMap::PprzMap(QWidget *parent) :
         });
 
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &PprzMap::updateAircraftItem);
+    connect(PprzDispatcher::get(), &PprzDispatcher::waypoint_moved, this, &PprzMap::moveWaypoint);
 
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &PprzMap::handleNewAC);
     connect(ui->map, &MapWidget::mouseMoved, this, &PprzMap::handleMouseMove);
@@ -176,11 +177,6 @@ void PprzMap::updateAircraftItem(pprzlink::Message msg) {
         ai = new AircraftItem(Point2DLatLon(static_cast<double>(lat), static_cast<double>(lon)), id, ui->map, 16);
         ai->setZValue(300);
         aircraft_items[id] = ai;
-
-        for(auto wp: AircraftManager::get()->getAircraft(id).getFlightPlan().getWaypoints()) {
-            //qDebug() << wp.getLat();
-            //new WaypointItem(Point2DLatLon(wp.getLat(), wp.getLon()), id, 300, ui->map);
-        }
     }
     ai->setPosition(Point2DLatLon(static_cast<double>(lat), static_cast<double>(lon)));
     ai->setHeading(static_cast<double>(course));
@@ -190,30 +186,21 @@ void PprzMap::handleNewAC(QString ac_id) {
     qDebug() << "new AC: " << ac_id;
     qDebug() << AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getDefaultAltitude();
     for(auto wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
-        if(wp.getName()[0] != '_') {
+        if(wp->getName()[0] != '_') {
             int z = (current_ac == ac_id) ? qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toInt():
                                            qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toInt();
-            WaypointItem* wpi = new WaypointItem(Point2DLatLon(wp), ac_id, wp.getName().c_str(), z, ui->map);
+            (void)z;
+            WaypointItem* wpi = new WaypointItem(wp, ac_id, z, ui->map);
             wpi->setEditable(true);
             wpi->setForbidHighlight(false);
+            waypointItems.append(wpi);
             //waypointMoved
             connect(wpi, &WaypointItem::waypointMoveFinished,
                 [=](Point2DLatLon latlon_pos) mutable {
-                    qDebug() << "waypoint " << wp.getName().c_str() << " moved to " << latlon_pos.lat() << ", " << latlon_pos.lon();
-                    wp.setLat(latlon_pos.lat());
-                    wp.setLon(latlon_pos.lon());
+                    qDebug() << "waypoint " << wp->getName().c_str() << " moved to " << latlon_pos.lat() << ", " << latlon_pos.lon();
                     emit(DispatcherUi::get()->move_waypoint(wp, ac_id));
                 }
             );
-
-
-//            connect(PprzDispatcher::get(), &PprzDispatcher::waypoint_moved,
-//                [=](QString ac_id, uint8_t wp_id) mutable {
-//                    if(ac_id == current_ac && wp_id == wp.getId()) {
-//                        wpi->setPosition(Point2DLatLon(wp.getLat(), wp.getLon()));
-//                    }
-//            });
-
         }
     }
 }
@@ -247,4 +234,28 @@ QString PprzMap::sexagesimalFormat(double lat, double lon) {
 
     QString txt = txtLat + latGeo + " " + txtLon + lonGeo;
     return txt;
+}
+
+void PprzMap::moveWaypoint(pprzlink::Message msg) {
+    std::string id;
+    uint8_t wp_id = 0;
+    float lat, lon, alt, ground_alt;
+    msg.getField("ac_id", id);
+    msg.getField("wp_id", wp_id);
+    msg.getField("lat", lat);
+    msg.getField("long", lon);
+    msg.getField("alt", alt);
+    msg.getField("ground_alt", ground_alt);
+    if(AircraftManager::get()->aircraftExists(id.c_str()) && wp_id != 0) {
+        shared_ptr<Waypoint> wp = AircraftManager::get()->getAircraft(id.c_str()).getFlightPlan().getWaypoint(wp_id);
+        wp->setLat(static_cast<double>(lat));
+        wp->setLon(static_cast<double>(lon));
+        wp->setAlt(static_cast<double>(alt));
+
+        for(auto wpi: waypointItems) {
+            if(wpi->getWaypoint() == wp && !wpi->isMoving()) {
+                wpi->updateGraphics();
+            }
+        }
+    }
 }

@@ -23,7 +23,7 @@ public:
 signals:
     void ac_selected(QString);
     void new_ac_config(QString);
-    void move_waypoint(const Waypoint&, QString ac_id);
+    void move_waypoint(const shared_ptr<Waypoint>, QString ac_id);
     //void create_waypoint(Waypoint*);
 
 public slots:

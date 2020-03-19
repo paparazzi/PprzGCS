@@ -69,13 +69,13 @@ FlightPlan::FlightPlan(string uri) : origin("__ORIGIN", 0)
             }
 
             if(lat_p != nullptr && lon_p != nullptr) {
-                waypoints.push_back(Waypoint(name_p, wp_id, stod(lat_p), stod(lon_p), alt));
+                waypoints.push_back(make_shared<Waypoint>(name_p, wp_id, stod(lat_p), stod(lon_p), alt));
                 if(altType == Waypoint::WpAltType::HEIGHT) {
                     throw runtime_error("Unimplemented! Can't (yet) create absolute waypoint with relative height!");
                 }
             }
             else if(x_p !=nullptr && y_p != nullptr) {
-                waypoints.push_back(Waypoint(name_p, wp_id, stod(x_p), stod(y_p), alt, &origin, altType));
+                waypoints.push_back(make_shared<Waypoint>(name_p, wp_id, stod(x_p), stod(y_p), alt, &origin, altType));
             } else {
                 throw runtime_error("You must specify either x/y or lat/lon!");
             }
@@ -92,15 +92,12 @@ FlightPlan::FlightPlan(string uri) : origin("__ORIGIN", 0)
 }
 
 
-Waypoint& FlightPlan::getWaypoint(uint8_t id) {
+shared_ptr<Waypoint> FlightPlan::getWaypoint(uint8_t id) {
     for(auto& wp: waypoints) {
-        if(wp.getId() == id) {
+        if(wp->getId() == id) {
             return wp;
         }
     }
     throw runtime_error("No waypoint with id " + to_string(id));
 }
 
-Waypoint& FlightPlan::getWaypoint(string id) {
-    return getWaypoint(static_cast<uint8_t>(stoi(id)));
-}
