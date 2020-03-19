@@ -9,11 +9,7 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, MapWidget* map, doub
     MapItem(ac_id, 200, map, neutral_scale_zoom, parent),
     latlon(pt), last_chunk_index(0)
 {
-    std::optional<Aircraft> aircraftOption = AircraftManager::get()->getAircraft(ac_id);
-    if(!aircraftOption.has_value()) {
-        throw std::runtime_error("AcId not found!");
-    }
-    Aircraft aircraft = aircraftOption.value();
+    Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
     int size = qApp->property("AIRCRAFTS_SIZE").toInt();
 
     color_idle = aircraft.getColor();

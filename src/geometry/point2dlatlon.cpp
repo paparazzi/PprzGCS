@@ -1,6 +1,9 @@
 #include "point2dlatlon.h"
 #include "point2dtile.h"
 #include "math.h"
+#include "maputils.h"
+
+#include "iostream"
 
 Point2DLatLon::Point2DLatLon(double lat, double lon) {
     setLat(lat);
@@ -13,4 +16,9 @@ Point2DLatLon::Point2DLatLon(Point2DTile pt) {
     double lat = 180.0 / M_PI * atan(0.5 * (exp(n) - exp(-n)));
     setLat(lat);
     setLon(lon);
+}
+
+Point2DLatLon::Point2DLatLon(Waypoint& wp) {
+    latp = wp.getLat();
+    lonp = wp.getLon();
 }

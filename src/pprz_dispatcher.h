@@ -28,6 +28,7 @@ signals:
     void attitude(pprzlink::Message);
     void pprz_mode(pprzlink::Message);
     void flight_param(pprzlink::Message);
+    void waypoint_moved(QString ac_id, uint8_t wp_id);
 
 public slots:
 

@@ -75,10 +75,13 @@ set(SOURCE
     resources/ressources.qrc
     src/AircraftManager.cpp
     src/aircraft.cpp
+    src/flightplan.cpp
+    src/common/waypoint.cpp
 )
 
 include_directories(
     src/
+    src/common/
     src/widgets/
     src/geometry/
     src/widgets/map/

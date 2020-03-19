@@ -1,7 +1,8 @@
 #ifndef POINT2DLATLON_H
 #define POINT2DLATLON_H
 
-#include "utils.h"
+#include "waypoint.h"
+#include <algorithm>
 
 class Point2DTile;
 
@@ -10,6 +11,7 @@ class Point2DLatLon
 public:
     Point2DLatLon(double lat, double lon);
     Point2DLatLon(Point2DTile pt);
+    Point2DLatLon(Waypoint& wp);
 
     double lat() {return latp;}
     double lon() {return lonp;}

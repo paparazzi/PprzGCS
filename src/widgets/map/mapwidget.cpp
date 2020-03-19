@@ -32,6 +32,7 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), pa
     );
     columnLeft->addWidget(layers_button);
 
+    setMouseTracking(true);
 
 
     setZoom(17);
@@ -191,6 +192,7 @@ void MapWidget::mouseMoveEvent(QMouseEvent *event) {
             lastPos = event->pos();
         }
     }
+    emit(mouseMoved(mapToScene(event->pos())));
 }
 
 void MapWidget::mouseReleaseEvent(QMouseEvent *event) {

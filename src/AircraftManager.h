@@ -20,8 +20,7 @@ public:
         return singleton;
     }
 
-    std::optional<Aircraft> getAircraft(QString id);
-    void addAircraft(QString id);
+    Aircraft& getAircraft(QString id);
     void addAircraft(pprzlink::Message msg);
     bool aircraftExists(QString id);
 

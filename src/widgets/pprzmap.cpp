@@ -55,6 +55,9 @@ PprzMap::PprzMap(QWidget *parent) :
 
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &PprzMap::updateAircraftItem);
 
+    connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &PprzMap::handleNewAC);
+    connect(ui->map, &MapWidget::mouseMoved, this, &PprzMap::handleMouseMove);
+
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected,
         [=](QString id) {
             current_ac = id;
@@ -173,8 +176,75 @@ void PprzMap::updateAircraftItem(pprzlink::Message msg) {
         ai = new AircraftItem(Point2DLatLon(static_cast<double>(lat), static_cast<double>(lon)), id, ui->map, 16);
         ai->setZValue(300);
         aircraft_items[id] = ai;
+
+        for(auto wp: AircraftManager::get()->getAircraft(id).getFlightPlan().getWaypoints()) {
+            //qDebug() << wp.getLat();
+            //new WaypointItem(Point2DLatLon(wp.getLat(), wp.getLon()), id, 300, ui->map);
+        }
     }
     ai->setPosition(Point2DLatLon(static_cast<double>(lat), static_cast<double>(lon)));
     ai->setHeading(static_cast<double>(course));
 }
 
+void PprzMap::handleNewAC(QString ac_id) {
+    qDebug() << "new AC: " << ac_id;
+    qDebug() << AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getDefaultAltitude();
+    for(auto wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
+        if(wp.getName()[0] != '_') {
+            int z = (current_ac == ac_id) ? qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toInt():
+                                           qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toInt();
+            WaypointItem* wpi = new WaypointItem(Point2DLatLon(wp), ac_id, wp.getName().c_str(), z, ui->map);
+            wpi->setEditable(true);
+            wpi->setForbidHighlight(false);
+            //waypointMoved
+            connect(wpi, &WaypointItem::waypointMoveFinished,
+                [=](Point2DLatLon latlon_pos) mutable {
+                    qDebug() << "waypoint " << wp.getName().c_str() << " moved to " << latlon_pos.lat() << ", " << latlon_pos.lon();
+                    wp.setLat(latlon_pos.lat());
+                    wp.setLon(latlon_pos.lon());
+                    emit(DispatcherUi::get()->move_waypoint(wp, ac_id));
+                }
+            );
+
+
+//            connect(PprzDispatcher::get(), &PprzDispatcher::waypoint_moved,
+//                [=](QString ac_id, uint8_t wp_id) mutable {
+//                    if(ac_id == current_ac && wp_id == wp.getId()) {
+//                        wpi->setPosition(Point2DLatLon(wp.getLat(), wp.getLon()));
+//                    }
+//            });
+
+        }
+    }
+}
+
+void PprzMap::handleMouseMove(QPointF scenePos) {
+    Point2DLatLon pt = latlonPoint(scenePos, zoomLevel(ui->map->zoom()), ui->map->tileSize());
+
+    if(ui->reference_combobox->currentIndex() == 0) {
+        QString txt = QString::number(pt.lat(), 'f', 7) + ", " + QString::number(pt.lon(), 'f', 7);
+        ui->pos_label->setText(txt);
+    } else if (ui->reference_combobox->currentIndex() == 1) {
+        QString txt = sexagesimalFormat(pt.lat(), pt.lon());
+        ui->pos_label->setText(txt);
+    }
+}
+
+QString PprzMap::sexagesimalFormat(double lat, double lon) {
+    auto sexformat = [=](double nb) {
+        int deg = static_cast<int>(nb);
+        int min = static_cast<int>((nb - deg) * 60);
+        int sec = static_cast<int>((((nb - deg) * 60) - min)*60);
+        QString txt = QString("%1").arg(deg, 3, 10, QChar('0')) + "° " + QString("%1").arg(min, 2, 10, QChar('0')) + "' " + QString("%1").arg(sec, 2, 10, QChar('0')) + "\"";
+        return txt;
+    };
+
+    QString txtLat = sexformat(abs(lat));
+    QString txtLon = sexformat(abs(lon));
+
+    QString latGeo = lat > 0 ? "N" : "S";
+    QString lonGeo = lon > 0 ? "E" : "W";
+
+    QString txt = txtLat + latGeo + " " + txtLon + lonGeo;
+    return txt;
+}

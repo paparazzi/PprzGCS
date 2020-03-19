@@ -2,8 +2,8 @@
 #define UI_DISPATCHER_H
 
 #include <QObject>
-
-class Waypoint {};  // dummy class just for test
+#include "waypoint.h"
+#include "point2dlatlon.h"
 
 class DispatcherUi : public QObject
 {
@@ -22,7 +22,9 @@ public:
 
 signals:
     void ac_selected(QString);
-    void create_waypoint(Waypoint*);
+    void new_ac_config(QString);
+    void move_waypoint(const Waypoint&, QString ac_id);
+    //void create_waypoint(Waypoint*);
 
 public slots:
 

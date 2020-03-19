@@ -53,11 +53,7 @@ void PathItem::addPoint(WaypointItem* wp) {
     WaypointItem* last_wp = waypoints.last();
     waypoints.append(wp);
 
-    std::optional<Aircraft> aircraftOption = AircraftManager::get()->getAircraft(ac_id);
-    if(!aircraftOption.has_value()) {
-        throw std::runtime_error("AcId not found!");
-    }
-    Aircraft aircraft = aircraftOption.value();
+    Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
 
     QPointF start_pos = scenePoint(last_wp->position(), zoomLevel(map->zoom()), map->tileSize());
     QPointF end_pos = scenePoint(wp->position(), zoomLevel(map->zoom()), map->tileSize());

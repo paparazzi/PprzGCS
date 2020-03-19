@@ -37,11 +37,14 @@ protected:
 
 
 protected slots:
+    void handleMouseMove(QPointF scenePos);
 
 private:
     void updateAircraftItem(pprzlink::Message msg);
+    void handleNewAC(QString ac_id);
     void saveItem(MapItem* item);
     void setEditorMode();
+    QString sexagesimalFormat(double lat, double lon);
     Ui::PprzMap *ui;
     int drawState;
     InteractionState interaction_state;

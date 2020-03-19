@@ -5,6 +5,7 @@
 #include "AircraftManager.h"
 #include <QDebug>
 #include <QApplication>
+#include "flightplan.h"
 
 AircraftManager* AircraftManager::singleton = nullptr;
 
@@ -12,29 +13,23 @@ AircraftManager::AircraftManager() {
 
 }
 
-std::optional<Aircraft> AircraftManager::getAircraft(QString id) {
+Aircraft& AircraftManager::getAircraft(QString id) {
     if(aircrafts.find(id) != aircrafts.end()) {
         return aircrafts[id];
     } else {
-        return {};
+        throw runtime_error("No such aircraft!");
     }
 }
 
-void AircraftManager::addAircraft(QString id) {
-    aircrafts[id] = Aircraft(id, Qt::red, "/home/fabien/DEV/test_qt/PprzGCS/resources/pictures/fixed_wing.svg", "plop");
-    qDebug() << "aircraft " << id << " added!";
-}
-
 void AircraftManager::addAircraft(pprzlink::Message msg) {
-    std::string ac_id;
-    //std::string flight_plan;
-    //std::string airframe;
-    //...
-    std::string ac_name;
-    std::string default_gui_color;
+    std::string ac_id, ac_name, default_gui_color, flight_plan, airframe, radio, settings;
     msg.getField("ac_id", ac_id);
     msg.getField("ac_name", ac_name);
     msg.getField("default_gui_color", default_gui_color);
+    msg.getField("flight_plan", flight_plan);
+    msg.getField("airframe", airframe);
+    msg.getField("radio", radio);
+    msg.getField("settings", settings);
 
     QColor color = parseColor(default_gui_color);
 
@@ -45,7 +40,11 @@ void AircraftManager::addAircraft(pprzlink::Message msg) {
         return;
     }
 
-    aircrafts[id] = Aircraft(id, color, qApp->property("DEFAULT_AIRCRAFT_ICON").toString(), QString::fromStdString(ac_name));
+    //qDebug() << flight_plan.c_str() << "    " << airframe.c_str() << "    " << radio.c_str() << "    " << settings.c_str();
+
+    FlightPlan fp(flight_plan.c_str());
+
+    aircrafts[id] = Aircraft(id, color, qApp->property("DEFAULT_AIRCRAFT_ICON").toString(), QString::fromStdString(ac_name), fp);
 }
 
 bool AircraftManager::aircraftExists(QString id) {

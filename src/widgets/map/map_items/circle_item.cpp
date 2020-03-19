@@ -28,11 +28,7 @@ CircleItem::CircleItem(WaypointItem* center, double radius, QString ac_id, qreal
 }
 
 void CircleItem::init(WaypointItem* center, double radius) {
-    std::optional<Aircraft> aircraftOption = AircraftManager::get()->getAircraft(ac_id);
-    if(!aircraftOption.has_value()) {
-        throw std::runtime_error("AcId not found!");
-    }
-    Aircraft aircraft = aircraftOption.value();
+    Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
 
     double pixelRadius = distMeters2Tile(radius, center->position().lat(), zoomLevel(map->zoom())) * map->tileSize();
     circle = new GraphicsCircle(pixelRadius, aircraft.getColor(), stroke, this);

@@ -39,7 +39,7 @@ public:
     MapScene* scene() {return _scene;}
 
 signals:
-    //void rightClick(QMouseEvent *event);
+    void mouseMoved(QPointF scenePos);
     void itemAdded(MapItem* map_item);
     void itemRemoved(MapItem* item);
 
