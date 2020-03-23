@@ -7,6 +7,7 @@
 #include "item_edit_state_machine.h"
 #include "aircraft_item.h"
 #include <pprzlink/Message.h>
+#include "coordinatestransform.h"
 
 namespace Ui {
 class PprzMap;
@@ -39,9 +40,12 @@ protected:
 protected slots:
     void handleMouseMove(QPointF scenePos);
 
-private:
+private slots:
     void updateAircraftItem(pprzlink::Message msg);
     void moveWaypoint(pprzlink::Message msg);
+    void changeCurrentAC(QString id);
+
+private:
     void handleNewAC(QString ac_id);
     void saveItem(MapItem* item);
     void setEditorMode();
@@ -55,7 +59,7 @@ private:
 
     QString current_ac;
 
-
+    CoordinatesTransform ct_wgs84_utm;
 };
 
 #endif // PPRZMAP_H

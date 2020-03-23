@@ -2,17 +2,18 @@
 #include "iostream"
 #include "tinyxml2.h"
 #include <clocale>
+#include "coordinatestransform.h"
 
 using namespace std;
 using namespace tinyxml2;
 
-FlightPlan::FlightPlan(): origin("__ORIGIN", 0)
+FlightPlan::FlightPlan(): origin()
 {
 
 }
 
 
-FlightPlan::FlightPlan(string uri) : origin("__ORIGIN", 0)
+FlightPlan::FlightPlan(string uri) : origin()
 {
     setlocale(LC_ALL, "C"); // needed for stod() to use '.' as decimal separator instead of ',' (at least in France)
     cout << uri << endl;
@@ -41,8 +42,10 @@ FlightPlan::FlightPlan(string uri) : origin("__ORIGIN", 0)
 
         defaultAlt = stod(defalt);
 
+        origin = make_shared<Waypoint>("__ORIGIN", 0, stod(lat0), stod(lon0), defaultAlt);
 
-        origin = Waypoint("__ORIGIN", 0, stod(lat0), stod(lon0), defaultAlt);
+        CoordinatesTransform ct;
+        ct.init_WGS84_UTM(origin->getLat(), origin->getLon());
 
         XMLElement* wps = fp_root->FirstChildElement("waypoints");
 
@@ -75,19 +78,15 @@ FlightPlan::FlightPlan(string uri) : origin("__ORIGIN", 0)
                 }
             }
             else if(x_p !=nullptr && y_p != nullptr) {
-                waypoints.push_back(make_shared<Waypoint>(name_p, wp_id, stod(x_p), stod(y_p), alt, &origin, altType));
+                double lat, lon;
+                ct.relative_to_wgs84(origin->getLat(), origin->getLon(), stod(x_p), stod(y_p), &lat, &lon);
+                waypoints.push_back(make_shared<Waypoint>(name_p, wp_id, lat, lon, alt, origin, altType));
             } else {
                 throw runtime_error("You must specify either x/y or lat/lon!");
             }
             wp = wp->NextSiblingElement();
             ++wp_id;
         }
-
-//        cout << origin << endl;
-//        for(auto w: waypoints) {
-//            cout << w << endl;
-//        }
-
     }
 }
 

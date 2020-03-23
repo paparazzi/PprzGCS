@@ -19,6 +19,7 @@ endif()
 
 
 find_package(Qt5 COMPONENTS Widgets Xml Network Svg REQUIRED)
+find_package(PROJ4)
 
 set(PPRZLINK_PATH ../pprzlink/lib/v2.0/C++)
 
@@ -70,6 +71,7 @@ set(SOURCE
     src/pprzmain.cpp
     src/dispatcher_ui.cpp
     src/geometry/coordinates.cpp
+    src/geometry/coordinatestransform.cpp
     src/geometry/point2dlatlon.cpp
     src/geometry/point2dtile.cpp
     resources/ressources.qrc
@@ -90,6 +92,7 @@ include_directories(
     src/widgets/map/graphics_objects/
     src/widgets/basics/
     ${PPRZLINK_PATH}
+    ${PROJ4_INCLUDE_DIRS}
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE})
@@ -100,6 +103,7 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Xml
     Qt5::Network
     Qt5::Svg
+    ${PROJ4_LIBRARIES}
     ${Boost_LIBRARIES}
 )
 

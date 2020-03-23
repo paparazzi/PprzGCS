@@ -15,10 +15,11 @@ public:
     std::vector<shared_ptr<Waypoint>>& getWaypoints() {return  waypoints;}
     shared_ptr<Waypoint> getWaypoint(uint8_t id);
     double getDefaultAltitude() {return defaultAlt;}
+    shared_ptr<Waypoint> getOrigin() {return origin;}
 
 private:
     std::vector<shared_ptr<Waypoint>> waypoints;
-    Waypoint origin;
+    shared_ptr<Waypoint> origin;
 
     double defaultAlt;
 };

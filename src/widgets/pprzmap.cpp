@@ -55,16 +55,31 @@ PprzMap::PprzMap(QWidget *parent) :
 
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &PprzMap::updateAircraftItem);
     connect(PprzDispatcher::get(), &PprzDispatcher::waypoint_moved, this, &PprzMap::moveWaypoint);
-
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &PprzMap::handleNewAC);
+    connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &PprzMap::changeCurrentAC);
     connect(ui->map, &MapWidget::mouseMoved, this, &PprzMap::handleMouseMove);
 
-    connect(DispatcherUi::get(), &DispatcherUi::ac_selected,
-        [=](QString id) {
-            current_ac = id;
-            ui->map->updateHighlights(id);
+}
+
+void PprzMap::changeCurrentAC(QString id) {
+    if(AircraftManager::get()->aircraftExists(id)) {
+        current_ac = id;
+        ui->map->updateHighlights(id);
+        auto waypoints = AircraftManager::get()->getAircraft(id).getFlightPlan().getWaypoints();
+
+        // remove previous waypoints (the fist 2 items are WGS84 reference)
+        while(ui->reference_combobox->count() > 2) {
+            ui->reference_combobox->removeItem(2);
         }
-    );
+
+        for(auto wp: waypoints) {
+            if(wp->getName()[0] != '_') {
+                ui->reference_combobox->addItem(wp->getName().c_str());
+            }
+        }
+    }
+
+
 }
 
 void PprzMap::registerWaypoint(WaypointItem* waypoint) {
@@ -185,6 +200,12 @@ void PprzMap::updateAircraftItem(pprzlink::Message msg) {
 void PprzMap::handleNewAC(QString ac_id) {
     qDebug() << "new AC: " << ac_id;
     qDebug() << AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getDefaultAltitude();
+
+    if(!ct_wgs84_utm.isInitialized()) {
+        auto orig = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getOrigin();
+        ct_wgs84_utm.init_WGS84_UTM(orig->getLat(), orig->getLon());
+    }
+
     for(auto wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
         if(wp->getName()[0] != '_') {
             int z = (current_ac == ac_id) ? qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toInt():
@@ -214,6 +235,16 @@ void PprzMap::handleMouseMove(QPointF scenePos) {
     } else if (ui->reference_combobox->currentIndex() == 1) {
         QString txt = sexagesimalFormat(pt.lat(), pt.lon());
         ui->pos_label->setText(txt);
+    } else {
+        size_t wp_index = static_cast<size_t>(ui->reference_combobox->currentIndex() - 2);
+        auto ref_wp = AircraftManager::get()->getAircraft(current_ac).getFlightPlan().getWaypoints()[wp_index];
+        Point2DLatLon pt_wp(ref_wp);
+
+        double distance, azimut;
+        ct_wgs84_utm.distance_azimut(pt_wp, pt, distance, azimut);
+
+        ui->pos_label->setText(QString("%1").arg(static_cast<int>(azimut), 3, 10, QChar(' ')) + "° " +
+                               QString("%1").arg(static_cast<int>(distance), 4, 10, QChar(' ')) + "m");
     }
 }
 
@@ -222,7 +253,7 @@ QString PprzMap::sexagesimalFormat(double lat, double lon) {
         int deg = static_cast<int>(nb);
         int min = static_cast<int>((nb - deg) * 60);
         int sec = static_cast<int>((((nb - deg) * 60) - min)*60);
-        QString txt = QString("%1").arg(deg, 3, 10, QChar('0')) + "° " + QString("%1").arg(min, 2, 10, QChar('0')) + "' " + QString("%1").arg(sec, 2, 10, QChar('0')) + "\"";
+        QString txt = QString("%1").arg(deg, 3, 10, QChar(' ')) + "° " + QString("%1").arg(min, 2, 10, QChar('0')) + "' " + QString("%1").arg(sec, 2, 10, QChar('0')) + "\"";
         return txt;
     };
 
