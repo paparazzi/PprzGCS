@@ -51,6 +51,7 @@ protected:
 
 private:
     void setupUi();
+    void handleNewAC(QString ac_id);
 
     QList<MapItem*> _items;
 

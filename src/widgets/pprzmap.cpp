@@ -198,9 +198,6 @@ void PprzMap::updateAircraftItem(pprzlink::Message msg) {
 }
 
 void PprzMap::handleNewAC(QString ac_id) {
-    qDebug() << "new AC: " << ac_id;
-    qDebug() << AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getDefaultAltitude();
-
     if(!ct_wgs84_utm.isInitialized()) {
         auto orig = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getOrigin();
         ct_wgs84_utm.init_WGS84_UTM(orig->getLat(), orig->getLon());

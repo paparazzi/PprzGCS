@@ -38,8 +38,6 @@ void WaypointItem::init() {
     graphics_text->setZValue(z_value);
     map->scene()->addItem(graphics_text);
 
-    qDebug() << "create waypointItem " << name;
-
     setZoomFactor(1.1);
 
     connect(

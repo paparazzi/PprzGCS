@@ -9,12 +9,15 @@
 #include <QSpacerItem>
 #include <QScrollArea>
 #include <QDebug>
+#include <QSpacerItem>
 #include "maplayercontrol.h"
 #include <QApplication>
 #include "pprz_dispatcher.h"
 #include "maputils.h"
-
+#include "mapstrip.h"
 #include "aircraft_item.h"
+#include "dispatcher_ui.h"
+#include "AircraftManager.h"
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), parent),
     pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton)
@@ -31,6 +34,8 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), pa
         [=]() { leftScrollArea->setVisible(!leftScrollArea->isVisible());}
     );
     columnLeft->addWidget(layers_button);
+
+    columnRight->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
     setMouseTracking(true);
 
@@ -59,6 +64,8 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), pa
             qDebug() << "msg recu !";
         }
     );
+
+    connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &MapWidget::handleNewAC);
 
 }
 
@@ -205,4 +212,11 @@ void MapWidget::wheelEvent(QWheelEvent* event) {
     for(auto item: _items) {
         item->updateGraphics();
     }
+}
+
+
+void MapWidget::handleNewAC(QString ac_id) {
+    auto ac = AircraftManager::get()->getAircraft(ac_id);
+    MapStrip* map_strip = new MapStrip(ac_id);
+    columnRight->insertWidget(0, map_strip);
 }

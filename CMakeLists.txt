@@ -45,6 +45,7 @@ set(SOURCE
     src/widgets/map/layertab.cpp
     src/widgets/map/mapscene.cpp
     src/widgets/map/maputils.cpp
+    src/widgets/map/mapstrip.cpp
 
     src/widgets/map/map_items/map_item.cpp
     src/widgets/map/map_items/waypoint_item.cpp
@@ -77,8 +78,9 @@ set(SOURCE
     resources/ressources.qrc
     src/AircraftManager.cpp
     src/aircraft.cpp
-    src/flightplan.cpp
     src/common/waypoint.cpp
+    src/common/block.cpp
+    src/common/flightplan.cpp
 )
 
 include_directories(

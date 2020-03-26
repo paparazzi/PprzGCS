@@ -21,13 +21,17 @@ public:
         return singleton;
     }
 
+    void sendMessage(pprzlink::Message);
+    std::shared_ptr<pprzlink::MessageDictionary> getDict() {return dict;}
+
 signals:
     void gps(pprzlink::Message);
     void alive(pprzlink::Message);
     void takeoff(pprzlink::Message);
     void attitude(pprzlink::Message);
-    void pprz_mode(pprzlink::Message);
     void flight_param(pprzlink::Message);
+    void ap_status(pprzlink::Message);
+    void nav_status(pprzlink::Message);
     void waypoint_moved(pprzlink::Message);
 
 public slots:
@@ -36,7 +40,7 @@ private:
 
     void requestConfig(std::string ac_id);
 
-    std::unique_ptr<pprzlink::MessageDictionary> dict;
+    std::shared_ptr<pprzlink::MessageDictionary> dict;
     std::unique_ptr<pprzlink::IvyLink> link;
 
     std::string pprzlink_id;

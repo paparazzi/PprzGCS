@@ -16,7 +16,7 @@ PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(fa
     std::string ivy_name = qApp->property("IVY_NAME").toString().toStdString();
     pprzlink_id = qApp->property("PPRZLINK_ID").toString().toStdString();
 
-    dict = std::make_unique<pprzlink::MessageDictionary>(qApp->property("PPRZLINK_MESSAGES").toString().toStdString());
+    dict = std::make_shared<pprzlink::MessageDictionary>(qApp->property("PPRZLINK_MESSAGES").toString().toStdString());
     link = std::make_unique<pprzlink::IvyLink>(*dict, ivy_name, qApp->property("IVY_BUS").toString().toStdString(), true);
 
     qRegisterMetaType<pprzlink::Message>();
@@ -33,6 +33,30 @@ PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(fa
                     first_msg = true;
                     emit(DispatcherUi::get()->ac_selected(QString(id.c_str())));
                 }
+            }
+        }
+    );
+
+    link->BindMessage(dict->getDefinition("AP_STATUS"),
+        [=](std::string ac_id, pprzlink::Message msg) {
+            (void)ac_id;
+            std::string id;
+            msg.getField("ac_id", id);
+
+            if(AircraftManager::get()->aircraftExists(id.c_str())) {
+                emit(ap_status(msg));
+            }
+        }
+    );
+
+    link->BindMessage(dict->getDefinition("NAV_STATUS"),
+        [=](std::string ac_id, pprzlink::Message msg) {
+            (void)ac_id;
+            std::string id;
+            msg.getField("ac_id", id);
+
+            if(AircraftManager::get()->aircraftExists(id.c_str())) {
+                emit(nav_status(msg));
             }
         }
     );
@@ -108,3 +132,7 @@ void PprzDispatcher::requestConfig(std::string ac_id) {
     });
 }
 
+void PprzDispatcher::sendMessage(pprzlink::Message msg) {
+    msg.setSenderId(pprzlink_id);
+    link->sendMessage(msg);
+}

@@ -18,11 +18,12 @@ int main(int argc, char *argv[])
     a.setProperty("PPRZLINK_ID", "pprzcontrol");
     a.setProperty("PPRZLINK_MESSAGES", "/home/fabien/paparazzi/var/messages.xml");
 
+    a.setProperty("PATH_GCS_ICON", "/home/fabien/paparazzi/data/pictures/gcs_icons");
 
     a.setProperty("APP_DATA_PATH", "/home/fabien/DEV/test_qt/PprzGCS/data");
     a.setProperty("PPRZLINK_PATH", "/home/fabien/DEV/test_qt/pprzlink");
     a.setProperty("MAP_MOVE_HYSTERESIS", 20);
-    a.setProperty("WAYPOINTS_SIZE", 10);
+    a.setProperty("WAYPOINTS_SIZE", 8);
     a.setProperty("CIRCLE_CREATE_MIN_RADIUS", 1.0);
     a.setProperty("CIRCLE_STROKE", 4);
     a.setProperty("SIZE_HIGHLIGHT_FACTOR", 1.5);
