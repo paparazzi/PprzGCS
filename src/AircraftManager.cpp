@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <QApplication>
 #include "flightplan.h"
+#include "setting_menu.h"
 
 AircraftManager* AircraftManager::singleton = nullptr;
 
@@ -43,8 +44,14 @@ void AircraftManager::addAircraft(pprzlink::Message msg) {
     //qDebug() << flight_plan.c_str() << "    " << airframe.c_str() << "    " << radio.c_str() << "    " << settings.c_str();
 
     FlightPlan fp(flight_plan.c_str());
+    SettingMenu sm(settings.c_str());
+    (void)sm;
 
-    aircrafts[id] = Aircraft(id, color, qApp->property("DEFAULT_AIRCRAFT_ICON").toString(), QString::fromStdString(ac_name), fp);
+    for(auto s: sm.getAllSettings()) {
+        cout << *s << endl;
+    }
+
+    aircrafts[id] = Aircraft(id, color, qApp->property("DEFAULT_AIRCRAFT_ICON").toString(), QString::fromStdString(ac_name), fp, sm);
 }
 
 bool AircraftManager::aircraftExists(QString id) {

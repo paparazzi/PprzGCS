@@ -81,6 +81,8 @@ set(SOURCE
     src/common/waypoint.cpp
     src/common/block.cpp
     src/common/flightplan.cpp
+    src/common/setting_menu.cpp
+    src/common/setting.cpp
 )
 
 include_directories(
