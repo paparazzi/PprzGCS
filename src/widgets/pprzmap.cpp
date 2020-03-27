@@ -145,6 +145,13 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
     else if (event->key() == Qt::Key_H) {
         ui->map->itemsForbidHighlight(false);
     }
+    else if (event->key() == Qt::Key_C) {
+        if(AircraftManager::get()->aircraftExists(current_ac)) {
+           Point2DLatLon pos = AircraftManager::get()->getAircraft(current_ac).getPosition();
+           ui->map->centerLatLon(pos);
+        }
+        ui->map->itemsForbidHighlight(false);
+    }
 }
 
 

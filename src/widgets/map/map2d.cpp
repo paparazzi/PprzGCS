@@ -82,6 +82,7 @@ bool Map2D::setTilesPath(QString path, QString providerName) {
 
 void Map2D::centerLatLon(Point2DLatLon latLon) {
     centerOn(scenePoint(latLon, zoomLevel(_zoom), tile_size));
+    updateTiles();
 }
 
 void Map2D::loadConfig(QString filename) {
