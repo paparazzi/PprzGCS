@@ -41,8 +41,6 @@ void AircraftManager::addAircraft(pprzlink::Message msg) {
         return;
     }
 
-    //qDebug() << flight_plan.c_str() << "    " << airframe.c_str() << "    " << radio.c_str() << "    " << settings.c_str();
-
     FlightPlan fp(flight_plan.c_str());
     SettingMenu sm(settings.c_str());
 

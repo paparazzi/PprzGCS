@@ -71,7 +71,6 @@ set(SOURCE
     src/pprz_dispatcher.cpp
     src/pprzmain.cpp
     src/dispatcher_ui.cpp
-    src/geometry/coordinates.cpp
     src/geometry/coordinatestransform.cpp
     src/geometry/point2dlatlon.cpp
     src/geometry/point2dtile.cpp

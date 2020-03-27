@@ -16,12 +16,9 @@ FlightPlan::FlightPlan(): origin()
 FlightPlan::FlightPlan(string uri) : origin()
 {
     setlocale(LC_ALL, "C"); // needed for stod() to use '.' as decimal separator instead of ',' (at least in France)
-    cout << uri << endl;
     XMLDocument doc;
 
-
     if(uri.substr(0,4) == "file") {
-        cout << "It's a file!" << endl;
         string path = uri.substr(7, uri.length()-7);
         doc.LoadFile(path.c_str());
     }
@@ -30,7 +27,6 @@ FlightPlan::FlightPlan(string uri) : origin()
         cerr << "Error parsing " << uri << ": " << doc.ErrorStr();
     }
     else {
-        //doc.Print();
         XMLElement* fp_root = doc.FirstChildElement( "dump" )->FirstChildElement( "flight_plan" );
         const char* lat0 = fp_root->Attribute("lat0");
         const char* lon0 = fp_root->Attribute("lon0");

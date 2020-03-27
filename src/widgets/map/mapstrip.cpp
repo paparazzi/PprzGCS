@@ -113,9 +113,7 @@ void MapStrip::addSettingsButtons() {
     int col = static_cast<int>(groups.size());
     int row = 0;
     for(auto group: groups) {
-//        qDebug() << "group " << group.first.c_str();
         for(auto sb: group->buttons) {
-            qDebug() << "sb " << sb->name.c_str();
             QString icon = sb->icon.c_str();
             QString name = sb->name.c_str();
             QPushButton* b = nullptr;
@@ -124,7 +122,6 @@ void MapStrip::addSettingsButtons() {
                 b = new QPushButton(this);
                 QString icon_path = qApp->property("PATH_GCS_ICON").toString() + "/" + icon;
                 b->setIcon(QIcon(icon_path));
-                qDebug() << "button " << icon_path;
                 if(name != "") {
                     b->setToolTip(name);
                 }
@@ -135,7 +132,6 @@ void MapStrip::addSettingsButtons() {
 
             if(b != nullptr) {
                 settings_buttons_layout->addWidget(b, row, col);
-                qDebug() << "button added!";
                   connect(b, &QPushButton::clicked,
                     [=]() {
                         pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
@@ -191,7 +187,6 @@ void MapStrip::paintEvent(QPaintEvent *event) {
 
 
 void MapStrip::mousePressEvent(QMouseEvent *event) {
-    qDebug() << "press!";
     lock = !lock;
     QWidget::mousePressEvent(event);
 }

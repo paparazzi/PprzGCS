@@ -13,12 +13,9 @@ SettingMenu::SettingMenu()
 
 SettingMenu::SettingMenu(std::string uri) {
     setlocale(LC_ALL, "C"); // needed for stod() to use '.' as decimal separator instead of ',' (at least in France)
-    cout << uri << endl;
     XMLDocument doc;
 
-
     if(uri.substr(0,4) == "file") {
-        cout << "It's a file!" << endl;
         string path = uri.substr(7, uri.length()-7);
         doc.LoadFile(path.c_str());
     }
