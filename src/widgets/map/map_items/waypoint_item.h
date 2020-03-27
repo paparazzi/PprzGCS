@@ -27,6 +27,7 @@ public:
     virtual ItemType getType() {return ITEM_WAYPOINT;}
     void setIgnoreEvent(bool ignore);
     bool isMoving() {return moving;}
+    void setStyle(GraphicsPoint::Style s){point->setStyle(s);}
 
 signals:
     void waypointMoved(Point2DLatLon latlon_pos);

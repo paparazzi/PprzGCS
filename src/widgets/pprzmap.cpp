@@ -55,6 +55,7 @@ PprzMap::PprzMap(QWidget *parent) :
 
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &PprzMap::updateAircraftItem);
     connect(PprzDispatcher::get(), &PprzDispatcher::waypoint_moved, this, &PprzMap::moveWaypoint);
+    connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &PprzMap::updateTarget);
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &PprzMap::handleNewAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &PprzMap::changeCurrentAC);
     connect(ui->map, &MapWidget::mouseMoved, this, &PprzMap::handleMouseMove);
@@ -193,8 +194,10 @@ void PprzMap::updateAircraftItem(pprzlink::Message msg) {
         ai->setZValue(300);
         aircraft_items[id] = ai;
     }
-    ai->setPosition(Point2DLatLon(static_cast<double>(lat), static_cast<double>(lon)));
+    Point2DLatLon pos(static_cast<double>(lat), static_cast<double>(lon));
+    ai->setPosition(pos);
     ai->setHeading(static_cast<double>(course));
+    AircraftManager::get()->getAircraft(id).setPosition(pos);
 }
 
 void PprzMap::handleNewAC(QString ac_id) {
@@ -202,12 +205,11 @@ void PprzMap::handleNewAC(QString ac_id) {
         auto orig = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getOrigin();
         ct_wgs84_utm.init_WGS84_UTM(orig->getLat(), orig->getLon());
     }
+    int z = (current_ac == ac_id) ? qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toInt():
+                                   qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toInt();
 
     for(auto wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
         if(wp->getName()[0] != '_') {
-            int z = (current_ac == ac_id) ? qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toInt():
-                                           qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toInt();
-            (void)z;
             WaypointItem* wpi = new WaypointItem(wp, ac_id, z, ui->map);
             wpi->setEditable(true);
             wpi->setForbidHighlight(false);
@@ -221,6 +223,12 @@ void PprzMap::handleNewAC(QString ac_id) {
             );
         }
     }
+
+    WaypointItem* target = new WaypointItem(Point2DLatLon(0, 0), ac_id, z, ui->map);
+    target->setStyle(GraphicsPoint::Style::CARROT);
+    target->setEditable(false);
+    //target->setForbidHighlight(false);
+    targets.append(target);
 }
 
 void PprzMap::handleMouseMove(QPointF scenePos) {
@@ -284,6 +292,20 @@ void PprzMap::moveWaypoint(pprzlink::Message msg) {
             if(wpi->getWaypoint() == wp && !wpi->isMoving()) {
                 wpi->updateGraphics();
             }
+        }
+    }
+}
+
+void PprzMap::updateTarget(pprzlink::Message msg) {
+    std::string id;
+    float target_lat, target_lon;
+    msg.getField("ac_id", id);
+    msg.getField("target_lat", target_lat);
+    msg.getField("target_long", target_lon);
+
+    for(auto wp: targets) {
+        if(wp->acId() == id.c_str()) {
+            wp->setPosition(Point2DLatLon(static_cast<double>(target_lat), static_cast<double>(target_lon)));
         }
     }
 }

@@ -43,6 +43,7 @@ protected slots:
 private slots:
     void updateAircraftItem(pprzlink::Message msg);
     void moveWaypoint(pprzlink::Message msg);
+    void updateTarget(pprzlink::Message msg);
     void changeCurrentAC(QString id);
 
 private:
@@ -55,6 +56,7 @@ private:
     InteractionState interaction_state;
     ItemEditStateMachine* fp_edit_sm;
     QList<WaypointItem*> waypointItems;
+    QList<WaypointItem*> targets;
     std::map<QString, AircraftItem*> aircraft_items;
 
     QString current_ac;

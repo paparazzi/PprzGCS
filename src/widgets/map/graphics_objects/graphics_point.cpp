@@ -9,7 +9,7 @@
 GraphicsPoint::GraphicsPoint(int size, QColor color, QObject *parent) :
     GraphicsObject(parent),
     QGraphicsItem (),
-    halfSize(size), move_state(PMS_IDLE), current_color(nullptr), ignore_events(false)
+    halfSize(size), move_state(PMS_IDLE), current_color(nullptr), ignore_events(false), style(WAYPOINT)
 {
     color_idle = color;
     current_color = &color_idle;
@@ -31,24 +31,37 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     (void)option;
     (void)widget;
     QPainterPath path;
-    double fx = 0.8;
-    double fy = 1.0;
-    if(!isHighlighted()) {
-        current_color = &color_unfocused;
-        fx /= qApp->property("SIZE_HIGHLIGHT_FACTOR").toDouble();
-        fy /= qApp->property("SIZE_HIGHLIGHT_FACTOR").toDouble();
+
+    if(style == WAYPOINT) {
+        double fx = 0.8;
+        double fy = 1.0;
+        if(!isHighlighted()) {
+            current_color = &color_unfocused;
+            fx /= qApp->property("SIZE_HIGHLIGHT_FACTOR").toDouble();
+            fy /= qApp->property("SIZE_HIGHLIGHT_FACTOR").toDouble();
+        }
+
+        QPolygonF poly;
+        poly.append(QPointF(0, halfSize*fy));
+        poly.append(QPointF(halfSize*fx, 0));
+        poly.append(QPointF(0, -halfSize*fy));
+        poly.append(QPointF(-halfSize*fx, 0));
+        poly.append(QPointF(0, halfSize*fy));
+        path.addPolygon(poly);
+
+        painter->setBrush(QBrush(*current_color));
+        //painter->setPen(Qt::NoPen);
+        painter->drawPath(path);
+    } else if (style==CARROT) {
+        QPolygonF poly;
+        poly.append(QPointF(halfSize*cos(M_PI/6), -halfSize*sin(M_PI/6)));
+        poly.append(QPointF(halfSize*cos(5*M_PI/6), -halfSize*sin(5*M_PI/6)));
+        poly.append(QPointF(halfSize*cos(3*M_PI/2), -halfSize*sin(3*M_PI/2)));
+        path.addPolygon(poly);
+        painter->setBrush(QBrush(QColor(255, 170, 0)));
+        painter->setPen(Qt::NoPen);
+        painter->drawPath(path);
     }
-
-    QPolygonF poly;
-    poly.append(QPointF(0, halfSize*fy));
-    poly.append(QPointF(halfSize*fx, 0));
-    poly.append(QPointF(0, -halfSize*fy));
-    poly.append(QPointF(-halfSize*fx, 0));
-    path.addPolygon(poly);
-
-    painter->setBrush(QBrush(*current_color));
-    painter->setPen(Qt::NoPen);
-    painter->drawPath(path);
 }
 
 
