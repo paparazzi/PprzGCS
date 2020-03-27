@@ -51,14 +51,24 @@ Setting::Setting(XMLElement* setel, uint8_t& setting_no) : setting_no(setting_no
             shared_ptr<StripButton> sb = make_shared<StripButton>();
             const char* name = sets->Attribute("name");
             const char* value = sets->Attribute("value");
+
             assert(name != nullptr);
             assert(value != nullptr);
             sb->name = name;
             sb->value = stof(value);
+
             const char* group = sets->Attribute("group");
             if(group != nullptr) {
                 sb->group = group;
             }
+
+            const char* icon = sets->Attribute("icon");
+            if(icon != nullptr) {
+                sb->icon = icon;
+            }
+
+            sb->setting_no = setting_no;
+
             strip_buttons.push_back(sb);
         } else {
             string msg = string("Tag ") + sets->Name() + string(" unknown for dl_setting!");
@@ -131,5 +141,8 @@ ostream& operator<<(ostream& os, const Setting::KeyPress& kp) {
 
 ostream& operator<<(ostream& os, const Setting::StripButton& sb) {
     os << sb.group << "." << sb.name << ": " << sb.value;
+    if(sb.icon != "") {
+        os << " " << sb.icon;
+    }
     return os;
 }

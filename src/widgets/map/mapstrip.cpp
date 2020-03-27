@@ -16,40 +16,57 @@ MapStrip::MapStrip(QString ac_id, QWidget *parent) :
     QFont fixedFont;
     fixedFont.setFamily(QString::fromUtf8("Ubuntu Mono"));
 
-    layout = new QGridLayout(this);
+    layout = new QHBoxLayout(this);
+    info_layout = new QGridLayout();
     fp_buttons_layout = new QGridLayout();
+    settings_buttons_layout = new QGridLayout();
 
-    layout->addLayout(fp_buttons_layout, 1, 3);
+    layout->addLayout(info_layout);
+    layout->addLayout(fp_buttons_layout);
+    layout->addLayout(settings_buttons_layout);
     setLayoutDirection(Qt::LayoutDirection::RightToLeft);
 
     ac_name = new QLabel(AircraftManager::get()->getAircraft(ac_id).name(), this);
     ac_name->setFont(fixedFont);
-    layout->addWidget(ac_name, 0, 0);
+    info_layout->addWidget(ac_name, 0, 0);
 
     bat_label = new QLabel("BAT : UNK", this);
     bat_label->setFont(fixedFont);
-    layout->addWidget(bat_label, 1, 0);
+    info_layout->addWidget(bat_label, 1, 0);
 
     link_label = new QLabel("LINK: UNK", this);
     link_label->setFont(fixedFont);
-    layout->addWidget(link_label, 2, 0);
+    info_layout->addWidget(link_label, 2, 0);
 
     speed_label =  new QLabel("SPEED: UNK", this);
     speed_label->setFont(fixedFont);
-    layout->addWidget(speed_label, 1, 1);
+    info_layout->addWidget(speed_label, 1, 1);
 
     height_label = new QLabel("AGL  : UNK", this);
     height_label->setFont(fixedFont);
-    layout->addWidget(height_label, 2, 1);
+    info_layout->addWidget(height_label, 2, 1);
 
     ap_mode = new QLabel("MODE : UNK", this);
     ap_mode->setFont(fixedFont);
-    layout->addWidget(ap_mode, 1, 2);
+    info_layout->addWidget(ap_mode, 1, 2);
 
     cur_block = new QLabel("MODE : UNK", this);
     cur_block->setFont(fixedFont);
-    layout->addWidget(cur_block, 2, 2);
+    info_layout->addWidget(cur_block, 2, 2);
 
+    addFlightPlanButtons();
+    addSettingsButtons();
+
+    connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &MapStrip::updateFlightParams);
+    connect(PprzDispatcher::get(), &PprzDispatcher::ap_status, this, &MapStrip::updateApStatus);
+    connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &MapStrip::updateNavStatus);
+
+
+
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+}
+
+void MapStrip::addFlightPlanButtons() {
     auto groups = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getGroups();
     int col = static_cast<int>(groups.size());
     int row = 0;
@@ -86,14 +103,53 @@ MapStrip::MapStrip(QString ac_id, QWidget *parent) :
         --col;
         row = 0;
     }
+}
 
-    connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &MapStrip::updateFlightParams);
-    connect(PprzDispatcher::get(), &PprzDispatcher::ap_status, this, &MapStrip::updateApStatus);
-    connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &MapStrip::updateNavStatus);
+#include "map"
 
+void MapStrip::addSettingsButtons() {
+    vector<shared_ptr<SettingMenu::ButtonGroup>> groups = AircraftManager::get()->getAircraft(ac_id).getSettingMenu().getButtonGroups();
 
+    int col = static_cast<int>(groups.size());
+    int row = 0;
+    for(auto group: groups) {
+//        qDebug() << "group " << group.first.c_str();
+        for(auto sb: group->buttons) {
+            qDebug() << "sb " << sb->name.c_str();
+            QString icon = sb->icon.c_str();
+            QString name = sb->name.c_str();
+            QPushButton* b = nullptr;
 
-    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+            if(icon != "") {
+                b = new QPushButton(this);
+                QString icon_path = qApp->property("PATH_GCS_ICON").toString() + "/" + icon;
+                b->setIcon(QIcon(icon_path));
+                qDebug() << "button " << icon_path;
+                if(name != "") {
+                    b->setToolTip(name);
+                }
+            } else if (name != "") {
+                b = new QPushButton(name, this);
+                b->setToolTip(name);
+            }
+
+            if(b != nullptr) {
+                settings_buttons_layout->addWidget(b, row, col);
+                qDebug() << "button added!";
+                  connect(b, &QPushButton::clicked,
+                    [=]() {
+                        pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
+                        msg.addField("ac_id", ac_id.toStdString());
+                        msg.addField("index", sb->setting_no);
+                        msg.addField("value", sb->value);
+                        PprzDispatcher::get()->sendMessage(msg);
+                });
+            }
+            ++row;
+        }
+        --col;
+        row = 0;
+    }
 }
 
 MapStrip::~MapStrip()
@@ -152,6 +208,15 @@ void MapStrip::enterEvent(QEvent *event) {
         widget->setVisible(true);
       }
     }
+
+    for (int i = 0; i < settings_buttons_layout->count(); ++i)
+    {
+      QWidget *widget = settings_buttons_layout->itemAt(i)->widget();
+      if (widget != nullptr)
+      {
+        widget->setVisible(true);
+      }
+    }
     QWidget::enterEvent(event);
 }
 
@@ -161,6 +226,15 @@ void MapStrip::leaveEvent(QEvent *event) {
         for (int i = 0; i < fp_buttons_layout->count(); ++i)
         {
           QWidget *widget = fp_buttons_layout->itemAt(i)->widget();
+          if (widget != nullptr)
+          {
+            widget->setVisible(false);
+          }
+        }
+
+        for (int i = 0; i < settings_buttons_layout->count(); ++i)
+        {
+          QWidget *widget = settings_buttons_layout->itemAt(i)->widget();
           if (widget != nullptr)
           {
             widget->setVisible(false);

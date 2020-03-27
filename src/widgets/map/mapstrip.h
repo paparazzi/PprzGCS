@@ -26,6 +26,9 @@ protected:
     void leaveEvent(QEvent *event);
 
 private:
+    void addFlightPlanButtons();
+    void addSettingsButtons();
+
     void updateFlightParams(pprzlink::Message msg);
     void updateApStatus(pprzlink::Message msg);
     void updateNavStatus(pprzlink::Message msg);
@@ -34,8 +37,10 @@ private:
 
     bool lock;
 
-    QGridLayout *layout;
+    QHBoxLayout *layout;
+    QGridLayout *info_layout;
     QGridLayout *fp_buttons_layout;
+    QGridLayout *settings_buttons_layout;
     QLabel* ac_name;
     QLabel* bat_label;
     QLabel* link_label;

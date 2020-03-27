@@ -13,6 +13,12 @@ using namespace tinyxml2;
 class SettingMenu
 {
 public:
+
+    struct ButtonGroup {
+        string group_name;
+        vector<shared_ptr<Setting::StripButton>> buttons;
+    };
+
     SettingMenu();
     SettingMenu(string uri);
     SettingMenu(XMLElement* setel, uint8_t& setting_no);
@@ -20,7 +26,7 @@ public:
     vector<shared_ptr<SettingMenu>> getSettingMenus() {return setting_menus;}
     vector<shared_ptr<Setting>> getSettings() {return settings;}
     vector<shared_ptr<Setting>> getAllSettings();
-
+    vector<shared_ptr<ButtonGroup>> getButtonGroups();
 
 private:
     void init(XMLElement* setel, uint8_t& setting_no);

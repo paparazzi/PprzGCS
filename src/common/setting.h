@@ -23,10 +23,16 @@ public:
         string name;
         string group;
         float value;
+        string icon;
+        uint8_t setting_no;
         friend ostream& operator<<(ostream& os, const StripButton& wp);
     };
 
     Setting(XMLElement* setel, uint8_t& setting_no);
+    vector<shared_ptr<KeyPress>> getKeyPresses() {return key_presses;}
+    vector<shared_ptr<StripButton>> getStripButtons() {return strip_buttons;}
+    uint8_t getNo() {return setting_no;}
+
 
     friend ostream& operator<<(ostream& os, const Setting& wp);
 

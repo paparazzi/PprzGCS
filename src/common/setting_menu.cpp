@@ -2,6 +2,7 @@
 #include "iostream"
 #include <clocale>
 #include <assert.h>
+#include <algorithm>
 
 
 SettingMenu::SettingMenu()
@@ -76,3 +77,37 @@ vector<shared_ptr<Setting>> SettingMenu::getAllSettings() {
 
     return v;
 }
+
+vector<shared_ptr<SettingMenu::ButtonGroup>> SettingMenu::getButtonGroups() {
+
+    vector<shared_ptr<Setting::StripButton>> buttons;
+    for(auto setting: getAllSettings()) {
+        for(auto sb: setting->getStripButtons()) {
+            buttons.push_back(sb);
+        }
+    }
+
+    sort(buttons.begin(), buttons.end(),
+        [](shared_ptr<Setting::StripButton> lb, shared_ptr<Setting::StripButton> rb) {
+                return lb->group < rb->group;
+    });
+
+
+    vector<shared_ptr<ButtonGroup>> groups;
+
+    shared_ptr<ButtonGroup> bg = make_shared<ButtonGroup>();
+    bg->group_name = buttons[0]->group;
+    groups.push_back(bg);
+
+    for(auto b: buttons) {
+        if(b->group != groups[groups.size()-1]->group_name) {
+            shared_ptr<ButtonGroup> bg = make_shared<ButtonGroup>();
+            bg->group_name = b->group;
+            groups.push_back(bg);
+        }
+        groups[groups.size()-1]->buttons.push_back(b);
+    }
+
+    return groups;
+}
+
