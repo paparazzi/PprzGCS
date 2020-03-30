@@ -46,6 +46,8 @@ void WaypointItem::init() {
             moving = true;
             Point2DLatLon latlon = latlonPoint(scene_pos, zoomLevel(map->zoom()), map->tileSize());
             graphics_text->setPos(scene_pos + QPointF(10, 10));
+            waypoint->setLat(latlon.lat());
+            waypoint->setLon(latlon.lon());
             emit(waypointMoved(latlon));
         }
     );
