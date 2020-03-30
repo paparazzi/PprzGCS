@@ -32,6 +32,8 @@ signals:
     void flight_param(pprzlink::Message);
     void ap_status(pprzlink::Message);
     void nav_status(pprzlink::Message);
+    void circle_status(pprzlink::Message);
+    void segment_status(pprzlink::Message);
     void waypoint_moved(pprzlink::Message);
 
 public slots:

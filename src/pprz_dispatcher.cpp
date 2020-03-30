@@ -61,6 +61,28 @@ PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(fa
         }
     );
 
+    link->BindMessage(dict->getDefinition("CIRCLE_STATUS"),
+        [=](std::string ac_id, pprzlink::Message msg) {
+            (void)ac_id;
+            std::string id;
+            msg.getField("ac_id", id);
+            if(AircraftManager::get()->aircraftExists(id.c_str())) {
+                emit(circle_status(msg));
+            }
+        }
+    );
+
+    link->BindMessage(dict->getDefinition("SEGMENT_STATUS"),
+        [=](std::string ac_id, pprzlink::Message msg) {
+            (void)ac_id;
+            std::string id;
+            msg.getField("ac_id", id);
+            if(AircraftManager::get()->aircraftExists(id.c_str())) {
+                emit(segment_status(msg));
+            }
+        }
+    );
+
 
     link->BindMessage(dict->getDefinition("WAYPOINT_MOVED"),
         [=](std::string ac_id, pprzlink::Message msg) {

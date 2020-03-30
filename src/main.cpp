@@ -27,8 +27,12 @@ int main(int argc, char *argv[])
     a.setProperty("CIRCLE_CREATE_MIN_RADIUS", 1.0);
     a.setProperty("CIRCLE_STROKE", 4);
     a.setProperty("SIZE_HIGHLIGHT_FACTOR", 1.5);
+
     a.setProperty("ITEM_Z_VALUE_HIGHLIGHTED", 100);
     a.setProperty("ITEM_Z_VALUE_UNHIGHLIGHTED", 50);
+    a.setProperty("NAV_SHAPE_Z_VALUE", 150);
+    a.setProperty("AIRCRAFT_Z_VALUE", 300);
+
     a.setProperty("MAPITEMS_FONT", 18);
     a.setProperty("AIRCRAFTS_SIZE", 25);
 

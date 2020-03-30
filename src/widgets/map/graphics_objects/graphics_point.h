@@ -16,12 +16,6 @@ class GraphicsPoint : public GraphicsObject, public QGraphicsItem
 {
     Q_OBJECT
 public:
-
-    enum Style {
-        WAYPOINT,
-        CARROT,
-    };
-
     explicit GraphicsPoint(int size, QColor color, QObject *parent = nullptr);
     void setColors(QColor colPressed, QColor colMoving, QColor colUnfocused);
     void setIgnoreEvent(bool ignore) {ignore_events = ignore;}
@@ -29,6 +23,7 @@ public:
 
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
+    QPainterPath shape() const override;
 
 signals:
     void pointMoved(QPointF scenePos);

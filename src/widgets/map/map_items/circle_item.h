@@ -30,6 +30,8 @@ public:
     ///
     void setRadius(double radius);
 
+    void setStyle(GraphicsCircle::Style s);
+
 signals:
     void circleMoved(Point2DLatLon latlon_pos);
     void circleScaled(double radius);

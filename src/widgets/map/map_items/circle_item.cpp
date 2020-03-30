@@ -131,3 +131,10 @@ void CircleItem::setRadius(double radius) {
     double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(map->zoom()))*map->tileSize();
     circle->setRadius(pixelRadius);
 }
+
+void CircleItem::setStyle(GraphicsCircle::Style s) {
+    circle->setStyle(s);
+    if(s == GraphicsCircle::Style::CURRENT_NAV) {
+        center->setStyle(GraphicsObject::Style::CURRENT_NAV);
+    }
+}

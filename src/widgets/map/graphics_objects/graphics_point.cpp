@@ -9,7 +9,7 @@
 GraphicsPoint::GraphicsPoint(int size, QColor color, QObject *parent) :
     GraphicsObject(parent),
     QGraphicsItem (),
-    halfSize(size), move_state(PMS_IDLE), current_color(nullptr), ignore_events(false), style(WAYPOINT)
+    halfSize(size), move_state(PMS_IDLE), current_color(nullptr), ignore_events(false), style(DEFAULT)
 {
     color_idle = color;
     current_color = &color_idle;
@@ -30,9 +30,9 @@ QRectF GraphicsPoint::boundingRect() const {
 void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     (void)option;
     (void)widget;
-    QPainterPath path;
 
-    if(style == WAYPOINT) {
+
+    if(style == DEFAULT) {
         double fx = 0.8;
         double fy = 1.0;
         if(!isHighlighted()) {
@@ -47,23 +47,38 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         poly.append(QPointF(0, -halfSize*fy));
         poly.append(QPointF(-halfSize*fx, 0));
         poly.append(QPointF(0, halfSize*fy));
+
+        QPainterPath path;
         path.addPolygon(poly);
 
         painter->setBrush(QBrush(*current_color));
         //painter->setPen(Qt::NoPen);
         painter->drawPath(path);
-    } else if (style==CARROT) {
+
+    } else if (style == CARROT) {
         QPolygonF poly;
         poly.append(QPointF(halfSize*cos(M_PI/6), -halfSize*sin(M_PI/6)));
         poly.append(QPointF(halfSize*cos(5*M_PI/6), -halfSize*sin(5*M_PI/6)));
         poly.append(QPointF(halfSize*cos(3*M_PI/2), -halfSize*sin(3*M_PI/2)));
+
+        QPainterPath path;
         path.addPolygon(poly);
         painter->setBrush(QBrush(QColor(255, 170, 0)));
         painter->setPen(Qt::NoPen);
         painter->drawPath(path);
+    } else if (style == CURRENT_NAV) {
+        //draw nothing
     }
 }
 
+QPainterPath GraphicsPoint::shape() const {
+    if(style == CURRENT_NAV) {
+        QPainterPath path;
+        return path;
+    } else {
+        return QGraphicsItem::shape();
+    }
+}
 
 void GraphicsPoint::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if(ignore_events) {

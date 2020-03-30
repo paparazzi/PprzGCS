@@ -44,6 +44,7 @@ private slots:
     void updateAircraftItem(pprzlink::Message msg);
     void moveWaypoint(pprzlink::Message msg);
     void updateTarget(pprzlink::Message msg);
+    void updateNavShape(pprzlink::Message msg);
     void changeCurrentAC(QString id);
 
 private:
@@ -57,6 +58,7 @@ private:
     ItemEditStateMachine* fp_edit_sm;
     QList<WaypointItem*> waypointItems;
     QList<WaypointItem*> targets;
+    QList<MapItem*> current_nav_shapes;
     std::map<QString, AircraftItem*> aircraft_items;
 
     QString current_ac;

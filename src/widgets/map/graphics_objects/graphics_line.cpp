@@ -1,45 +1,77 @@
 #include "graphics_line.h"
 #include <QDebug>
+#include <QPainter>
+#include <QApplication>
 
-
-GraphicsLine::GraphicsLine(QLineF linef, QPen pen_idle, QObject *parent) :
+GraphicsLine::GraphicsLine(QPointF a, QPointF b, QColor color, int stroke, QObject *parent) :
     GraphicsObject(parent),
-    QGraphicsLineItem (linef),
-    pen_idle(pen_idle), pen_unfocused(pen_idle), ignore_events(false)
+    QGraphicsItem (),
+    A(a), B(b),
+    color_idle(color), color_unfocused(color),
+    base_stroke(stroke), stroke(stroke),
+    style(DEFAULT)
 {
-    setPen(pen_idle);
+    current_color = &color_idle;
 }
 
 
 QRectF GraphicsLine::boundingRect() const {
-    QRectF rect = QGraphicsLineItem::boundingRect();
-    qDebug() << rect;
+    QPointF topLeft = QPointF(qMin(A.x(), B.x()), qMin(A.y(), B.y()));
+    QPointF bottomRight = QPointF(qMax(A.x(), B.x()), qMax(A.y(), B.y()));
+    QRectF rect = QRectF(topLeft, bottomRight);
+    rect = rect.united(last_bounding_rect);
     return rect;
 }
 
 
 void GraphicsLine::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    QGraphicsLineItem::paint(painter, option, widget);
+    (void)option;
+    (void)widget;
+
+    if(style == Style::DEFAULT) {
+        painter->setPen(QPen(*current_color, stroke));
+    } else if(style == Style::CURRENT_NAV) {
+        painter->setPen(QPen(Qt::green));
+    }
+
+    painter->drawLine(A, B);
+
+    QPointF topLeft = QPointF(qMin(A.x(), B.x()), qMin(A.y(), B.y()));
+    QPointF bottomRight = QPointF(qMax(A.x(), B.x()), qMin(A.y(), B.y()));
+    last_bounding_rect = QRectF(topLeft, bottomRight);
+    //qDebug() << "paint!";
 }
 
+QPainterPath GraphicsLine::shape() const {
+    QPainterPath path;
+    path.moveTo(A);
+    path.lineTo(B);
+    QPainterPathStroker pps;
+    pps.setWidth(stroke);
+    QPainterPath p = pps.createStroke(path);
+    p.addPath(path);
+    return p;
+}
 
 void GraphicsLine::changeFocus() {
     if(!isHighlighted()) {
-        setPen(pen_unfocused);
+        current_color = &color_unfocused;
+        stroke = static_cast<int>(base_stroke / qApp->property("SIZE_HIGHLIGHT_FACTOR").toDouble());
     } else {
-        setPen(pen_idle);
+        stroke = base_stroke;
+        current_color = &color_idle;
     }
 }
 
 
-void GraphicsLine::setColors(QColor color) {
-    pen_unfocused = pen();
-    pen_unfocused.setColor(color);
+void GraphicsLine::setColors(QColor colUnfocused) {
+    color_unfocused = colUnfocused;
 }
 
 void GraphicsLine::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if(ignore_events) {
         event->ignore();
+        qDebug() << "Line press ignored !";
         return;
     }
     GraphicsObject::mousePressEvent(event);
@@ -49,15 +81,32 @@ void GraphicsLine::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 void GraphicsLine::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if(ignore_events) {
         event->ignore();
+        qDebug() << "Line move ignored !";
         return;
     }
     (void)event;
+    qDebug() << "Line MOVED !";
 }
 
 void GraphicsLine::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if(ignore_events) {
         event->ignore();
+        qDebug() << "Line release ignored !";
         return;
     }
     (void)event;
+    qDebug() << "Line RELEASE !";
+}
+
+void GraphicsLine::setLine(QPointF a, QPointF b) {
+    A=a;
+    B=b;
+    prepareGeometryChange();
+    update();
+    //qDebug() << "plop";
+}
+
+void GraphicsLine::setStyle(Style s) {
+    qDebug() << "NAV style bro!";
+    style = s;
 }

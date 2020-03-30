@@ -22,9 +22,12 @@ public:
     virtual void removeFromScene();
     virtual ItemType getType() {return ITEM_PATH;}
     WaypointItem* getLastWaypoint() {return waypoints.last();}
+    QList<WaypointItem*> getWaypoints() {return waypoints;}
     void setLinesIgnoreEvents(bool ignore);
     void setLastLineIgnoreEvents(bool ignore);
     void removeLastWaypoint();
+
+    void setStyle(GraphicsLine::Style s);
 
 signals:
 
@@ -34,10 +37,11 @@ protected:
 
 
 private:
+    void updatePath(Point2DLatLon pos);
     void init(WaypointItem* startWp);
     QList<WaypointItem*> waypoints;
     QList<GraphicsLine*> lines;
-    int line_widht;
+    int line_width;
     bool highlighted;
     //QGraphicsLineItem* line;
 };

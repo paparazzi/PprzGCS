@@ -7,7 +7,7 @@
 
 PathItem::PathItem(Point2DLatLon start, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
-    line_widht(5)
+    line_width(5)
 {
     WaypointItem* wpStart = new WaypointItem(start, ac_id, z_value, map, neutral_scale_zoom, parent);
     init(wpStart);
@@ -15,7 +15,7 @@ PathItem::PathItem(Point2DLatLon start, QString ac_id, qreal z_value, MapWidget*
 
 PathItem::PathItem(WaypointItem* wpStart, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, z_value, map, neutral_scale_zoom, parent),
-    line_widht(5)
+    line_width(5)
 {
     assert(wpStart != nullptr);
     init(wpStart);
@@ -58,7 +58,7 @@ void PathItem::addPoint(WaypointItem* wp) {
     QPointF start_pos = scenePoint(last_wp->position(), zoomLevel(map->zoom()), map->tileSize());
     QPointF end_pos = scenePoint(wp->position(), zoomLevel(map->zoom()), map->tileSize());
 
-    GraphicsLine* line = new GraphicsLine(QLineF(start_pos, end_pos), QPen(QBrush(aircraft.getColor()), line_widht), this);
+    GraphicsLine* line = new GraphicsLine(start_pos, end_pos, aircraft.getColor(), line_width, this);
 
     QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
     line->setColors(color_variants[2]);
@@ -91,6 +91,11 @@ void PathItem::addPoint(WaypointItem* wp) {
             emit(itemGainedHighlight());
         }
     );
+}
+
+void PathItem::updatePath(Point2DLatLon pos) {
+    (void)pos;
+    updateGraphics();
 }
 
 void PathItem::setHighlighted(bool h) {
@@ -136,15 +141,12 @@ void PathItem::updateGraphics() {
     assert(waypoints.length() == lines.length() + 1);
 
     double s = getScale();
+(void)s;
 
     for(int i=0; i<lines.length(); i++) {
         QPointF start_scene_pos = scenePoint(waypoints[i]->position(), zoomLevel(map->zoom()), map->tileSize());
         QPointF end_scene_pos = scenePoint(waypoints[i+1]->position(), zoomLevel(map->zoom()), map->tileSize());
-        lines[i]->setLine(QLineF(start_scene_pos, end_scene_pos));
-
-        QPen p = lines[i]->pen();
-        p.setWidth(static_cast<int>(line_widht * s));
-        lines[i]->setPen(p);
+        lines[i]->setLine(start_scene_pos, end_scene_pos);
     }
 }
 
@@ -173,4 +175,15 @@ void PathItem::removeLastWaypoint() {
     waypoints.removeLast();
     map->scene()->removeItem(lastLine);
     delete lastLine;
+}
+
+void PathItem::setStyle(GraphicsLine::Style s) {
+    for(auto line: lines) {
+        line->setStyle(s);
+    }
+    if(s == GraphicsLine::Style::CURRENT_NAV) {
+        for(auto w:waypoints) {
+            w->setStyle(GraphicsObject::Style::CURRENT_NAV);
+        }
+    }
 }

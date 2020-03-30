@@ -56,6 +56,9 @@ PprzMap::PprzMap(QWidget *parent) :
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &PprzMap::updateAircraftItem);
     connect(PprzDispatcher::get(), &PprzDispatcher::waypoint_moved, this, &PprzMap::moveWaypoint);
     connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &PprzMap::updateTarget);
+    connect(PprzDispatcher::get(), &PprzDispatcher::circle_status, this, &PprzMap::updateNavShape);
+    connect(PprzDispatcher::get(), &PprzDispatcher::segment_status, this, &PprzMap::updateNavShape);
+
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &PprzMap::handleNewAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &PprzMap::changeCurrentAC);
     connect(ui->map, &MapWidget::mouseMoved, this, &PprzMap::handleMouseMove);
@@ -198,7 +201,7 @@ void PprzMap::updateAircraftItem(pprzlink::Message msg) {
         ai = aircraft_items[id];
     } else {
         ai = new AircraftItem(Point2DLatLon(static_cast<double>(lat), static_cast<double>(lon)), id, ui->map, 16);
-        ai->setZValue(300);
+        ai->setZValue(qApp->property("AIRCRAFT_Z_VALUE").toInt());
         aircraft_items[id] = ai;
     }
     Point2DLatLon pos(static_cast<double>(lat), static_cast<double>(lon));
@@ -232,7 +235,7 @@ void PprzMap::handleNewAC(QString ac_id) {
     }
 
     WaypointItem* target = new WaypointItem(Point2DLatLon(0, 0), ac_id, z, ui->map);
-    target->setStyle(GraphicsPoint::Style::CARROT);
+    target->setStyle(GraphicsObject::Style::CARROT);
     target->setEditable(false);
     //target->setForbidHighlight(false);
     targets.append(target);
@@ -315,4 +318,81 @@ void PprzMap::updateTarget(pprzlink::Message msg) {
             wp->setPosition(Point2DLatLon(static_cast<double>(target_lat), static_cast<double>(target_lon)));
         }
     }
+}
+
+void PprzMap::updateNavShape(pprzlink::Message msg) {
+    std::string id;
+    msg.getField("ac_id", id);
+
+    MapItem* prev_item = nullptr;
+    for(auto item: current_nav_shapes) {
+        if(item->acId() == QString(id.c_str())) {
+            prev_item = item;
+        }
+    }
+
+    int z = qApp->property("NAV_SHAPE_Z_VALUE").toInt();
+(void)prev_item;
+    (void)z;
+
+    if(msg.getDefinition().getName() == "CIRCLE_STATUS") {
+        if(prev_item!= nullptr && prev_item->getType() != ITEM_CIRCLE) {
+            current_nav_shapes.removeAll(prev_item);
+            ui->map->removeItem(prev_item);
+            prev_item = nullptr;
+            //qDebug() << "segment removed!";
+        }
+
+        float circle_lat, circle_long;
+        int16_t radius;
+        msg.getField("circle_lat", circle_lat);
+        msg.getField("circle_long", circle_long);
+        msg.getField("radius", radius);
+
+
+        Point2DLatLon pos(static_cast<double>(circle_lat), static_cast<double>(circle_long));
+        if(prev_item == nullptr) {
+            CircleItem* ci = new CircleItem(pos, radius, id.c_str(), z, ui->map);
+            ci->setStyle(GraphicsObject::Style::CURRENT_NAV);
+            current_nav_shapes.append(ci);
+            //qDebug() << "circle created!";
+        } else {
+            CircleItem* ci = static_cast<CircleItem*>(prev_item);
+            ci->setPosition(pos);
+            ci->setRadius(radius);
+        }
+
+    } else if (msg.getDefinition().getName() == "SEGMENT_STATUS") {
+        if(prev_item!= nullptr && prev_item->getType() != ITEM_PATH) {
+            current_nav_shapes.removeAll(prev_item);
+            ui->map->removeItem(prev_item);
+            prev_item = nullptr;
+            //qDebug() << "circle removed!";
+        }
+
+        float segment1_lat, segment1_long, segment2_lat, segment2_long;
+        msg.getField("segment1_lat", segment1_lat);
+        msg.getField("segment1_long", segment1_long);
+        msg.getField("segment2_lat", segment2_lat);
+        msg.getField("segment2_long", segment2_long);
+
+        Point2DLatLon p1(static_cast<double>(segment1_lat), static_cast<double>(segment1_long));
+        Point2DLatLon p2(static_cast<double>(segment2_lat), static_cast<double>(segment2_long));
+        if(prev_item == nullptr) {
+            PathItem* pi = new PathItem(p1, id.c_str(), z, ui->map);
+            pi->addPoint(p2);
+            pi->setStyle(GraphicsObject::Style::CURRENT_NAV);
+            current_nav_shapes.append(pi);
+            //qDebug() << "segment created!";
+        } else {
+            PathItem* pi = static_cast<PathItem*>(prev_item);
+            auto wps = pi->getWaypoints();
+            assert(wps.size() == 2);
+            wps[0]->setPosition(p1);
+            wps[1]->setPosition(p2);
+        }
+
+    }
+
+
 }

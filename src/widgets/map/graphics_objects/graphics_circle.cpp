@@ -13,7 +13,7 @@ GraphicsCircle::GraphicsCircle(double radius, QColor color, int stroke, QObject 
         QGraphicsItem (),
         radius(radius), scale_state(CSS_IDLE),
         current_color(nullptr), color_idle(color), color_pressed(color), color_scaling(color), color_unfocused(color),
-        base_stroke(stroke), stroke(stroke), text(), display_radius(true)
+        base_stroke(stroke), stroke(stroke), text(), display_radius(true), style(DEFAULT)
 {
     current_color = &color_idle;
 }
@@ -48,12 +48,19 @@ void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
     (void)option;
     (void)widget;
     path_draw = QPainterPath();
-    double out_draw = radius + stroke*scale_factor;
-    double in_draw = radius - stroke*scale_factor;
-    QRectF outter_draw = QRectF(-out_draw, -out_draw, 2*out_draw, 2*out_draw);
-    QRectF inner_draw = QRectF(-in_draw, -in_draw, 2*in_draw, 2*in_draw);
-    path_draw.addEllipse(outter_draw);
-    path_draw.addEllipse(inner_draw);
+
+    if(style == DEFAULT) {
+        double out_draw = radius + stroke*scale_factor;
+        double in_draw = radius - stroke*scale_factor;
+        QRectF outter_draw = QRectF(-out_draw, -out_draw, 2*out_draw, 2*out_draw);
+        QRectF inner_draw = QRectF(-in_draw, -in_draw, 2*in_draw, 2*in_draw);
+        path_draw.addEllipse(outter_draw);
+        path_draw.addEllipse(inner_draw);
+    } else if (style == CURRENT_NAV) {
+        path_draw.addEllipse(QRectF(-radius, -radius, 2*radius, 2*radius));
+    }
+
+
 
     path_shape = QPainterPath();
     double out_path = radius + (stroke + 5)*scale_factor;
@@ -64,9 +71,16 @@ void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
     path_shape.addEllipse(inner_shape);
 
 
-    painter->setBrush(QBrush(*current_color));
-    painter->setPen(Qt::NoPen);
-    painter->drawPath(path_draw);
+    if(style == DEFAULT) {
+        painter->setBrush(QBrush(*current_color));
+        painter->setPen(Qt::NoPen);
+        painter->drawPath(path_draw);
+    } else if (style == CURRENT_NAV) {
+        painter->setPen(QPen(Qt::green));
+        painter->drawPath(path_draw);
+    }
+
+
 
     double recthalf = radius + (stroke + 10)*scale_factor;
     if(display_radius) {

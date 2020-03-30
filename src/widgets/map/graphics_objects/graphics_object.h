@@ -9,6 +9,13 @@ class GraphicsObject : public QObject
 {
     Q_OBJECT
 public:
+
+    enum Style {
+        DEFAULT,
+        CURRENT_NAV,
+        CARROT,
+    };
+
     explicit GraphicsObject(QObject *parent = nullptr);
     bool isHighlighted() {return highlighted;}
     virtual void setHighlighted(bool h);
