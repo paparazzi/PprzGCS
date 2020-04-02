@@ -19,10 +19,10 @@ endif()
 
 
 find_package(Qt5 COMPONENTS Widgets Xml Network Svg REQUIRED)
-find_package(PROJ4)
+find_package(PROJ REQUIRED)
 
-set(PPRZLINK_PATH ../pprzlink/lib/v2.0/C++)
 
+set(PPRZLINK_PATH ext/pprzlink/lib/v2.0/C++)
 add_subdirectory(${PPRZLINK_PATH} pprzlink)
 
 
@@ -95,7 +95,7 @@ include_directories(
     src/widgets/map/graphics_objects/
     src/widgets/basics/
     ${PPRZLINK_PATH}
-    ${PROJ4_INCLUDE_DIRS}
+    ${PROJ_INCLUDE_DIRS}
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE})
@@ -106,7 +106,7 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Xml
     Qt5::Network
     Qt5::Svg
-    ${PROJ4_LIBRARIES}
+    ${PROJ_LIBRARIES}
     ${Boost_LIBRARIES}
 )
 

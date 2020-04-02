@@ -1,0 +1,6 @@
+[submodule "ext/pprzlink"]
+	path = ext/pprzlink
+	url = https://github.com/enacuavlab/pprzlink.git
+[submodule "ext/PROJ"]
+	path = ext/PROJ
+	url = https://github.com/OSGeo/PROJ.git
