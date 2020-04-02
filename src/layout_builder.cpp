@@ -9,6 +9,7 @@
 #include "strip.h"
 #include "pprzmap.h"
 #include "ac_selector.h"
+#include "settings_explorer.h"
 #include <QLabel>
 
 #include <iostream>
@@ -61,6 +62,8 @@ QWidget* rec_build(QDomNode &node, QSplitter* parent, int* size) {
                 widget = new PprzMap(parent);
             } else if (name == "aircraft" or name=="altgraph") {
                 widget = new QWidget(); // dummy widget
+            } else if (name == "settings") {
+                widget = new SettingsExplorer(parent);
             } else {
                 std::string s = "Widget " + name.toStdString() + " unknown";
                 throw unknown_widget(s);

@@ -28,6 +28,8 @@ public:
     vector<shared_ptr<Setting>> getAllSettings();
     vector<shared_ptr<ButtonGroup>> getButtonGroups();
 
+    string getName() {return name;}
+
 private:
     void init(XMLElement* setel, uint8_t& setting_no);
 

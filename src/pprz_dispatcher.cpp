@@ -11,7 +11,7 @@ PprzDispatcher* PprzDispatcher::singleton = nullptr;
 
 Q_DECLARE_METATYPE(pprzlink::Message);
 
-PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(false)
+PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(false), started(false)
 {
     std::string ivy_name = qApp->property("IVY_NAME").toString().toStdString();
     pprzlink_id = qApp->property("PPRZLINK_ID").toString().toStdString();
@@ -21,6 +21,32 @@ PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(fa
 
     qRegisterMetaType<pprzlink::Message>();
 
+}
+
+
+void PprzDispatcher::requestConfig(std::string ac_id) {
+    assert(started);
+    pprzlink::Message reqConfig(dict->getDefinition("CONFIG_REQ"));
+    reqConfig.addField("ac_id", ac_id);
+    reqConfig.setSenderId(pprzlink_id);
+    link->sendRequest(reqConfig, [=](std::string ai, pprzlink::Message msg) {
+        (void)ai;
+        std::string ac_id;
+        msg.getField("ac_id", ac_id);
+        AircraftManager::get()->addAircraft(msg);
+        qDebug() << "new AC !";
+        emit(DispatcherUi::get()->new_ac_config(ac_id.c_str()));
+    });
+}
+
+void PprzDispatcher::sendMessage(pprzlink::Message msg) {
+    assert(started);
+    msg.setSenderId(pprzlink_id);
+    link->sendMessage(msg);
+}
+
+
+void PprzDispatcher::start() {
     link->BindMessage(dict->getDefinition("FLIGHT_PARAM"),
         [=](std::string ac_id, pprzlink::Message msg) {
             (void)ac_id;
@@ -83,6 +109,17 @@ PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(fa
         }
     );
 
+    link->BindMessage(dict->getDefinition("ENGINE_STATUS"),
+        [=](std::string ac_id, pprzlink::Message msg) {
+            (void)ac_id;
+            std::string id;
+            msg.getField("ac_id", id);
+            if(AircraftManager::get()->aircraftExists(id.c_str())) {
+                emit(engine_status(msg));
+            }
+        }
+    );
+
 
     link->BindMessage(dict->getDefinition("WAYPOINT_MOVED"),
         [=](std::string ac_id, pprzlink::Message msg) {
@@ -110,8 +147,6 @@ PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(fa
             link->sendMessage(msg);
         });
 
-
-
     usleep(10000);
     pprzlink::Message msg(dict->getDefinition("AIRCRAFTS_REQ"));
     msg.setSenderId(pprzlink_id);
@@ -138,23 +173,6 @@ PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(fa
         }
     );
 
-}
+    started = true;
 
-
-void PprzDispatcher::requestConfig(std::string ac_id) {
-    pprzlink::Message reqConfig(dict->getDefinition("CONFIG_REQ"));
-    reqConfig.addField("ac_id", ac_id);
-    reqConfig.setSenderId(pprzlink_id);
-    link->sendRequest(reqConfig, [=](std::string ai, pprzlink::Message msg) {
-        (void)ai;
-        std::string ac_id;
-        msg.getField("ac_id", ac_id);
-        AircraftManager::get()->addAircraft(msg);
-        emit(DispatcherUi::get()->new_ac_config(ac_id.c_str()));
-    });
-}
-
-void PprzDispatcher::sendMessage(pprzlink::Message msg) {
-    msg.setSenderId(pprzlink_id);
-    link->sendMessage(msg);
 }

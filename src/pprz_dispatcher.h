@@ -21,6 +21,8 @@ public:
         return singleton;
     }
 
+    void start();
+
     void sendMessage(pprzlink::Message);
     std::shared_ptr<pprzlink::MessageDictionary> getDict() {return dict;}
 
@@ -34,7 +36,9 @@ signals:
     void nav_status(pprzlink::Message);
     void circle_status(pprzlink::Message);
     void segment_status(pprzlink::Message);
+    void engine_status(pprzlink::Message);
     void waypoint_moved(pprzlink::Message);
+
 
 public slots:
 
@@ -48,6 +52,7 @@ private:
     std::string pprzlink_id;
 
     bool first_msg;
+    bool started;
 };
 
 

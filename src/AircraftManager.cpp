@@ -42,7 +42,7 @@ void AircraftManager::addAircraft(pprzlink::Message msg) {
     }
 
     FlightPlan fp(flight_plan.c_str());
-    SettingMenu sm(settings.c_str());
+    shared_ptr<SettingMenu> sm = make_shared<SettingMenu>(settings.c_str());
 
     aircrafts[id] = Aircraft(id, color, qApp->property("DEFAULT_AIRCRAFT_ICON").toString(), QString::fromStdString(ac_name), fp, sm);
 }

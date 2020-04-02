@@ -4,6 +4,7 @@
 #include "layout_builder.h"
 #include <QNetworkProxy>
 #include <QProcessEnvironment>
+#include "pprz_dispatcher.h"
 
 int main(int argc, char *argv[])
 {
@@ -54,6 +55,7 @@ int main(int argc, char *argv[])
     a.setProperty("TRACK_CHUNCK_SIZE", 20);
 
     PprzMain* w = build_layout("://test_gcs_qt.xml");
+    PprzDispatcher::get()->start();
 
     w->show();
 

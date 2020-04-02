@@ -33,6 +33,8 @@ set(SOURCE
     src/widgets/strip.cpp
     src/widgets/ac_selector.ui
     src/widgets/ac_selector.cpp
+    src/widgets/settings_explorer.ui
+    src/widgets/settings_explorer.cpp
     src/widgets/pprzmap.cpp
 
     src/widgets/pprzmap.ui

@@ -32,6 +32,7 @@ public:
     vector<shared_ptr<KeyPress>> getKeyPresses() {return key_presses;}
     vector<shared_ptr<StripButton>> getStripButtons() {return strip_buttons;}
     uint8_t getNo() {return setting_no;}
+    string getName() { if(shortname != "") { return shortname;} else {return var;}}
 
 
     friend ostream& operator<<(ostream& os, const Setting& wp);

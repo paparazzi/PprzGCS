@@ -227,7 +227,7 @@ void PprzMap::handleNewAC(QString ac_id) {
             //waypointMoved
             connect(wpi, &WaypointItem::waypointMoveFinished,
                 [=](Point2DLatLon latlon_pos) mutable {
-                    qDebug() << "waypoint " << wp->getName().c_str() << " moved to " << latlon_pos.lat() << ", " << latlon_pos.lon();
+                    (void)latlon_pos;
                     emit(DispatcherUi::get()->move_waypoint(wp, ac_id));
                 }
             );

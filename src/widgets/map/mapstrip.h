@@ -32,6 +32,9 @@ private:
     void updateFlightParams(pprzlink::Message msg);
     void updateApStatus(pprzlink::Message msg);
     void updateNavStatus(pprzlink::Message msg);
+    void updateEngineStatus(pprzlink::Message msg);
+
+    void setExtended(bool visi);
 
     QString ac_id;
 

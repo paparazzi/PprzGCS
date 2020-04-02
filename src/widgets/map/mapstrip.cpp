@@ -60,10 +60,11 @@ MapStrip::MapStrip(QString ac_id, QWidget *parent) :
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &MapStrip::updateFlightParams);
     connect(PprzDispatcher::get(), &PprzDispatcher::ap_status, this, &MapStrip::updateApStatus);
     connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &MapStrip::updateNavStatus);
-
-
+    connect(PprzDispatcher::get(), &PprzDispatcher::engine_status, this, &MapStrip::updateEngineStatus);
 
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    setExtended(false);
 }
 
 void MapStrip::addFlightPlanButtons() {
@@ -108,7 +109,7 @@ void MapStrip::addFlightPlanButtons() {
 #include "map"
 
 void MapStrip::addSettingsButtons() {
-    vector<shared_ptr<SettingMenu::ButtonGroup>> groups = AircraftManager::get()->getAircraft(ac_id).getSettingMenu().getButtonGroups();
+    vector<shared_ptr<SettingMenu::ButtonGroup>> groups = AircraftManager::get()->getAircraft(ac_id).getSettingMenu()->getButtonGroups();
 
     int col = static_cast<int>(groups.size());
     int row = 0;
@@ -194,47 +195,13 @@ void MapStrip::mousePressEvent(QMouseEvent *event) {
 
 void MapStrip::enterEvent(QEvent *event) {
     emit(DispatcherUi::get()->ac_selected(ac_id));
-    ap_mode->show();
-    for (int i = 0; i < fp_buttons_layout->count(); ++i)
-    {
-      QWidget *widget = fp_buttons_layout->itemAt(i)->widget();
-      if (widget != nullptr)
-      {
-        widget->setVisible(true);
-      }
-    }
-
-    for (int i = 0; i < settings_buttons_layout->count(); ++i)
-    {
-      QWidget *widget = settings_buttons_layout->itemAt(i)->widget();
-      if (widget != nullptr)
-      {
-        widget->setVisible(true);
-      }
-    }
+    setExtended(true);
     QWidget::enterEvent(event);
 }
 
 void MapStrip::leaveEvent(QEvent *event) {
     if(!lock) {
-        ap_mode->hide();
-        for (int i = 0; i < fp_buttons_layout->count(); ++i)
-        {
-          QWidget *widget = fp_buttons_layout->itemAt(i)->widget();
-          if (widget != nullptr)
-          {
-            widget->setVisible(false);
-          }
-        }
-
-        for (int i = 0; i < settings_buttons_layout->count(); ++i)
-        {
-          QWidget *widget = settings_buttons_layout->itemAt(i)->widget();
-          if (widget != nullptr)
-          {
-            widget->setVisible(false);
-          }
-        }
+        setExtended(false);
     }
     QWidget::leaveEvent(event);
 }
@@ -280,4 +247,37 @@ void MapStrip::updateNavStatus(pprzlink::Message msg) {
     auto block_name = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getBlock(block_no)->getName();
     (void)block_name;
     cur_block->setText("BLOCK : " + QString(block_name.c_str()));
+}
+
+void MapStrip::updateEngineStatus(pprzlink::Message msg) {
+    std::string id;
+    msg.getField("ac_id", id);
+    if(ac_id != id.c_str()) {
+        return;
+    }
+    float throttle, bat;
+    msg.getField("throttle", throttle);
+    msg.getField("bat", bat);
+    bat_label->setText("BAT : " + QString::number(static_cast<double>(bat), 'f', 2) + " V");
+}
+
+void MapStrip::setExtended(bool visi) {
+    ap_mode->setVisible(visi);
+    for (int i = 0; i < fp_buttons_layout->count(); ++i)
+    {
+      QWidget *widget = fp_buttons_layout->itemAt(i)->widget();
+      if (widget != nullptr)
+      {
+        widget->setVisible(visi);
+      }
+    }
+
+    for (int i = 0; i < settings_buttons_layout->count(); ++i)
+    {
+      QWidget *widget = settings_buttons_layout->itemAt(i)->widget();
+      if (widget != nullptr)
+      {
+        widget->setVisible(visi);
+      }
+    }
 }
