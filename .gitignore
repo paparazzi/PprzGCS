@@ -71,3 +71,6 @@ Thumbs.db
 *.dll
 *.exe
 
+# build directory for manual build
+build/
+

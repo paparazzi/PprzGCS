@@ -1,9 +1,47 @@
 
+# A new Ground Control Station for Paparazzi UAV
 
-You can add tile sources in the tile_source.xml file.
+What is Paparazzi? => See the Wiki: http://wiki.paparazziuav.org/wiki/Main_Page
 
-zoomMin and zoomMax default to 0 and 19.
 
-If you change zoomMin you MUST set xMax and yMax.
+## INSTALLATION
 
-xMin, yMin, xMax, yMax are the tiles X/Y coordinates at the zoom level zoomMin.
+
+### dependencies
+This software depend on Qt5.12 or later, tinyxml2, Ivy and boost libraries. Make sure they are installed on you system.
+
+__WARNING__: Some path are still harcoded, this is work in progress. If you want to contribute on making the build process smoother (or anything else), you are very welcome!
+
+
+### Fetch submodules:
+
+ `git submodule update --init --recursive`
+ 
+### Build and install the PROJ libraries:
+
+`cd ext/PROJ`
+
+`mkdir build && cd build`
+
+`cmake ..`
+
+`make`
+
+`sudo make install`
+
+### Build the GCS
+
+If you just build PROj, go back to the project root:
+
+`cd ../../..`
+
+`mkdir build && cd build`
+
+`cmake ..`
+
+`make`
+
+Now you can launch it:
+
+`./PprzGCS`
+

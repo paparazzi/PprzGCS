@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8)
 
 project(PprzGCS)
 
-set(Qt5_DIR "/home/fabien/Qt/5.12.0/gcc_64/lib/cmake/Qt5")
+set(Qt5_DIR "$HOME/Qt/5.12.0/gcc_64/lib/cmake/Qt5")
 
 #set(CMAKE_PREFIX_PATH  "${CMAKE_PREFIX_PATH};/home/fabien/local/lib")
 
