@@ -13,15 +13,26 @@ int main(int argc, char *argv[])
     //QCoreApplication
     //QCommandLineParser
 
+    if(!qEnvironmentVariableIsSet("PAPARAZZI_HOME") ||
+       !qEnvironmentVariableIsSet("PAPARAZZI_SRC")  ||
+       !qEnvironmentVariableIsSet("PAPARAZZI_GCS_DATA")) {
+        std::cerr << "Set environnements variables PAPARAZZI_HOME, PAPARAZZI_SRC and PAPARAZZI_GCS_DATA!" << std::endl;
+        abort();
+    }
+
+    QString PAPARAZZI_HOME = qgetenv("PAPARAZZI_HOME");
+    QString PAPARAZZI_SRC = qgetenv("PAPARAZZI_SRC");
+    QString PAPARAZZI_GCS_DATA = qgetenv("PAPARAZZI_GCS_DATA");
+
+
     a.setProperty("IVY_NAME", "QPprzControl");
     a.setProperty("IVY_BUS", "127.255.255.255:2010");
     a.setProperty("PPRZLINK_ID", "pprzcontrol");
-    a.setProperty("PPRZLINK_MESSAGES", "/home/fabien/paparazzi/var/messages.xml");
 
-    a.setProperty("PATH_GCS_ICON", "/home/fabien/paparazzi/data/pictures/gcs_icons");
-
-    a.setProperty("APP_DATA_PATH", "/home/fabien/DEV/test_qt/PprzGCS/data");
-    a.setProperty("PPRZLINK_PATH", "/home/fabien/DEV/test_qt/pprzlink");
+    a.setProperty("PPRZLINK_MESSAGES", PAPARAZZI_HOME + "/var/messages.xml");
+    a.setProperty("PPRZLINK_MESSAGES", PAPARAZZI_HOME + "/var/messages.xml");
+    a.setProperty("PATH_GCS_ICON", PAPARAZZI_HOME + "/data/pictures/gcs_icons");
+    a.setProperty("APP_DATA_PATH", PAPARAZZI_GCS_DATA);
     a.setProperty("MAP_MOVE_HYSTERESIS", 20);
     a.setProperty("WAYPOINTS_SIZE", 8);
     a.setProperty("CIRCLE_CREATE_MIN_RADIUS", 1.0);
@@ -41,12 +52,6 @@ int main(int argc, char *argv[])
 
     a.setProperty("TRACK_MAX_CHUNKS", 10);
     a.setProperty("TRACK_CHUNCK_SIZE", 20);
-
-//    QNetworkProxy proxy;
-//    proxy.setType(QNetworkProxy::DefaultProxy);
-//    proxy.setHostName("http://proxy");
-//    proxy.setPort(3128);
-//    QNetworkProxy::setApplicationProxy(proxy);
 
     PprzMain* w = build_layout("://test_gcs_qt.xml");
 
