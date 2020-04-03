@@ -4,3 +4,6 @@
 [submodule "ext/PROJ"]
 	path = ext/PROJ
 	url = https://github.com/OSGeo/PROJ.git
+[submodule "ext/tinyxml2"]
+	path = ext/tinyxml2
+	url = https://github.com/leethomason/tinyxml2.git
