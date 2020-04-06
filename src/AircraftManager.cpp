@@ -7,6 +7,7 @@
 #include <QApplication>
 #include "flightplan.h"
 #include "setting_menu.h"
+#include "airframe.h"
 
 AircraftManager* AircraftManager::singleton = nullptr;
 
@@ -44,7 +45,12 @@ void AircraftManager::addAircraft(pprzlink::Message msg) {
     FlightPlan fp(flight_plan.c_str());
     shared_ptr<SettingMenu> sm = make_shared<SettingMenu>(settings.c_str());
 
-    aircrafts[id] = Aircraft(id, color, qApp->property("DEFAULT_AIRCRAFT_ICON").toString(), QString::fromStdString(ac_name), fp, sm);
+    Airframe air(airframe.c_str());
+
+    QString icon = qApp->property("PATH_AIRCRAFT_ICON").toString() + "/" + QString(air.getIconName().c_str()) + ".svg";
+    qDebug() << "icon: " << icon;
+
+    aircrafts[id] = Aircraft(id, color, icon, QString::fromStdString(ac_name), fp, sm, air);
 }
 
 bool AircraftManager::aircraftExists(QString id) {

@@ -4,13 +4,14 @@
 #include <QColor>
 #include "flightplan.h"
 #include "setting_menu.h"
+#include "airframe.h"
 #include "point2dlatlon.h"
 
 class Aircraft
 {
 public:
     Aircraft();
-    Aircraft(QString id, QColor color, QString icon, QString name, FlightPlan fp, shared_ptr<SettingMenu> setting_menu);
+    Aircraft(QString id, QColor color, QString icon, QString name, FlightPlan fp, shared_ptr<SettingMenu> setting_menu, Airframe air);
 
     QColor getColor(){return color;}
     QString getId(){return ac_id;}
@@ -30,6 +31,7 @@ private:
     QString _name;
     FlightPlan flight_plan;
     shared_ptr<SettingMenu> setting_menu;
+    Airframe airframe;
     //SettingMenu setting_menu;
 
     Point2DLatLon position;

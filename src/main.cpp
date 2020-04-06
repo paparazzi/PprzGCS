@@ -46,10 +46,10 @@ int main(int argc, char *argv[])
     a.setProperty("AIRCRAFT_Z_VALUE", 300);
 
     a.setProperty("MAPITEMS_FONT", 18);
-    a.setProperty("AIRCRAFTS_SIZE", 25);
+    a.setProperty("AIRCRAFTS_SIZE", 40);
 
     a.setProperty("DEFAULT_COLOR", "red");
-    a.setProperty("DEFAULT_AIRCRAFT_ICON", ":/pictures/aircraft_fixedwing1.svg");
+    a.setProperty("PATH_AIRCRAFT_ICON", PAPARAZZI_GCS_DATA + "/pictures/aircraft_icons");
 
     a.setProperty("TRACK_MAX_CHUNKS", 10);
     a.setProperty("TRACK_CHUNCK_SIZE", 20);
