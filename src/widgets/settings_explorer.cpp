@@ -115,19 +115,21 @@ void SettingsExplorer::updateMenu() {
 }
 
 void SettingsExplorer::paintEvent(QPaintEvent *event) {
-    QPainter p(this);
-    p.setRenderHint(QPainter::Antialiasing);
-    QPainterPath path;
-    path.addRect(event->rect());
-    p.setPen(Qt::NoPen);
+    if(ui->aircraft_combo->count() > 0) {
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        QPainterPath path;
+        path.addRect(event->rect());
+        p.setPen(Qt::NoPen);
 
-    QColor color = AircraftManager::get()->getAircraft(ac_ids[ui->aircraft_combo->currentIndex()]).getColor();
-    int hue = color.hue();
-    int sat = color.saturation();
-    color.setHsv(hue, static_cast<int>(sat*0.5), 255);
+        QColor color = AircraftManager::get()->getAircraft(ac_ids[ui->aircraft_combo->currentIndex()]).getColor();
+        int hue = color.hue();
+        int sat = color.saturation();
+        color.setHsv(hue, static_cast<int>(sat*0.5), 255);
 
-    p.fillPath(path, color);
-    p.drawPath(path);
+        p.fillPath(path, color);
+        p.drawPath(path);
+    }
 
     QWidget::paintEvent(event);
 }
