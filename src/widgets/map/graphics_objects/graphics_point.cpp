@@ -72,7 +72,7 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
 }
 
 QPainterPath GraphicsPoint::shape() const {
-    if(style == CURRENT_NAV) {
+    if(style == CURRENT_NAV || style == CARROT) {
         QPainterPath path;
         return path;
     } else {
