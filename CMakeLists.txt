@@ -36,6 +36,7 @@ set(SOURCE
     src/widgets/settings_explorer.ui
     src/widgets/settings_explorer.cpp
     src/widgets/pprzmap.cpp
+    src/widgets/pfd.cpp
 
     src/widgets/pprzmap.ui
     src/widgets/map/tileprovider.cpp

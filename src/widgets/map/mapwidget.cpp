@@ -17,6 +17,7 @@
 #include "mapstrip.h"
 #include "aircraft_item.h"
 #include "dispatcher_ui.h"
+#include "pfd.h"
 #include "AircraftManager.h"
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), parent),
@@ -34,6 +35,9 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), pa
         [=]() { leftScrollArea->setVisible(!leftScrollArea->isVisible());}
     );
     columnLeft->addWidget(layers_button);
+
+    Pfd* pfd = new Pfd(this);
+    columnRight->addWidget(pfd);
 
     columnRight->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 
@@ -218,5 +222,5 @@ void MapWidget::wheelEvent(QWheelEvent* event) {
 void MapWidget::handleNewAC(QString ac_id) {
     auto ac = AircraftManager::get()->getAircraft(ac_id);
     MapStrip* map_strip = new MapStrip(ac_id);
-    columnRight->insertWidget(0, map_strip);
+    columnRight->insertWidget(1, map_strip);
 }

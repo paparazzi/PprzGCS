@@ -4,7 +4,7 @@
       <columns size="400">
           <widget name="strips"   size="100"/>
           <widget name="settings" size="800"/>
-          <widget name="alarms" size="100"/>
+          <widget name="PFD" size="100"/>
       </columns>
   </rows>
 </layout>

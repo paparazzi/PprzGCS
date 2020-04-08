@@ -17,5 +17,8 @@
         <file>pictures/bat_full.svg</file>
         <file>pictures/bat_half.svg</file>
         <file>pictures/settings.svg</file>
+        <file>pictures/pfd_aircraft_pitch.svg</file>
+        <file>pictures/pfd_aircraft_roll.svg</file>
+        <file>pictures/pfd_aircraft_yaw.svg</file>
     </qresource>
 </RCC>

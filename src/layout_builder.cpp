@@ -10,6 +10,7 @@
 #include "pprzmap.h"
 #include "ac_selector.h"
 #include "settings_explorer.h"
+#include "pfd.h"
 #include <QLabel>
 
 #include <iostream>
@@ -64,6 +65,8 @@ QWidget* rec_build(QDomNode &node, QSplitter* parent, int* size) {
                 widget = new QWidget(); // dummy widget
             } else if (name == "settings") {
                 widget = new SettingsExplorer(parent);
+            } else if (name == "PFD") {
+                widget = new Pfd(parent);
             } else {
                 std::string s = "Widget " + name.toStdString() + " unknown";
                 throw unknown_widget(s);
