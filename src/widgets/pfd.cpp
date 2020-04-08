@@ -19,6 +19,14 @@ Pfd::Pfd(QWidget *parent) : QWidget(parent), border_stroke(6)
     places[0] = ROLL;
     places[1] = PITCH;
     places[2] = YAW;
+
+    pix_roll_fixedwing = QPixmap(":/pictures/pfd_aircraft_roll.svg");
+    pix_pitch_fixedwing = QPixmap(":/pictures/pfd_aircraft_pitch.svg");
+    pix_yaw_fixedwing = QPixmap(":/pictures/pfd_aircraft_yaw.svg");
+
+    pix_roll_rotorcraft = QPixmap(":/pictures/pfd_aircraft_roll_rotorcraft.svg");
+    pix_pitch_rotorcraft = QPixmap(":/pictures/pfd_aircraft_pitch_rotorcraft.svg");
+    pix_yaw_rotorcraft = QPixmap(":/pictures/pfd_aircraft_yaw_rotorcraft.svg");
 }
 
 void Pfd::resizeEvent(QResizeEvent *event) {
@@ -88,17 +96,16 @@ void Pfd::paintPitch(QRect rect,  QPointF center) {
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(rect);
 
-    double alpha = -roll * M_PI/180.0;
+    double alpha = static_cast<double>(-roll) * M_PI/180.0;
     double y = sin(alpha) * rect.height() / 2;
     double x = cos(alpha) * rect.width() / 2 - border_stroke;
 
     painter.setBrush(QColor("#986701"));
-    painter.drawChord(rect, 16*(alpha - M_PI)*180.0/M_PI, 16*(2*(M_PI_2-alpha))*180.0/M_PI);
-    //painter.drawChord(rect, 16*(-M_PI)*180.0/M_PI, 16*(2*(M_PI_2))*180.0/M_PI);
+    painter.drawChord(rect, static_cast<int>(16*(alpha - M_PI)*180.0/M_PI), static_cast<int>(16*(2*(M_PI_2-alpha))*180.0/M_PI));
 
     QPen pen = QPen(Qt::white, 4);
     painter.setPen(pen);
-    QLine line(-x, y , x , y);
+    QLine line(static_cast<int>(-x), static_cast<int>(y) , static_cast<int>(x), static_cast<int>(y));
     //QLine line(rect.left(), 0 , rect.right() , 0);
     painter.drawLine(line);
 
@@ -107,11 +114,10 @@ void Pfd::paintPitch(QRect rect,  QPointF center) {
     line = QLine(rect.left()+border_stroke, 0 , rect.right()-border_stroke , 0);
     painter.drawLine(line);
 
-    QPixmap pix(":/pictures/pfd_aircraft_pitch.svg");
+    QPixmap* pix = getIcon(PITCH);
 
-    //painter.translate(rect.center());
-    painter.rotate(pitch);
-    painter.drawPixmap(-rect.width()/2, -rect.height()/2, rect.width(), rect.height(), pix.scaled(pix.width(),pix.height(),Qt::KeepAspectRatio));
+    painter.rotate(static_cast<double>(pitch));
+    painter.drawPixmap(-rect.width()/2, -rect.height()/2, rect.width(), rect.height(), pix->scaled(pix->width(),pix->height(),Qt::KeepAspectRatio));
 
     QPainterPath pp;
     pp.addEllipse(rect);
@@ -132,16 +138,16 @@ void Pfd::paintRoll(QRect rect,  QPointF center) {
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(rect);
 
-    double alpha = pitch * M_PI/180.0;
+    double alpha = static_cast<double>(pitch) * M_PI/180.0;
     double y = sin(alpha) * rect.height() / 2;
     double x = cos(alpha) * rect.width() / 2 - border_stroke;
 
     painter.setBrush(QColor("#986701"));
-    painter.drawChord(rect, 16*(alpha - M_PI)*180.0/M_PI, 16*(2*(M_PI_2-alpha))*180.0/M_PI);
+    painter.drawChord(rect, static_cast<int>(16*(alpha - M_PI)*180.0/M_PI), static_cast<int>(16*(2*(M_PI_2-alpha))*180.0/M_PI));
 
     QPen pen = QPen(Qt::white, 4);
     painter.setPen(pen);
-    QLine line(-x, y , x , y);
+    QLine line(static_cast<int>(-x), static_cast<int>(y), static_cast<int>(x), static_cast<int>(y));
     painter.drawLine(line);
 
     pen = QPen(Qt::black, 2, Qt::DashDotLine);
@@ -149,11 +155,10 @@ void Pfd::paintRoll(QRect rect,  QPointF center) {
     line = QLine(rect.left()+border_stroke, 0 , rect.right()-border_stroke , 0);
     painter.drawLine(line);
 
-    QPixmap pix(":/pictures/pfd_aircraft_roll.svg");
+    QPixmap* pix = getIcon(ROLL);
 
-    //painter.translate(rect.center());
-    painter.rotate(roll);
-    painter.drawPixmap(-rect.width()/2, -rect.height()/2, rect.width(), rect.height(), pix.scaled(pix.width(),pix.height(),Qt::KeepAspectRatio));
+    painter.rotate(static_cast<double>(roll));
+    painter.drawPixmap(-rect.width()/2, -rect.height()/2, rect.width(), rect.height(), pix->scaled(pix->width(),pix->height(),Qt::KeepAspectRatio));
 
     QPainterPath pp;
     pp.addEllipse(rect);
@@ -170,19 +175,16 @@ void Pfd::paintYaw(QRect rect, QPointF center) {
     painter.setRenderHint(QPainter::Antialiasing);
     painter.translate(center);
     painter.setPen(Qt::NoPen);
-    painter.setBrush(QBrush(QColor("#986701")));
+    painter.setBrush(QBrush(QColor("#000000")));
     painter.drawEllipse(rect);
 
-    QPen pen = QPen(Qt::black, 2, Qt::DashDotLine);
-    painter.setPen(pen);
-    QLine line = QLine(rect.left()+border_stroke, 0 , rect.right()-border_stroke , 0);
-    painter.drawLine(line);
+    QRect rect_rose = QRect(rect.left() + border_stroke, rect.top() + border_stroke, rect.width()-2*border_stroke, rect.height()-2*border_stroke);
+    QPixmap rose(":/pictures/wind_rose.svg");
+    painter.drawPixmap(rect_rose, rose);
 
-    QPixmap pix(":/pictures/pfd_aircraft_yaw.svg");
-
-    //painter.translate(rect.center());
-    painter.rotate(yaw);
-    painter.drawPixmap(-rect.width()/2, -rect.height()/2, rect.width(), rect.height(), pix.scaled(pix.width(),pix.height(),Qt::KeepAspectRatio));
+    QPixmap* pix = getIcon(YAW);
+    painter.rotate(static_cast<double>(yaw));
+    painter.drawPixmap(-rect.width()/2, -rect.height()/2, rect.width(), rect.height(), pix->scaled(pix->width(),pix->height(),Qt::KeepAspectRatio));
 
     QPainterPath pp;
     pp.addEllipse(rect);
@@ -253,16 +255,14 @@ QRect Pfd::placeRect(int i) {
 
     if(i==0) {
         double sizeA = side*0.8;
-        return QRect(-sizeA/2,-sizeA/2, sizeA, sizeA);
+        return QRect(static_cast<int>(-sizeA/2),static_cast<int>(-sizeA/2), static_cast<int>(sizeA), static_cast<int>(sizeA));
     } else if(i==1) {
         double sizeB = side*0.35;
-        return QRect(-sizeB/2,-sizeB/2, sizeB, sizeB);
+        return QRect(static_cast<int>(-sizeB/2),static_cast<int>(-sizeB/2), static_cast<int>(sizeB), static_cast<int>(sizeB));
     } else {
         double sizeC = side*0.35;
-        return QRect(-sizeC/2,-sizeC/2, sizeC, sizeC);
+        return QRect(static_cast<int>(-sizeC/2),static_cast<int>(-sizeC/2), static_cast<int>(sizeC), static_cast<int>(sizeC));
     }
-
-    throw runtime_error("PFD place do not exist!");
 }
 
 QPointF Pfd::placeCenter(int i) {
@@ -276,20 +276,44 @@ QPointF Pfd::placeCenter(int i) {
         return QPointF(pfd_rect.left() + sizeA/2, pfd_rect.center().y());
     } else if(i==1) {
         double sizeB = side*0.35;
-        QRect rectB = QRect(-sizeB/2,-sizeB/2, sizeB, sizeB);
+        QRect rectB = QRect(static_cast<int>(-sizeB/2), static_cast<int>(-sizeB/2), static_cast<int>(sizeB), static_cast<int>(sizeB));
         return pfd_rect.topRight()-rectB.topRight();
     } else {
         double sizeC = side*0.35;
-        QRect rectC = QRect(-sizeC/2,-sizeC/2, sizeC, sizeC);
+        QRect rectC = QRect(static_cast<int>(-sizeC/2),static_cast<int>(-sizeC/2), static_cast<int>(sizeC), static_cast<int>(sizeC));
         return pfd_rect.bottomRight() - rectC.bottomRight();
     }
+}
 
-    throw runtime_error("PFD place do not exist!");
+QPixmap* Pfd::getIcon(Axis axis) {
+    string firmware = AircraftManager::get()->getAircraft(current_ac).getAirframe().getFirmware();
+    if(firmware == "fixedwing") {
+        switch (axis) {
+        case ROLL:
+            return &pix_roll_fixedwing;
+        case PITCH:
+            return &pix_pitch_fixedwing;
+        case YAW:
+            return &pix_yaw_fixedwing;
+        }
+    } else if(firmware == "rotorcraft") {
+        switch (axis) {
+        case ROLL:
+            return &pix_roll_rotorcraft;
+        case PITCH:
+            return &pix_pitch_rotorcraft;
+        case YAW:
+            return &pix_yaw_rotorcraft;
+        }
+    } else {
+        throw runtime_error("[PFD] firmware not supported yet!");
+    }
+    return nullptr;
 }
 
 QSize Pfd::sizeHint() const
 {
-    return QSize(200, 200);
+    return QSize(300, 300);
 }
 
 QSize Pfd::minimumSizeHint() const

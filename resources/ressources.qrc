@@ -20,5 +20,9 @@
         <file>pictures/pfd_aircraft_pitch.svg</file>
         <file>pictures/pfd_aircraft_roll.svg</file>
         <file>pictures/pfd_aircraft_yaw.svg</file>
+        <file>pictures/wind_rose.svg</file>
+        <file>pictures/pfd_aircraft_pitch_rotorcraft.svg</file>
+        <file>pictures/pfd_aircraft_roll_rotorcraft.svg</file>
+        <file>pictures/pfd_aircraft_yaw_rotorcraft.svg</file>
     </qresource>
 </RCC>

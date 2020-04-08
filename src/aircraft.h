@@ -20,6 +20,7 @@ public:
     FlightPlan& getFlightPlan() {return flight_plan;}
     //SettingMenu& getSettingMenu() {return setting_menu;}
     shared_ptr<SettingMenu> getSettingMenu() {return setting_menu;}
+    Airframe& getAirframe() {return airframe;}
 
     Point2DLatLon getPosition() {return position;}
     void setPosition(Point2DLatLon pos) {position = pos;}

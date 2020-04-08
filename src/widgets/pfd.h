@@ -32,6 +32,8 @@ protected:
     void paintYaw(QRect rect, QPointF center);
 
 
+
+
 signals:
 
 public slots:
@@ -49,12 +51,21 @@ private:
     QRect placeRect(int i);
     QPointF placeCenter(int i);
 
+    QPixmap* getIcon(Axis axis);
 
 
     Axis places[3];
     std::map<QString, struct Eulers> eulers;
 
     QString current_ac;
+
+    QPixmap pix_roll_fixedwing;
+    QPixmap pix_pitch_fixedwing;
+    QPixmap pix_yaw_fixedwing;
+
+    QPixmap pix_roll_rotorcraft;
+    QPixmap pix_pitch_rotorcraft;
+    QPixmap pix_yaw_rotorcraft;
 
     int border_stroke;
 

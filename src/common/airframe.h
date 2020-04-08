@@ -28,6 +28,7 @@ public:
     Airframe();
     Airframe(std::string uri);
 
+    string getFirmware() {return firmware;}
     string getIconName();
 
 private:
