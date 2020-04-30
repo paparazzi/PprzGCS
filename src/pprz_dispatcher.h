@@ -38,6 +38,7 @@ signals:
     void segment_status(pprzlink::Message);
     void engine_status(pprzlink::Message);
     void waypoint_moved(pprzlink::Message);
+    void dl_values(pprzlink::Message);
 
 
 public slots:

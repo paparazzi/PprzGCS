@@ -133,6 +133,17 @@ void PprzDispatcher::start() {
             }
     });
 
+    link->BindMessage(dict->getDefinition("DL_VALUES"),
+        [=](std::string ac_id, pprzlink::Message msg) {
+            (void)ac_id;
+            std::string id;
+            msg.getField("ac_id", id);
+
+            if(AircraftManager::get()->aircraftExists(id.c_str())) {
+                emit(dl_values(msg));
+            }
+        }
+    );
 
 
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint,

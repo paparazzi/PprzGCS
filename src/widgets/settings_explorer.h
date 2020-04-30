@@ -5,6 +5,10 @@
 #include <vector>
 #include <memory>
 #include "setting_menu.h"
+#include <QVBoxLayout>
+#include <QTabWidget>
+#include "double_slider.h"
+#include "pprz_dispatcher.h"
 
 namespace Ui {
 class SettingsExplorer;
@@ -23,17 +27,17 @@ protected:
 
 private:
     void handleNewAC(QString ac_id);
-    void updateMenu();
-    void handleRowChanged(int row);
+    void populateTab(QTabWidget* tab, shared_ptr<SettingMenu> settings, QString ac_id);
+    void fillSetting(shared_ptr<Setting> setting, QString ac_id, QGridLayout* lay, QWidget* parent);
+    void updateSettings(pprzlink::Message msg);
     Ui::SettingsExplorer *ui;
-
-    std::shared_ptr<SettingMenu> lastMenu;
-
-    //std::shared_ptr<QMetaObject::Connection> conn;
 
     std::map<int, QString> ac_ids;
     std::map<int, QColor> colors;
-    std::map<QString, std::vector<size_t>> path;
+
+    std::map<shared_ptr<Setting>, std::function<void(double)>> label_setters;
+    std::map<shared_ptr<Setting>, std::function<void(double)>> setters;
+    std::map<shared_ptr<Setting>, bool> initialized;
 };
 
 #endif // SETTINGS_EXPLORER_H

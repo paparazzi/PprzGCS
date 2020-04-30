@@ -70,6 +70,9 @@ set(SOURCE
 
 
     src/widgets/basics/imagebutton.cpp
+    src/widgets/basics/double_slider.cpp
+    src/widgets/basics/switch.cpp
+
     src/layout_builder.cpp
     src/pprz_dispatcher.cpp
     src/pprzmain.cpp

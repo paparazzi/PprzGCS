@@ -33,6 +33,8 @@ public:
     vector<shared_ptr<StripButton>> getStripButtons() {return strip_buttons;}
     uint8_t getNo() {return setting_no;}
     string getName() { if(shortname != "") { return shortname;} else {return var;}}
+    vector<string>& getValues() {return values;}
+    tuple<float, float, float> getBounds() {return make_tuple(min, max, step);}
 
 
     friend ostream& operator<<(ostream& os, const Setting& wp);
