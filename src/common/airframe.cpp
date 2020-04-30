@@ -94,3 +94,42 @@ string Airframe::getIconName() {
 
     return firmware;
 }
+
+float Airframe::getAltShiftPlus() {
+    for(auto s: sections) {
+        if(s.name == "GCS") {
+            for(auto d: s.defines) {
+                if(d.name == "ALT_SHIFT_PLUS") {
+                    return stof(d.value);
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+float Airframe::getAltShiftPlusPlus() {
+    for(auto s: sections) {
+        if(s.name == "GCS") {
+            for(auto d: s.defines) {
+                if(d.name == "ALT_SHIFT_PLUS_PLUS") {
+                    return stof(d.value);
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+float Airframe::getAltShiftMinus() {
+    for(auto s: sections) {
+        if(s.name == "GCS") {
+            for(auto d: s.defines) {
+                if(d.name == "ALT_SHIFT_MINUS") {
+                    return stof(d.value);
+                }
+            }
+        }
+    }
+    return 0;
+}

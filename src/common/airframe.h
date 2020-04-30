@@ -30,6 +30,9 @@ public:
 
     string getFirmware() {return firmware;}
     string getIconName();
+    float getAltShiftPlus();
+    float getAltShiftPlusPlus();
+    float getAltShiftMinus();
 
 private:
     string name;
