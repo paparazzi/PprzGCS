@@ -238,13 +238,13 @@ void Pfd::changeCurrentAC(QString id) {
 
 void Pfd::updateEulers(pprzlink::Message msg) {
     std::string ac_id;
-    float roll, pitch, course;
+    float roll, pitch, heading;
     msg.getField("ac_id", ac_id);
     if(AircraftManager::get()->aircraftExists(ac_id.c_str())) {
         msg.getField("roll", roll);
         msg.getField("pitch", pitch);
-        msg.getField("course", course);
-        eulers[ac_id.c_str()] = Eulers {roll, pitch, course};
+        msg.getField("heading", heading);
+        eulers[ac_id.c_str()] = Eulers {roll, pitch, heading};
         update();
     }
 }

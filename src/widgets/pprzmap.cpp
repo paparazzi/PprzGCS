@@ -188,11 +188,11 @@ void PprzMap::setEditorMode() {
 
 void PprzMap::updateAircraftItem(pprzlink::Message msg) {
     std::string ac_id;
-    float lat, lon, course;
+    float lat, lon, heading;
     msg.getField("ac_id", ac_id);
     msg.getField("lat", lat);
     msg.getField("long", lon);
-    msg.getField("course", course);
+    msg.getField("heading", heading);
 
     QString id = QString(ac_id.c_str());
     AircraftItem* ai;
@@ -206,7 +206,7 @@ void PprzMap::updateAircraftItem(pprzlink::Message msg) {
     }
     Point2DLatLon pos(static_cast<double>(lat), static_cast<double>(lon));
     ai->setPosition(pos);
-    ai->setHeading(static_cast<double>(course));
+    ai->setHeading(static_cast<double>(heading));
     AircraftManager::get()->getAircraft(id).setPosition(pos);
 }
 

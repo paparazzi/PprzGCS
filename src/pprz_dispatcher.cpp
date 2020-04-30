@@ -9,7 +9,7 @@ using namespace std;
 
 PprzDispatcher* PprzDispatcher::singleton = nullptr;
 
-Q_DECLARE_METATYPE(pprzlink::Message);
+Q_DECLARE_METATYPE(pprzlink::Message)
 
 PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(false), started(false)
 {
