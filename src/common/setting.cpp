@@ -14,6 +14,9 @@ Setting::Setting(XMLElement* setel, uint8_t& setting_no) : setting_no(setting_no
     max = stof(setel->Attribute("max"));
     step = stof(setel->Attribute("step"));
 
+    last_values[0] = min;
+    last_values[1] = min;
+
     //shortname
     const char* shortname_p = setel->Attribute("shortname");
     if(shortname_p != nullptr) {

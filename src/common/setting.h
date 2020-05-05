@@ -35,6 +35,11 @@ public:
     string getName() { if(shortname != "") { return shortname;} else {return var;}}
     vector<string>& getValues() {return values;}
     tuple<float, float, float> getBounds() {return make_tuple(min, max, step);}
+    void setValue(float v) {
+        last_values[1] = last_values[0];
+        last_values[0] = v;
+    }
+    float getPreviousValue() {return last_values[1];}
 
 
     friend ostream& operator<<(ostream& os, const Setting& wp);
@@ -60,6 +65,8 @@ private:
 
     vector<shared_ptr<KeyPress>> key_presses;
     vector<shared_ptr<StripButton>> strip_buttons;
+
+    float last_values[2];
 };
 
 #endif // SETTING_H

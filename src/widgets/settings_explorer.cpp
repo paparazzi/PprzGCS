@@ -12,6 +12,7 @@
 #include <QGroupBox>
 #include <QRadioButton>
 #include <switch.h>
+#include <QToolButton>
 
 SettingsExplorer::SettingsExplorer(QWidget *parent) :
     QWidget(parent),
@@ -92,9 +93,15 @@ void SettingsExplorer::fillSetting(shared_ptr<Setting> setting, QString ac_id, Q
     QPushButton* value_btn = new QPushButton("?", parent);
     value_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     lay->addWidget(value_btn, lay->rowCount()-1, 1);
-    QPushButton* ok_btn = new QPushButton(QString::fromUtf8("\xE2\x9C\x93"), parent);
+    auto ok_btn = new QToolButton(parent);
+    ok_btn->setText(QString::fromUtf8("\xE2\x9C\x93"));
     ok_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     lay->addWidget(ok_btn, lay->rowCount()-1, 3);
+
+    auto undo_btn = new QToolButton(parent);
+    undo_btn->setText(QString::fromUtf8("\xE2\x86\xA9"));
+    undo_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    lay->addWidget(undo_btn, lay->rowCount()-1, 4);
 
     connect(value_btn, &QPushButton::clicked, [=]() {
         qDebug() << "setting " << setting->getNo() << " of AC " << ac_id << " clicked !";
@@ -103,6 +110,14 @@ void SettingsExplorer::fillSetting(shared_ptr<Setting> setting, QString ac_id, Q
         getSetting.addField("ac_id", ac_id.toStdString());
         getSetting.addField("index", setting->getNo());
         PprzDispatcher::get()->sendMessage(getSetting);
+    });
+
+    connect(undo_btn, &QToolButton::clicked, [=]() {
+        pprzlink::Message dlSetting(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
+        dlSetting.addField("ac_id", ac_id.toStdString());
+        dlSetting.addField("index", setting->getNo());
+        dlSetting.addField("value", setting->getPreviousValue());
+        PprzDispatcher::get()->sendMessage(dlSetting);
     });
 
     initialized[setting] = false;
@@ -120,11 +135,13 @@ void SettingsExplorer::fillSetting(shared_ptr<Setting> setting, QString ac_id, Q
         setters[setting] = [combo](double value) {combo->setCurrentIndex(static_cast<int>(value));};
         label_setters[setting] = [combo, value_btn](double value) {value_btn->setText(combo->itemText(static_cast<int>(value)));};
 
-        connect(ok_btn, &QPushButton::clicked, [=]() {
+        connect(ok_btn, &QToolButton::clicked, [=]() {
+            float value = static_cast<float>(combo->currentIndex());
+            setting->setValue(value);
             pprzlink::Message dlSetting(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
             dlSetting.addField("ac_id", ac_id.toStdString());
             dlSetting.addField("index", setting->getNo());
-            dlSetting.addField("value", static_cast<float>(combo->currentIndex()));
+            dlSetting.addField("value", value);
             PprzDispatcher::get()->sendMessage(dlSetting);
         });
 
@@ -156,13 +173,15 @@ void SettingsExplorer::fillSetting(shared_ptr<Setting> setting, QString ac_id, Q
             value_btn->setText(txt);
         };
 
-        connect(ok_btn, &QPushButton::clicked, [=]() {
+        connect(ok_btn, &QToolButton::clicked, [=]() {
+            float value = static_cast<float>(sw->isChecked());
+            setting->setValue(value);
             pprzlink::Message dlSetting(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
             dlSetting.addField("ac_id", ac_id.toStdString());
             dlSetting.addField("index", setting->getNo());
 
             qDebug() << sw->isChecked() << " " << setting->getNo();
-            dlSetting.addField("value", static_cast<float>(sw->isChecked())); //TODO
+            dlSetting.addField("value", value); //TODO
             PprzDispatcher::get()->sendMessage(dlSetting);
         });
 
@@ -174,7 +193,8 @@ void SettingsExplorer::fillSetting(shared_ptr<Setting> setting, QString ac_id, Q
         uniq_val->setAlignment(Qt::AlignCenter);
         lay->addWidget(uniq_val, lay->rowCount()-1, 2);
 
-        connect(ok_btn, &QPushButton::clicked, [=]() {
+        connect(ok_btn, &QToolButton::clicked, [=]() {
+            setting->setValue(value);
             pprzlink::Message dlSetting(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
             dlSetting.addField("ac_id", ac_id.toStdString());
             dlSetting.addField("index", setting->getNo());
@@ -205,11 +225,13 @@ void SettingsExplorer::fillSetting(shared_ptr<Setting> setting, QString ac_id, Q
         vbox->addWidget(slider);
         lay->addLayout(vbox, lay->rowCount()-1, 2);
 
-        connect(ok_btn, &QPushButton::clicked, [=]() {
+        connect(ok_btn, &QToolButton::clicked, [=]() {
+            float value = static_cast<float>(slider->doubleValue());
+            setting->setValue(value);
             pprzlink::Message dlSetting(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
             dlSetting.addField("ac_id", ac_id.toStdString());
             dlSetting.addField("index", setting->getNo());
-            dlSetting.addField("value", static_cast<float>(slider->doubleValue()));
+            dlSetting.addField("value", value);
             PprzDispatcher::get()->sendMessage(dlSetting);
         });
     }
@@ -258,6 +280,9 @@ void SettingsExplorer::updateSettings(pprzlink::Message msg) {
             assert(settings[i]->getNo() == static_cast<uint8_t>(i));
             label_setters[settings[i]](s);
             if(!initialized[settings[i]]) {
+                //initialize last values.
+                settings[i]->setValue(s);
+                settings[i]->setValue(s);
                 setters[settings[i]](s);
                 initialized[settings[i]] = true;
             }
