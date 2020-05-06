@@ -1,25 +1,44 @@
 #ifndef STRIP_H
 #define STRIP_H
 
-#include <QWidget>
-
-namespace Ui {
-class Strip;
-}
+#include <QtWidgets>
+#include "pprz_dispatcher.h"
+#include "graphlabel.h"
+#include "jaugelabel.h"
+#include "colorlabel.h"
 
 class Strip : public QWidget
 {
     Q_OBJECT
-
 public:
-    explicit Strip(QWidget *parent = nullptr);
-    ~Strip();
+    explicit Strip(QString ac_id, QWidget *parent = nullptr);
+
+signals:
+
+public slots:
+
+protected:
+    void paintEvent(QPaintEvent*) override;
 
 private:
-    Ui::Strip *ui;
+    void updateEngineStatus(pprzlink::Message msg);
+    void updateApStatus(pprzlink::Message msg);
+    void updateFlightParams(pprzlink::Message msg);
+    void updateTelemetryStatus(pprzlink::Message msg);
 
-private slots:
-    void changeColor(QString ac_id);
+    QString _ac_id;
+    QVBoxLayout* layout;
+    QVBoxLayout* lay_bat_link;
+    QHBoxLayout* lay_head;
+    QHBoxLayout* lay_body;
+    QVBoxLayout* lay_status;
+    GraphLabel* bat_graph;
+    JaugeLabel* throttle_label;
+    JaugeLabel* speed_label;
+    ColorLabel* link_label;
+    ColorLabel* ap_mode_label;
+    ColorLabel* gps_mode_label;
+    QLabel* flight_time_label;
 };
 
 #endif // STRIP_H

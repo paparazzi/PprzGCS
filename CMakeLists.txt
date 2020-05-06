@@ -29,7 +29,6 @@ add_subdirectory(${PPRZLINK_PATH} pprzlink)
 set(SOURCE
     ${SOURCE}
     src/main.cpp
-    src/widgets/strip.ui
     src/widgets/strip.cpp
     src/widgets/ac_selector.ui
     src/widgets/ac_selector.cpp
@@ -37,6 +36,7 @@ set(SOURCE
     src/widgets/settings_explorer.cpp
     src/widgets/pprzmap.cpp
     src/widgets/pfd.cpp
+    src/widgets/strips.cpp
 
     src/widgets/pprzmap.ui
     src/widgets/map/tileprovider.cpp
@@ -72,6 +72,9 @@ set(SOURCE
     src/widgets/basics/imagebutton.cpp
     src/widgets/basics/double_slider.cpp
     src/widgets/basics/switch.cpp
+    src/widgets/basics/graphlabel.cpp
+    src/widgets/basics/jaugelabel.cpp
+    src/widgets/basics/colorlabel.cpp
 
     src/layout_builder.cpp
     src/pprz_dispatcher.cpp

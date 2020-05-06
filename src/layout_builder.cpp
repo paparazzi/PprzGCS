@@ -6,7 +6,7 @@
 #include <QMainWindow>
 #include <iostream>
 #include "pprzmain.h"
-#include "strip.h"
+#include "strips.h"
 #include "pprzmap.h"
 #include "ac_selector.h"
 #include "settings_explorer.h"
@@ -56,7 +56,7 @@ QWidget* rec_build(QDomNode &node, QSplitter* parent, int* size) {
 
             QWidget* widget;
             if (name == "strips") {
-                widget = new Strip(parent);
+                widget = new Strips(parent);
             } else if (name == "alarms") {
                 widget = new ACSelector(parent);
             } else if(name == "map2d") {
