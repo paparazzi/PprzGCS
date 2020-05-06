@@ -23,6 +23,19 @@ PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(fa
 
 }
 
+void PprzDispatcher::bindDeftoSignal(std::string const &name, sig_ptr_t sig) {
+    link->BindMessage(dict->getDefinition(name),
+        [=](std::string ac_id, pprzlink::Message msg) {
+            (void)ac_id;
+            std::string id;
+            msg.getField("ac_id", id);
+
+            if(AircraftManager::get()->aircraftExists(id.c_str())) {
+                emit((this->*sig)(msg));
+            }
+        }
+    );
+}
 
 void PprzDispatcher::requestConfig(std::string ac_id) {
     assert(started);
@@ -47,6 +60,7 @@ void PprzDispatcher::sendMessage(pprzlink::Message msg) {
 
 
 void PprzDispatcher::start() {
+
     link->BindMessage(dict->getDefinition("FLIGHT_PARAM"),
         [=](std::string ac_id, pprzlink::Message msg) {
             (void)ac_id;
@@ -63,64 +77,6 @@ void PprzDispatcher::start() {
         }
     );
 
-    link->BindMessage(dict->getDefinition("AP_STATUS"),
-        [=](std::string ac_id, pprzlink::Message msg) {
-            (void)ac_id;
-            std::string id;
-            msg.getField("ac_id", id);
-
-            if(AircraftManager::get()->aircraftExists(id.c_str())) {
-                emit(ap_status(msg));
-            }
-        }
-    );
-
-    link->BindMessage(dict->getDefinition("NAV_STATUS"),
-        [=](std::string ac_id, pprzlink::Message msg) {
-            (void)ac_id;
-            std::string id;
-            msg.getField("ac_id", id);
-
-            if(AircraftManager::get()->aircraftExists(id.c_str())) {
-                emit(nav_status(msg));
-            }
-        }
-    );
-
-    link->BindMessage(dict->getDefinition("CIRCLE_STATUS"),
-        [=](std::string ac_id, pprzlink::Message msg) {
-            (void)ac_id;
-            std::string id;
-            msg.getField("ac_id", id);
-            if(AircraftManager::get()->aircraftExists(id.c_str())) {
-                emit(circle_status(msg));
-            }
-        }
-    );
-
-    link->BindMessage(dict->getDefinition("SEGMENT_STATUS"),
-        [=](std::string ac_id, pprzlink::Message msg) {
-            (void)ac_id;
-            std::string id;
-            msg.getField("ac_id", id);
-            if(AircraftManager::get()->aircraftExists(id.c_str())) {
-                emit(segment_status(msg));
-            }
-        }
-    );
-
-    link->BindMessage(dict->getDefinition("ENGINE_STATUS"),
-        [=](std::string ac_id, pprzlink::Message msg) {
-            (void)ac_id;
-            std::string id;
-            msg.getField("ac_id", id);
-            if(AircraftManager::get()->aircraftExists(id.c_str())) {
-                emit(engine_status(msg));
-            }
-        }
-    );
-
-
     link->BindMessage(dict->getDefinition("WAYPOINT_MOVED"),
         [=](std::string ac_id, pprzlink::Message msg) {
             (void)ac_id;
@@ -133,17 +89,13 @@ void PprzDispatcher::start() {
             }
     });
 
-    link->BindMessage(dict->getDefinition("DL_VALUES"),
-        [=](std::string ac_id, pprzlink::Message msg) {
-            (void)ac_id;
-            std::string id;
-            msg.getField("ac_id", id);
-
-            if(AircraftManager::get()->aircraftExists(id.c_str())) {
-                emit(dl_values(msg));
-            }
-        }
-    );
+    bindDeftoSignal("AP_STATUS", &PprzDispatcher::ap_status);
+    bindDeftoSignal("NAV_STATUS", &PprzDispatcher::nav_status);
+    bindDeftoSignal("CIRCLE_STATUS", &PprzDispatcher::circle_status);
+    bindDeftoSignal("SEGMENT_STATUS", &PprzDispatcher::segment_status);
+    bindDeftoSignal("ENGINE_STATUS", &PprzDispatcher::engine_status);
+    bindDeftoSignal("DL_VALUES", &PprzDispatcher::dl_values);
+    bindDeftoSignal("TELEMETRY_STATUS", &PprzDispatcher::telemetry_status);
 
 
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint,

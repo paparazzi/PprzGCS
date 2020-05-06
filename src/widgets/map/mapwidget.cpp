@@ -61,14 +61,6 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), pa
     setZoom(17);
     centerLatLon(Point2DLatLon(43.462344,1.273044));
 
-    connect(
-        PprzDispatcher::get(), &PprzDispatcher::gps,
-        [=](pprzlink::Message msg) {
-        (void) msg;
-            qDebug() << "msg recu !";
-        }
-    );
-
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &MapWidget::handleNewAC);
 
 }

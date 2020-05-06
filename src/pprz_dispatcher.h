@@ -27,10 +27,6 @@ public:
     std::shared_ptr<pprzlink::MessageDictionary> getDict() {return dict;}
 
 signals:
-    void gps(pprzlink::Message);
-    void alive(pprzlink::Message);
-    void takeoff(pprzlink::Message);
-    void attitude(pprzlink::Message);
     void flight_param(pprzlink::Message);
     void ap_status(pprzlink::Message);
     void nav_status(pprzlink::Message);
@@ -39,13 +35,17 @@ signals:
     void engine_status(pprzlink::Message);
     void waypoint_moved(pprzlink::Message);
     void dl_values(pprzlink::Message);
+    void telemetry_status(pprzlink::Message);
 
 
 public slots:
 
 private:
 
+    using sig_ptr_t = decltype(&PprzDispatcher::flight_param);
+
     void requestConfig(std::string ac_id);
+    void bindDeftoSignal(std::string const &name, sig_ptr_t sig);
 
     std::shared_ptr<pprzlink::MessageDictionary> dict;
     std::unique_ptr<pprzlink::IvyLink> link;
