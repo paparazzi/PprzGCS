@@ -33,26 +33,17 @@ QString TileProvider::tilePath(Point2DTile coor) {
         throw std::runtime_error("Tiles path not set!");
     }
     QString path = tiles_path + "/" + config.dir + "/" +
-            QString::number(coor.zoom()) + "/X" + QString::number(coor.xi()) +
-            "_Y" + QString::number(coor.yi()) + config.format;
+            QString::number(coor.zoom()) + "/" +
+            QString::number(coor.xi()) + "/" +
+            QString::number(coor.yi()) + config.format;
     return path;
 }
 
 QUrl TileProvider::tileUrl(Point2DTile coor) {
-    char url[URL_MAX_LEN];
-    int args[3];
-
-    if(URL_MAX_LEN - config.addr.length() < 30) {
-        throw "URL too long!";
-    }
-
-    args[config.posX] = coor.xi();
-    args[config.posY] = coor.yi();
-    args[config.posZoom] = coor.zoom();
-    int written = snprintf(url, URL_MAX_LEN, config.addr.toStdString().c_str(), args[0], args[1], args[2]);
-    if(written >= URL_MAX_LEN) {
-        throw "URL too long!";
-    }
+    QString url = config.addr;
+    url.replace("{x}", QString::number(coor.xi()));
+    url.replace("{y}", QString::number(coor.yi()));
+    url.replace("{z}", QString::number(coor.zoom()));
     return QUrl(url);
 }
 

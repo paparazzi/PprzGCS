@@ -117,9 +117,6 @@ void Map2D::loadConfig(QString filename) {
                 setName(name).
                 setDir(ele.attribute("dir")).
                 setAddr(ele.attribute("addr")).
-                setPosZoom(ele.attribute("posZoom").toInt()).
-                setPosX(ele.attribute("posX").toInt()).
-                setPosY(ele.attribute("posY").toInt()).
                 setZoomMin(zoomMin).
                 setZoomMax(zoomMax).
                 setXMin(xMin).

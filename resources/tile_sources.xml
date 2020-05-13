@@ -1,64 +1,56 @@
 <sources>
 	<source
 	    name="Google" dir="GOOGLE"
-            addr="http://khms3.google.com/kh/v=863?x=%d&amp;y=%d&amp;z=%d"
-	    posZoom="2" posX="0" posY="1"
+            addr="http://khms3.google.com/kh/v=863?x={x}&amp;y={y}&amp;z={z}"
 	    zoomMin="0" zoomMax="19"
 	    tileSize="256"
 	    format=".jpeg"
 	/>
         <source
             name="Google Hybrid" dir="GOOGLE_HYBRID"
-            addr="https://mt1.google.com/vt/lyrs=y&amp;x=%d&amp;y=%d&amp;z=%d"
-            posZoom="2" posX="0" posY="1"
+            addr="https://mt1.google.com/vt/lyrs=y&amp;x={x}&amp;y={y}&amp;z={z}"
             zoomMin="0" zoomMax="19"
             tileSize="256"
             format=".jpeg"
         />
 	<source
 	    name="Watercolor" dir="OSM_STAMEN"
-	    addr="http://c.tile.stamen.com/watercolor/%d/%d/%d.jpg"
-	    posZoom="0" posX="1" posY="2"
+            addr="http://c.tile.stamen.com/watercolor/{z}/{x}/{y}.jpg"
 	    zoomMin="0" zoomMax="19"
 	    tileSize="256"
 	    format=".jpg"
 	/>
         <source
             name="ICAO" dir="ICAO"
-            addr="http://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI&amp;style=normal&amp;tilematrixset=PM&amp;Service=WMTS&amp;Request=GetTile&amp;Version=1.0.0&amp;Format=image%%2Fjpeg&amp;TileMatrix=%d&amp;TileCol=%d&amp;TileRow=%d"
-            posZoom="0" posX="1" posY="2"
+            addr="http://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN-OACI&amp;style=normal&amp;tilematrixset=PM&amp;Service=WMTS&amp;Request=GetTile&amp;Version=1.0.0&amp;Format=image%%2Fjpeg&amp;TileMatrix={z}&amp;TileCol={x}&amp;TileRow={y}"
             zoomMin="6" zoomMax="11" xMin="29" xMax="34" yMin="21" yMax="24"
             tileSize="256"
             format=".jpeg"
         />
         <source
             name="DroneRestrict" dir="FR_UAV_RESTRICT"
-            addr="http://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=TRANSPORTS.DRONES.RESTRICTIONS&amp;style=normal&amp;tilematrixset=PM&amp;Service=WMTS&amp;Request=GetTile&amp;Version=1.0.0&amp;Format=image%%2Fpng&amp;TileMatrix=%d&amp;TileCol=%d&amp;TileRow=%d"
-            posZoom="0" posX="1" posY="2"
+            addr="http://wxs.ign.fr/an7nvfzojv5wa96dsga5nk8w/geoportail/wmts?layer=TRANSPORTS.DRONES.RESTRICTIONS&amp;style=normal&amp;tilematrixset=PM&amp;Service=WMTS&amp;Request=GetTile&amp;Version=1.0.0&amp;Format=image%%2Fpng&amp;TileMatrix={z}&amp;TileCol={x}&amp;TileRow={y}"
             zoomMin="7" zoomMax="14" xMin="60" xMax="67" yMin="42" yMax="47"
             tileSize="256"
             format=".png"
         />
         <source
             name="OpenStreetMap" dir="OSM_CLASSIC"
-            addr="http://tile.openstreetmap.org/%d/%d/%d.png"
-            posZoom="0" posX="1" posY="2"
+            addr="http://tile.openstreetmap.org/{z}/{x}/{y}.png"
             zoomMin="0" zoomMax="19"
             tileSize="256"
             format=".png"
         />
         <source
             name="Hiking" dir="HIKING"
-            addr="http://tile.waymarkedtrails.org/hiking/%d/%d/%d.png"
-            posZoom="0" posX="1" posY="2"
+            addr="http://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png"
             zoomMin="0" zoomMax="19"
             tileSize="256"
             format=".png"
         />
         <source
             name="Dark Matter" dir="DARK_MATTER"
-            addr="http://cartodb-basemaps-d.global.ssl.fastly.net/dark_all/%d/%d/%d.png"
-            posZoom="0" posX="1" posY="2"
+            addr="http://cartodb-basemaps-d.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png"
             zoomMin="0" zoomMax="19"
             tileSize="256"
             format=".png"
