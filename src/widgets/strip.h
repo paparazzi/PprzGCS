@@ -25,6 +25,7 @@ private:
     void updateApStatus(pprzlink::Message msg);
     void updateFlightParams(pprzlink::Message msg);
     void updateTelemetryStatus(pprzlink::Message msg);
+    void updateFBW(pprzlink::Message msg);
 
     QString _ac_id;
     QVBoxLayout* layout;
@@ -33,10 +34,12 @@ private:
     QHBoxLayout* lay_body;
     QVBoxLayout* lay_status;
     GraphLabel* bat_graph;
+    GraphLabel* alt_graph;
     JaugeLabel* throttle_label;
     JaugeLabel* speed_label;
     ColorLabel* link_label;
     ColorLabel* ap_mode_label;
+    ColorLabel* fbw_mode_label;
     ColorLabel* gps_mode_label;
     QLabel* flight_time_label;
 };

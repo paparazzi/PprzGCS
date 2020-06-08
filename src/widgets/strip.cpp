@@ -36,6 +36,7 @@ Strip::Strip(QString ac_id, QWidget *parent) : QWidget(parent), _ac_id(ac_id)
     // get bat min and max
     //AircraftManager::get()->getAircraft(ac_id).getAirframe()
     bat_graph = new GraphLabel(8, 14, this);
+    bat_graph->setUnit("V");
     lay_bat_link->addWidget(bat_graph);
 
     link_label = new ColorLabel(this);
@@ -50,18 +51,36 @@ Strip::Strip(QString ac_id, QWidget *parent) : QWidget(parent), _ac_id(ac_id)
     ap_mode_label = new ColorLabel(this);
     ap_mode_label->setMinSize(QSize(60, 50));
     ap_mode_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    ap_mode_label->setToolTip("Navigation mode");
     status_layout->addWidget(ap_mode_label);
+
+    fbw_mode_label = new ColorLabel(this);
+    fbw_mode_label->setMinSize(QSize(60, 50));
+    fbw_mode_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    fbw_mode_label->setToolTip("Radio Command status");
+    status_layout->addWidget(fbw_mode_label);
+
 
     gps_mode_label = new ColorLabel(this);
     gps_mode_label->setMinSize(QSize(60, 50));
     gps_mode_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    gps_mode_label->setToolTip("GPS status");
     status_layout->addWidget(gps_mode_label);
+
+    alt_graph = new GraphLabel(0, 120, this);
+    alt_graph->setDualText(true);
+    alt_graph->setSecondayText("+0.0");
+    alt_graph->setPrecision(0);
+    alt_graph->setUnit("m");
+    alt_graph->setIndicator(true);
+    lay_body->addWidget(alt_graph);
 
 
     connect(PprzDispatcher::get(), &PprzDispatcher::engine_status, this, &Strip::updateEngineStatus);
     connect(PprzDispatcher::get(), &PprzDispatcher::ap_status, this, &Strip::updateApStatus);
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &Strip::updateFlightParams);
     connect(PprzDispatcher::get(), &PprzDispatcher::telemetry_status, this, &Strip::updateTelemetryStatus);
+    connect(PprzDispatcher::get(), &PprzDispatcher::fly_by_wire, this, &Strip::updateFBW);
 }
 
 
@@ -151,6 +170,20 @@ void Strip::updateFlightParams(pprzlink::Message msg) {
         msg.getField("agl", agl);
         msg.getField("airspeed", airspeed);
         speed_label->setValue(speed);
+        alt_graph->pushData(agl);
+        QString txt = QString::number(climb, 'f', 1);
+        if(climb > 0) {
+            txt = "+" + txt;
+        }
+        alt_graph->setSecondayText(txt);
+        if(abs(speed) > 0.1) {
+            alt_graph->setIndicatorAngle((climb/speed)*1.2);
+        } else if(abs(climb) > 0.01){
+            alt_graph->setIndicatorAngle(climb/abs(climb)*0.3);
+        } else {
+            alt_graph->setIndicatorAngle(0);
+        }
+
     }
 }
 
@@ -172,5 +205,26 @@ void Strip::updateTelemetryStatus(pprzlink::Message msg) {
         } else {
             link_label->setText("");
         }
+    }
+}
+
+void Strip::updateFBW(pprzlink::Message msg) {
+    std::string id;
+    msg.getField("ac_id", id);
+    if(id.c_str() == _ac_id) {
+        std::string rc_status, rc_mode;
+        msg.getField("rc_status", rc_status);
+        msg.getField("rc_mode", rc_mode);
+
+        if(rc_status == "OK") {
+            fbw_mode_label->setBrush(QColor("#7ef17e"));
+        } else if (rc_status == "LOST" || rc_status == "REALLY_LOST") {
+            fbw_mode_label->setBrush(Qt::red);
+        } else {
+            fbw_mode_label->setBrush(QColor("#ffa500"));
+        }
+
+        fbw_mode_label->setText(rc_status.c_str());
+
     }
 }

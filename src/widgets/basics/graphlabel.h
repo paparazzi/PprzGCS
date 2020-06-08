@@ -12,6 +12,14 @@ public:
     explicit GraphLabel(double min, double max, QWidget *parent = nullptr);
 
     void pushData(double value);
+    void setDualText(bool d) {dual_text = d;}
+    void setSecondayText(QString t) {secondary_text = t;}
+    void setPrecision(int p) {precision = p;}
+    void setUnit(QString u) {unit = u;}
+
+    void setIndicator(bool i) {indicator = i;}
+    void setIndicatorAngle(double angle) {indicator_angle = angle;}
+
 
     QSize minimumSizeHint() const override;
 
@@ -29,6 +37,15 @@ private:
     double min, max;
 
     QList<std::tuple<QTime, double>> data;
+    QString unit;
+
+    int precision;
+
+    bool dual_text;
+    QString secondary_text;
+
+    bool indicator;
+    double indicator_angle;
 };
 
 #endif // GRAPHLABEL_H

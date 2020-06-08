@@ -96,6 +96,7 @@ void PprzDispatcher::start() {
     bindDeftoSignal("ENGINE_STATUS", &PprzDispatcher::engine_status);
     bindDeftoSignal("DL_VALUES", &PprzDispatcher::dl_values);
     bindDeftoSignal("TELEMETRY_STATUS", &PprzDispatcher::telemetry_status);
+    bindDeftoSignal("FLY_BY_WIRE", &PprzDispatcher::fly_by_wire);
 
 
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint,

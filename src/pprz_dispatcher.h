@@ -36,6 +36,7 @@ signals:
     void waypoint_moved(pprzlink::Message);
     void dl_values(pprzlink::Message);
     void telemetry_status(pprzlink::Message);
+    void fly_by_wire(pprzlink::Message);
 
 
 public slots:

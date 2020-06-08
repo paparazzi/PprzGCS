@@ -3,6 +3,7 @@
 #include <QPaintEvent>
 #include <QDebug>
 #include <algorithm>
+#include <math.h>
 
 GraphLabel::GraphLabel(QWidget *parent) : QWidget(parent)
 {
@@ -13,7 +14,8 @@ GraphLabel::GraphLabel(QWidget *parent) : QWidget(parent)
     min = 8;
 }
 
-GraphLabel::GraphLabel(double min, double max, QWidget *parent) : QWidget (parent), min(min), max(max)
+GraphLabel::GraphLabel(double min, double max, QWidget *parent) : QWidget (parent), min(min), max(max),
+    unit(""), precision(2), dual_text(false), indicator_angle(0.0)
 {
     brushTop = QColor("#ffa500");
     brushBottom = QColor("#7ef17e");
@@ -66,8 +68,23 @@ void GraphLabel::paintEvent(QPaintEvent *e) {
     p.setFont(font);
     p.setPen(Qt::black);
     if(!data.isEmpty()) {
-        QString txt = QString::number(std::get<1>(data.last())) + "V";
-        p.drawText(QRectF(0, 0, e->rect().width(), e->rect().height()), Qt::AlignCenter, txt);
+        QString txt = QString::number(std::get<1>(data.last()), 'f', precision) + unit;
+
+        if(dual_text) {
+            p.drawText(QRectF(0, 0, e->rect().width(), e->rect().height()/2), Qt::AlignCenter, txt);
+            p.drawText(QRectF(0, e->rect().height()/2, e->rect().width(), e->rect().height()/2), Qt::AlignCenter, secondary_text);
+        } else {
+           p.drawText(QRectF(0, 0, e->rect().width(), e->rect().height()), Qt::AlignCenter, txt);
+        }
+    }
+
+    if(indicator) {
+        p.setPen(Qt::black);
+        int dx = e->rect().width() - 20;
+        int dy = dx * tan(-indicator_angle);
+        QPoint a(10, e->rect().height()/2);
+        QPoint b(a.x() + dx, a.y()+dy);
+        p.drawLine(a, b);
     }
 
 }
