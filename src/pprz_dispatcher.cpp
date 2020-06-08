@@ -122,9 +122,10 @@ void PprzDispatcher::start() {
         std::string id;
         std::stringstream ss(ac_list);
         while (std::getline(ss, id, ',')) {
-            requestConfig(id);
+            if(id != "") {
+                requestConfig(id);
+            }
         }
-
     });
 
 

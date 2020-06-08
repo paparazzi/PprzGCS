@@ -49,8 +49,9 @@ SettingsExplorer::~SettingsExplorer()
 
 void SettingsExplorer::handleNewAC(QString ac_id) {
     auto ac = AircraftManager::get()->getAircraft(ac_id);
-    ui->aircraft_combo->addItem(ac.name());
-    ac_ids[ui->aircraft_combo->count()-1] = ac_id;
+    ac_ids[ui->aircraft_combo->count()] = ac_id;
+
+
 
     auto settings = AircraftManager::get()->getAircraft(ac_id).getSettingMenu();
     QTabWidget* pageWidget = new QTabWidget(this);
@@ -59,7 +60,7 @@ void SettingsExplorer::handleNewAC(QString ac_id) {
     ui->stackedWidget->addWidget(pageWidget);
     ui->stackedWidget->setCurrentWidget(pageWidget);
 
-
+    ui->aircraft_combo->addItem(ac.name());
 }
 
 void SettingsExplorer::populateTab(QTabWidget* tab, shared_ptr<SettingMenu> settings, QString ac_id) {
@@ -238,7 +239,7 @@ void SettingsExplorer::fillSetting(shared_ptr<Setting> setting, QString ac_id, Q
 }
 
 void SettingsExplorer::paintEvent(QPaintEvent *event) {
-    if(ui->aircraft_combo->count() > 0) {
+    if(ui->aircraft_combo->count() > 0 && ac_ids[ui->aircraft_combo->currentIndex()] != "") {
         QPainter p(this);
         p.setRenderHint(QPainter::Antialiasing);
         QPainterPath path;

@@ -188,13 +188,16 @@ void MapStrip::paintEvent(QPaintEvent *event) {
 
 
 void MapStrip::mousePressEvent(QMouseEvent *event) {
-    lock = !lock;
+    if(event->button() == Qt::RightButton) {
+        lock = !lock;
+    } else if (event->button() == Qt::LeftButton) {
+        emit(DispatcherUi::get()->ac_selected(ac_id));
+    }
     QWidget::mousePressEvent(event);
 }
 
 
 void MapStrip::enterEvent(QEvent *event) {
-    emit(DispatcherUi::get()->ac_selected(ac_id));
     setExtended(true);
     QWidget::enterEvent(event);
 }
