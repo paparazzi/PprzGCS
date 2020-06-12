@@ -2,8 +2,15 @@
 #define BLOCK_H
 
 #include <string>
+#include <map>
+#include <vector>
 
 using namespace std;
+
+struct Stage {
+    string instruction;
+    map<string, string> attributes;
+};
 
 class Block
 {
@@ -21,6 +28,7 @@ public:
     string getText() {return strip_button_txt ;}
     string getKey() {return key;}
     string getGroup() {return group;}
+    vector<Stage>& getStages() {return stages;}
 
     friend ostream& operator<<(ostream& os, const Block& wp);
 
@@ -32,6 +40,8 @@ private:
     string strip_button_txt;
     string key;
     string group;
+
+    vector<Stage> stages;
 };
 
 #endif // BLOCK_H

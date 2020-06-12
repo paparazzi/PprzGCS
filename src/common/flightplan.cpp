@@ -130,9 +130,19 @@ void FlightPlan::parse_blocks(tinyxml2::XMLElement* blks) {
 }
 
 void FlightPlan::parse_block_stages(tinyxml2::XMLElement* blk, shared_ptr<Block> block) {
-    //TODO
-    (void)blk;
-    (void) block;
+    (void)block;
+    auto stel = blk->FirstChildElement();
+    while(stel != nullptr) {
+        Stage stage;
+        stage.instruction = stel->Name();
+        auto att = stel->FirstAttribute();
+        while(att != nullptr) {
+            stage.attributes[att->Name()] = att->Value();
+            att = att->Next();
+        }
+        block->getStages().push_back(stage);
+        stel = stel->NextSiblingElement();
+    }
 }
 
 shared_ptr<Waypoint> FlightPlan::getWaypoint(uint8_t id) {
