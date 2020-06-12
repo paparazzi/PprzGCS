@@ -37,6 +37,7 @@ set(SOURCE
     src/widgets/pprzmap.cpp
     src/widgets/pfd.cpp
     src/widgets/strips.cpp
+    src/widgets/flightplan_viewer.cpp
 
     src/widgets/pprzmap.ui
     src/widgets/map/tileprovider.cpp
@@ -75,6 +76,9 @@ set(SOURCE
     src/widgets/basics/graphlabel.cpp
     src/widgets/basics/jaugelabel.cpp
     src/widgets/basics/colorlabel.cpp
+    src/widgets/basics/flowlayout.cpp
+    src/widgets/basics/mbpushbutton.cpp
+    src/widgets/basics/sidepanel.cpp
 
     src/layout_builder.cpp
     src/pprz_dispatcher.cpp

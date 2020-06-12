@@ -1,10 +1,11 @@
 <layout width="1000" height="800">
-  <rows>
-      <widget name="map2d" size="600"/>
-      <columns size="400">
-          <widget name="strips"   size="100"/>
-          <widget name="settings" size="800"/>
-          <widget name="PFD" size="100"/>
-      </columns>
-  </rows>
+    <rows>
+        <columns size="100">
+            <widget name="map2d" size="800"/>
+        </columns>
+        <columns size="100">
+            <widget name="strips"   size="100"/>
+            <widget name="settings" size="800"/>
+        </columns>
+    </rows>
 </layout>

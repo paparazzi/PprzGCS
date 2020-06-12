@@ -10,6 +10,7 @@
 #include "pprzmap.h"
 #include "ac_selector.h"
 #include "settings_explorer.h"
+#include "flightplan_viewer.h"
 #include "pfd.h"
 #include <QLabel>
 
@@ -67,6 +68,8 @@ QWidget* rec_build(QDomNode &node, QSplitter* parent, int* size) {
                 widget = new SettingsExplorer(parent);
             } else if (name == "PFD") {
                 widget = new Pfd(parent);
+            } else if (name == "flight_plan") {
+                widget = new FlightPlanViewer(parent);
             } else {
                 std::string s = "Widget " + name.toStdString() + " unknown";
                 throw unknown_widget(s);
