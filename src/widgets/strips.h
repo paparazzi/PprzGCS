@@ -3,12 +3,14 @@
 
 #include <QWidget>
 #include <QStackedWidget>
+#include "configurable.h"
 
-class Strips : public QStackedWidget
+class Strips : public QStackedWidget, public Configurable
 {
     Q_OBJECT
 public:
     explicit Strips(QWidget *parent = nullptr);
+    void configure(QDomElement) {};
 
 signals:
 

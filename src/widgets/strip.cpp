@@ -46,6 +46,7 @@ Strip::Strip(QString ac_id, QWidget *parent) : QWidget(parent), _ac_id(ac_id)
     QGroupBox* gp = new QGroupBox(this);
     gp->setTitle("status");
     lay_body->addWidget(gp);
+    gp->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
     QVBoxLayout* status_layout = new QVBoxLayout(gp);
 
     ap_mode_label = new ColorLabel(this);
@@ -68,12 +69,15 @@ Strip::Strip(QString ac_id, QWidget *parent) : QWidget(parent), _ac_id(ac_id)
     status_layout->addWidget(gps_mode_label);
 
     alt_graph = new GraphLabel(0, 120, this);
+    alt_graph->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
     alt_graph->setDualText(true);
     alt_graph->setSecondayText("+0.0");
     alt_graph->setPrecision(0);
     alt_graph->setUnit("m");
     alt_graph->setIndicator(true);
     lay_body->addWidget(alt_graph);
+
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
 
     connect(PprzDispatcher::get(), &PprzDispatcher::engine_status, this, &Strip::updateEngineStatus);

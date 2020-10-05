@@ -9,12 +9,17 @@ class PprzMain : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit PprzMain(int width, int height, QWidget* centralWidget, QWidget *parent = nullptr);
-    ~PprzMain();
 
+    static PprzMain* get() {
+        if(singleton == nullptr) {
+            singleton = new PprzMain();
+        }
+        return singleton;
+    }
 
 private:
-    Gcs *ui;
+    static PprzMain* singleton;
+    explicit PprzMain(QWidget *parent = nullptr);
 
 };
 

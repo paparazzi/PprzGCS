@@ -10,6 +10,12 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
+//    QFile file(":/dark.qss");
+//    file.open(QFile::ReadOnly | QFile::Text);
+//    QTextStream stream(&file);
+//    a.setStyleSheet(stream.readAll());
+
+
     //QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     //QCoreApplication
     //QCommandLineParser
@@ -33,6 +39,16 @@ int main(int argc, char *argv[])
     a.setProperty("PPRZLINK_MESSAGES", PAPARAZZI_HOME + "/var/messages.xml");
     a.setProperty("PPRZLINK_MESSAGES", PAPARAZZI_HOME + "/var/messages.xml");
     a.setProperty("PATH_GCS_ICON", PAPARAZZI_HOME + "/data/pictures/gcs_icons");
+    a.setProperty("DEFAULT_TILE_PROVIDER", "Google");
+
+    //----- buttons bars -----
+    a.setProperty("BUTTONS_BAR_SIZE", 80);
+    a.setProperty("BUTTONS_BAR_COLOR_IDLE", "#252525");
+    a.setProperty("BUTTONS_BAR_COLOR_HOVER", "#353535");
+    a.setProperty("BUTTONS_BAR_COLOR_PRESSED", "#000000");
+    //------------------------
+
+
     a.setProperty("APP_DATA_PATH", PAPARAZZI_GCS_DATA);
     a.setProperty("MAP_MOVE_HYSTERESIS", 20);
     a.setProperty("WAYPOINTS_SIZE", 8);
@@ -54,7 +70,8 @@ int main(int argc, char *argv[])
     a.setProperty("TRACK_MAX_CHUNKS", 10);
     a.setProperty("TRACK_CHUNCK_SIZE", 20);
 
-    PprzMain* w = build_layout("://test_gcs_qt.xml");
+    QMainWindow* w = build_layout("://test_gcs_qt.xml");
+
     PprzDispatcher::get()->start();
 
     w->show();

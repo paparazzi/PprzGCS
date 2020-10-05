@@ -63,7 +63,7 @@ void FlightPlanViewer::handleNewAC(QString ac_id) {
 
     ac_combo->addItem(ac.name());
 
-    setStyleSheet("QWidget {frame: 2px}");
+    //setStyleSheet("QWidget {frame: 2px}");
 
 }
 
@@ -167,7 +167,7 @@ void FPInnerViewer::update_stage_display() {
         }
 
         stages_list->addItem(txt.c_str());
-        qDebug() << stage.instruction.c_str();
+        //qDebug() << stage.instruction.c_str();
     }
 }
 
@@ -176,7 +176,7 @@ void FPInnerViewer::paintEvent(QPaintEvent *event) {
     QSize si = blocks_layout->sizeHint();
     QPainter p(this);
     QRect rect = blocks_layout->geometry();
-    qDebug() << rect << "  " << si;
+    //qDebug() << rect << "  " << si;
 
     p.setPen(QPen(Qt::green));
     p.drawRect(rect);

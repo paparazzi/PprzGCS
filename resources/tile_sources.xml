@@ -7,6 +7,20 @@
 	    format=".jpeg"
 	/>
         <source
+            name="Muret" dir="muret"
+            addr=""
+            zoomMin="17" zoomMax="21"
+            tileSize="256"
+            format=".png"
+        />
+        <source
+            name="IMAV2019" dir="IMAV2019"
+            addr=""
+            zoomMin="14" zoomMax="21"
+            tileSize="256"
+            format=".png"
+        />
+        <source
             name="Google Hybrid" dir="GOOGLE_HYBRID"
             addr="https://mt1.google.com/vt/lyrs=y&amp;x={x}&amp;y={y}&amp;z={z}"
             zoomMin="0" zoomMax="19"

@@ -6,15 +6,13 @@
 #include <QMainWindow>
 #include <iostream>
 #include "pprzmain.h"
-#include "strips.h"
 #include "pprzmap.h"
-#include "ac_selector.h"
-#include "settings_explorer.h"
-#include "flightplan_viewer.h"
 #include "pfd.h"
 #include <QLabel>
-
+#include "gcs.h"
 #include <iostream>
+#include "configurable.h"
+#include "widget_utils.h"
 
 static const char* DEFAULT_WIDTH = "1024";
 static const char* DEFAULT_HEIGHT = "600";
@@ -55,24 +53,30 @@ QWidget* rec_build(QDomNode &node, QSplitter* parent, int* size) {
                 throw invalid_widget_name("Invalid widget name");
             }
 
-            QWidget* widget;
-            if (name == "strips") {
-                widget = new Strips(parent);
-            } else if (name == "alarms") {
-                widget = new ACSelector(parent);
-            } else if(name == "map2d") {
-                widget = new PprzMap(parent);
-            } else if (name == "aircraft" or name=="altgraph") {
-                widget = new QWidget(); // dummy widget
-            } else if (name == "settings") {
-                widget = new SettingsExplorer(parent);
-            } else if (name == "PFD") {
-                widget = new Pfd(parent);
-            } else if (name == "flight_plan") {
-                widget = new FlightPlanViewer(parent);
-            } else {
-                std::string s = "Widget " + name.toStdString() + " unknown";
-                throw unknown_widget(s);
+            QWidget* widget = makeWidget(name, parent);
+
+            for(int i=0; i<ele.childNodes().length(); i++) {
+                QDomNode node = ele.childNodes().item(i);
+                if(!node.isElement()) {
+                    continue;
+                }
+                QDomElement layout_ele = node.toElement();
+                if(layout_ele.tagName() == "configure") {
+                    Configurable* c = dynamic_cast<Configurable*>(widget);
+                    if(c == nullptr) {
+                        throw runtime_error("Class does not inherit from Configurable!!!");
+                    }
+
+                    c->configure(layout_ele);
+                } else if (layout_ele.tagName() == "horizontalLayout" || layout_ele.tagName() == "verticalLayout") {
+                    QLayout* layout = layout_rec_build(layout_ele, widget);
+                    PprzMap* map = dynamic_cast<PprzMap*>(widget);
+                    if(map) {
+                        map->setMapLayout(layout);
+                    } else {
+                        widget->setLayout(layout);
+                    }
+                }
             }
 
             if(parent != nullptr) {
@@ -87,7 +91,52 @@ QWidget* rec_build(QDomNode &node, QSplitter* parent, int* size) {
     }
 }
 
-PprzMain* build_layout(QString filename) {
+QLayout* layout_rec_build(QDomElement &ele, QWidget* parent) {
+    (void)parent;
+
+    QBoxLayout* layout;
+    if(ele.tagName() == "horizontalLayout") {
+        layout = new QHBoxLayout();
+    } else if (ele.tagName() == "verticalLayout") {
+        layout = new QVBoxLayout();
+    }
+    else {
+        throw runtime_error("layout must be either verticalLayout or horizontalLayout");
+    }
+
+    for(int i=0; i<ele.childNodes().length(); i++) {
+        QDomNode child = ele.childNodes().item(i);
+        if(!child.isElement()) {
+            throw invalid_node("layout node is not an Element.");
+        }
+        auto child_ele = child.toElement();
+        if(child_ele.tagName() == "horizontalLayout" || child_ele.tagName() == "verticalLayout") {
+            auto child_layout = layout_rec_build(child_ele, parent);
+            layout->addItem(child_layout);
+        }
+        else if(child_ele.tagName() == "widget") {
+            auto name = child_ele.attribute("name");
+            QWidget* widget = makeWidget(name, parent);
+            layout->addWidget(widget);
+        }
+        else if (child_ele.tagName() == "spacer") {
+            QSpacerItem* spacer;
+            if(child_ele.attribute("orientation") == "vertical") {
+                spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+            } else {
+                spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
+            }
+            layout->addItem(spacer);
+            int i = layout->indexOf(spacer);
+            layout->setStretch(i, 1);
+        }
+
+    }
+
+    return layout;
+}
+
+QMainWindow* build_layout(QString filename) {
     QDomDocument xmlLayout;
     QFile f(filename);
     if(!f.open(QIODevice::ReadOnly)) {
@@ -113,7 +162,9 @@ PprzMain* build_layout(QString filename) {
     int s;
     QWidget* widget = rec_build(root_node, nullptr, &s);
 
-    PprzMain *w = new PprzMain(width, height, widget);
+    auto window = PprzMain::get();
+    auto gcs = new Gcs();
+    gcs->setupUi(window, width, height, widget);
 
-    return w;
+    return window;
 }

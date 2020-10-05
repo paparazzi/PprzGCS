@@ -18,6 +18,7 @@
 #include "pathitem_sm.h"
 #include <QCursor>
 #include "AircraftManager.h"
+#include "pprzmain.h"
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
@@ -97,11 +98,18 @@ void PprzMap::registerWaypoint(WaypointItem* waypoint) {
         });
 }
 
+void PprzMap::setMapLayout(QLayout* layout) {
+    ui->map->setLayout(layout);
+}
+
 PprzMap::~PprzMap()
 {
     delete ui;
 }
 
+void PprzMap::configure(QDomElement e) {
+    ui->map->configure(e);
+}
 
 void PprzMap::keyPressEvent(QKeyEvent *event) {
     (void)event;

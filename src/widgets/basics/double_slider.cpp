@@ -43,11 +43,6 @@ void DoubleSlider::sliderChange(QAbstractSlider::SliderChange change)
     {
         QStyleOptionSlider opt;
         initStyleOption(&opt);
-
-        QRect sr = style()->subControlRect(QStyle::CC_Slider, &opt, QStyle::SC_SliderHandle, this);
-        QPoint bottomRightCorner = sr.bottomLeft();
-
-        QToolTip::showText(mapToGlobal( QPoint( bottomRightCorner.x(), bottomRightCorner.y() ) ), QString::number(doubleValue()), this);
     }
 }
 

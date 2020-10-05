@@ -1,11 +1,16 @@
 <layout width="1000" height="800">
     <rows>
-        <columns size="100">
-            <widget name="map2d" size="800"/>
-        </columns>
-        <columns size="100">
-            <widget name="strips"   size="100"/>
-            <widget name="settings" size="800"/>
-        </columns>
+            <widget name="map2d" size="800">
+                <configure>
+                    <columnLeft>
+                        <widget name="flight_plan" icon="ICAO.png"/>
+                        <widget name="settings" icon="settings.svg"/>
+                    </columnLeft>
+                    <columnRight>
+                        <widget name="PFD" icon="pfd.svg"/>
+                        <widget name="strips" icon="link_ok.svg"/>
+                    </columnRight>
+                </configure>
+            </widget>
     </rows>
 </layout>

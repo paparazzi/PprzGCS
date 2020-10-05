@@ -3,8 +3,9 @@
 
 #include <QWidget>
 #include "pprz_dispatcher.h"
+#include "configurable.h"
 
-class Pfd : public QWidget
+class Pfd : public QWidget, public Configurable
 {
     Q_OBJECT
 public:
@@ -19,6 +20,7 @@ public:
 
     QSize sizeHint() const;
     QSize minimumSizeHint() const;
+    void configure(QDomElement) {};
 
 protected:
     void paintEvent(QPaintEvent *event);

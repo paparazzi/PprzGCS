@@ -30,15 +30,15 @@ set(SOURCE
     ${SOURCE}
     src/main.cpp
     src/widgets/strip.cpp
-    src/widgets/ac_selector.ui
     src/widgets/ac_selector.cpp
-    src/widgets/settings_explorer.ui
-    src/widgets/settings_explorer.cpp
+    src/widgets/settings_viewer.cpp
+    src/widgets/settingsviewers_stack.cpp
     src/widgets/pprzmap.cpp
     src/widgets/pfd.cpp
     src/widgets/strips.cpp
     src/widgets/flightplan_viewer.cpp
-
+    src/widgets/layer_combo.cpp
+    src/widgets/widget_utils.cpp
     src/widgets/pprzmap.ui
     src/widgets/map/tileprovider.cpp
     src/widgets/map/tileproviderconfig.cpp
@@ -79,6 +79,7 @@ set(SOURCE
     src/widgets/basics/flowlayout.cpp
     src/widgets/basics/mbpushbutton.cpp
     src/widgets/basics/sidepanel.cpp
+    src/widgets/basics/lock_button.cpp
 
     src/layout_builder.cpp
     src/pprz_dispatcher.cpp

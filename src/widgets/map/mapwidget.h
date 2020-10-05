@@ -13,6 +13,8 @@
 #include "imagebutton.h"
 #include "layertab.h"
 #include <QCursor>
+#include "configurable.h"
+#include "lock_button.h"
 
 class MapItem;
 
@@ -22,7 +24,7 @@ enum PanState {
     PAN_MOVE
 };
 
-class MapWidget : public Map2D
+class MapWidget : public Map2D, public Configurable
 {
     Q_OBJECT
 public:
@@ -30,13 +32,15 @@ public:
 
     void addItem(MapItem* map_item);
     void removeItem(MapItem* item);
-    void addLayerControl(QString name, bool initialState, int z);
+    MapLayerControl* makeLayerControl(QString name, bool initialState, int z);
     virtual void setCursor(const QCursor &);
     void setPanMask(int mask) {pan_mouse_mask = mask; setMouseLoadTileMask(mask);}
     void itemsForbidHighlight(bool fh);
     void itemsEditable(bool ed);
     void updateHighlights(QString ac_id);
     MapScene* scene() {return _scene;}
+
+    void configure(QDomElement);
 
 signals:
     void mouseMoved(QPointF scenePos);
@@ -50,18 +54,29 @@ protected:
     virtual void wheelEvent(QWheelEvent* event);
 
 private:
-    void setupUi();
+
+    enum WidgetContainer {
+        WIDGETS_LEFT,
+        WIDGETS_RIGHT,
+    };
+
     void handleNewAC(QString ac_id);
+    void addLayersWidget();
+    void addWidget(QWidget* w, LockButton* button, WidgetContainer side);
 
     QList<MapItem*> _items;
 
     QHBoxLayout* horizontalLayout;
-    LayerTab* layer_tab;
+
+    //ButtonBand
+    QVBoxLayout* buttonsLeftLayout;
     QVBoxLayout* columnLeft;
-    QVBoxLayout* columnRight;
     QSpacerItem* spacer;
-    QScrollArea* leftScrollArea;
-    ImageButton* layers_button;
+    QVBoxLayout* columnRight;
+    QVBoxLayout* buttonsRightLayout;
+
+    QList<LockButton*> buttonsLeft;
+    QList<LockButton*> buttonsRight;
 
     QPoint lastPos;
     PanState pan_state;

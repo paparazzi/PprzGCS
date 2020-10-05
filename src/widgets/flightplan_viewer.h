@@ -5,12 +5,14 @@
 #include <QtWidgets>
 #include "flowlayout.h"
 #include "aircraft.h"
+#include "configurable.h"
 
-class FlightPlanViewer : public QWidget
+class FlightPlanViewer : public QWidget, public Configurable
 {
     Q_OBJECT
 public:
     explicit FlightPlanViewer(QWidget *parent = nullptr);
+    void configure(QDomElement) {};
 
 signals:
 

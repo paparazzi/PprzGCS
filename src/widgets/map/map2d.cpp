@@ -23,7 +23,7 @@ Map2D::Map2D(QString configFile, QWidget *parent) : QGraphicsView(parent), numer
     setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     setTransformationAnchor(QGraphicsView::NoAnchor);
     setResizeAnchor(QGraphicsView::AnchorViewCenter);
-    setBackgroundBrush(QBrush(Qt::darkGreen));
+    setBackgroundBrush(QBrush(QColor("#353535")));
 
     Point2DLatLon initLatLon(43.462344,1.273044);
     centerLatLon(initLatLon);

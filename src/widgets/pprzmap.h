@@ -8,6 +8,10 @@
 #include "aircraft_item.h"
 #include <pprzlink/Message.h>
 #include "coordinatestransform.h"
+#include "QScrollArea"
+#include "layer_combo.h"
+#include "maplayercontrol.h"
+#include "configurable.h"
 
 namespace Ui {
 class PprzMap;
@@ -19,7 +23,7 @@ enum InteractionState {
     PMIS_OTHER,
 };
 
-class PprzMap : public QWidget
+class PprzMap : public QWidget, public Configurable
 {
     Q_OBJECT
 
@@ -27,6 +31,9 @@ public:
     explicit PprzMap(QWidget *parent = nullptr);
     ~PprzMap();
     void registerWaypoint(WaypointItem* waypoint);
+    void setMapLayout(QLayout* layout);
+    MapLayerControl* makeLayerControl(QString name, bool initialState, int z);
+    void configure(QDomElement e);
 
 protected:
     virtual void keyPressEvent(QKeyEvent *event);
@@ -64,6 +71,8 @@ private:
     QString current_ac;
 
     CoordinatesTransform ct_wgs84_utm;
+
+    LayerCombo* layers_drop;
 };
 
 #endif // PPRZMAP_H
