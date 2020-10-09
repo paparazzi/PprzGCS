@@ -14,8 +14,7 @@ class SettingsViewer : public QWidget
 {
     Q_OBJECT
 public:
-    explicit SettingsViewer(QWidget *parent = nullptr);
-    void init(QString ac_id);
+    explicit SettingsViewer(QString ac_id, QWidget *parent = nullptr);
 
 signals:
 
@@ -28,6 +27,7 @@ protected:
     virtual void mouseReleaseEvent(QMouseEvent *e);
 
 private:
+    void init(QString ac_id);
     void create_widgets(shared_ptr<SettingMenu> setting_menu, QList<shared_ptr<SettingMenu>> stack);
     void populate_search_results(QString searched);
     void restore_searched_items();

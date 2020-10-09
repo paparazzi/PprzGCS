@@ -6,7 +6,7 @@
 #include "switch.h"
 #include <QDebug>
 
-SettingsViewer::SettingsViewer(QWidget *parent) : QWidget(parent), ac_id("")
+SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac_id)
 {
     main_layout = new QVBoxLayout(this);
     search_layout = new QHBoxLayout();
@@ -68,6 +68,7 @@ SettingsViewer::SettingsViewer(QWidget *parent) : QWidget(parent), ac_id("")
 
     connect(PprzDispatcher::get(), &PprzDispatcher::dl_values, this, &SettingsViewer::updateSettings);
 
+    init(ac_id);
 }
 
 bool SettingsViewer::eventFilter(QObject *object, QEvent *event)

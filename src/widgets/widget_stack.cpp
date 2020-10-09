@@ -1,9 +1,10 @@
-#include "settingsviewers_stack.h"
+#include "widget_stack.h"
 #include "dispatcher_ui.h"
 #include "AircraftManager.h"
 
 
-SettingsViewersStack::SettingsViewersStack(QWidget *parent) : QWidget(parent)
+WidgetStack::WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent) : QWidget(parent),
+    constructor(constructor)
 {
     vLayout = new QVBoxLayout(this);
     stack = new QStackedWidget(this);
@@ -15,7 +16,7 @@ SettingsViewersStack::SettingsViewersStack(QWidget *parent) : QWidget(parent)
 
     vLayout->addWidget(stack);
 
-    connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &SettingsViewersStack::handleNewAC);
+    connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &WidgetStack::handleNewAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this,
             [=](QString ac_id) {
                 if(viewers_indexes.keys().contains(ac_id)) {
@@ -26,9 +27,8 @@ SettingsViewersStack::SettingsViewersStack(QWidget *parent) : QWidget(parent)
     stack->setAutoFillBackground(true);
 }
 
-void SettingsViewersStack::handleNewAC(QString ac_id) {
-    auto sv = new SettingsViewer(this);
-    sv->init(ac_id);
+void WidgetStack::handleNewAC(QString ac_id) {
+    auto sv = constructor(ac_id, this);
     int index = stack->addWidget(sv);
     viewers_indexes[ac_id] = index;
 }

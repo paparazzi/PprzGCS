@@ -32,11 +32,11 @@ set(SOURCE
     src/widgets/strip.cpp
     src/widgets/ac_selector.cpp
     src/widgets/settings_viewer.cpp
-    src/widgets/settingsviewers_stack.cpp
     src/widgets/pprzmap.cpp
     src/widgets/pfd.cpp
     src/widgets/strips.cpp
     src/widgets/flightplan_viewer.cpp
+    src/widgets/widget_stack.cpp
     src/widgets/layer_combo.cpp
     src/widgets/widget_utils.cpp
     src/widgets/pprzmap.ui

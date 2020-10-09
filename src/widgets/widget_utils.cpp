@@ -5,7 +5,8 @@
 #include "pfd.h"
 #include "flightplan_viewer.h"
 #include "layer_combo.h"
-#include "settingsviewers_stack.h"
+#include "settings_viewer.h"
+#include "widget_stack.h"
 
 QWidget* makeWidget(QString name, QWidget* parent) {
     QWidget* widget = nullptr;
@@ -19,7 +20,11 @@ QWidget* makeWidget(QString name, QWidget* parent) {
     } else if (name == "aircraft" or name=="altgraph") {
         widget = new QWidget(); // dummy widget
     } else if (name == "settings") {
-        widget = new SettingsViewersStack(parent);
+        widget = new WidgetStack(
+                [](QString ac_id, QWidget* container) {
+                    return new SettingsViewer(ac_id, container);
+                },
+                parent);
     } else if (name == "PFD") {
         widget = new Pfd(parent);
     } else if (name == "flight_plan") {
