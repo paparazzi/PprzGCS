@@ -7,6 +7,7 @@
 #include "layer_combo.h"
 #include "settings_viewer.h"
 #include "widget_stack.h"
+#include "flightplan_viewerv2.h"
 
 QWidget* makeWidget(QString name, QWidget* parent) {
     QWidget* widget = nullptr;
@@ -30,6 +31,13 @@ QWidget* makeWidget(QString name, QWidget* parent) {
     } else if (name == "flight_plan") {
         widget = new FlightPlanViewer(parent);
     }
+    else if (name == "flight_planV2") {
+        widget = new WidgetStack(
+                [](QString ac_id, QWidget* container) {
+                    return new FlightPlanViewerV2(ac_id, container);
+                },
+                parent);
+        }
     else {
         std::string s = "Widget " + name.toStdString() + " unknown";
         throw runtime_error(s);

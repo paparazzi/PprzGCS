@@ -36,6 +36,7 @@ set(SOURCE
     src/widgets/pfd.cpp
     src/widgets/strips.cpp
     src/widgets/flightplan_viewer.cpp
+    src/widgets/flightplan_viewerv2.cpp
     src/widgets/widget_stack.cpp
     src/widgets/layer_combo.cpp
     src/widgets/widget_utils.cpp
