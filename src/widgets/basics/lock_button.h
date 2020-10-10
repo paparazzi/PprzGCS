@@ -10,8 +10,18 @@
 class LockButton : public QWidget
 {
     Q_OBJECT
+    Q_PROPERTY(QColor color_hover WRITE setBackgroundColorHover DESIGNABLE true)
+    Q_PROPERTY(QColor color_idle WRITE setBackgroundColor DESIGNABLE true)
+    Q_PROPERTY(QColor color_pressed WRITE setBackgroundColorPressed DESIGNABLE true)
+    Q_PROPERTY(int size WRITE setSizeProperty DESIGNABLE true)
 public:
     explicit LockButton(QIcon icon, QWidget *parent = nullptr);
+
+    void setBackgroundColorHover ( QColor c ) {_color_hover = c;}
+    void setBackgroundColor ( QColor c ){_color_idle = c;}
+    void setBackgroundColorPressed ( QColor c ){_color_pressed = c;}
+    void setSizeProperty(int s) {setSize(QSize(s,s));}
+
 
     QSize sizeHint() const;
     QSize minimumSizeHint() const;
@@ -47,7 +57,7 @@ private:
 
     State state;
 
-    QSize size;
+    QSize _size;
     QMargins icon_margins;
 
     QIcon icon;
@@ -57,9 +67,9 @@ private:
     bool _locked;
     bool active;
 
-    QColor color_idle;
-    QColor color_hover;
-    QColor color_pressed;
+    QColor _color_idle;
+    QColor _color_hover;
+    QColor _color_pressed;
 
     QRect lock_rect;
     QRect active_rect;

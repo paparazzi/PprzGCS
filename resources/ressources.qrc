@@ -29,5 +29,6 @@
         <file>dark.qss</file>
         <file>pictures/lock_dark.svg</file>
         <file>pictures/lock_warning.svg</file>
+        <file>style.qss</file>
     </qresource>
 </RCC>

@@ -8,24 +8,20 @@ LockButton::LockButton(QIcon icon, QWidget *parent) : QWidget(parent),
     state(IDLE), icon(icon), icon_lock(":/pictures/lock.svg"), icon_unlocked(":/pictures/unlocked.svg"),
     _locked(false), active(false), _widget(nullptr)
 {
-    int s = qApp->property("BUTTONS_BAR_SIZE").toInt();
-    setSize(QSize(s,s));
-    color_idle = QColor(qApp->property("BUTTONS_BAR_COLOR_IDLE").toString());
-    color_hover = QColor(qApp->property("BUTTONS_BAR_COLOR_HOVER").toString());
-    color_pressed = QColor(qApp->property("BUTTONS_BAR_COLOR_PRESSED").toString());
+
 }
 
 void LockButton::setSize(QSize s) {
-    size = s;
-    auto lock_size = QSize(size.width()/4, size.height()/4);
-    lock_rect = QRect(size.width() - lock_size.width(), 0, lock_size.width(), lock_size.height());
-    active_rect = QRect(size.width()-4, size.height()/4, 2, size.height()-2*size.height()/4);
-    icon_margins = QMargins(size.width()/20, size.height()/4, size.width()/20, size.height()/20);
+    _size = s;
+    auto lock_size = QSize(_size.width()/4, _size.height()/4);
+    lock_rect = QRect(_size.width() - lock_size.width(), 0, lock_size.width(), lock_size.height());
+    active_rect = QRect(_size.width()-4, _size.height()/4, 2, _size.height()-2*_size.height()/4);
+    icon_margins = QMargins(_size.width()/20, _size.height()/4, _size.width()/20, _size.height()/20);
 }
 
 void LockButton::setActiveSide(bool activeLeft) {
-    auto pos_active_rect = activeLeft ? 2 : size.width()-4;
-    active_rect = QRect(pos_active_rect, size.height()/4, 2, size.height()-2*size.height()/4);
+    auto pos_active_rect = activeLeft ? 2 : _size.width()-4;
+    active_rect = QRect(pos_active_rect, _size.height()/4, 2, _size.height()-2*_size.height()/4);
 }
 
 void LockButton::enterEvent(QEvent* e) {
@@ -45,13 +41,13 @@ void LockButton::paintEvent(QPaintEvent* e) {
 
     switch (state) {
     case IDLE:
-        painter.setBrush(QBrush(color_idle));
+        painter.setBrush(QBrush(_color_idle));
         break;
     case HOVER:
-        painter.setBrush(QBrush(color_hover));
+        painter.setBrush(QBrush(_color_hover));
         break;
     case PRESSED:
-        painter.setBrush(QBrush(color_pressed));
+        painter.setBrush(QBrush(_color_pressed));
         break;
     }
 
@@ -108,5 +104,5 @@ QSize LockButton::sizeHint() const
 
 QSize LockButton::minimumSizeHint() const
 {
-    return size;
+    return _size;
 }
