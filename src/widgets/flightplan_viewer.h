@@ -6,6 +6,7 @@
 #include "flowlayout.h"
 #include "aircraft.h"
 #include "configurable.h"
+#include "pprz_dispatcher.h"
 
 class FlightPlanViewer : public QWidget, public Configurable
 {

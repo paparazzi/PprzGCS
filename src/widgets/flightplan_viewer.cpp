@@ -3,7 +3,6 @@
 #include "AircraftManager.h"
 #include "mbpushbutton.h"
 #include <QDebug>
-#include "pprz_dispatcher.h"
 
 FlightPlanViewer::FlightPlanViewer(QWidget *parent) : QWidget(parent)
 {

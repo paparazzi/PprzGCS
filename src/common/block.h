@@ -4,17 +4,21 @@
 #include <string>
 #include <map>
 #include <vector>
+#include "tinyxml2.h"
 
 using namespace std;
+using namespace tinyxml2;
 
 struct Stage {
     string instruction;
     map<string, string> attributes;
+    uint8_t no;
 };
 
 class Block
 {
 public:
+    Block(tinyxml2::XMLElement* blk);
     Block(string name, uint8_t no);
 
     void setIcon(string icon) {strip_icon = icon;}
@@ -33,6 +37,9 @@ public:
     friend ostream& operator<<(ostream& os, const Block& wp);
 
 private:
+    void parse_blocks(tinyxml2::XMLElement* blks);
+    void parse_block_stages(tinyxml2::XMLElement* blk);
+
     string name;
     uint8_t no;
 
@@ -40,6 +47,8 @@ private:
     string strip_button_txt;
     string key;
     string group;
+
+    map<string, string> attributes;
 
     vector<Stage> stages;
 };

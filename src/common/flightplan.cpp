@@ -95,31 +95,8 @@ void FlightPlan::parse_blocks(tinyxml2::XMLElement* blks) {
     XMLElement* blk = blks->FirstChildElement();
 
     while(blk != nullptr) {
-        const char* name_p = blk->Attribute("name");
-        const char* no_p = blk->Attribute("no");
-        uint8_t no = static_cast<uint8_t>(stoul(no_p));
-        auto block = make_shared<Block>(name_p, no);
+        auto block = make_shared<Block>(blk);
         blocks.push_back(block);
-
-        const char* icon_p = blk->Attribute("strip_icon");
-        if(icon_p != nullptr) {
-            block->setIcon(icon_p);
-        }
-        const char* text_p = blk->Attribute("strip_button");
-        if(text_p != nullptr) {
-            block->setText(text_p);
-        }
-        const char* key_p = blk->Attribute("key");
-        if(key_p != nullptr) {
-            block->setKey(key_p);
-        }
-        const char* group_p = blk->Attribute("group");
-        if(group_p != nullptr) {
-            block->setGroup(group_p);
-        }
-
-        parse_block_stages(blk, block);
-
         blk = blk->NextSiblingElement();
     }
 
@@ -127,22 +104,6 @@ void FlightPlan::parse_blocks(tinyxml2::XMLElement* blks) {
               [](auto lblock, auto rblock) {
                     return lblock->getNo() < rblock->getNo();
     });
-}
-
-void FlightPlan::parse_block_stages(tinyxml2::XMLElement* blk, shared_ptr<Block> block) {
-    (void)block;
-    auto stel = blk->FirstChildElement();
-    while(stel != nullptr) {
-        Stage stage;
-        stage.instruction = stel->Name();
-        auto att = stel->FirstAttribute();
-        while(att != nullptr) {
-            stage.attributes[att->Name()] = att->Value();
-            att = att->Next();
-        }
-        block->getStages().push_back(stage);
-        stel = stel->NextSiblingElement();
-    }
 }
 
 shared_ptr<Waypoint> FlightPlan::getWaypoint(uint8_t id) {
