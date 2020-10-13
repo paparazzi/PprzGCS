@@ -37,6 +37,7 @@ void LockButton::leaveEvent(QEvent* e) {
 }
 
 void LockButton::paintEvent(QPaintEvent* e) {
+    (void)e;
     QPainter painter(this);
 
     switch (state) {
@@ -53,9 +54,9 @@ void LockButton::paintEvent(QPaintEvent* e) {
 
     painter.setPen(Qt::NoPen);
 
-    painter.drawRect(e->rect());
+    painter.drawRect(rect());
 
-    QRect icon_rect = e->rect().marginsRemoved(icon_margins);
+    QRect icon_rect = rect().marginsRemoved(icon_margins);
     icon.paint(&painter, icon_rect);
 
     if(_locked) {

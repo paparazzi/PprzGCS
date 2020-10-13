@@ -43,21 +43,21 @@ void GraphLabel::paintEvent(QPaintEvent *e) {
     QPainter p(this);
     p.setPen(Qt::NoPen);
     p.setBrush(brushTop);
-    p.drawRoundedRect(e->rect(), 5, 5);
+    p.drawRoundedRect(rect(), 5, 5);
 
     QPolygonF polygon;
     for(auto [t, v]: data) {
-        double y = (1 -std::clamp((v - min) / (max - min), 0., 1.)) * e->rect().height();
-        double x = (1 - std::clamp(t.msecsTo(QTime::currentTime())/(timespan*1000.), 0., 1.)) * e->rect().width();
+        double y = (1 -std::clamp((v - min) / (max - min), 0., 1.)) * rect().height();
+        double x = (1 - std::clamp(t.msecsTo(QTime::currentTime())/(timespan*1000.), 0., 1.)) * rect().width();
         polygon.prepend(QPointF(x, y));
     }
     if(!polygon.isEmpty()) {
         polygon.append(QPointF(0, polygon.last().y()));
     }
-    polygon.append(QPointF(0, e->rect().height()));
-    polygon.append(QPointF(e->rect().width(), e->rect().height()));
+    polygon.append(QPointF(0, rect().height()));
+    polygon.append(QPointF(rect().width(), rect().height()));
     if(!polygon.isEmpty()) {
-        polygon.append(QPointF(e->rect().width(), polygon.first().y()));
+        polygon.append(QPointF(rect().width(), polygon.first().y()));
     }
     p.setBrush(brushBottom);
     p.drawPolygon(polygon);
@@ -71,18 +71,18 @@ void GraphLabel::paintEvent(QPaintEvent *e) {
         QString txt = QString::number(std::get<1>(data.last()), 'f', precision) + unit;
 
         if(dual_text) {
-            p.drawText(QRectF(0, 0, e->rect().width(), e->rect().height()/2), Qt::AlignCenter, txt);
-            p.drawText(QRectF(0, e->rect().height()/2, e->rect().width(), e->rect().height()/2), Qt::AlignCenter, secondary_text);
+            p.drawText(QRectF(0, 0, rect().width(), rect().height()/2), Qt::AlignCenter, txt);
+            p.drawText(QRectF(0, rect().height()/2, rect().width(), rect().height()/2), Qt::AlignCenter, secondary_text);
         } else {
-           p.drawText(QRectF(0, 0, e->rect().width(), e->rect().height()), Qt::AlignCenter, txt);
+           p.drawText(rect(), Qt::AlignCenter, txt);
         }
     }
 
     if(indicator) {
         p.setPen(Qt::black);
-        int dx = e->rect().width() - 20;
+        int dx = rect().width() - 20;
         int dy = dx * tan(-indicator_angle);
-        QPoint a(10, e->rect().height()/2);
+        QPoint a(10, rect().height()/2);
         QPoint b(a.x() + dx, a.y()+dy);
         p.drawLine(a, b);
     }

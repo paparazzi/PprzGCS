@@ -30,6 +30,8 @@ private:
     double value;
     bool status;
 
+    QSize minSize;
+
 };
 
 #endif // JAUGELABEL_H

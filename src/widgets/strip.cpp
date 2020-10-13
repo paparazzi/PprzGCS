@@ -9,13 +9,11 @@ Strip::Strip(QString ac_id, QWidget *parent) : QWidget(parent), _ac_id(ac_id)
     lay_bat_link = new QVBoxLayout();
     lay_head = new QHBoxLayout();
     lay_body = new QHBoxLayout();
-    //lay_status = new QVBoxLayout();
 
     layout->addLayout(lay_head);
     layout->addLayout(lay_body);
 
     lay_body->addLayout(lay_bat_link);
-    //lay_body->addLayout(lay_status);
 
     flight_time_label = new QLabel("00:00:00", this);
     flight_time_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -23,13 +21,11 @@ Strip::Strip(QString ac_id, QWidget *parent) : QWidget(parent), _ac_id(ac_id)
 
     speed_label = new JaugeLabel(0, 10, "m/s", this);
     speed_label->setPrecision(1);
-    speed_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     lay_head->addWidget(speed_label);
     speed_label->setStatus(true);
 
     throttle_label = new JaugeLabel(0, 100, "%", this);
     throttle_label->setPrecision(0);
-    throttle_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     lay_head->addWidget(throttle_label);
 
 
@@ -40,31 +36,23 @@ Strip::Strip(QString ac_id, QWidget *parent) : QWidget(parent), _ac_id(ac_id)
     lay_bat_link->addWidget(bat_graph);
 
     link_label = new ColorLabel(this);
-    link_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    link_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     lay_bat_link->addWidget(link_label);
 
-    QGroupBox* gp = new QGroupBox(this);
-    gp->setTitle("status");
-    lay_body->addWidget(gp);
-    gp->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-    QVBoxLayout* status_layout = new QVBoxLayout(gp);
+    QVBoxLayout* status_layout = new QVBoxLayout();
+    lay_body->addLayout(status_layout);
+    status_layout->addWidget(new QLabel("status", this));
 
     ap_mode_label = new ColorLabel(this);
-    ap_mode_label->setMinSize(QSize(60, 50));
-    ap_mode_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     ap_mode_label->setToolTip("Navigation mode");
     status_layout->addWidget(ap_mode_label);
 
     fbw_mode_label = new ColorLabel(this);
-    fbw_mode_label->setMinSize(QSize(60, 50));
-    fbw_mode_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     fbw_mode_label->setToolTip("Radio Command status");
     status_layout->addWidget(fbw_mode_label);
 
 
     gps_mode_label = new ColorLabel(this);
-    gps_mode_label->setMinSize(QSize(60, 50));
-    gps_mode_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     gps_mode_label->setToolTip("GPS status");
     status_layout->addWidget(gps_mode_label);
 

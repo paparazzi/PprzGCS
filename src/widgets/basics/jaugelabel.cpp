@@ -8,7 +8,7 @@ JaugeLabel::JaugeLabel(QWidget *parent) : JaugeLabel(0, 1, "%",  parent)
 }
 
 JaugeLabel::JaugeLabel(double min, double max, QString unit, QWidget *parent) :
-    QWidget(parent), min(min), max(max), unit(unit), precision(2)
+    QWidget(parent), min(min), max(max), unit(unit), precision(2), minSize(20,10)
 {
     brushRight = QColor("#ffa500");
     brushLeft = QColor("#7ef17e");
@@ -17,24 +17,26 @@ JaugeLabel::JaugeLabel(double min, double max, QString unit, QWidget *parent) :
 
 QSize JaugeLabel::minimumSizeHint() const
 {
-    return QSize(60, 18);
+    return minSize;
+    //return QSize(60, 18);
 }
 
 void JaugeLabel::paintEvent(QPaintEvent *e) {
+    (void)e;
     QPainter p(this);
     p.setPen(Qt::NoPen);
     if(status) {
         p.setBrush(brushLeft);
-        int x = static_cast<int>(std::clamp((value - min) / (max - min), 0., 1.) * e->rect().width());
-        p.drawRect(0, 0, x, e->rect().height());
+        int x = static_cast<int>(std::clamp((value - min) / (max - min), 0., 1.) * rect().width());
+        p.drawRect(0, 0, x, rect().height());
 
         p.setBrush(brushRight);
-        p.drawRect(x, 0, e->rect().width()-x, e->rect().height());
+        p.drawRect(x, 0, rect().width()-x, rect().height());
 
 
     } else {
         p.setBrush(brushKill);
-        p.drawRect(0, 0, e->rect().width(), e->rect().height());
+        p.drawRect(rect());
     }
 
 
@@ -44,8 +46,12 @@ void JaugeLabel::paintEvent(QPaintEvent *e) {
     p.setFont(font);
     p.setPen(Qt::black);
     QString txt = QString::number(value, 'f', precision) + unit;
-    p.drawText(QRectF(0, 0, e->rect().width(), e->rect().height()), Qt::AlignCenter, txt);
+    p.drawText(rect(), Qt::AlignCenter, txt);
 
-
+    auto fm = QFontMetricsF(font);
+    // Compute minimum widget size based of text size.
+    auto txt_rect = fm.boundingRect(txt);
+    minSize = QSize(static_cast<int>(txt_rect.width())+6, static_cast<int>(txt_rect.height()));
+    setMinimumSize(minSize);
 
 }
