@@ -8,6 +8,7 @@
 #include <QFontDatabase>
 #include <QApplication>
 #include <QDebug>
+#include <QPainterPath>
 #include "dispatcher_ui.h"
 
 MapStrip::MapStrip(QString ac_id, QWidget *parent) :

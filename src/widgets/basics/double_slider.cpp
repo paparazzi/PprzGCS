@@ -47,7 +47,7 @@ void DoubleSlider::sliderChange(QAbstractSlider::SliderChange change)
 }
 
 void DoubleSlider::wheelEvent(QWheelEvent* e) {
-    if(e->delta() > 0) {
+    if(e->angleDelta().y() > 0) {
         setValue(value()+1);
     } else {
         setValue(value()-1);

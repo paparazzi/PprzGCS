@@ -10,6 +10,7 @@
 #include <QPixmap>
 #include <QBitmap>
 #include <QRegion>
+#include <QPainterPath>
 
 
 Pfd::Pfd(QWidget *parent) : QWidget(parent), border_stroke(6)

@@ -95,7 +95,7 @@ void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
 
         QFontMetrics fm(font);
 
-        double maxWidth = qMax(2*recthalf, 2*textPos.x() + fm.width(text) + 100);
+        double maxWidth = qMax(2*recthalf, 2*textPos.x() + fm.horizontalAdvance(text) + 100);
         last_bounding_rect = QRectF(-recthalf, -recthalf, maxWidth, 2*recthalf);
     } else {
         last_bounding_rect = QRectF(-recthalf, -recthalf, 2*recthalf, 2*recthalf);

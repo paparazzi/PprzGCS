@@ -42,13 +42,13 @@ void LockButton::paintEvent(QPaintEvent* e) {
 
     switch (state) {
     case IDLE:
-        painter.setBrush(QBrush(_color_idle));
+        painter.setBrush(QBrush(m_color_idle));
         break;
     case HOVER:
-        painter.setBrush(QBrush(_color_hover));
+        painter.setBrush(QBrush(m_color_hover));
         break;
     case PRESSED:
-        painter.setBrush(QBrush(_color_pressed));
+        painter.setBrush(QBrush(m_color_pressed));
         break;
     }
 

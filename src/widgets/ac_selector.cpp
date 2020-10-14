@@ -58,7 +58,7 @@ void ACSelector::paintEvent(QPaintEvent* e) {
         auto ac = AircraftManager::get()->getAircraft(ac_id);
         painter.setPen(Qt::NoPen);
         painter.setBrush(ac.getColor());
-        painter.drawRoundRect(rect, 10);
+        painter.drawRoundedRect(rect, 10, 10);
 
         auto dark = QColor("#101010");
         auto light = QColor("#f0f0f0");
@@ -118,7 +118,7 @@ void ACSelector::mousePressEvent(QMouseEvent *e) {
 }
 
 void ACSelector::wheelEvent(QWheelEvent *event) {
-    auto incr = event->delta() > 0 ? 1 : -1;
+    auto incr = event->angleDelta().y() > 0 ? 1 : -1;
     auto index = ac_ids.indexOf(current_ac_id) + incr;
     if(index >= 0 && index < ac_ids.size()) {
         emit(DispatcherUi::get()->ac_selected(ac_ids[index]));

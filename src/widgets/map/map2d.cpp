@@ -139,7 +139,7 @@ void Map2D::wheelEvent(QWheelEvent* event) {
     setResizeAnchor(QGraphicsView::NoAnchor);
     int curZoom = zoomLevel(_zoom);
 
-    if(event->delta() > 0) {
+    if(event->angleDelta().y() > 0) {
         _zoom += 0.5;
     } else {
         _zoom -= 0.5;
