@@ -3,7 +3,7 @@
             <widget name="map2d" size="800">
                 <configure>
                     <columnLeft>
-                        <widget name="flight_planV2" icon="ICAO.png"/>
+                        <widget name="flight_planV2" icon="flight_plan.svg"/>
                         <widget name="settings" icon="settings.svg"/>
                     </columnLeft>
                     <columnRight>
