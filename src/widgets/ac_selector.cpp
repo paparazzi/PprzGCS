@@ -34,11 +34,11 @@ void ACSelector::paintEvent(QPaintEvent* e) {
     QPainter painter(this);
     painter.setPen(Qt::NoPen);
 
-    QRect arrow_left_rect = QRect(0, e->rect().height()/2, ARROW_WIDTH, e->rect().height()/2);
+    QRect arrow_left_rect = QRect(0, rect().height()/2, ARROW_WIDTH, rect().height()/2);
     painter.setBrush(Qt::white);
     painter.drawRect(arrow_left_rect);
 
-    QRect arrow_right_rect = QRect(e->rect().width()-ARROW_WIDTH, e->rect().height()/2, ARROW_WIDTH, e->rect().height()/2);
+    QRect arrow_right_rect = QRect(rect().width()-ARROW_WIDTH, rect().height()/2, ARROW_WIDTH, rect().height()/2);
     painter.setBrush(Qt::white);
     painter.drawRect(arrow_right_rect);
 
@@ -49,11 +49,11 @@ void ACSelector::paintEvent(QPaintEvent* e) {
 
     for(int i=0; i<ac_ids.size(); i++) {
         auto ac_id = ac_ids[i];
-        auto left = arrow_left_rect.width() + (i * (e->rect().width()-2*ARROW_WIDTH)) / ac_ids.size();
-        auto right = arrow_left_rect.width() + ((i+1) * (e->rect().width()-2*ARROW_WIDTH)) / ac_ids.size();
+        auto left = arrow_left_rect.width() + (i * (rect().width()-2*ARROW_WIDTH)) / ac_ids.size();
+        auto right = arrow_left_rect.width() + ((i+1) * (rect().width()-2*ARROW_WIDTH)) / ac_ids.size();
         int width = right - left;
-        auto top = ac_id == current_ac_id ? 0: e->rect().height()/2;
-        auto height = ac_id == current_ac_id ? e->rect().height(): e->rect().height()/2;
+        auto top = ac_id == current_ac_id ? 0: rect().height()/2;
+        auto height = ac_id == current_ac_id ? rect().height(): rect().height()/2;
         QRect rect = QRect(left, top, width, height);
         auto ac = AircraftManager::get()->getAircraft(ac_id);
         painter.setPen(Qt::NoPen);

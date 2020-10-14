@@ -178,8 +178,13 @@ void MapWidget::configure(QDomElement ele) {
 }
 
 MapLayerControl* MapWidget::makeLayerControl(QString name, bool initialState, int z) {
-    QString path = qApp->property("APP_DATA_PATH").toString() + "/pictures/" + name + ".png";
+    QString path = qApp->property("APP_DATA_PATH").toString() + "/pictures/map_thumbnails/" + name + ".png";
+
     QPixmap thumbnail = QPixmap(path);
+    if(thumbnail.isNull()) {
+        path = qApp->property("APP_DATA_PATH").toString() + "/pictures/map_thumbnails/default.png";
+        thumbnail = QPixmap(path);
+    }
 
     MapLayerControl* layer_control = new MapLayerControl(name, thumbnail, initialState, z);
 

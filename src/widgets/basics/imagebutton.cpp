@@ -51,6 +51,7 @@ void ImageButton::mouseReleaseEvent(QMouseEvent *e) {
 }
 
 void ImageButton::paintEvent(QPaintEvent* e) {
+    (void)e;
     QPainter painter(this);
-    icon().paint(&painter, e->rect());
+    icon().paint(&painter,rect());
 }

@@ -10,14 +10,17 @@ MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState
     verticalLayout = new QVBoxLayout(this);
     verticalLayout->setSpacing(0);
 
+    auto hLay = new QHBoxLayout();
+
     nameLabel = new QLabel(name);
     verticalLayout->addWidget(nameLabel);
     verticalLayout->setAlignment(nameLabel, Qt::AlignHCenter);
     nameLabel->setMargin(5);
 
+    verticalLayout->addLayout(hLay);
+
     imageLabel = new QLabel(this);
-    verticalLayout->addWidget(imageLabel);
-    verticalLayout->setAlignment(imageLabel, Qt::AlignHCenter);
+    hLay->addWidget(imageLabel);
     imageLabel->setPixmap(pixmap);
 
     QIcon icon(":/pictures/displayed.svg");
@@ -25,7 +28,7 @@ MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState
         icon = QIcon(":/pictures/hidden.svg");
     }
 
-    show_button = new ImageButton(icon, QSize(60, 60), true, imageLabel);
+    show_button = new ImageButton(icon, QSize(60, 60), false, imageLabel);
     QVBoxLayout* image_layout = new QVBoxLayout(imageLabel);
     image_layout->addWidget(show_button);
     image_layout->setAlignment(show_button, Qt::AlignHCenter);
@@ -35,11 +38,10 @@ MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState
             toggleShowState();
         });
 
-    opacitySlider = new QSlider(Qt::Horizontal, this);
+    opacitySlider = new QSlider(Qt::Vertical, this);
     opacitySlider->setValue(opacitySlider->maximum());
-    verticalLayout->addWidget(opacitySlider);
-    //verticalLayout->setAlignment(opacitySlider, Qt::AlignHCenter);
-    //opacitySlider->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    hLay->addWidget(opacitySlider);
+
     connect(
         opacitySlider, &QSlider::valueChanged,
         [=](int value) {

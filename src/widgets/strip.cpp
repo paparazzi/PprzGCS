@@ -140,7 +140,7 @@ void Strip::paintEvent(QPaintEvent* e) {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
     QPainterPath path;
-    path.addRect(e->rect());
+    path.addRect(rect());
     p.setPen(Qt::NoPen);
 
     QColor color = AircraftManager::get()->getAircraft(_ac_id).getColor();
