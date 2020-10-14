@@ -28,7 +28,7 @@ void GraphLabel::pushData(double value) {
 
     //erase old data
     while(true) {
-        auto [t, v] = data.front();
+        [[maybe_unused]] auto [t, v] = data.front();
         if(t.addMSecs(static_cast<int>(timespan*1000.)) < QTime::currentTime()) {
             data.pop_front();
         } else {

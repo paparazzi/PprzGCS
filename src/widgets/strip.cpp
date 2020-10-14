@@ -5,67 +5,14 @@
 
 Strip::Strip(QString ac_id, QWidget *parent) : QWidget(parent), _ac_id(ac_id)
 {
-    layout = new QVBoxLayout(this);
-    lay_bat_link = new QVBoxLayout();
-    lay_head = new QHBoxLayout();
-    lay_body = new QHBoxLayout();
+    auto stackLayout = new QHBoxLayout(this);
 
-    layout->addLayout(lay_head);
-    layout->addLayout(lay_body);
+    build_full_strip();
+    build_short_strip();
+    stackLayout->addWidget(full_strip);
+    stackLayout->addWidget(short_strip);
 
-    lay_body->addLayout(lay_bat_link);
-
-    flight_time_label = new QLabel("00:00:00", this);
-    flight_time_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    lay_head->addWidget(flight_time_label);
-
-    speed_label = new JaugeLabel(0, 10, "m/s", this);
-    speed_label->setPrecision(1);
-    lay_head->addWidget(speed_label);
-    speed_label->setStatus(true);
-
-    throttle_label = new JaugeLabel(0, 100, "%", this);
-    throttle_label->setPrecision(0);
-    lay_head->addWidget(throttle_label);
-
-
-    // get bat min and max
-    //AircraftManager::get()->getAircraft(ac_id).getAirframe()
-    bat_graph = new GraphLabel(8, 14, this);
-    bat_graph->setUnit("V");
-    lay_bat_link->addWidget(bat_graph);
-
-    link_label = new ColorLabel(this);
-    link_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-    lay_bat_link->addWidget(link_label);
-
-    QVBoxLayout* status_layout = new QVBoxLayout();
-    lay_body->addLayout(status_layout);
-    status_layout->addWidget(new QLabel("status", this));
-
-    ap_mode_label = new ColorLabel(this);
-    ap_mode_label->setToolTip("Navigation mode");
-    status_layout->addWidget(ap_mode_label);
-
-    fbw_mode_label = new ColorLabel(this);
-    fbw_mode_label->setToolTip("Radio Command status");
-    status_layout->addWidget(fbw_mode_label);
-
-
-    gps_mode_label = new ColorLabel(this);
-    gps_mode_label->setToolTip("GPS status");
-    status_layout->addWidget(gps_mode_label);
-
-    alt_graph = new GraphLabel(0, 120, this);
-    alt_graph->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-    alt_graph->setDualText(true);
-    alt_graph->setSecondayText("+0.0");
-    alt_graph->setPrecision(0);
-    alt_graph->setUnit("m");
-    alt_graph->setIndicator(true);
-    lay_body->addWidget(alt_graph);
-
-    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    full_strip->hide();
 
 
     connect(PprzDispatcher::get(), &PprzDispatcher::engine_status, this, &Strip::updateEngineStatus);
@@ -73,6 +20,119 @@ Strip::Strip(QString ac_id, QWidget *parent) : QWidget(parent), _ac_id(ac_id)
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &Strip::updateFlightParams);
     connect(PprzDispatcher::get(), &PprzDispatcher::telemetry_status, this, &Strip::updateTelemetryStatus);
     connect(PprzDispatcher::get(), &PprzDispatcher::fly_by_wire, this, &Strip::updateFBW);
+}
+
+
+void Strip::build_full_strip() {
+    full_strip = new QWidget(this);
+    auto layout_fullstrip = new QVBoxLayout(full_strip);
+    auto lay_bat_link = new QVBoxLayout();
+    auto lay_head = new QHBoxLayout();
+    auto lay_body = new QHBoxLayout();
+
+    layout_fullstrip->addLayout(lay_head);
+    layout_fullstrip->addLayout(lay_body);
+
+    lay_body->addLayout(lay_bat_link);
+
+    full_flight_time_label = new QLabel("00:00:00", full_strip);
+    full_flight_time_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    lay_head->addWidget(full_flight_time_label);
+
+    full_speed_label = new JaugeLabel(0, 10, "m/s", full_strip);
+    full_speed_label->setPrecision(1);
+    lay_head->addWidget(full_speed_label);
+    full_speed_label->setStatus(true);
+
+    full_throttle_label = new JaugeLabel(0, 100, "%", full_strip);
+    full_throttle_label->setPrecision(0);
+    lay_head->addWidget(full_throttle_label);
+
+
+    // get bat min and max
+    //AircraftManager::get()->getAircraft(ac_id).getAirframe()
+    full_bat_graph = new GraphLabel(8, 14, full_strip);
+    full_bat_graph->setUnit("V");
+    lay_bat_link->addWidget(full_bat_graph);
+
+    full_link_label = new ColorLabel(full_strip);
+    full_link_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    lay_bat_link->addWidget(full_link_label);
+
+    QVBoxLayout* status_layout = new QVBoxLayout();
+    lay_body->addLayout(status_layout);
+    status_layout->addWidget(new QLabel("status", full_strip));
+
+    full_ap_mode_label = new ColorLabel(full_strip);
+    full_ap_mode_label->setToolTip("Navigation mode");
+    status_layout->addWidget(full_ap_mode_label);
+
+    full_fbw_mode_label = new ColorLabel(full_strip);
+    full_fbw_mode_label->setToolTip("Radio Command status");
+    status_layout->addWidget(full_fbw_mode_label);
+
+
+    full_gps_mode_label = new ColorLabel(full_strip);
+    full_gps_mode_label->setToolTip("GPS status");
+    status_layout->addWidget(full_gps_mode_label);
+
+    full_alt_graph = new GraphLabel(0, 120, full_strip);
+    full_alt_graph->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    full_alt_graph->setDualText(true);
+    full_alt_graph->setSecondayText("+0.0");
+    full_alt_graph->setPrecision(0);
+    full_alt_graph->setUnit("m");
+    full_alt_graph->setIndicator(true);
+    lay_body->addWidget(full_alt_graph);
+
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+}
+
+void Strip::build_short_strip() {
+    short_strip = new QWidget(this);
+    auto short_strip_layout = new QVBoxLayout(short_strip);
+    (void) short_strip_layout;
+
+    // get bat min and max
+    short_jl_bat = new JaugeLabel(11., 14., "V", short_strip);
+    short_jl_bat->setStatus(true);
+    short_strip_layout->addWidget(short_jl_bat);
+
+    short_flight_time_label = new QLabel("00:00:00", short_strip);
+    short_flight_time_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    short_strip_layout->addWidget(short_flight_time_label);
+
+    auto hLay = new QHBoxLayout();
+    auto grid = new QGridLayout();
+    auto sLay = new QVBoxLayout();
+
+    short_strip_layout->addLayout(hLay);
+    hLay->addLayout(grid);
+    hLay->addLayout(sLay);
+
+    short_vspeed_indicator = new QLabel(QString::fromUtf8("\xE2\x86\x97"), short_strip);
+    grid->addWidget(new QLabel("vs", short_strip), 0, 0);
+    grid->addWidget(new QLabel("alt", short_strip), 1, 0);
+    grid->addWidget(short_vspeed_indicator, 2, 0);
+    grid->addWidget(new QLabel("tg", short_strip), 3, 0);
+
+    short_speed_label = new QLabel("-m/s", short_strip);
+    short_alt_label = new QLabel("-m", short_strip);
+    short_vspeed_label = new QLabel("+-", short_strip);
+    short_target_label = new QLabel("-m", short_strip);
+
+    grid->addWidget(short_speed_label, 0, 1);
+    grid->addWidget(short_alt_label, 1, 1);
+    grid->addWidget(short_vspeed_label, 2, 1);
+    grid->addWidget(short_target_label, 3, 1);
+
+    short_ap_mode_label = new ColorLabel(short_strip);
+    short_fbw_mode_label = new ColorLabel(short_strip);
+    short_gps_mode_label = new ColorLabel(short_strip);
+
+    sLay->addWidget(short_ap_mode_label);
+    sLay->addWidget(short_fbw_mode_label);
+    sLay->addWidget(short_gps_mode_label);
 }
 
 
@@ -94,6 +154,16 @@ void Strip::paintEvent(QPaintEvent* e) {
     QWidget::paintEvent(e);
 }
 
+void Strip::mousePressEvent(QMouseEvent *e) {
+    (void)e;
+    full_strip->setVisible(!full_strip->isVisible());
+    short_strip->setVisible(!short_strip->isVisible());
+}
+
+void Strip::mouseReleaseEvent(QMouseEvent *e) {
+    (void)e;
+}
+
 void Strip::updateEngineStatus(pprzlink::Message msg) {
     std::string id;
     msg.getField("ac_id", id);
@@ -101,8 +171,9 @@ void Strip::updateEngineStatus(pprzlink::Message msg) {
         float bat, throttle;
         msg.getField("throttle", throttle);
         msg.getField("bat", bat);
-        bat_graph->pushData(bat);
-        throttle_label->setValue(throttle);
+        full_bat_graph->pushData(bat);
+        short_jl_bat->setValue(bat);
+        full_throttle_label->setValue(throttle);
     }
 }
 
@@ -125,28 +196,37 @@ void Strip::updateApStatus(pprzlink::Message msg) {
         QString f_time = QString("%1").arg(hours, 2, 10, QChar('0')) + ":" +
                          QString("%1").arg(minutes, 2, 10, QChar('0')) + ":" +
                          QString("%1").arg(seconds, 2, 10, QChar('0'));
-        flight_time_label->setText(f_time);
+        full_flight_time_label->setText(f_time);
+        short_flight_time_label->setText(f_time);
 
-        throttle_label->setStatus(kill_mode=="OFF");
+        full_throttle_label->setStatus(kill_mode=="OFF");
 
         if(ap_mode == "HOME" || ap_mode == "FAILSAFE") {
-            ap_mode_label->setBrush(Qt::red);
+            full_ap_mode_label->setBrush(Qt::red);
+            short_ap_mode_label->setBrush(Qt::red);
         } else if (ap_mode == "MANUAL") {
-            ap_mode_label->setBrush(QColor("#ffa500"));
+            full_ap_mode_label->setBrush(QColor("#ffa500"));
+            short_ap_mode_label->setBrush(QColor("#ffa500"));
         } else {
-            ap_mode_label->setBrush(QColor("#7ef17e"));
+            full_ap_mode_label->setBrush(QColor("#7ef17e"));
+            short_ap_mode_label->setBrush(QColor("#7ef17e"));
         }
-        ap_mode_label->setText(ap_mode.c_str());
+        full_ap_mode_label->setText(ap_mode.c_str());
+        short_ap_mode_label->setText(ap_mode.c_str());
 
 
         if(gps_mode == "NOFIX") {
-            gps_mode_label->setBrush(Qt::red);
+            full_gps_mode_label->setBrush(Qt::red);
+            short_gps_mode_label->setBrush(Qt::red);
         } else if (gps_mode == "NA" || gps_mode == "2D") {
-            gps_mode_label->setBrush(QColor("#ffa500"));
+            full_gps_mode_label->setBrush(QColor("#ffa500"));
+            short_gps_mode_label->setBrush(QColor("#ffa500"));
         } else {
-            gps_mode_label->setBrush(QColor("#7ef17e"));
+            full_gps_mode_label->setBrush(QColor("#7ef17e"));
+            short_gps_mode_label->setBrush(QColor("#7ef17e"));
         }
-        gps_mode_label->setText(gps_mode.c_str());
+        full_gps_mode_label->setText(gps_mode.c_str());
+        short_gps_mode_label->setText(gps_mode.c_str());
 
     }
 }
@@ -161,19 +241,30 @@ void Strip::updateFlightParams(pprzlink::Message msg) {
         msg.getField("climb", climb);
         msg.getField("agl", agl);
         msg.getField("airspeed", airspeed);
-        speed_label->setValue(speed);
-        alt_graph->pushData(agl);
+        full_speed_label->setValue(speed);
+        short_speed_label->setText(QString::number(speed, 'f', 1) + " m/s");
+        full_alt_graph->pushData(agl);
+        short_alt_label->setText(QString::number(agl, 'f', 0) + " m");
         QString txt = QString::number(climb, 'f', 1);
         if(climb > 0) {
             txt = "+" + txt;
         }
-        alt_graph->setSecondayText(txt);
+        full_alt_graph->setSecondayText(txt);
+        short_vspeed_label->setText(txt);
         if(abs(speed) > 0.1) {
-            alt_graph->setIndicatorAngle((climb/speed)*1.2);
+            full_alt_graph->setIndicatorAngle((climb/speed)*1.2);
         } else if(abs(climb) > 0.01){
-            alt_graph->setIndicatorAngle(climb/abs(climb)*0.3);
+            full_alt_graph->setIndicatorAngle(climb/abs(climb)*0.3);
         } else {
-            alt_graph->setIndicatorAngle(0);
+            full_alt_graph->setIndicatorAngle(0);
+        }
+
+        if(climb > 0.5) {
+            short_vspeed_indicator->setText(QString::fromUtf8("\xE2\x86\x97"));
+        } else if(climb < -0.5) {
+            short_vspeed_indicator->setText(QString::fromUtf8("\xE2\x86\x98"));
+        } else {
+            short_vspeed_indicator->setText(QString::fromUtf8("\xE2\x86\x92"));
         }
 
     }
@@ -187,15 +278,15 @@ void Strip::updateTelemetryStatus(pprzlink::Message msg) {
         float time_since_last_msg;
         msg.getField("time_since_last_msg", time_since_last_msg);
         if(time_since_last_msg > 5) {
-            link_label->setBrush(Qt::red);
+            full_link_label->setBrush(Qt::red);
         } else {
-            link_label->setBrush(QColor("#7ef17e"));
+            full_link_label->setBrush(QColor("#7ef17e"));
         }
 
         if(time_since_last_msg > 2) {
-            link_label->setText(QString::number(time_since_last_msg, 'f', 0));
+            full_link_label->setText(QString::number(time_since_last_msg, 'f', 0));
         } else {
-            link_label->setText("");
+            full_link_label->setText("");
         }
     }
 }
@@ -209,14 +300,18 @@ void Strip::updateFBW(pprzlink::Message msg) {
         msg.getField("rc_mode", rc_mode);
 
         if(rc_status == "OK") {
-            fbw_mode_label->setBrush(QColor("#7ef17e"));
+            full_fbw_mode_label->setBrush(QColor("#7ef17e"));
+            short_fbw_mode_label->setBrush(QColor("#7ef17e"));
         } else if (rc_status == "LOST" || rc_status == "REALLY_LOST") {
-            fbw_mode_label->setBrush(Qt::red);
+            full_fbw_mode_label->setBrush(Qt::red);
+            short_fbw_mode_label->setBrush(Qt::red);
         } else {
-            fbw_mode_label->setBrush(QColor("#ffa500"));
+            full_fbw_mode_label->setBrush(QColor("#ffa500"));
+            short_fbw_mode_label->setBrush(QColor("#ffa500"));
         }
 
-        fbw_mode_label->setText(rc_status.c_str());
+        full_fbw_mode_label->setText(rc_status.c_str());
+        short_fbw_mode_label->setText(rc_status.c_str());
 
     }
 }

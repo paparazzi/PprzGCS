@@ -21,8 +21,8 @@ protected:
 
 private:
     QBrush brushLeft;
-    QBrush brushRight;
-    QBrush brushKill;
+    QBrush brushBackEnabled;
+    QBrush brushBackDisabled;
     double min, max;
     QString unit;
     int precision;

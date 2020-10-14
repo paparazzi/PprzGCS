@@ -10,9 +10,9 @@ JaugeLabel::JaugeLabel(QWidget *parent) : JaugeLabel(0, 1, "%",  parent)
 JaugeLabel::JaugeLabel(double min, double max, QString unit, QWidget *parent) :
     QWidget(parent), min(min), max(max), unit(unit), precision(2), minSize(20,10)
 {
-    brushRight = QColor("#ffa500");
+    brushBackEnabled = QColor("#ffa500");
     brushLeft = QColor("#7ef17e");
-    brushKill = Qt::red;
+    brushBackDisabled = Qt::red;
 }
 
 QSize JaugeLabel::minimumSizeHint() const
@@ -25,19 +25,20 @@ void JaugeLabel::paintEvent(QPaintEvent *e) {
     (void)e;
     QPainter p(this);
     p.setPen(Qt::NoPen);
+
     if(status) {
-        p.setBrush(brushLeft);
-        int x = static_cast<int>(std::clamp((value - min) / (max - min), 0., 1.) * rect().width());
-        p.drawRect(0, 0, x, rect().height());
-
-        p.setBrush(brushRight);
-        p.drawRect(x, 0, rect().width()-x, rect().height());
-
-
+        p.setBrush(brushBackEnabled);
     } else {
-        p.setBrush(brushKill);
-        p.drawRect(rect());
+        p.setBrush(brushBackDisabled);
     }
+    p.drawRect(rect());
+
+
+
+    p.setBrush(brushLeft);
+    int x = static_cast<int>(std::clamp((value - min) / (max - min), 0., 1.) * rect().width());
+    p.drawRect(0, 0, x, rect().height());
+
 
 
     QFont font = p.font();

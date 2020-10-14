@@ -2,10 +2,10 @@
 #define STRIPS_H
 
 #include <QWidget>
-#include <QStackedWidget>
+#include <QLayout>
 #include "configurable.h"
 
-class Strips : public QStackedWidget, public Configurable
+class Strips : public QWidget, public Configurable
 {
     Q_OBJECT
 public:
@@ -17,7 +17,7 @@ signals:
 private:
     void handleNewAC(QString ac_id);
 
-    std::map<QString, int> ac_ids;
+    std::map<QString, QWidget*> strips;
 public slots:
 };
 
