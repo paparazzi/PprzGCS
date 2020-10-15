@@ -19,6 +19,7 @@
 #include <QCursor>
 #include "AircraftManager.h"
 #include "pprzmain.h"
+#include "waypointeditor.h"
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
@@ -232,13 +233,18 @@ void PprzMap::handleNewAC(QString ac_id) {
             wpi->setEditable(true);
             wpi->setForbidHighlight(false);
             waypointItems.append(wpi);
-            //waypointMoved
-            connect(wpi, &WaypointItem::waypointMoveFinished,
-                [=](Point2DLatLon latlon_pos) mutable {
-                    (void)latlon_pos;
-                    emit(DispatcherUi::get()->move_waypoint(wp, ac_id));
-                }
-            );
+
+            auto dialog_move_waypoint = [=]() {
+                wpi->setMoving(true);
+                auto we = new WaypointEditor(wpi, ac_id);
+                we->exec();
+                wpi->setMoving(false);
+            };
+
+            connect(wpi, &WaypointItem::waypointMoveFinished, dialog_move_waypoint);
+
+            connect(wpi, &WaypointItem::itemDoubleClicked, dialog_move_waypoint);
+
         }
     }
 
@@ -307,7 +313,8 @@ void PprzMap::moveWaypoint(pprzlink::Message msg) {
         wp->setAlt(static_cast<double>(alt));
 
         for(auto wpi: waypointItems) {
-            if(wpi->getWaypoint() == wp && !wpi->isMoving()) {
+            if(wpi->getOriginalWaypoint() == wp && !wpi->isMoving()) {
+                wpi->updatePosition();
                 wpi->updateGraphics();
             }
         }

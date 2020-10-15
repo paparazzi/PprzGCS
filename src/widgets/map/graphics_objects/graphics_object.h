@@ -32,6 +32,7 @@ protected:
 
 signals:
     void objectClicked(QPointF scene_pos);
+    void objectDoubleClicked(QPointF scene_pos);
     void objectGainedHighlight();
 
 private:

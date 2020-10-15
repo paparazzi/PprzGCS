@@ -47,6 +47,7 @@ public:
 
 signals:
     void itemClicked(QPointF scene_pos);
+    void itemDoubleClicked(QPointF scene_pos);
     void itemGainedHighlight();
 
 protected:

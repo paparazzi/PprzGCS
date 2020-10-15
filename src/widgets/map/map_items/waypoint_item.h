@@ -14,8 +14,9 @@ public:
     WaypointItem(Point2DLatLon pt, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     WaypointItem(shared_ptr<Waypoint> wp, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
 
-    Point2DLatLon position() {return Point2DLatLon(waypoint);}
-    shared_ptr<Waypoint> getWaypoint() {return waypoint;}
+    Point2DLatLon position() {return Point2DLatLon(original_waypoint);}
+    shared_ptr<Waypoint> getOriginalWaypoint() {return original_waypoint;}
+    shared_ptr<Waypoint> waypoint() {return _waypoint;}
     void setPosition(Point2DLatLon ll);
     QPointF scenePos();
     virtual void setHighlighted(bool h);
@@ -24,14 +25,17 @@ public:
     virtual void setEditable(bool ed);
     virtual void removeFromScene();
     virtual void updateGraphics();
+    void updatePosition();
     virtual ItemType getType() {return ITEM_WAYPOINT;}
     void setIgnoreEvent(bool ignore);
     bool isMoving() {return moving;}
     void setStyle(GraphicsPoint::Style s){point->setStyle(s);}
+    void setMoving(bool m) {moving = m;}
 
 signals:
     void waypointMoved(Point2DLatLon latlon_pos);
-    void waypointMoveFinished(Point2DLatLon latlon_pos);
+    void waypointMoveFinished();
+    void waypointDoubleClicked();
 
 
 private:
@@ -39,7 +43,8 @@ private:
     QString name;
     GraphicsPoint * point;
     QGraphicsTextItem* graphics_text;
-    shared_ptr<Waypoint> waypoint;
+    shared_ptr<Waypoint> original_waypoint;
+    shared_ptr<Waypoint> _waypoint;
     int altitude;
     bool highlighted;
     bool moving;

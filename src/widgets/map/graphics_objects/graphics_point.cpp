@@ -124,6 +124,14 @@ void GraphicsPoint::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     changeFocus();
 }
 
+void GraphicsPoint::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+    if(ignore_events) {
+        event->ignore();
+        return;
+    }
+    emit(objectDoubleClicked(event->scenePos()));
+}
+
 void GraphicsPoint::changeFocus() {
     if(!isHighlighted()) {
         current_color = &color_unfocused;
