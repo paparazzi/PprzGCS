@@ -72,6 +72,10 @@ void LockButton::paintEvent(QPaintEvent* e) {
 }
 
 void LockButton::mousePressEvent(QMouseEvent *e) {
+    if(e->button() != Qt::LeftButton) {
+        return;
+    }
+
     if(lock_rect.contains(e->pos())) {
         state = IDLE;
     } else {
@@ -82,7 +86,10 @@ void LockButton::mousePressEvent(QMouseEvent *e) {
 }
 
 void LockButton::mouseReleaseEvent(QMouseEvent *e) {
-    (void)e;
+    if(e->button() != Qt::LeftButton) {
+        return;
+    }
+
     state = HOVER;
 
     if(lock_rect.contains(e->pos())) {
