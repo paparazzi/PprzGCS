@@ -2,13 +2,14 @@
 
 LayerCombo::LayerCombo(QWidget *parent) : QWidget(parent), moved_layer_control(nullptr)
 {
-    scroll = new QScrollArea();
-    scroll_content = new QWidget();
+    scroll = new QScrollArea(this);
+    scroll_content = new QWidget(scroll);
     content_layout = new QVBoxLayout(scroll_content);
     main_layout  = new QVBoxLayout(this);
     main_layout->addWidget(scroll);
     scroll->setWidget(scroll_content);
     scroll->setWidgetResizable(true);
+    scroll->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
 
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
@@ -17,6 +18,16 @@ LayerCombo::LayerCombo(QWidget *parent) : QWidget(parent), moved_layer_control(n
     moved_thumbnail->setWindowFlag(Qt::FramelessWindowHint);
     moved_thumbnail->setWindowFlag(Qt::WindowStaysOnTopHint);
 
+    scroll_content->installEventFilter(this);
+    //scroll->horizontalScrollBar()->setEnabled(false);
+}
+
+bool LayerCombo::eventFilter(QObject *object, QEvent *event)
+{
+    if (object == scroll_content && event->type() == QEvent::Resize) {
+        resize(scroll_content->width() + 40 , size().height());
+    }
+    return false;
 }
 
 void LayerCombo::addLayerControl(MapLayerControl* mlc) {
@@ -34,7 +45,6 @@ void LayerCombo::mousePressEvent(QMouseEvent* e) {
             QSize pSize = mlc->pixmap()->size();
             QSize pixSize = QSize(pSize.width()/2, pSize.height()/2);
             moved_thumbnail->setPixmap(mlc->pixmap()->scaled(pixSize));
-            //moved_thumbnail->resize(moved_thumbnail->pixmap()->size());
             moved_thumbnail->raise();
 
             QPoint globalPos = mapToGlobal(e->pos());
@@ -52,28 +62,28 @@ void LayerCombo::mouseMoveEvent(QMouseEvent* e) {
         QSize pixSize = moved_thumbnail->pixmap()->size();
         QPoint pos(globalPos.x()-pixSize.width()/2, globalPos.y()-pixSize.height()/2);
         moved_thumbnail->move(pos);
-        qDebug() << "moved at " << e->pos();
-        int scroll_y = e->pos().y();
-        //int scroll_y = mapTo(scroll, e->pos()).y();
-        qDebug() << "bbb";
-        int scroll_value = scroll->verticalScrollBar()->value();
-        qDebug() << "ccc";
-        if(scroll_y < 30) {
-            scroll_value = qMax(scroll_value - scroll_y, scroll->verticalScrollBar()->minimum());
-            qDebug() << "scroll up";
+        int w_y = e->pos().y();
+
+//        double scbv = (static_cast<double>(w_y) / static_cast<double>(scroll->height())) * scroll->verticalScrollBar()->maximum();
+//        scroll->verticalScrollBar()->setValue(static_cast<int>(scbv));
+
+        if(w_y < 30) {
+            int scroll_value = scroll->verticalScrollBar()->value();
+            scroll_value = qMax(scroll_value - w_y, scroll->verticalScrollBar()->minimum());
             scroll->verticalScrollBar()->setValue(scroll_value);
-        } else if(scroll->height() - scroll_y < 30) {
-            qDebug() << "scroll down";
-            scroll_value = qMin(scroll_value + scroll->height() - scroll_y, scroll->verticalScrollBar()->maximum());
+        } else if(scroll->height() - w_y < 30) {
+            int scroll_value = scroll->verticalScrollBar()->value();
+            scroll_value = qMin(scroll_value + scroll->height() - w_y, scroll->verticalScrollBar()->maximum());
             scroll->verticalScrollBar()->setValue(scroll_value);
         }
     }
 }
 
 void LayerCombo::mouseReleaseEvent(QMouseEvent* e) {
+
     if(moved_layer_control) {
         moved_thumbnail->hide();
-        int release_y = e->pos().y();
+        int release_y = scroll_content->mapFrom(this, e->pos()).y();
         int old_z = moved_layer_control->zValue();
 
         auto top_mlc = std::max_element(map_layer_controls.begin(), map_layer_controls.end(),

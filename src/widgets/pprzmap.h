@@ -71,8 +71,6 @@ private:
     QString current_ac;
 
     CoordinatesTransform ct_wgs84_utm;
-
-    LayerCombo* layers_drop;
 };
 
 #endif // PPRZMAP_H
