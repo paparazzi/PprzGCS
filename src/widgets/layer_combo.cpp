@@ -24,8 +24,9 @@ LayerCombo::LayerCombo(QWidget *parent) : QWidget(parent), moved_layer_control(n
 
 bool LayerCombo::eventFilter(QObject *object, QEvent *event)
 {
+
     if (object == scroll_content && event->type() == QEvent::Resize) {
-        resize(scroll_content->width() + 40 , size().height());
+        resize(scroll_content->sizeHint().width() + 40 , size().height());
     }
     return false;
 }
