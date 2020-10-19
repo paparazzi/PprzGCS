@@ -23,6 +23,10 @@ Aircraft& AircraftManager::getAircraft(QString id) {
     }
 }
 
+QList<Aircraft> AircraftManager::getAircrafts() {
+    return aircrafts.values();
+}
+
 void AircraftManager::addAircraft(pprzlink::Message msg) {
     std::string ac_id, ac_name, default_gui_color, flight_plan, airframe, radio, settings;
     msg.getField("ac_id", ac_id);

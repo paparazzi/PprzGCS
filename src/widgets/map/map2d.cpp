@@ -223,6 +223,14 @@ void Map2D::updateTiles() {
     }
 }
 
+void Map2D::getViewPoints(Point2DLatLon& nw, Point2DLatLon& se) {
+    QPointF top_left = mapToScene(QPoint(0,0));
+    QPointF bottom_right = mapToScene(QPoint(width(),height()));
+    nw = latlonPoint(top_left, zoomLevel(zoom()), tile_size);
+    se = latlonPoint(bottom_right, zoomLevel(zoom()), tile_size);
+}
+
+
 void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {
     if(tileReady->hasData()){
         if(!tileObj->isInScene()) {    // Not in scene, so lets add it

@@ -20,6 +20,7 @@
 #include "AircraftManager.h"
 #include "pprzmain.h"
 #include "waypointeditor.h"
+#include "srtm_manager.h"
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
@@ -54,6 +55,30 @@ PprzMap::PprzMap(QWidget *parent) :
                 (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
             }
         });
+
+    connect(ui->srtm_button, &QPushButton::clicked, [=]() {
+
+        // Download SRTM tile(s) for each flightplan footprint
+        for(auto ac: AircraftManager::get()->getAircrafts()) {
+            double min_lat = 90;
+            double min_lon = 180;
+            double max_lat = -90;
+            double max_lon = -180;
+            for(auto wp: ac.getFlightPlan().getWaypoints()) {
+                min_lat = min(min_lat, wp->getLat());
+                max_lat = max(max_lat, wp->getLat());
+                min_lon = min(min_lon, wp->getLon());
+                max_lon = max(max_lon, wp->getLon());
+            }
+            SRTMManager::get()->load_srtm(min_lat, max_lat, min_lon, max_lon);
+        }
+
+        // Download SRTM tile(s) for view footprint
+        Point2DLatLon nw(0, 0), se(0, 0);
+        ui->map->getViewPoints(nw, se);
+        SRTMManager::get()->load_srtm(se.lat(), nw.lat(), nw.lon(), se.lon());
+
+    });
 
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &PprzMap::updateAircraftItem);
     connect(PprzDispatcher::get(), &PprzDispatcher::waypoint_moved, this, &PprzMap::moveWaypoint);
@@ -274,6 +299,14 @@ void PprzMap::handleMouseMove(QPointF scenePos) {
 
         ui->pos_label->setText(QString("%1").arg(static_cast<int>(azimut), 3, 10, QChar(' ')) + "° " +
                                QString("%1").arg(static_cast<int>(distance), 4, 10, QChar(' ')) + "m");
+    }
+
+    auto ele = SRTMManager::get()->get_elevation(pt.lat(), pt.lon());
+    if(ele) {
+        QString txt = QString("SRTM: ") + QString("%1").arg(ele.value(), 4, 10, QChar(' ')) + "m";
+        ui->srtm_label->setText(txt);
+    } else {
+        ui->srtm_label->setText("SRTM: None");
     }
 }
 

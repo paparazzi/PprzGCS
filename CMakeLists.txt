@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.12)
 
 project(PprzGCS)
 
@@ -20,11 +20,13 @@ endif()
 
 find_package(Qt5 COMPONENTS Widgets Xml Network Svg REQUIRED)
 find_package(PROJ REQUIRED)
-
+find_package(libzippp 3.0 REQUIRED)
 
 set(PPRZLINK_PATH ext/pprzlink/lib/v2.0/C++)
 add_subdirectory(${PPRZLINK_PATH} pprzlink)
 
+#set(LIBZIPPP_PATH ext/libzippp)
+#add_subdirectory(${LIBZIPPP_PATH} pprzlink)
 
 set(SOURCE
     ${SOURCE}
@@ -92,6 +94,7 @@ set(SOURCE
     src/geometry/point2dtile.cpp
     resources/ressources.qrc
     src/AircraftManager.cpp
+    src/srtm_manager.cpp
     src/aircraft.cpp
     src/common/waypoint.cpp
     src/common/block.cpp
@@ -112,7 +115,7 @@ include_directories(
     src/widgets/map/graphics_objects/
     src/widgets/basics/
     ${PPRZLINK_PATH}
-    ${PROJ_INCLUDE_DIRS}
+    ${PROJ_INCLUDE_DIRS} 
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE})
@@ -125,5 +128,6 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Svg
     ${PROJ_LIBRARIES}
     ${Boost_LIBRARIES}
+    libzippp::libzippp
 )
 

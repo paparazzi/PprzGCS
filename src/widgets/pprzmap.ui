@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>548</width>
+    <height>351</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,9 +17,9 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="layer_button">
+      <widget class="QPushButton" name="srtm_button">
        <property name="text">
-        <string>Layers</string>
+        <string>SRTM</string>
        </property>
       </widget>
      </item>
@@ -35,6 +35,18 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QLabel" name="srtm_label">
+       <property name="font">
+        <font>
+         <family>Ubuntu Mono</family>
+        </font>
+       </property>
+       <property name="text">
+        <string>SRTM label</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QComboBox" name="reference_combobox">
@@ -58,7 +70,7 @@
         </font>
        </property>
        <property name="text">
-        <string>TextLabel</string>
+        <string>pos_label</string>
        </property>
       </widget>
      </item>

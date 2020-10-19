@@ -24,6 +24,7 @@ public:
     std::map<QString, TileProviderConfig*>* tileProviders() {return &sourceConfigs;}
     QList<QString> tileProvidersNames();
     void updateTiles();
+    void getViewPoints(Point2DLatLon& nw, Point2DLatLon& sw);
     double zoom() {return _zoom;}
 //    int zoomLevel() {return static_cast<int>(ceil(_zoom));}
     void setZoom(double z);

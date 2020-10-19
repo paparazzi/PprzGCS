@@ -10,6 +10,7 @@
 #include <optional>
 #include <map>
 #include <pprzlink/Message.h>
+#include <QMap>
 
 class AircraftManager {
 public:
@@ -21,6 +22,7 @@ public:
     }
 
     Aircraft& getAircraft(QString id);
+    QList<Aircraft> getAircrafts();
     void addAircraft(pprzlink::Message msg);
     bool aircraftExists(QString id);
 
@@ -29,7 +31,7 @@ private:
     explicit AircraftManager();
     static QColor parseColor(std::string str);
 
-    std::map<QString, Aircraft> aircrafts;
+    QMap<QString, Aircraft> aircrafts;
 
 };
 
