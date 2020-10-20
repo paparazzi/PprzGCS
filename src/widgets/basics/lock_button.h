@@ -13,11 +13,11 @@ class LockButton : public QWidget
     Q_PROPERTY(QColor color_hover MEMBER m_color_hover DESIGNABLE true)
     Q_PROPERTY(QColor color_idle  MEMBER m_color_idle DESIGNABLE true)
     Q_PROPERTY(QColor color_pressed  MEMBER m_color_pressed DESIGNABLE true)
-    Q_PROPERTY(int size WRITE setSizeProperty DESIGNABLE true)
+    Q_PROPERTY(int size READ getSizeProperty WRITE setSizeProperty DESIGNABLE true)
 public:
     explicit LockButton(QIcon icon, QWidget *parent = nullptr);
     void setSizeProperty(int s) {setSize(QSize(s,s));}
-
+    int getSizeProperty() {return _size.width();}
 
     QSize sizeHint() const;
     QSize minimumSizeHint() const;

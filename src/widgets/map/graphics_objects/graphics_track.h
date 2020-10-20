@@ -8,6 +8,7 @@
 class GraphicsTrack : public GraphicsObject, public QGraphicsItem
 {
     Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
 public:
     explicit GraphicsTrack(QColor color_idle, QColor color_unfocused, QObject *parent = nullptr);
     explicit GraphicsTrack(QColor color_idle, QColor color_unfocused, QPolygonF points, QObject *parent = nullptr);

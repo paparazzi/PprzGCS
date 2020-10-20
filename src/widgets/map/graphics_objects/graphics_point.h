@@ -15,6 +15,7 @@ enum PointMoveState {
 class GraphicsPoint : public GraphicsObject, public QGraphicsItem
 {
     Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
 public:
     explicit GraphicsPoint(int size, QColor color, QObject *parent = nullptr);
     void setColors(QColor colPressed, QColor colMoving, QColor colUnfocused);

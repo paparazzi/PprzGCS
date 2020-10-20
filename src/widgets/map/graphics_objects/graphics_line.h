@@ -9,6 +9,7 @@
 class GraphicsLine : public GraphicsObject, public QGraphicsItem
 {
     Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
 public:
 
     explicit GraphicsLine(QPointF a, QPointF b, QColor color, int stroke, QObject *parent = nullptr);

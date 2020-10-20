@@ -15,6 +15,7 @@ enum CircleScaleState {
 class GraphicsCircle : public GraphicsObject, public QGraphicsItem
 {
     Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
 public:
     explicit GraphicsCircle(double radius, QColor color, int stroke, QObject *parent = nullptr);
     void setRadius(double r);

@@ -8,6 +8,8 @@
 
 class GraphicsAircraft : public GraphicsObject, public QGraphicsItem
 {
+    Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
 public:
     GraphicsAircraft(QColor color, QString icon_path, int size);
 

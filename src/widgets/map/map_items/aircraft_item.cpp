@@ -7,7 +7,7 @@
 
 AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, 200, map, neutral_scale_zoom, parent),
-    latlon(pt), last_chunk_index(0)
+    latlon(pt), heading(0.), last_chunk_index(0)
 {
     Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
     int size = qApp->property("AIRCRAFTS_SIZE").toInt();
