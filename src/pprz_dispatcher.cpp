@@ -115,6 +115,8 @@ void PprzDispatcher::start() {
     pprzlink::Message msg(dict->getDefinition("AIRCRAFTS_REQ"));
     msg.setSenderId(pprzlink_id);
 
+    started = true;
+
     link->sendRequest(msg, [=](std::string ac_id, pprzlink::Message msg) {
         (void)ac_id;
         std::string ac_list;
@@ -137,7 +139,4 @@ void PprzDispatcher::start() {
             requestConfig(id);
         }
     );
-
-    started = true;
-
 }
