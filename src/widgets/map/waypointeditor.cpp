@@ -13,16 +13,26 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     auto infoLay = new QVBoxLayout();
     lay->addLayout(infoLay);
 
+    auto combo = new QComboBox(this);
+    combo->addItem("WGS84");
+    combo->addItem("WGS84 sexa");
+    for(auto wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
+        combo->addItem(wp->getName().c_str());
+    }
+    infoLay->addWidget(combo);
+    combo->setEnabled(false);
+
     auto latLay = new QHBoxLayout();
-    latLay->addWidget(new QLabel("lat", this));
+    auto axis1_label = new QLabel("lat", this);
+    latLay->addWidget(axis1_label);
     auto latEdit = new QLineEdit(QString::number(wi->waypoint()->getLat()), this);
     latLay->addWidget(latEdit);
 
     auto lonLay = new QHBoxLayout();
-    lonLay->addWidget(new QLabel("lon", this));
+    auto axis2_label = new QLabel("lon", this);
+    lonLay->addWidget(axis2_label);
     auto lonEdit = new QLineEdit(QString::number(wi->waypoint()->getLon()), this);
     lonLay->addWidget(lonEdit);
-
 
     auto altLay = new QHBoxLayout();
     altLay->addWidget(new QLabel("alt", this));
@@ -43,6 +53,11 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     butLay->addWidget(upButton);
     butLay->addWidget(downButton);
 
+    infoLay->addLayout(latLay);
+    infoLay->addLayout(lonLay);
+    infoLay->addLayout(altLay);
+    infoLay->addLayout(butLay);
+
     auto updateAgl = [=]() {
         auto ele = SRTMManager::get()->get_elevation(wi->waypoint()->getLat(), wi->waypoint()->getLon());
         double agl;
@@ -57,12 +72,8 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
         aglLabel->setText("AGL: " + QString::number(agl) + "m");
     };
 
-    updateAgl();
 
-    infoLay->addLayout(latLay);
-    infoLay->addLayout(lonLay);
-    infoLay->addLayout(altLay);
-    infoLay->addLayout(butLay);
+    updateAgl();
 
     connect(latEdit, &QLineEdit::textChanged, [=](){
         bool ok = false;
@@ -102,6 +113,17 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
         wi->waypoint()->setAlt(wi->waypoint()->getAlt() - 10);
         altSpin->setValue(wi->waypoint()->getAlt());
         updateAgl();
+    });
+
+
+    connect(combo, &QComboBox::currentTextChanged, [=](const QString &text) {
+        if(text == "WGS84" || text == "WGS84 sexa") {
+            axis1_label->setText("lat");
+            axis2_label->setText("lon");
+        } else {
+            axis1_label->setText("x");
+            axis2_label->setText("y");
+        }
     });
 
 
