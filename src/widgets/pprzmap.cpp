@@ -262,8 +262,15 @@ void PprzMap::handleNewAC(QString ac_id) {
             auto dialog_move_waypoint = [=]() {
                 wpi->setMoving(true);
                 auto we = new WaypointEditor(wpi, ac_id);
-                we->exec();
-                wpi->setMoving(false);
+                auto view_pos = ui->map->mapFromScene(wpi->scenePos());
+                auto global_pos = ui->map->mapToGlobal(view_pos);
+                we->show(); //show just to get the width and height right.
+                we->move(global_pos - QPoint(we->width()/2, we->height()/2));
+                connect(we, &QDialog::finished, [=](int result) {
+                    (void)result;
+                    wpi->setMoving(false);
+                });
+                we->open();
             };
 
             connect(wpi, &WaypointItem::waypointMoveFinished, dialog_move_waypoint);
