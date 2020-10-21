@@ -28,15 +28,18 @@ FlightPlan::FlightPlan(string uri) : origin()
     }
     else {
         XMLElement* fp_root = doc.FirstChildElement( "dump" )->FirstChildElement( "flight_plan" );
+        name = fp_root->Attribute("name");
         const char* lat0 = fp_root->Attribute("lat0");
         const char* lon0 = fp_root->Attribute("lon0");
         const char* defalt = fp_root->Attribute("alt");
-
-        if(lat0 == nullptr || lon0 == nullptr || defalt == nullptr) {
-            throw runtime_error("lat0, lon0 or alt not filled!");
-        }
+        const char* max_dist_home = fp_root->Attribute("max_dist_from_home");
+        const char* gnd_alt = fp_root->Attribute("ground_alt");
+        const char* sec_h = fp_root->Attribute("security_height");
 
         defaultAlt = stod(defalt);
+        max_dist_from_home = stod(max_dist_home);
+        ground_alt = stod(gnd_alt);
+        security_height = stod(sec_h);
 
         origin = make_shared<Waypoint>("__ORIGIN", 0, stod(lat0), stod(lon0), defaultAlt);
 

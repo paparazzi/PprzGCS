@@ -28,6 +28,8 @@ public:
     vector<shared_ptr<BlockGroup>> getGroups();
     shared_ptr<Block> getBlock(uint8_t id);
     double getDefaultAltitude() {return defaultAlt;}
+    double getGroundAlt() {return ground_alt;}
+    void setGroundAlt(double ga) {ground_alt = ga;}
     shared_ptr<Waypoint> getOrigin() {return origin;}
 
 private:
@@ -40,6 +42,10 @@ private:
     shared_ptr<Waypoint> origin;
 
     double defaultAlt;
+    string name;
+    double max_dist_from_home;
+    double ground_alt;
+    double security_height;
 };
 
 #endif // FLIGHTPLAN_H
