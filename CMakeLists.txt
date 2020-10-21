@@ -92,6 +92,7 @@ set(SOURCE
     src/geometry/coordinatestransform.cpp
     src/geometry/point2dlatlon.cpp
     src/geometry/point2dtile.cpp
+    src/geometry/point2dpseudomercator.cpp
     resources/ressources.qrc
     src/AircraftManager.cpp
     src/srtm_manager.cpp

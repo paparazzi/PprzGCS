@@ -4,9 +4,15 @@
 #include <iomanip>
 #include <math.h>
 
+CoordinatesTransform* CoordinatesTransform::singleton = nullptr;
+
 CoordinatesTransform::CoordinatesTransform() : pj_context(nullptr), proj(nullptr), transform(NO_TRANSFORM)
 {
     pj_context = proj_context_create();
+    proj_4326_3857 = proj_create_crs_to_crs (pj_context,
+        "EPSG:4326",
+        "EPSG:3857",
+        nullptr);
 }
 
 CoordinatesTransform::~CoordinatesTransform()
@@ -17,6 +23,9 @@ CoordinatesTransform::~CoordinatesTransform()
 
 void CoordinatesTransform::init_WGS84_UTM(double lat, double lon) {
     string epsg = utm_epsg(lat, lon);
+    if(proj != nullptr) {
+        proj_destroy(proj);
+    }
     proj = proj_create_crs_to_crs (pj_context,
         "EPSG:4326",
         epsg.c_str(),
@@ -24,12 +33,15 @@ void CoordinatesTransform::init_WGS84_UTM(double lat, double lon) {
     transform = WGS84_UTM;
 }
 
-void CoordinatesTransform::init_WGS84_web_mercator() {
-    proj = proj_create_crs_to_crs (pj_context,
-        "EPSG:4326",
-        "EPSG:3857",
-        nullptr);
-    transform = WGS84_WEB_MERCATOR;
+Point2DPseudoMercator CoordinatesTransform::WGS84_to_pseudoMercator(Point2DLatLon ll) {
+    auto plop = proj_trans (proj_4326_3857, PJ_FWD, proj_coord(ll.lat(), ll.lon(), 0, 0));
+    return Point2DPseudoMercator(plop.xy.x, plop.xy.y);
+}
+
+Point2DLatLon CoordinatesTransform::pseudoMercator_to_WGS84(Point2DPseudoMercator pm) {
+    auto plop = proj_trans (proj_4326_3857, PJ_INV, proj_coord(pm.x(), pm.y(), 0, 0));
+    (void)plop;
+    return Point2DLatLon(plop.lp.lam, plop.lp.phi);
 }
 
 

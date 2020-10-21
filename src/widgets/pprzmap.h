@@ -70,7 +70,7 @@ private:
 
     QString current_ac;
 
-    CoordinatesTransform ct_wgs84_utm;
+    //CoordinatesTransform ct_wgs84_utm;
 };
 
 #endif // PPRZMAP_H

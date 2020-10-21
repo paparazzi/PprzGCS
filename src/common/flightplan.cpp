@@ -51,8 +51,8 @@ FlightPlan::FlightPlan(string uri) : origin()
 }
 
 void FlightPlan::parse_waypoints(XMLElement* wps) {
-    CoordinatesTransform ct;
-    ct.init_WGS84_UTM(origin->getLat(), origin->getLon());
+    //CoordinatesTransform ct;
+    CoordinatesTransform::get()->init_WGS84_UTM(origin->getLat(), origin->getLon());
 
     XMLElement* wp = wps->FirstChildElement();
     uint8_t wp_id = 1;
@@ -84,7 +84,7 @@ void FlightPlan::parse_waypoints(XMLElement* wps) {
         }
         else if(x_p !=nullptr && y_p != nullptr) {
             double lat, lon;
-            ct.relative_to_wgs84(origin->getLat(), origin->getLon(), stod(x_p), stod(y_p), &lat, &lon);
+            CoordinatesTransform::get()->relative_to_wgs84(origin->getLat(), origin->getLon(), stod(x_p), stod(y_p), &lat, &lon);
             waypoints.push_back(make_shared<Waypoint>(name_p, wp_id, lat, lon, alt, origin, altType));
         } else {
             throw runtime_error("You must specify either x/y or lat/lon!");

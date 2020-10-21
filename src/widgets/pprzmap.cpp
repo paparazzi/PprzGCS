@@ -21,6 +21,7 @@
 #include "pprzmain.h"
 #include "waypointeditor.h"
 #include "srtm_manager.h"
+#include "point2dpseudomercator.h"
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
@@ -245,9 +246,9 @@ void PprzMap::updateAircraftItem(pprzlink::Message msg) {
 }
 
 void PprzMap::handleNewAC(QString ac_id) {
-    if(!ct_wgs84_utm.isInitialized()) {
+    if(!CoordinatesTransform::get()->isInitialized()) {
         auto orig = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getOrigin();
-        ct_wgs84_utm.init_WGS84_UTM(orig->getLat(), orig->getLon());
+        CoordinatesTransform::get()->init_WGS84_UTM(orig->getLat(), orig->getLon());
     }
     int z = (current_ac == ac_id) ? qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toInt():
                                    qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toInt();
@@ -288,7 +289,9 @@ void PprzMap::handleNewAC(QString ac_id) {
 }
 
 void PprzMap::handleMouseMove(QPointF scenePos) {
-    Point2DLatLon pt = latlonPoint(scenePos, zoomLevel(ui->map->zoom()), ui->map->tileSize());
+    auto tp = tilePoint(scenePos, zoomLevel(ui->map->zoom()), ui->map->tileSize());
+    Point2DPseudoMercator ppm(tp);
+    auto pt = CoordinatesTransform::get()->pseudoMercator_to_WGS84(ppm);
 
     if(ui->reference_combobox->currentIndex() == 0) {
         QString txt = QString::number(pt.lat(), 'f', 7) + ", " + QString::number(pt.lon(), 'f', 7);
@@ -302,7 +305,8 @@ void PprzMap::handleMouseMove(QPointF scenePos) {
         Point2DLatLon pt_wp(ref_wp);
 
         double distance, azimut;
-        ct_wgs84_utm.distance_azimut(pt_wp, pt, distance, azimut);
+        CoordinatesTransform::get()->distance_azimut(pt_wp, pt, distance, azimut);
+        //ct_wgs84_utm.distance_azimut(pt_wp, pt, distance, azimut);
 
         ui->pos_label->setText(QString("%1").arg(static_cast<int>(azimut), 3, 10, QChar(' ')) + "° " +
                                QString("%1").arg(static_cast<int>(distance), 4, 10, QChar(' ')) + "m");

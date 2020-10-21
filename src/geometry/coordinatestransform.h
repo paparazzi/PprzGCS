@@ -4,6 +4,7 @@
 #include <string>
 #include <proj.h>
 #include "point2dlatlon.h"
+#include "point2dpseudomercator.h"
 
 using namespace std;
 
@@ -16,12 +17,20 @@ public:
         WGS84_WEB_MERCATOR
     };
 
-    CoordinatesTransform();
+    static CoordinatesTransform* get() {
+        if(singleton == nullptr) {
+            singleton = new CoordinatesTransform();
+        }
+        return singleton;
+    }
+
+
     ~CoordinatesTransform();
 
     bool isInitialized() {return transform != NO_TRANSFORM;}
     void init_WGS84_UTM(double lat, double lon);
-    void init_WGS84_web_mercator();
+    Point2DPseudoMercator WGS84_to_pseudoMercator(Point2DLatLon);
+    Point2DLatLon pseudoMercator_to_WGS84(Point2DPseudoMercator);
     PJ_COORD trans(PJ_COORD src);
     PJ_COORD trans_inv(PJ_COORD src);
     void relative_to_wgs84(double lat0, double lon0, double x, double y, double* lat, double* lon);
@@ -31,9 +40,13 @@ public:
 
 
 private:
+    CoordinatesTransform();
+    static CoordinatesTransform* singleton;
+
     static string utm_epsg(double lat, double lon);
     PJ_CONTEXT* pj_context;
     PJ* proj;
+    PJ* proj_4326_3857;
 
     Transform transform;
 
