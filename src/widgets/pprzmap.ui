@@ -24,6 +24,18 @@
       </widget>
      </item>
      <item>
+      <widget class="QLabel" name="srtm_label">
+       <property name="font">
+        <font>
+         <family>Ubuntu Mono</family>
+        </font>
+       </property>
+       <property name="text">
+        <string>SRTM label</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -35,18 +47,6 @@
         </size>
        </property>
       </spacer>
-     </item>
-     <item>
-      <widget class="QLabel" name="srtm_label">
-       <property name="font">
-        <font>
-         <family>Ubuntu Mono</family>
-        </font>
-       </property>
-       <property name="text">
-        <string>SRTM label</string>
-       </property>
-      </widget>
      </item>
      <item>
       <widget class="QComboBox" name="reference_combobox">

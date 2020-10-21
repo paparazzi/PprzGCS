@@ -310,10 +310,10 @@ void PprzMap::handleMouseMove(QPointF scenePos) {
 
     auto ele = SRTMManager::get()->get_elevation(pt.lat(), pt.lon());
     if(ele) {
-        QString txt = QString("SRTM: ") + QString("%1").arg(ele.value(), 4, 10, QChar(' ')) + "m";
+        QString txt = QString("%1").arg(ele.value(), 4, 10, QChar(' ')) + "m";
         ui->srtm_label->setText(txt);
     } else {
-        ui->srtm_label->setText("SRTM: None");
+        ui->srtm_label->setText("No SRTM");
     }
 }
 
