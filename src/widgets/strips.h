@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QLayout>
 #include "configurable.h"
+#include "strip.h"
 
 class Strips : public QWidget, public Configurable
 {
@@ -17,7 +18,8 @@ signals:
 private:
     void handleNewAC(QString ac_id);
 
-    std::map<QString, QWidget*> strips;
+    std::map<QString, Strip*> strips;
+    QVBoxLayout* scroll_layout;
 public slots:
 };
 

@@ -7,28 +7,31 @@ WidgetStack::WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor,
     constructor(constructor)
 {
     vLayout = new QVBoxLayout(this);
-    stack = new QStackedWidget(this);
-
+    vLayout->setSpacing(0);
+    auto contentWidget = new QWidget(this);
+    stackLayout = new QVBoxLayout(contentWidget);
+    contentWidget->setAutoFillBackground(true);
+    stackLayout->setContentsMargins(0,0,0,0);
     ac_selector = new ACSelector(this);
     vLayout->addWidget(ac_selector);
 
-
-
-    vLayout->addWidget(stack);
+    vLayout->addWidget(contentWidget);
 
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &WidgetStack::handleNewAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this,
             [=](QString ac_id) {
-                if(viewers_indexes.keys().contains(ac_id)) {
-                  stack->setCurrentIndex(viewers_indexes[ac_id]);
+                for(auto id : viewers_widgets.keys()) {
+                    if(id == ac_id) {
+                        viewers_widgets[id]->show();
+                    } else {
+                        viewers_widgets[id]->hide();
+                    }
                 }
             });
-
-    stack->setAutoFillBackground(true);
 }
 
 void WidgetStack::handleNewAC(QString ac_id) {
     auto sv = constructor(ac_id, this);
-    int index = stack->addWidget(sv);
-    viewers_indexes[ac_id] = index;
+    stackLayout->addWidget(sv);
+    viewers_widgets[ac_id] = sv;
 }

@@ -294,6 +294,7 @@ void PprzMap::handleMouseMove(QPointF scenePos) {
     auto pt = CoordinatesTransform::get()->pseudoMercator_to_WGS84(ppm);
 
     if(ui->reference_combobox->currentIndex() == 0) {
+        // Why 6 digits ? Its smaller than a person, and bigger than a waldo: https://xkcd.com/2170/
         QString txt = QString("%1").arg(pt.lat(), 10, 'f', 6, QChar(' ')) + "," + QString("%1").arg(pt.lon(), 11, 'f', 6, QChar(' '));
         ui->pos_label->setText(txt);
     } else if (ui->reference_combobox->currentIndex() == 1) {

@@ -17,11 +17,11 @@ public:
 private:
     void handleNewAC(QString ac_id);
 
-    QMap<QString, int> viewers_indexes;
+    QMap<QString, QWidget*> viewers_widgets;
 
     QVBoxLayout* vLayout;
     ACSelector* ac_selector;
-    QStackedWidget* stack;
+    QVBoxLayout* stackLayout;
 
     std::function<QWidget*(QString, QWidget*)> constructor;
 };

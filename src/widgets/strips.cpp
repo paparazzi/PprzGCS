@@ -5,26 +5,27 @@
 
 Strips::Strips(QWidget *parent) : QWidget(parent)
 {
-    new QVBoxLayout(this);
-    connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &Strips::handleNewAC);
+    auto scroll = new QScrollArea(this);
+    auto scroll_content = new QWidget(scroll);
+    scroll_layout = new QVBoxLayout(scroll_content);
+    auto main_layout  = new QVBoxLayout(this);
+    main_layout->addWidget(scroll);
+    scroll->setWidget(scroll_content);
+    scroll->setWidgetResizable(true);
+    scroll->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
 
-    connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this,
-        [=](QString ac_id) {
-        for(auto strip: strips) {
-            if(strip.first == ac_id) {
-                strip.second->show();
-            } else {
-                strip.second->hide();
-            }
-        }
-    });
+    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+
+
+    scroll_layout->setAlignment(Qt::AlignRight);
+    connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &Strips::handleNewAC);
 }
 
 void Strips::handleNewAC(QString ac_id) {
     auto ac = AircraftManager::get()->getAircraft(ac_id);
 
-    QWidget* pageWidget = new Strip(ac_id, this);
+    Strip* pageWidget = new Strip(ac_id, this);
     strips[ac_id] = pageWidget;
 
-    layout()->addWidget(pageWidget);
+    scroll_layout->addWidget(pageWidget);
 }

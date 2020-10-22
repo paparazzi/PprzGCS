@@ -2,18 +2,23 @@
 #include "AircraftManager.h"
 #include <QPainter>
 #include <QPaintEvent>
+#include "dispatcher_ui.h"
 
-Strip::Strip(QString ac_id, QWidget *parent) : QWidget(parent), _ac_id(ac_id)
+Strip::Strip(QString ac_id, QWidget *parent,  bool full) : QWidget(parent), _ac_id(ac_id)
 {
-    auto stackLayout = new QHBoxLayout(this);
+    auto mainLayout = new QHBoxLayout(this);
+    mainLayout->setSizeConstraint(QLayout::SetFixedSize);
 
     build_full_strip();
     build_short_strip();
-    stackLayout->addWidget(full_strip);
-    stackLayout->addWidget(short_strip);
+    mainLayout->addWidget(full_strip);
+    mainLayout->addWidget(short_strip);
 
-    full_strip->hide();
-
+    if(full) {
+        short_strip->hide();
+    } else {
+        full_strip->hide();
+    }
 
     connect(PprzDispatcher::get(), &PprzDispatcher::engine_status, this, &Strip::updateEngineStatus);
     connect(PprzDispatcher::get(), &PprzDispatcher::ap_status, this, &Strip::updateApStatus);
@@ -22,16 +27,32 @@ Strip::Strip(QString ac_id, QWidget *parent) : QWidget(parent), _ac_id(ac_id)
     connect(PprzDispatcher::get(), &PprzDispatcher::fly_by_wire, this, &Strip::updateFBW);
 }
 
+void Strip::setCompact(bool compact) {
+    full_strip->setVisible(!compact);
+    short_strip->setVisible(compact);
+}
+
 
 void Strip::build_full_strip() {
     full_strip = new QWidget(this);
-    auto layout_fullstrip = new QVBoxLayout(full_strip);
+    auto layout_full = new QHBoxLayout(full_strip);
+
+    auto set_lay = new QGridLayout();
+    addSettingsButtons(set_lay);
+    layout_full->addLayout(set_lay);
+
+    auto fp_lay = new QGridLayout();
+    addFlightPlanButtons(fp_lay);
+    layout_full->addLayout(fp_lay);
+
+    auto layout_status = new QVBoxLayout();
     auto lay_bat_link = new QVBoxLayout();
     auto lay_head = new QHBoxLayout();
     auto lay_body = new QHBoxLayout();
 
-    layout_fullstrip->addLayout(lay_head);
-    layout_fullstrip->addLayout(lay_body);
+    layout_full->addLayout(layout_status);
+    layout_status->addLayout(lay_head);
+    layout_status->addLayout(lay_body);
 
     lay_body->addLayout(lay_bat_link);
 
@@ -49,7 +70,7 @@ void Strip::build_full_strip() {
     lay_head->addWidget(full_throttle_label);
 
 
-    // get bat min and max
+    // TODO get bat min and max
     //AircraftManager::get()->getAircraft(ac_id).getAirframe()
     full_bat_graph = new GraphLabel(8, 14, full_strip);
     full_bat_graph->setUnit("V");
@@ -84,8 +105,6 @@ void Strip::build_full_strip() {
     full_alt_graph->setUnit("m");
     full_alt_graph->setIndicator(true);
     lay_body->addWidget(full_alt_graph);
-
-    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 }
 
 void Strip::build_short_strip() {
@@ -136,6 +155,93 @@ void Strip::build_short_strip() {
 }
 
 
+
+
+
+
+
+
+void Strip::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
+    auto groups = AircraftManager::get()->getAircraft(_ac_id).getFlightPlan().getGroups();
+    int col = static_cast<int>(groups.size());
+    int row = 0;
+    for(auto group: groups) {
+        for(auto block: group->blocks) {
+            QString icon = block->getIcon().c_str();
+            QString txt = block->getText().c_str();
+            QPushButton* b = nullptr;
+
+            if(icon != "") {
+                b = new QPushButton(this);
+                QString icon_path = qApp->property("PATH_GCS_ICON").toString() + "/" + icon;
+                b->setIcon(QIcon(icon_path));
+                if(txt != "") {
+                    b->setToolTip(txt);
+                }
+            } else if (txt != "") {
+                b = new QPushButton(txt, this);
+                b->setToolTip(txt);
+            }
+
+            if(b != nullptr) {
+                fp_buttons_layout->addWidget(b, row, col);
+                  connect(b, &QPushButton::clicked,
+                    [=]() {
+                        pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("JUMP_TO_BLOCK"));
+                        msg.addField("ac_id", _ac_id.toStdString());
+                        msg.addField("block_id", block->getNo());
+                        PprzDispatcher::get()->sendMessage(msg);
+                });
+            }
+            ++row;
+        }
+        --col;
+        row = 0;
+    }
+}
+
+void Strip::addSettingsButtons(QGridLayout* settings_buttons_layout) {
+    vector<shared_ptr<SettingMenu::ButtonGroup>> groups = AircraftManager::get()->getAircraft(_ac_id).getSettingMenu()->getButtonGroups();
+
+    int col = static_cast<int>(groups.size());
+    int row = 0;
+    for(auto group: groups) {
+        for(auto sb: group->buttons) {
+            QString icon = sb->icon.c_str();
+            QString name = sb->name.c_str();
+            QPushButton* b = nullptr;
+
+            if(icon != "") {
+                b = new QPushButton(this);
+                QString icon_path = qApp->property("PATH_GCS_ICON").toString() + "/" + icon;
+                b->setIcon(QIcon(icon_path));
+                if(name != "") {
+                    b->setToolTip(name);
+                }
+            } else if (name != "") {
+                b = new QPushButton(name, this);
+                b->setToolTip(name);
+            }
+
+            if(b != nullptr) {
+                settings_buttons_layout->addWidget(b, row, col);
+                  connect(b, &QPushButton::clicked,
+                    [=]() {
+                        pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
+                        msg.addField("ac_id", _ac_id.toStdString());
+                        msg.addField("index", sb->setting_no);
+                        msg.addField("value", sb->value);
+                        PprzDispatcher::get()->sendMessage(msg);
+                });
+            }
+            ++row;
+        }
+        --col;
+        row = 0;
+    }
+}
+
+
 void Strip::paintEvent(QPaintEvent* e) {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
@@ -156,8 +262,7 @@ void Strip::paintEvent(QPaintEvent* e) {
 
 void Strip::mousePressEvent(QMouseEvent *e) {
     (void)e;
-    full_strip->setVisible(!full_strip->isVisible());
-    short_strip->setVisible(!short_strip->isVisible());
+    emit(DispatcherUi::get()->ac_selected(_ac_id));
 }
 
 void Strip::mouseReleaseEvent(QMouseEvent *e) {

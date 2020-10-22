@@ -1,16 +1,18 @@
 <layout width="1000" height="800">
-    <rows>
+    <columns>
+
             <widget name="map2d" size="800">
                 <configure>
                     <columnLeft>
                         <widget name="flight_planV2" icon="flight_plan.svg"/>
-                        <widget name="settings" icon="settings.svg"/>
                     </columnLeft>
                     <columnRight>
+                        <widget name="map_strip" icon="link_ok.svg"/>
                         <widget name="PFD" icon="pfd.svg"/>
-                        <widget name="strips" icon="link_ok.svg"/>
+                        <widget name="settings" icon="settings.svg"/>
                     </columnRight>
                 </configure>
             </widget>
-    </rows>
+            <widget name="strips"/>
+    </columns>
 </layout>

@@ -38,6 +38,13 @@ QWidget* makeWidget(QString name, QWidget* parent) {
                 },
                 parent);
         }
+    else if (name == "map_strip") {
+        widget = new WidgetStack(
+                [](QString ac_id, QWidget* container) {
+                    return new Strip(ac_id, container, true);
+                },
+                parent);
+        }
     else {
         std::string s = "Widget " + name.toStdString() + " unknown";
         throw runtime_error(s);

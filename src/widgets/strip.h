@@ -12,7 +12,9 @@ class Strip : public QWidget
 {
     Q_OBJECT
 public:
-    explicit Strip(QString ac_id, QWidget *parent = nullptr);
+    explicit Strip(QString ac_id, QWidget *parent = nullptr, bool full = false);
+
+    void setCompact(bool);
 
 signals:
 
@@ -26,6 +28,9 @@ protected:
 private:
     void build_full_strip();
     void build_short_strip();
+
+    void addFlightPlanButtons(QGridLayout*);
+    void addSettingsButtons(QGridLayout*);
 
     void updateEngineStatus(pprzlink::Message msg);
     void updateApStatus(pprzlink::Message msg);
