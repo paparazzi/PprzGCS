@@ -1,5 +1,7 @@
 #include "maputils.h"
 #include <QDebug>
+#include "coordinatestransform.h"
+#include "point2dpseudomercator.h"
 
 constexpr double EARTH_RADIUS = 6378137.0;
 
@@ -12,12 +14,9 @@ QPointF scenePoint(Point2DTile tilePoint, int tileSize) {
 }
 
 QPointF scenePoint(Point2DLatLon latlon, int zoomLvl, int tileSize) {
-    Point2DTile tile_pos = Point2DTile(latlon, zoomLvl);
+    Point2DPseudoMercator pm = CoordinatesTransform::get()->WGS84_to_pseudoMercator(latlon);
+    Point2DTile tile_pos = pm.toTile(zoomLvl);
     return scenePoint(tile_pos, tileSize);
-}
-
-Point2DLatLon latlonPoint(QPointF scenePos, int zoom, int tileSize) {
-    return Point2DLatLon(tilePoint(scenePos, zoom, tileSize));
 }
 
 int zoomLevel(double zoom) {

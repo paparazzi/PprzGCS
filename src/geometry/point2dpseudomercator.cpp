@@ -16,7 +16,7 @@ Point2DPseudoMercator::Point2DPseudoMercator(Point2DTile pt) {
 }
 
 Point2DTile Point2DPseudoMercator::toTile(int zoom) {
-    double xTile = ((1<<zoom)*(_x/EXTENT+ 1))/2;
-    double yTile = ((1<<zoom)*(_y/EXTENT+ 1))/2;
+    double xTile = ((1<<zoom)*(_x/EXTENT+ 1))/2.;
+    double yTile = ((1<<zoom)*(-_y/EXTENT+ 1))/2.;
     return Point2DTile(xTile, yTile, zoom);
 }

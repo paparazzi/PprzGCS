@@ -9,6 +9,7 @@
 #include <QFile>
 #include "utils.h"
 #include "maputils.h"
+#include "coordinatestransform.h"
 
 Map2D::Map2D(QString configFile, QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), _zoom(5.0), tile_size(256), minZoom(0.0), maxZoom(25.0)
 {
@@ -158,7 +159,7 @@ void Map2D::wheelEvent(QWheelEvent* event) {
     // mouse pos in scene
     QPointF oldPos = mapToScene(event->pos());
     // lat lon point pointed by the mouse (at the current zoomLevel)
-    Point2DLatLon poi(tilePoint(oldPos, curZoom, tile_size));
+    auto poi = CoordinatesTransform::get()->wgs84_from_scene(oldPos, curZoom, tile_size);
 
     scale(scaleFactor, scaleFactor);    // apply scale
     // mouse pos in scene after scale
@@ -178,7 +179,7 @@ void Map2D::wheelEvent(QWheelEvent* event) {
 
 void Map2D::setZoom(double z) {
     QPointF center = mapToScene(QPoint(width()/2, height()/2));
-    Point2DLatLon latLon(tilePoint(center, zoomLevel(_zoom), tile_size));
+    auto latLon = CoordinatesTransform::get()->wgs84_from_scene(center, zoomLevel(_zoom), tile_size);
     _zoom = z;
     updateTiles();
     centerLatLon(latLon);
@@ -226,8 +227,8 @@ void Map2D::updateTiles() {
 void Map2D::getViewPoints(Point2DLatLon& nw, Point2DLatLon& se) {
     QPointF top_left = mapToScene(QPoint(0,0));
     QPointF bottom_right = mapToScene(QPoint(width(),height()));
-    nw = latlonPoint(top_left, zoomLevel(zoom()), tile_size);
-    se = latlonPoint(bottom_right, zoomLevel(zoom()), tile_size);
+    nw = CoordinatesTransform::get()->wgs84_from_scene(top_left, zoomLevel(zoom()), tile_size);
+    se = CoordinatesTransform::get()->wgs84_from_scene(bottom_right, zoomLevel(zoom()), tile_size);
 }
 
 
@@ -262,5 +263,5 @@ QList<QString> Map2D::tileProvidersNames() {
 }
 
 Point2DLatLon Map2D::latlonFromView(QPoint viewPos, int zoom) {
-    return Point2DLatLon(tilePoint(mapToScene(viewPos), zoom, tile_size));
+    return CoordinatesTransform::get()->wgs84_from_scene(mapToScene(viewPos), zoom, tile_size);
 }

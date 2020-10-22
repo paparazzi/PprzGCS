@@ -30,7 +30,7 @@ MapItem* SmWaypointItem::update(SmEditEvent event_type, QGraphicsSceneMouseEvent
         assert(waypoint == nullptr && mouseEvent == nullptr);
     } else {
         assert(mouseEvent != nullptr);
-        latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(map->zoom()), map->tileSize());
+        latlon = CoordinatesTransform::get()->wgs84_from_scene(mouseEvent->scenePos(), zoomLevel(map->zoom()), map->tileSize());
     }
 
     switch (state) {

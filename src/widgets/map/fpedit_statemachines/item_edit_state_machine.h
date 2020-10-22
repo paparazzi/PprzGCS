@@ -4,6 +4,7 @@
 #include "map_item.h"
 #include <QGraphicsSceneMouseEvent>
 #include <QColor>
+#include "coordinatestransform.h"
 
 class MapWidget;
 class WaypointItem;

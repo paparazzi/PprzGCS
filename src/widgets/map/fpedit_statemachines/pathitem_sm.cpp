@@ -35,7 +35,7 @@ MapItem* SmPathItem::update(SmEditEvent event_type, QGraphicsSceneMouseEvent* mo
     }
     else {
         assert(mouseEvent != nullptr);
-        latlon = latlonPoint(mouseEvent->scenePos(), zoomLevel(map->zoom()), map->tileSize());
+        latlon = CoordinatesTransform::get()->wgs84_from_scene(mouseEvent->scenePos(), zoomLevel(map->zoom()), map->tileSize());
     }
 
     // if we are editing a path, go direct to MOVING state !

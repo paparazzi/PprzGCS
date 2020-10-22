@@ -6,6 +6,7 @@
 #include <QGraphicsScene>
 #include "mapwidget.h"
 #include "AircraftManager.h"
+#include "coordinatestransform.h"
 
 WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, z_value, map, neutral_scale_zoom, parent), moving(false)
@@ -45,7 +46,7 @@ void WaypointItem::init() {
         point, &GraphicsPoint::pointMoved, this,
         [=](QPointF scene_pos) {
             moving = true;
-            Point2DLatLon latlon = latlonPoint(scene_pos, zoomLevel(map->zoom()), map->tileSize());
+            Point2DLatLon latlon = CoordinatesTransform::get()->wgs84_from_scene(scene_pos, zoomLevel(map->zoom()), map->tileSize());
             graphics_text->setPos(scene_pos + QPointF(10, 10));
             _waypoint->setLat(latlon.lat());
             _waypoint->setLon(latlon.lon());
@@ -56,7 +57,7 @@ void WaypointItem::init() {
     connect(
         point, &GraphicsPoint::pointMoveFinished, this,
         [=](QPointF scene_pos) {
-            Point2DLatLon latlon = latlonPoint(scene_pos, zoomLevel(map->zoom()), map->tileSize());
+            Point2DLatLon latlon = CoordinatesTransform::get()->wgs84_from_scene(scene_pos, zoomLevel(map->zoom()), map->tileSize());
             _waypoint->setLat(latlon.lat());
             _waypoint->setLon(latlon.lon());
             emit(waypointMoveFinished());

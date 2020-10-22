@@ -1,10 +1,14 @@
 #ifndef COORDINATESTRANSFORM_H
 #define COORDINATESTRANSFORM_H
 
+//#pragma once
+
 #include <string>
 #include <proj.h>
 #include "point2dlatlon.h"
 #include "point2dpseudomercator.h"
+#include "point2dtile.h"
+#include <QPointF>
 
 using namespace std;
 
@@ -31,11 +35,10 @@ public:
     void init_WGS84_UTM(double lat, double lon);
     Point2DPseudoMercator WGS84_to_pseudoMercator(Point2DLatLon);
     Point2DLatLon pseudoMercator_to_WGS84(Point2DPseudoMercator);
-    PJ_COORD trans(PJ_COORD src);
-    PJ_COORD trans_inv(PJ_COORD src);
+    Point2DLatLon wgs84_from_scene(QPointF scenePoint, int zoom, int tile_size);
+
     void relative_to_wgs84(double lat0, double lon0, double x, double y, double* lat, double* lon);
-    double distance(Point2DLatLon pt1, Point2DLatLon pt2);
-    double azimut(Point2DLatLon pt1, Point2DLatLon pt2);
+
     void distance_azimut(Point2DLatLon pt1, Point2DLatLon pt2, double& distance, double& azimut);
 
 
@@ -44,6 +47,11 @@ private:
     static CoordinatesTransform* singleton;
 
     static string utm_epsg(double lat, double lon);
+    PJ_COORD trans(PJ_COORD src);
+    PJ_COORD trans_inv(PJ_COORD src);
+    double distance(Point2DLatLon pt1, Point2DLatLon pt2);
+    double azimut(Point2DLatLon pt1, Point2DLatLon pt2);
+
     PJ_CONTEXT* pj_context;
     PJ* proj;
     PJ* proj_4326_3857;
