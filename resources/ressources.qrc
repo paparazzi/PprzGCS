@@ -1,7 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>fake_map.png</file>
-        <file>test_gcs_qt.xml</file>
         <file>tile_sources.xml</file>
         <file>pictures/map_layers_hover.svg</file>
         <file>pictures/map_layers_normal.svg</file>
@@ -26,7 +24,6 @@
         <file>pictures/pfd_aircraft_yaw_rotorcraft.svg</file>
         <file>pictures/lock.svg</file>
         <file>pictures/unlocked.svg</file>
-        <file>dark.qss</file>
         <file>pictures/lock_dark.svg</file>
         <file>pictures/lock_warning.svg</file>
         <file>style.qss</file>

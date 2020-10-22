@@ -62,7 +62,8 @@ int main(int argc, char *argv[])
     a.setProperty("TRACK_MAX_CHUNKS", 10);
     a.setProperty("TRACK_CHUNCK_SIZE", 20);
 
-    QMainWindow* w = build_layout("://test_gcs_qt.xml");
+    QString layout_path = PAPARAZZI_GCS_DATA + "/conf/default_layout.xml";
+    QMainWindow* w = build_layout(layout_path);
 
     PprzDispatcher::get()->start();
 
