@@ -6,7 +6,7 @@
             <widget name="flight_planV2" icon="flight_plan.svg"/>
         </columnLeft>
         <columnRight>
-            <widget name="map_strip" icon="link_ok.svg"/>
+            <widget name="map_strip" icon="strips.png"/>
             <widget name="PFD" icon="pfd.svg"/>
             <widget name="settings" icon="settings.svg"/>
         </columnRight>
