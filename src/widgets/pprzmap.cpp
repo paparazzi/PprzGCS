@@ -294,7 +294,7 @@ void PprzMap::handleMouseMove(QPointF scenePos) {
     auto pt = CoordinatesTransform::get()->pseudoMercator_to_WGS84(ppm);
 
     if(ui->reference_combobox->currentIndex() == 0) {
-        QString txt = QString::number(pt.lat(), 'f', 7) + ", " + QString::number(pt.lon(), 'f', 7);
+        QString txt = QString("%1").arg(pt.lat(), 10, 'f', 6, QChar(' ')) + "," + QString("%1").arg(pt.lon(), 11, 'f', 6, QChar(' '));
         ui->pos_label->setText(txt);
     } else if (ui->reference_combobox->currentIndex() == 1) {
         QString txt = sexagesimalFormat(pt.lat(), pt.lon());
