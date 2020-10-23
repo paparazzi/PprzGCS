@@ -11,7 +11,7 @@ class WidgetStack : public QWidget, public Configurable
 {
     Q_OBJECT
 public:
-    explicit WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent = nullptr);
+    explicit WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent = nullptr, bool headers=true);
     void configure(QDomElement) {};
 
 private:

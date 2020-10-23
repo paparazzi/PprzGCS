@@ -29,9 +29,6 @@ private:
     void build_full_strip();
     void build_short_strip();
 
-    void addFlightPlanButtons(QGridLayout*);
-    void addSettingsButtons(QGridLayout*);
-
     void updateEngineStatus(pprzlink::Message msg);
     void updateApStatus(pprzlink::Message msg);
     void updateFlightParams(pprzlink::Message msg);

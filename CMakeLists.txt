@@ -43,6 +43,7 @@ set(SOURCE
     src/widgets/layer_combo.cpp
     src/widgets/widget_utils.cpp
     src/widgets/pprzmap.ui
+    src/widgets/commands.cpp
     src/widgets/map/tileprovider.cpp
     src/widgets/map/tileproviderconfig.cpp
     src/widgets/map/tileitem.cpp

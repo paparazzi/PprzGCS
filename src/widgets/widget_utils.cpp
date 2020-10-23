@@ -8,6 +8,7 @@
 #include "settings_viewer.h"
 #include "widget_stack.h"
 #include "flightplan_viewerv2.h"
+#include "commands.h"
 
 QWidget* makeWidget(QString name, QWidget* parent) {
     QWidget* widget = nullptr;
@@ -37,14 +38,21 @@ QWidget* makeWidget(QString name, QWidget* parent) {
                     return new FlightPlanViewerV2(ac_id, container);
                 },
                 parent);
-        }
+    }
     else if (name == "map_strip") {
         widget = new WidgetStack(
                 [](QString ac_id, QWidget* container) {
                     return new Strip(ac_id, container, true);
                 },
                 parent);
-        }
+    }
+    else if (name == "commands") {
+        widget = new WidgetStack(
+                [](QString ac_id, QWidget* container) {
+                    return new Commands(ac_id, container);
+                },
+                parent, false);
+    }
     else {
         std::string s = "Widget " + name.toStdString() + " unknown";
         throw runtime_error(s);

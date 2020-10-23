@@ -37,14 +37,6 @@ void Strip::build_full_strip() {
     full_strip = new QWidget(this);
     auto layout_full = new QHBoxLayout(full_strip);
 
-    auto set_lay = new QGridLayout();
-    addSettingsButtons(set_lay);
-    layout_full->addLayout(set_lay);
-
-    auto fp_lay = new QGridLayout();
-    addFlightPlanButtons(fp_lay);
-    layout_full->addLayout(fp_lay);
-
     auto layout_status = new QVBoxLayout();
     auto lay_bat_link = new QVBoxLayout();
     auto lay_head = new QHBoxLayout();
@@ -152,93 +144,6 @@ void Strip::build_short_strip() {
     sLay->addWidget(short_ap_mode_label);
     sLay->addWidget(short_fbw_mode_label);
     sLay->addWidget(short_gps_mode_label);
-}
-
-
-
-
-
-
-
-
-void Strip::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
-    auto groups = AircraftManager::get()->getAircraft(_ac_id).getFlightPlan().getGroups();
-    int col = static_cast<int>(groups.size());
-    int row = 0;
-    for(auto group: groups) {
-        for(auto block: group->blocks) {
-            QString icon = block->getIcon().c_str();
-            QString txt = block->getText().c_str();
-            QPushButton* b = nullptr;
-
-            if(icon != "") {
-                b = new QPushButton(this);
-                QString icon_path = qApp->property("PATH_GCS_ICON").toString() + "/" + icon;
-                b->setIcon(QIcon(icon_path));
-                if(txt != "") {
-                    b->setToolTip(txt);
-                }
-            } else if (txt != "") {
-                b = new QPushButton(txt, this);
-                b->setToolTip(txt);
-            }
-
-            if(b != nullptr) {
-                fp_buttons_layout->addWidget(b, row, col);
-                  connect(b, &QPushButton::clicked,
-                    [=]() {
-                        pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("JUMP_TO_BLOCK"));
-                        msg.addField("ac_id", _ac_id.toStdString());
-                        msg.addField("block_id", block->getNo());
-                        PprzDispatcher::get()->sendMessage(msg);
-                });
-            }
-            ++row;
-        }
-        --col;
-        row = 0;
-    }
-}
-
-void Strip::addSettingsButtons(QGridLayout* settings_buttons_layout) {
-    vector<shared_ptr<SettingMenu::ButtonGroup>> groups = AircraftManager::get()->getAircraft(_ac_id).getSettingMenu()->getButtonGroups();
-
-    int col = static_cast<int>(groups.size());
-    int row = 0;
-    for(auto group: groups) {
-        for(auto sb: group->buttons) {
-            QString icon = sb->icon.c_str();
-            QString name = sb->name.c_str();
-            QPushButton* b = nullptr;
-
-            if(icon != "") {
-                b = new QPushButton(this);
-                QString icon_path = qApp->property("PATH_GCS_ICON").toString() + "/" + icon;
-                b->setIcon(QIcon(icon_path));
-                if(name != "") {
-                    b->setToolTip(name);
-                }
-            } else if (name != "") {
-                b = new QPushButton(name, this);
-                b->setToolTip(name);
-            }
-
-            if(b != nullptr) {
-                settings_buttons_layout->addWidget(b, row, col);
-                  connect(b, &QPushButton::clicked,
-                    [=]() {
-                        pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
-                        msg.addField("ac_id", _ac_id.toStdString());
-                        msg.addField("index", sb->setting_no);
-                        msg.addField("value", sb->value);
-                        PprzDispatcher::get()->sendMessage(msg);
-                });
-            }
-            ++row;
-        }
-        --col;
-        row = 0;
-    }
 }
 
 

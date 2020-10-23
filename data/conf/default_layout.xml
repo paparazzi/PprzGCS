@@ -12,7 +12,10 @@
         </columnRight>
       </configure>
     </widget>
-    <widget name="strips"  size="200"/>
+    <rows size="200">
+        <widget name="commands" size="0"/>
+        <widget name="strips"/>
+    </rows>
   </columns>
 </layout>
 

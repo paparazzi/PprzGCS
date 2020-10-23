@@ -3,7 +3,7 @@
 #include "AircraftManager.h"
 
 
-WidgetStack::WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent) : QWidget(parent),
+WidgetStack::WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent, bool headers) : QWidget(parent),
     constructor(constructor)
 {
     vLayout = new QVBoxLayout(this);
@@ -12,9 +12,10 @@ WidgetStack::WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor,
     stackLayout = new QVBoxLayout(contentWidget);
     contentWidget->setAutoFillBackground(true);
     stackLayout->setContentsMargins(0,0,0,0);
-    ac_selector = new ACSelector(this);
-    vLayout->addWidget(ac_selector);
-
+    if(headers) {
+        ac_selector = new ACSelector(this);
+        vLayout->addWidget(ac_selector);
+    }
     vLayout->addWidget(contentWidget);
 
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &WidgetStack::handleNewAC);
