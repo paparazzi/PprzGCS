@@ -39,7 +39,11 @@ public:
         last_values[1] = last_values[0];
         last_values[0] = v;
     }
+
+    float getValue() {return last_values[0];}
     float getPreviousValue() {return last_values[1];}
+    float getMin() {return  min;}
+    float getMax() {return  max;}
 
 
     friend ostream& operator<<(ostream& os, const Setting& wp);

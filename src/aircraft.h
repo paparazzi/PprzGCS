@@ -1,11 +1,13 @@
 #ifndef AIRCRAFT_H
 #define AIRCRAFT_H
 
+#include <QObject>
 #include <QColor>
 #include "flightplan.h"
 #include "setting_menu.h"
 #include "airframe.h"
 #include "point2dlatlon.h"
+#include "pprz_dispatcher.h"
 
 class Aircraft
 {
@@ -24,6 +26,11 @@ public:
 
     Point2DLatLon getPosition() {return position;}
     void setPosition(Point2DLatLon pos) {position = pos;}
+
+    void setSetting(shared_ptr<Setting>, float value);
+    void setSetting(uint8_t setting_no, float value);
+
+    void updateSettings(pprzlink::Message msg);
 
 private:
     QString ac_id;

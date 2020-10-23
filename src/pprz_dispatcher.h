@@ -42,7 +42,7 @@ signals:
 public slots:
 
 private:
-
+    void updateSettings(pprzlink::Message msg);
     using sig_ptr_t = decltype(&PprzDispatcher::flight_param);
 
     void requestConfig(std::string ac_id);

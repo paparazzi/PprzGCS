@@ -29,7 +29,7 @@ private:
     void populate_search_results(QString searched);
     void restore_searched_items();
     QWidget* makeSettingWidget(shared_ptr<Setting> setting, QWidget* parent);
-    void updateSettings(pprzlink::Message msg);
+    void updateSettings(QString id, shared_ptr<Setting>, float);
 
     QString ac_id;
     QVBoxLayout* main_layout;

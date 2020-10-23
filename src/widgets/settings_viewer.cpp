@@ -65,8 +65,7 @@ SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent)
     //setStyleSheet("QWidget{background-color: #31363b;} QLabel{color:white;} QAbstractButton{color:white;} QLineEdit{color:white;}");
     //setAutoFillBackground(true);
 
-
-    connect(PprzDispatcher::get(), &PprzDispatcher::dl_values, this, &SettingsViewer::updateSettings);
+    connect(DispatcherUi::get(), &DispatcherUi::settingUpdated, this, &SettingsViewer::updateSettings);
 
     init(ac_id);
 }
@@ -220,6 +219,7 @@ void SettingsViewer::populate_search_results(QString searched) {
 
 QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget* parent) {
     (void)setting;(void)parent;
+
     QWidget* widget = new QWidget(parent);
     QVBoxLayout* vLay = new QVBoxLayout(widget);
     QHBoxLayout* hlay = new QHBoxLayout();
@@ -252,11 +252,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
     });
 
     connect(undo_btn, &QToolButton::clicked, [=]() {
-        pprzlink::Message dlSetting(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
-        dlSetting.addField("ac_id", ac_id.toStdString());
-        dlSetting.addField("index", setting->getNo());
-        dlSetting.addField("value", setting->getPreviousValue());
-        PprzDispatcher::get()->sendMessage(dlSetting);
+        AircraftManager::get()->getAircraft(ac_id).setSetting(setting, setting->getPreviousValue());
     });
 
     initialized[setting] = false;
@@ -276,12 +272,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
 
         connect(ok_btn, &QToolButton::clicked, [=]() {
             float value = static_cast<float>(combo->currentIndex());
-            setting->setValue(value);
-            pprzlink::Message dlSetting(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
-            dlSetting.addField("ac_id", ac_id.toStdString());
-            dlSetting.addField("index", setting->getNo());
-            dlSetting.addField("value", value);
-            PprzDispatcher::get()->sendMessage(dlSetting);
+            AircraftManager::get()->getAircraft(ac_id).setSetting(setting, value);
         });
 
     } else if(setting->getValues().size() == 2 || abs(min+step-max) < 0.0001) {
@@ -314,14 +305,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
 
         connect(ok_btn, &QToolButton::clicked, [=]() {
             float value = static_cast<float>(sw->isChecked());
-            setting->setValue(value);
-            pprzlink::Message dlSetting(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
-            dlSetting.addField("ac_id", ac_id.toStdString());
-            dlSetting.addField("index", setting->getNo());
-
-            qDebug() << sw->isChecked() << " " << setting->getNo();
-            dlSetting.addField("value", value); //TODO
-            PprzDispatcher::get()->sendMessage(dlSetting);
+            AircraftManager::get()->getAircraft(ac_id).setSetting(setting, value);
         });
 
     } else if(abs(max-min) < 0.00001) {
@@ -333,12 +317,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
         vLay->addWidget(uniq_val);
 
         connect(ok_btn, &QToolButton::clicked, [=]() {
-            setting->setValue(value);
-            pprzlink::Message dlSetting(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
-            dlSetting.addField("ac_id", ac_id.toStdString());
-            dlSetting.addField("index", setting->getNo());
-            dlSetting.addField("value", value);
-            PprzDispatcher::get()->sendMessage(dlSetting);
+            AircraftManager::get()->getAircraft(ac_id).setSetting(setting, value);
         });
 
     } else {
@@ -385,12 +364,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
                     } else {
                         raw_edit->setStyleSheet("QLineEdit{background-color: #ffd088;}");
                     }
-                    setting->setValue(value);
-                    pprzlink::Message dlSetting(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
-                    dlSetting.addField("ac_id", ac_id.toStdString());
-                    dlSetting.addField("index", setting->getNo());
-                    dlSetting.addField("value", value);
-                    PprzDispatcher::get()->sendMessage(dlSetting);
+                    AircraftManager::get()->getAircraft(ac_id).setSetting(setting, value);
                 } else {
                     raw_edit->setStyleSheet("QLineEdit{background-color: #ff8888;}");
                 }
@@ -410,12 +384,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
 
         connect(ok_btn, &QToolButton::clicked, [=]() {
             float value = static_cast<float>(slider->doubleValue());
-            setting->setValue(value);
-            pprzlink::Message dlSetting(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
-            dlSetting.addField("ac_id", ac_id.toStdString());
-            dlSetting.addField("index", setting->getNo());
-            dlSetting.addField("value", value);
-            PprzDispatcher::get()->sendMessage(dlSetting);
+            AircraftManager::get()->getAircraft(ac_id).setSetting(setting, value);
         });
     }
 
@@ -427,40 +396,12 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
     return widget;
 }
 
-void SettingsViewer::updateSettings(pprzlink::Message msg) {
-    std::string ac_id;
-    std::string values;
-    msg.getField("ac_id", ac_id);
-    msg.getField("values", values);
-    QString id = QString(ac_id.c_str());
-    if(id != this->ac_id) {
-        return;
-    }
-
-    auto settings = AircraftManager::get()->getAircraft(id).getSettingMenu()->getAllSettings();
-    sort(settings.begin(), settings.end(),
-        [](shared_ptr<Setting> sl, shared_ptr<Setting> sr) {
-                return sl->getNo() < sr->getNo();
-    });
-
-    std::stringstream ss(values);
-    std::string token;
-    size_t i=0;
-    while (std::getline(ss, token, ',')) {
-        if(token != "?") {
-            double s = stod(token);
-            assert(settings[i]->getNo() == static_cast<uint8_t>(i));
-            if(label_setters.find(settings[i]) != label_setters.end()) {
-                label_setters[settings[i]](s);
-                if(!initialized[settings[i]]) {
-                    //initialize last values.
-                    settings[i]->setValue(static_cast<float>(s));
-                    settings[i]->setValue(static_cast<float>(s));
-                    setters[settings[i]](s);
-                    initialized[settings[i]] = true;
-                }
-            }
+void SettingsViewer::updateSettings(QString id, shared_ptr<Setting> setting, float value) {
+    if(ac_id == id) {
+        label_setters[setting](value);
+        if(!initialized[setting]) {
+            setters[setting](value);
+            initialized[setting] = true;
         }
-        i++;
     }
 }

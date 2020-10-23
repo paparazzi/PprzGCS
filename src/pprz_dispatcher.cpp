@@ -21,6 +21,8 @@ PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(fa
 
     qRegisterMetaType<pprzlink::Message>();
 
+    connect(this, &PprzDispatcher::dl_values, this, &PprzDispatcher::updateSettings);
+
 }
 
 void PprzDispatcher::bindDeftoSignal(std::string const &name, sig_ptr_t sig) {
@@ -139,4 +141,35 @@ void PprzDispatcher::start() {
             requestConfig(id);
         }
     );
+}
+
+
+void PprzDispatcher::updateSettings(pprzlink::Message msg) {
+    std::string ac_id;
+    std::string values;
+    msg.getField("ac_id", ac_id);
+    msg.getField("values", values);
+    QString id = QString(ac_id.c_str());
+
+    auto ac = AircraftManager::get()->getAircraft(id);
+
+    auto settings = ac.getSettingMenu()->getAllSettings();
+    sort(settings.begin(), settings.end(),
+        [](shared_ptr<Setting> sl, shared_ptr<Setting> sr) {
+                return sl->getNo() < sr->getNo();
+    });
+
+    std::stringstream ss(values);
+    std::string token;
+    size_t i=0;
+    while (std::getline(ss, token, ',')) {
+        if(token != "?") {
+            double s = stod(token);
+            assert(settings[i]->getNo() == static_cast<uint8_t>(i));
+            float value = static_cast<float>(s);
+            settings[i]->setValue(value);
+            emit(DispatcherUi::get()->settingUpdated(ac_id.c_str(), settings[i], value));
+        }
+        i++;
+    }
 }
