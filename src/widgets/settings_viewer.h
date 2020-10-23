@@ -22,9 +22,6 @@ public slots:
 
 protected:
     bool eventFilter(QObject *obj, QEvent *ev) override;
-    virtual void mousePressEvent(QMouseEvent *e);
-    virtual void mouseMoveEvent(QMouseEvent *e);
-    virtual void mouseReleaseEvent(QMouseEvent *e);
 
 private:
     void init(QString ac_id);

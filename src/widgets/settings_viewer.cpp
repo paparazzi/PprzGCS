@@ -81,17 +81,6 @@ bool SettingsViewer::eventFilter(QObject *object, QEvent *event)
     return false;
 }
 
-void SettingsViewer::mousePressEvent(QMouseEvent *e) {
-   (void)e;
-    qDebug() << "pressed";
-}
-void SettingsViewer::mouseMoveEvent(QMouseEvent *e) {
-    (void)e;
-}
-void SettingsViewer::mouseReleaseEvent(QMouseEvent *e) {
-    (void)e;
-}
-
 void SettingsViewer::init(QString ac_id) {
     this->ac_id = ac_id;
     auto settings = AircraftManager::get()->getAircraft(ac_id).getSettingMenu();
@@ -114,6 +103,7 @@ void SettingsViewer::init(QString ac_id) {
         [=]() {
             scroll_content->setCurrentIndex(widgets_indexes[settings]);
             path->setCurrentIndex(path_indexes[settings]);
+            scroll->verticalScrollBar()->setValue(0);
         }
     );
 
@@ -149,6 +139,7 @@ void SettingsViewer::create_widgets(shared_ptr<SettingMenu> setting_menu, QList<
                     restore_searched_items();
                     last_widget_index = widgets_indexes[setm];
                     last_path_index = path_indexes[setm];
+                    scroll->verticalScrollBar()->setValue(0);
                 }
             );
         }
@@ -174,6 +165,7 @@ void SettingsViewer::create_widgets(shared_ptr<SettingMenu> setting_menu, QList<
                 restore_searched_items();
                 last_widget_index = widgets_indexes[sets];
                 last_path_index = path_indexes[sets];
+                scroll->verticalScrollBar()->setValue(0);
             }
         );
     }
