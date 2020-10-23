@@ -21,14 +21,6 @@ void ACSelector::handleNewAC(QString ac_id) {
     repaint();
 }
 
-//void ACSelector::enterEvent(QEvent* e) {
-//    (void)e;
-//}
-
-//void ACSelector::leaveEvent(QEvent* e) {
-//    (void)e;
-//}
-
 void ACSelector::paintEvent(QPaintEvent* e) {
     (void)e;
     QPainter painter(this);
@@ -46,6 +38,14 @@ void ACSelector::paintEvent(QPaintEvent* e) {
     painter.drawText(arrow_left_rect, Qt::AlignCenter, "<");
     painter.drawText(arrow_right_rect, Qt::AlignCenter, ">");
 
+    if(ac_ids.size() == 0) {
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor("#808080"));
+        auto r = QRect(ARROW_WIDTH, rect().height()/2, rect().width()-2*ARROW_WIDTH, rect().height()/2);
+        painter.drawRect(r);
+        painter.setPen(Qt::white);
+        painter.drawText(r.marginsRemoved(QMargins(5, 0, 5, 0)), Qt::AlignCenter, QString::fromUtf8("\xE2\x88\x85"), &r);
+    }
 
     for(int i=0; i<ac_ids.size(); i++) {
         auto ac_id = ac_ids[i];
@@ -74,7 +74,6 @@ void ACSelector::paintEvent(QPaintEvent* e) {
 
         painter.setPen(txtColor);
         painter.drawText(rect.marginsRemoved(QMargins(5, 0, 5, 0)), Qt::AlignVCenter, ac.name(), &rect);
-        //painter.drawText(rect, Qt::AlignCenter, ac.name());
 
     }
 }

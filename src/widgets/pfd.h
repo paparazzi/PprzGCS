@@ -29,9 +29,9 @@ protected:
 //    virtual void mouseReleaseEvent(QMouseEvent *event);
     void resizeEvent(QResizeEvent *event);
 
-    void paintPitch(QRect rect, QPointF center);
-    void paintRoll(QRect rect, QPointF center);
-    void paintYaw(QRect rect, QPointF center);
+    void paintPitch(QRect rect, QPointF center, QColor ac_color, float pitch, float roll);
+    void paintRoll(QRect rect, QPointF center, QColor ac_color, float pitch, float roll);
+    void paintYaw(QRect rect, QPointF center, QColor ac_color, float yaw);
 
 
 
@@ -64,6 +64,7 @@ private:
     QPixmap pix_roll_fixedwing;
     QPixmap pix_pitch_fixedwing;
     QPixmap pix_yaw_fixedwing;
+    QPixmap pix_no_ac;
 
     QPixmap pix_roll_rotorcraft;
     QPixmap pix_pitch_rotorcraft;

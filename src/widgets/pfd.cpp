@@ -13,7 +13,7 @@
 #include <QPainterPath>
 
 
-Pfd::Pfd(QWidget *parent) : QWidget(parent), border_stroke(6)
+Pfd::Pfd(QWidget *parent) : QWidget(parent), current_ac(""), border_stroke(6)
 {
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &Pfd::changeCurrentAC);
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &Pfd::updateEulers);
@@ -24,6 +24,7 @@ Pfd::Pfd(QWidget *parent) : QWidget(parent), border_stroke(6)
     pix_roll_fixedwing = QPixmap(":/pictures/pfd_aircraft_roll.svg");
     pix_pitch_fixedwing = QPixmap(":/pictures/pfd_aircraft_pitch.svg");
     pix_yaw_fixedwing = QPixmap(":/pictures/pfd_aircraft_yaw.svg");
+    pix_no_ac = QPixmap(":/pictures/no_ac.svg");
 
     pix_roll_rotorcraft = QPixmap(":/pictures/pfd_aircraft_roll_rotorcraft.svg");
     pix_pitch_rotorcraft = QPixmap(":/pictures/pfd_aircraft_pitch_rotorcraft.svg");
@@ -52,43 +53,47 @@ void Pfd::resizeEvent(QResizeEvent *event) {
 void Pfd::paintEvent(QPaintEvent *event) {
     (void)event;
 
-    int side = qMin(width(), height());
-    QRect rect = QRect(-side/4,-side/4, side/2, side/2);
+    //int side = qMin(width(), height());
+    //QRect rect = QRect(-side/4,-side/4, side/2, side/2);
 
     if(eulers.find(current_ac) != eulers.end()) {
-
+        auto ac_color = AircraftManager::get()->getAircraft(current_ac).getColor();
         for(int i=0; i<3; i++) {
             QRect rect = placeRect(i);
             QPointF center = placeCenter(i);
             if(places[i] == PITCH) {
-                paintPitch(rect, center);
+                float pitch = eulers[current_ac].pitch;
+                float roll = eulers[current_ac].roll;
+                paintPitch(rect, center, ac_color, pitch, roll);
             } else if(places[i] == ROLL) {
-                paintRoll(rect, center);
+                float pitch = eulers[current_ac].pitch;
+                float roll = eulers[current_ac].roll;
+                paintRoll(rect, center, ac_color, pitch, roll);
             } else {
-                paintYaw(rect, center);
+                float yaw = eulers[current_ac].yaw;
+                paintYaw(rect, center, ac_color, yaw);
             }
         }
 
     } else {
-        QPainter painter(this);
-        painter.setBrush(QBrush(QColor("#8ed3ea")));
-        painter.drawEllipse(rect);
-        painter.setBrush(QColor("#98845b"));
-        painter.drawChord(rect, static_cast<int>(16*(M_PI)*180.0/M_PI), static_cast<int>(16*(M_PI)*180.0/M_PI));
-        QPen pen = QPen(Qt::red, 4);
-        painter.setPen(pen);
-        QLine line(rect.left(), rect.center().y(), rect.right(), rect.center().y());
-        painter.drawLine(line);
+        auto no_ac_color = QColor("#808080");
+        QRect rect = placeRect(0);
+        QPointF center = placeCenter(0);
+        paintPitch(rect, center, no_ac_color, 0, 0);
+        rect = placeRect(1);
+        center = placeCenter(1);
+        paintRoll(rect, center, no_ac_color, 0, 0);
+        rect = placeRect(2);
+        center = placeCenter(2);
+        paintYaw(rect, center, no_ac_color, 0);
+
     }
 
 
 
 }
 
-void Pfd::paintPitch(QRect rect,  QPointF center) {
-    float pitch = eulers[current_ac].pitch;
-    float roll = eulers[current_ac].roll;
-
+void Pfd::paintPitch(QRect rect,  QPointF center, QColor ac_color, float pitch, float roll) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.translate(center);
@@ -123,15 +128,12 @@ void Pfd::paintPitch(QRect rect,  QPointF center) {
     QPainterPath pp;
     pp.addEllipse(rect);
     pp.addEllipse(rect.center(), rect.left()+border_stroke, rect.top()+border_stroke);
-    painter.setBrush(AircraftManager::get()->getAircraft(current_ac).getColor());
+    painter.setBrush(ac_color);
     painter.setPen(Qt::NoPen);
     painter.drawPath(pp);
 }
 
-void Pfd::paintRoll(QRect rect,  QPointF center) {
-    float pitch = eulers[current_ac].pitch;
-    float roll = eulers[current_ac].roll;
-
+void Pfd::paintRoll(QRect rect,  QPointF center, QColor ac_color, float pitch, float roll) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.translate(center);
@@ -164,14 +166,12 @@ void Pfd::paintRoll(QRect rect,  QPointF center) {
     QPainterPath pp;
     pp.addEllipse(rect);
     pp.addEllipse(rect.center(), rect.left()+border_stroke, rect.top()+border_stroke);
-    painter.setBrush(AircraftManager::get()->getAircraft(current_ac).getColor());
+    painter.setBrush(ac_color);
     painter.setPen(Qt::NoPen);
     painter.drawPath(pp);
 }
 
-void Pfd::paintYaw(QRect rect, QPointF center) {
-    float yaw = eulers[current_ac].yaw;
-
+void Pfd::paintYaw(QRect rect, QPointF center, QColor ac_color, float yaw) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.translate(center);
@@ -190,7 +190,7 @@ void Pfd::paintYaw(QRect rect, QPointF center) {
     QPainterPath pp;
     pp.addEllipse(rect);
     pp.addEllipse(rect.center(), rect.left()+border_stroke, rect.top()+border_stroke);
-    painter.setBrush(AircraftManager::get()->getAircraft(current_ac).getColor());
+    painter.setBrush(ac_color);
     painter.setPen(Qt::NoPen);
     painter.drawPath(pp);
 }
@@ -218,17 +218,6 @@ void Pfd::mousePressEvent(QMouseEvent *event) {
     event->ignore();
     QWidget::mousePressEvent(event);
 }
-
-//void Pfd::mouseMoveEvent(QMouseEvent *event) {
-//    event->ignore();
-//    QWidget::mouseMoveEvent(event);
-//}
-
-//void Pfd::mouseReleaseEvent(QMouseEvent *event) {
-//    event->ignore();
-
-//    QWidget::mouseReleaseEvent(event);
-//}
 
 void Pfd::changeCurrentAC(QString id) {
     if(AircraftManager::get()->aircraftExists(id)) {
@@ -287,6 +276,10 @@ QPointF Pfd::placeCenter(int i) {
 }
 
 QPixmap* Pfd::getIcon(Axis axis) {
+    if(current_ac == "") {
+        return &pix_no_ac;
+    }
+
     string firmware = AircraftManager::get()->getAircraft(current_ac).getAirframe().getFirmware();
     if(firmware == "fixedwing") {
         switch (axis) {
@@ -314,7 +307,7 @@ QPixmap* Pfd::getIcon(Axis axis) {
 
 QSize Pfd::sizeHint() const
 {
-    return QSize(300, 300);
+    return QSize(200, 200);
 }
 
 QSize Pfd::minimumSizeHint() const
