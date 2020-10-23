@@ -50,8 +50,8 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     auto downButton = new QPushButton(this);
     upButton->setText("+10");
     downButton->setText("-10");
-    butLay->addWidget(upButton);
     butLay->addWidget(downButton);
+    butLay->addWidget(upButton);
 
     infoLay->addLayout(latLay);
     infoLay->addLayout(lonLay);
