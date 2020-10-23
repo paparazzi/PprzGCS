@@ -39,6 +39,14 @@ private:
     string firmware;
 
     vector<struct Section> sections;
+
+    static constexpr float ALT_PLUS_FW = 10;
+    static constexpr float ALT_MINUS_FW = -10;
+    static constexpr float ALT_PLUS_PLUS_FW = 30;
+
+    static constexpr float ALT_PLUS_RC = 1;
+    static constexpr float ALT_MINUS_RC = -1;
+    static constexpr float ALT_PLUS_PLUS_RC = 3;
 };
 
 #endif // AIRFRAME_H

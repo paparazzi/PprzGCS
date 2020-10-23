@@ -105,6 +105,14 @@ float Airframe::getAltShiftPlus() {
             }
         }
     }
+
+
+    if(firmware == "fixedwing") {
+        return ALT_PLUS_FW;
+    } else if (firmware == "rotorcraft") {
+        return ALT_PLUS_RC;
+    }
+
     return 0;
 }
 
@@ -118,6 +126,13 @@ float Airframe::getAltShiftPlusPlus() {
             }
         }
     }
+
+    if(firmware == "fixedwing") {
+        return ALT_PLUS_PLUS_FW;
+    } else if (firmware == "rotorcraft") {
+        return ALT_PLUS_PLUS_RC;
+    }
+
     return 0;
 }
 
@@ -131,5 +146,12 @@ float Airframe::getAltShiftMinus() {
             }
         }
     }
+
+    if(firmware == "fixedwing") {
+        return ALT_MINUS_FW;
+    } else if (firmware == "rotorcraft") {
+        return ALT_MINUS_RC;
+    }
+
     return 0;
 }

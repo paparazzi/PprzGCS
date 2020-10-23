@@ -2,6 +2,7 @@
 #define COMMANDS_H
 
 #include <QtWidgets>
+#include "setting.h"
 
 class Commands : public QWidget
 {
@@ -19,6 +20,8 @@ protected:
 private:
     void addFlightPlanButtons(QGridLayout* fp_buttons_layout);
     void addSettingsButtons(QGridLayout* settings_buttons_layout);
+    void addSpecialCommands(QGridLayout* special_commands_layout);
+    void addCommandButton(QGridLayout*, QString icon, int row, int col, std::function<void()> callback);
     QString ac_id;
 };
 
