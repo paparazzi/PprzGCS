@@ -3,6 +3,7 @@
 
 #include <QtWidgets>
 #include "setting.h"
+#include "pprz_dispatcher.h"
 
 class Commands : public QWidget
 {
@@ -22,7 +23,12 @@ private:
     void addSettingsButtons(QGridLayout* settings_buttons_layout);
     void addSpecialCommands(QGridLayout* special_commands_layout);
     void addCommandButton(QGridLayout*, QString icon, int row, int col, std::function<void()> callback);
+
+    void updateTargetAlt(pprzlink::Message msg);
+
     QString ac_id;
+
+    float target_alt;
 };
 
 #endif // COMMANDS_H

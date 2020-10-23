@@ -35,6 +35,8 @@ Commands::Commands(QString ac_id, QWidget *parent) : QWidget(parent),
     addSettingsButtons(set_lay);
     lay->addLayout(set_lay);
 
+    target_alt = static_cast<float>(AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getDefaultAltitude());
+    connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &Commands::updateTargetAlt);
 }
 
 void Commands::paintEvent(QPaintEvent* e) {
@@ -159,15 +161,18 @@ void Commands::addSpecialCommands(QGridLayout* glay) {
 
         if(set->getName() == "altitude") {
             addCommandButton(glay, "up.png", 1, 1, [=]() mutable {
-                ac.setSetting(set, set->getValue() + ac.getAirframe().getAltShiftPlus());
+                qDebug() << target_alt;
+                ac.setSetting(set, target_alt + ac.getAirframe().getAltShiftPlus());
             });
 
             addCommandButton(glay, "down.png", 1, 2, [=]() mutable {
-                ac.setSetting(set, set->getValue() + ac.getAirframe().getAltShiftMinus());
+                qDebug() << target_alt;
+                ac.setSetting(set, target_alt + ac.getAirframe().getAltShiftMinus());
             });
 
             addCommandButton(glay, "upup.png", 1, 3, [=]() mutable {
-                ac.setSetting(set, set->getValue() + ac.getAirframe().getAltShiftPlusPlus());
+                qDebug() << target_alt;
+                ac.setSetting(set, target_alt + ac.getAirframe().getAltShiftPlusPlus());
             });
         }
 
@@ -198,3 +203,13 @@ void Commands::addCommandButton(QGridLayout* glay,QString icon, int row, int col
     glay->addWidget(button, row, col);
     connect(button, &QToolButton::clicked, callback);
 }
+
+void Commands::updateTargetAlt(pprzlink::Message msg) {
+    std::string id;
+    msg.getField("ac_id", id);
+
+    if(ac_id == id.c_str()) {
+        msg.getField("target_alt", target_alt);
+    }
+}
+
