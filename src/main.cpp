@@ -10,12 +10,6 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    QFile file(":/style.qss");
-    file.open(QFile::ReadOnly | QFile::Text);
-    QTextStream stream(&file);
-    a.setStyleSheet(stream.readAll());
-
-
     //QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
     //QCoreApplication
     //QCommandLineParser
@@ -62,7 +56,13 @@ int main(int argc, char *argv[])
     a.setProperty("TRACK_MAX_CHUNKS", 10);
     a.setProperty("TRACK_CHUNCK_SIZE", 20);
 
+    QFile file(PAPARAZZI_GCS_DATA + "/conf/style.qss");
+    file.open(QFile::ReadOnly | QFile::Text);
+    QTextStream stream(&file);
+    a.setStyleSheet(stream.readAll());
+
     QString layout_path = PAPARAZZI_GCS_DATA + "/conf/default_layout.xml";
+
     QMainWindow* w = build_layout(layout_path);
 
     PprzDispatcher::get()->start();
