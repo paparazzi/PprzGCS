@@ -13,6 +13,11 @@ struct BlockGroup {
     vector<shared_ptr<Block>> blocks;
 };
 
+struct Exception {
+    string cond;
+    string deroute;
+};
+
 class FlightPlan
 {
 public:
@@ -26,6 +31,7 @@ public:
     shared_ptr<Waypoint> getWaypoint(uint8_t id);
     vector<shared_ptr<Block>>& getBlocks() {return  blocks;}
     vector<shared_ptr<BlockGroup>> getGroups();
+    vector<shared_ptr<Exception>> getExeptions() {return  exceptions;}
     shared_ptr<Block> getBlock(uint8_t id);
     double getDefaultAltitude() {return defaultAlt;}
     double getGroundAlt() {return ground_alt;}
@@ -33,11 +39,13 @@ public:
     shared_ptr<Waypoint> getOrigin() {return origin;}
 
 private:
+    void parse_exceptions(tinyxml2::XMLElement* exs);
     void parse_waypoints(tinyxml2::XMLElement* wps);
     void parse_blocks(tinyxml2::XMLElement* blks);
     void parse_block_stages(tinyxml2::XMLElement* blk, shared_ptr<Block> block);
 
     std::vector<shared_ptr<Waypoint>> waypoints;
+    std::vector<shared_ptr<Exception>> exceptions;
     std::vector<shared_ptr<Block>> blocks;
     shared_ptr<Waypoint> origin;
 
@@ -46,6 +54,8 @@ private:
     double max_dist_from_home;
     double ground_alt;
     double security_height;
+
+
 };
 
 #endif // FLIGHTPLAN_H

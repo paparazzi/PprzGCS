@@ -47,60 +47,44 @@ FlightPlan::FlightPlan(string uri) : origin()
         parse_waypoints(wps);
         XMLElement* blks = fp_root->FirstChildElement("blocks");
         parse_blocks(blks);
+
+        XMLElement* exs = fp_root->FirstChildElement("exceptions");
+        if(exs) {
+            parse_exceptions(exs);
+        }
+
+    }
+}
+
+void FlightPlan::parse_exceptions(XMLElement* exs) {
+    for(auto ex=exs->FirstChildElement(); ex!=nullptr; ex=ex->NextSiblingElement()) {
+        const char* cond = ex->Attribute("cond");
+        const char* deroute = ex->Attribute("deroute");
+
+        auto e = make_shared<Exception>();
+        e->cond = cond;
+        e->deroute = deroute;
+
+        exceptions.push_back(e);
     }
 }
 
 void FlightPlan::parse_waypoints(XMLElement* wps) {
-    //CoordinatesTransform ct;
     CoordinatesTransform::get()->init_WGS84_UTM(origin->getLat(), origin->getLon());
 
-    XMLElement* wp = wps->FirstChildElement();
     uint8_t wp_id = 1;
-    while(wp != nullptr) {
-        const char* name_p = wp->Attribute("name");
-        const char* lat_p = wp->Attribute("lat");
-        const char* lon_p = wp->Attribute("lon");
-        const char* x_p = wp->Attribute("x");
-        const char* y_p = wp->Attribute("y");
-        const char* alt_p = wp->Attribute("alt");
-        const char* height_p = wp->Attribute("height");
-
-        Waypoint::WpAltType altType = Waypoint::WpAltType::ALT;
-        double alt;
-        if(height_p != nullptr) {
-            altType = Waypoint::WpAltType::HEIGHT;
-            alt = stod(height_p);
-        } else if(alt_p != nullptr) {
-            alt = stod(alt_p);
-        } else {
-            alt = defaultAlt;
-        }
-
-        if(lat_p != nullptr && lon_p != nullptr) {
-            waypoints.push_back(make_shared<Waypoint>(name_p, wp_id, stod(lat_p), stod(lon_p), alt));
-            if(altType == Waypoint::WpAltType::HEIGHT) {
-                throw runtime_error("Unimplemented! Can't (yet) create absolute waypoint with relative height!");
-            }
-        }
-        else if(x_p !=nullptr && y_p != nullptr) {
-            double lat, lon;
-            CoordinatesTransform::get()->relative_to_wgs84(origin->getLat(), origin->getLon(), stod(x_p), stod(y_p), &lat, &lon);
-            waypoints.push_back(make_shared<Waypoint>(name_p, wp_id, lat, lon, alt, origin, altType));
-        } else {
-            throw runtime_error("You must specify either x/y or lat/lon!");
-        }
-        wp = wp->NextSiblingElement();
+    for(auto wp=wps->FirstChildElement(); wp!=nullptr; wp=wp->NextSiblingElement()) {
+        auto waypoint = make_shared<Waypoint>(wp, wp_id, origin, defaultAlt);
+        waypoints.push_back(waypoint);
         ++wp_id;
     }
 }
 
 void FlightPlan::parse_blocks(tinyxml2::XMLElement* blks) {
-    XMLElement* blk = blks->FirstChildElement();
 
-    while(blk != nullptr) {
+    for(auto blk=blks->FirstChildElement(); blk!=nullptr; blk=blk->NextSiblingElement()) {
         auto block = make_shared<Block>(blk);
         blocks.push_back(block);
-        blk = blk->NextSiblingElement();
     }
 
     std::sort(blocks.begin(), blocks.end(),
