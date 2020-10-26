@@ -24,6 +24,8 @@ private:
     static PprzMain* singleton;
     explicit PprzMain(QWidget *parent = nullptr);
 
+    void populate_menu();
+
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
