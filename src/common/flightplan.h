@@ -34,6 +34,33 @@ struct Variable {
     map<string, string> attributes;
 };
 
+struct Sector {
+    enum Variant {
+        SECTOR,
+        KML,
+    };
+
+    Sector(Variant t) {
+        variant = t;
+    }
+
+    Variant variant;
+
+    // should use a tagged union but well... do a PR, ok ?
+    // or just use Rust, not a 35 years old prehistoric language
+    // At that point, let's not count UBs, right ?
+
+    //sector
+    string name;
+    std::optional<string> color;   //color
+    std::optional<string> type;    //type
+    vector<string> corners;
+
+
+    //kml
+    string kml_file;
+};
+
 class FlightPlan
 {
 public:
@@ -49,6 +76,7 @@ public:
     vector<shared_ptr<BlockGroup>> getGroups();
     vector<shared_ptr<Exception>> getExeptions() {return  exceptions;}
     vector<shared_ptr<Variable>> getVariables() {return  variables;}
+    vector<shared_ptr<Sector>> getSectors() {return  sectors;}
     shared_ptr<Block> getBlock(uint8_t id);
     double getDefaultAltitude() {return defaultAlt;}
     double getGroundAlt() {return ground_alt;}
@@ -58,6 +86,7 @@ public:
 private:
     void parse_exceptions(tinyxml2::XMLElement* exs);
     void parse_variables(tinyxml2::XMLElement* vars);
+    void parse_sectors(tinyxml2::XMLElement* secs);
     void parse_waypoints(tinyxml2::XMLElement* wps);
     void parse_blocks(tinyxml2::XMLElement* blks);
     void parse_block_stages(tinyxml2::XMLElement* blk, shared_ptr<Block> block);
@@ -66,6 +95,7 @@ private:
     std::vector<shared_ptr<Exception>> exceptions;
     std::vector<shared_ptr<Block>> blocks;
     std::vector<shared_ptr<Variable>> variables;
+    std::vector<shared_ptr<Sector>> sectors;
     shared_ptr<Waypoint> origin;
 
     double defaultAlt;

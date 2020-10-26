@@ -31,6 +31,7 @@ private:
     QWidget* make_waypoints_tab();
     QWidget* make_exceptions_tab();
     QWidget* make_variables_tab();
+    QWidget* make_sectors_tab();
     QWidget* make_tree(shared_ptr<Block> block, std::function<void()>, struct Facade*);
 
     QString ac_id;

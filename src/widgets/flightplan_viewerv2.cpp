@@ -18,6 +18,10 @@ FlightPlanViewerV2::FlightPlanViewerV2(QString ac_id, QWidget *parent) : QTabWid
         addTab(make_variables_tab(), "Variables");
     }
 
+    if(AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getSectors().size() > 0) {
+        addTab(make_sectors_tab(), "Sectors");
+    }
+
     addTab(new QWidget(), "Header");
 
     connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &FlightPlanViewerV2::handleNavStatus);
@@ -196,6 +200,24 @@ QWidget* FlightPlanViewerV2::make_variables_tab() {
 
         for(auto att:var->attributes) {
             txt += QString("  ") + att.first.c_str() + "=" + att.second.c_str();
+        }
+
+        list->addItem(txt);
+    }
+    return list;
+}
+
+QWidget* FlightPlanViewerV2::make_sectors_tab() {
+    auto list = new QListWidget(this);
+    for(auto sec: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getSectors()) {
+        QString txt;
+        if(sec->variant == Sector::SECTOR) {
+            txt += QString("sector ") + sec->name.c_str() + ":";
+            for(auto corner: sec->corners) {
+                txt += QString(" ") + corner.c_str();
+            }
+        } else if(sec->variant == Sector::KML) {
+            txt += QString("kml: ") + sec->kml_file.c_str();
         }
 
         list->addItem(txt);

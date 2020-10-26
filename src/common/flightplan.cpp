@@ -58,6 +58,11 @@ FlightPlan::FlightPlan(string uri) : origin()
             parse_variables(vars);
         }
 
+        XMLElement* secs = fp_root->FirstChildElement("sectors");
+        if(vars) {
+            parse_sectors(secs);
+        }
+
     }
 }
 
@@ -88,6 +93,37 @@ void FlightPlan::parse_variables(XMLElement* vars) {
             var->attributes[att->Name()] = att->Value();
         }
         variables.push_back(var);
+    }
+}
+
+void FlightPlan::parse_sectors(tinyxml2::XMLElement* secs) {
+    for(auto ele=secs->FirstChildElement(); ele!=nullptr; ele=ele->NextSiblingElement()) {
+        shared_ptr<Sector> sec;
+        if(strcmp(ele->Name(), "sector") == 0) {
+            // It's a sector!
+            sec = make_shared<Sector>(Sector::SECTOR);
+            sec->name = ele->Attribute("name");
+            auto color = ele->Attribute("color");
+            if(color != nullptr) {
+                sec->color = color;
+            }
+            auto type = ele->Attribute("type");
+            if(type != nullptr) {
+                sec->type = type;
+            }
+            for(auto corner=ele->FirstChildElement(); corner!= nullptr; corner=corner->NextSiblingElement()) {
+                auto corner_name = corner->Attribute("name");
+                sec->corners.push_back(corner_name);
+            }
+        } else if (strcmp(ele->Name(), "kml") == 0) {
+            //It's a KML!
+            sec = make_shared<Sector>(Sector::KML);
+            sec->kml_file = ele->Attribute("file");
+        } else {
+            throw std::runtime_error("");
+        }
+
+        sectors.push_back(sec);
     }
 }
 
