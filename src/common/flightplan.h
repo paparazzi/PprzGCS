@@ -18,6 +18,22 @@ struct Exception {
     string deroute;
 };
 
+struct Variable {
+    enum Type {
+        VARIABLE,
+        ABI_BINDING,
+    };
+
+    Variable(Type t, string var_name) {
+        _var_name = var_name;
+        type = t;
+    }
+
+    Type type;
+    string _var_name;
+    map<string, string> attributes;
+};
+
 class FlightPlan
 {
 public:
@@ -32,6 +48,7 @@ public:
     vector<shared_ptr<Block>>& getBlocks() {return  blocks;}
     vector<shared_ptr<BlockGroup>> getGroups();
     vector<shared_ptr<Exception>> getExeptions() {return  exceptions;}
+    vector<shared_ptr<Variable>> getVariables() {return  variables;}
     shared_ptr<Block> getBlock(uint8_t id);
     double getDefaultAltitude() {return defaultAlt;}
     double getGroundAlt() {return ground_alt;}
@@ -40,6 +57,7 @@ public:
 
 private:
     void parse_exceptions(tinyxml2::XMLElement* exs);
+    void parse_variables(tinyxml2::XMLElement* vars);
     void parse_waypoints(tinyxml2::XMLElement* wps);
     void parse_blocks(tinyxml2::XMLElement* blks);
     void parse_block_stages(tinyxml2::XMLElement* blk, shared_ptr<Block> block);
@@ -47,6 +65,7 @@ private:
     std::vector<shared_ptr<Waypoint>> waypoints;
     std::vector<shared_ptr<Exception>> exceptions;
     std::vector<shared_ptr<Block>> blocks;
+    std::vector<shared_ptr<Variable>> variables;
     shared_ptr<Waypoint> origin;
 
     double defaultAlt;

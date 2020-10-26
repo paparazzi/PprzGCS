@@ -53,6 +53,11 @@ FlightPlan::FlightPlan(string uri) : origin()
             parse_exceptions(exs);
         }
 
+        XMLElement* vars = fp_root->FirstChildElement("variables");
+        if(vars) {
+            parse_variables(vars);
+        }
+
     }
 }
 
@@ -66,6 +71,23 @@ void FlightPlan::parse_exceptions(XMLElement* exs) {
         e->deroute = deroute;
 
         exceptions.push_back(e);
+    }
+}
+
+void FlightPlan::parse_variables(XMLElement* vars) {
+    for(auto ele=vars->FirstChildElement(); ele!=nullptr; ele=ele->NextSiblingElement()) {
+        shared_ptr<Variable> var;
+        if(strcmp(ele->Name(), "variable") == 0) {
+            var = make_shared<Variable>(Variable::VARIABLE, ele->Attribute("var"));
+        } else if (strcmp(ele->Name(), "abi_binding") == 0) {
+            var = make_shared<Variable>(Variable::ABI_BINDING, ele->Attribute("name"));
+        } else {
+            throw std::runtime_error("");
+        }
+        for(auto att=ele->FirstAttribute(); att!=nullptr; att=att->Next()) {
+            var->attributes[att->Name()] = att->Value();
+        }
+        variables.push_back(var);
     }
 }
 

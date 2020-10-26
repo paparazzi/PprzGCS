@@ -7,14 +7,18 @@
 FlightPlanViewerV2::FlightPlanViewerV2(QString ac_id, QWidget *parent) : QTabWidget(parent),
     ac_id(ac_id), current_block(0), current_stage(0), labels_stylesheet("")
 {
-    addTab(make_blocks_tab(), "blocks");
-    addTab(make_waypoints_tab(), "waypoints");
+    addTab(make_blocks_tab(), "Blocks");
+    addTab(make_waypoints_tab(), "Waypoints");
 
     if(AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getExeptions().size() > 0) {
-        addTab(make_exceptions_tab(), "exceptions");
+        addTab(make_exceptions_tab(), "Exceptions");
     }
 
-    addTab(new QWidget(), "header");
+    if(AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getVariables().size() > 0) {
+        addTab(make_variables_tab(), "Variables");
+    }
+
+    addTab(new QWidget(), "Header");
 
     connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &FlightPlanViewerV2::handleNavStatus);
 }
@@ -175,6 +179,25 @@ QWidget* FlightPlanViewerV2::make_exceptions_tab() {
     auto list = new QListWidget(this);
     for(auto ex: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getExeptions()) {
         QString txt = QString("cond: ") + ex->cond.c_str() + QString("\tderoute: ") + ex->deroute.c_str();
+        list->addItem(txt);
+    }
+    return list;
+}
+
+QWidget* FlightPlanViewerV2::make_variables_tab() {
+    auto list = new QListWidget(this);
+    for(auto var: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getVariables()) {
+        QString txt;
+        if(var->type == Variable::VARIABLE) {
+            txt += QString("var: ");
+        } else if(var->type == Variable::ABI_BINDING) {
+            txt += QString("abi_binding: ");
+        }
+
+        for(auto att:var->attributes) {
+            txt += QString("  ") + att.first.c_str() + "=" + att.second.c_str();
+        }
+
         list->addItem(txt);
     }
     return list;
