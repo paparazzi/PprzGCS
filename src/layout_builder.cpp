@@ -9,7 +9,6 @@
 #include "pprzmap.h"
 #include "pfd.h"
 #include <QLabel>
-#include "gcs.h"
 #include <iostream>
 #include "configurable.h"
 #include "widget_utils.h"
@@ -163,8 +162,7 @@ QMainWindow* build_layout(QString filename) {
     QWidget* widget = rec_build(root_node, nullptr, &s);
 
     auto window = PprzMain::get();
-    auto gcs = new Gcs();
-    gcs->setupUi(window, width, height, widget);
+    window->setupUi(width, height, widget);
 
     return window;
 }

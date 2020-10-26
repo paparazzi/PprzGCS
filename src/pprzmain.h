@@ -2,7 +2,7 @@
 #define PPRZMAIN_H
 
 #include <QMainWindow>
-#include "gcs.h"
+#include <QtWidgets>
 
 class PprzMain : public QMainWindow
 {
@@ -17,9 +17,16 @@ public:
         return singleton;
     }
 
+    void setupUi(int width, int height, QWidget* centralWidget);
+
+
 private:
     static PprzMain* singleton;
     explicit PprzMain(QWidget *parent = nullptr);
+
+    QMenuBar *menuBar;
+    QToolBar *mainToolBar;
+    QStatusBar *statusBar;
 
 };
 
