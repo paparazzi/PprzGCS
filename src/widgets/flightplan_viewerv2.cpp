@@ -9,7 +9,11 @@ FlightPlanViewerV2::FlightPlanViewerV2(QString ac_id, QWidget *parent) : QTabWid
 {
     addTab(make_blocks_tab(), "blocks");
     addTab(make_waypoints_tab(), "waypoints");
-    addTab(new QWidget(), "exceptions");
+
+    if(AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getExeptions().size() > 0) {
+        addTab(make_exceptions_tab(), "exceptions");
+    }
+
     addTab(new QWidget(), "header");
 
     connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &FlightPlanViewerV2::handleNavStatus);
@@ -149,23 +153,31 @@ QWidget* FlightPlanViewerV2::make_tree(shared_ptr<Block> block, std::function<vo
 }
 
 QWidget* FlightPlanViewerV2::make_waypoints_tab() {
-    auto scroll = new QScrollArea(this);
-    scroll->setWidgetResizable(true);
-    scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    auto widget = new QWidget();
-
-    auto w_layout = new QVBoxLayout(widget);
+    auto list = new QListWidget(this);
 
     for(auto waypoint: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
-        QString name = waypoint->getName().c_str();
+        QString txt = waypoint->getName().c_str() + QString("\t");
 
-        auto lbl = new QLabel(name, widget);
-        w_layout->addWidget(lbl);
+        for(auto att: waypoint->getXmlAttributes()) {
+            if(att.first != "name") {
+                txt += QString("\t") + att.first.c_str() + "=" + att.second.c_str();
+            }
+        }
+
+        list->addItem(txt);
+
     }
 
-    scroll->setWidget(widget);
+    return list;
+}
 
-    return scroll;
+QWidget* FlightPlanViewerV2::make_exceptions_tab() {
+    auto list = new QListWidget(this);
+    for(auto ex: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getExeptions()) {
+        QString txt = QString("cond: ") + ex->cond.c_str() + QString("\tderoute: ") + ex->deroute.c_str();
+        list->addItem(txt);
+    }
+    return list;
 }
 
 void FlightPlanViewerV2::handleNavStatus(pprzlink::Message msg) {
