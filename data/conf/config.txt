@@ -1,0 +1,15 @@
+# This is a config file for PprzGCS.
+# PprzGCS has sensible default values, but you can alter them here.
+
+# IVY_NAME PprzGCS
+# IVY_BUS 127.255.255.255:2010
+
+# WAYPOINTS_SIZE 8
+# SIZE_HIGHLIGHT_FACTOR 1.5
+MAPITEMS_FONT 18
+# AIRCRAFTS_SIZE 40
+
+
+# MAP_PATH /tmp/map
+# DEFAULT_TILE_PROVIDER OpenStreetMap
+# DEFAULT_TILE_PROVIDER Google

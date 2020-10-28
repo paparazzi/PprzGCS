@@ -64,7 +64,7 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
 
     setZoom(17);
     centerLatLon(Point2DLatLon(43.462344,1.273044));
-    setTilesPath(qApp->property("APP_DATA_PATH").toString() + "/map");
+    setTilesPath(qApp->property("MAP_PATH").toString());
 
     addLayersWidget();
 

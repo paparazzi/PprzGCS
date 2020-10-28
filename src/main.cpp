@@ -6,56 +6,7 @@
 #include <QProcessEnvironment>
 #include "pprz_dispatcher.h"
 #include <QWizard>
-
-void configure(QFile& config_file) {
-    assert(config_file.isOpen());
-    QTextStream stream(&config_file);
-
-    if(!qEnvironmentVariableIsSet("PAPARAZZI_HOME") ||
-       !qEnvironmentVariableIsSet("PAPARAZZI_SRC")) {
-        std::cerr << "Set environnements variables PAPARAZZI_HOME, PAPARAZZI_SRC!" << std::endl;
-        abort();
-    }
-
-    QString PAPARAZZI_HOME = qgetenv("PAPARAZZI_HOME");
-    QString PAPARAZZI_SRC = qgetenv("PAPARAZZI_SRC");
-    QString PAPARAZZI_GCS_DATA = qgetenv("PAPARAZZI_GCS_DATA");
-
-    qApp->setProperty("IVY_NAME", "QPprzControl");
-    qApp->setProperty("IVY_BUS", "127.255.255.255:2010");
-    qApp->setProperty("PPRZLINK_ID", "pprzcontrol");
-
-    qApp->setProperty("PPRZLINK_MESSAGES", PAPARAZZI_HOME + "/var/messages.xml");
-    qApp->setProperty("PPRZLINK_MESSAGES", PAPARAZZI_HOME + "/var/messages.xml");
-    qApp->setProperty("PATH_GCS_ICON", PAPARAZZI_HOME + "/data/pictures/gcs_icons");
-    qApp->setProperty("DEFAULT_TILE_PROVIDER", "Google");
-
-    qApp->setProperty("APP_DATA_PATH", PAPARAZZI_GCS_DATA);
-    qApp->setProperty("MAP_MOVE_HYSTERESIS", 20);
-    qApp->setProperty("WAYPOINTS_SIZE", 8);
-    qApp->setProperty("CIRCLE_CREATE_MIN_RADIUS", 1.0);
-    qApp->setProperty("CIRCLE_STROKE", 4);
-    qApp->setProperty("SIZE_HIGHLIGHT_FACTOR", 1.5);
-
-    qApp->setProperty("ITEM_Z_VALUE_HIGHLIGHTED", 100);
-    qApp->setProperty("ITEM_Z_VALUE_UNHIGHLIGHTED", 50);
-    qApp->setProperty("NAV_SHAPE_Z_VALUE", 150);
-    qApp->setProperty("AIRCRAFT_Z_VALUE", 300);
-
-    qApp->setProperty("MAPITEMS_FONT", 18);
-    qApp->setProperty("AIRCRAFTS_SIZE", 40);
-
-    qApp->setProperty("DEFAULT_COLOR", "red");
-    qApp->setProperty("PATH_AIRCRAFT_ICON", PAPARAZZI_GCS_DATA + "/pictures/aircraft_icons");
-
-    qApp->setProperty("TRACK_MAX_CHUNKS", 10);
-    qApp->setProperty("TRACK_CHUNCK_SIZE", 20);
-
-
-    qApp->setProperty("APP_STYLE_FILE", PAPARAZZI_GCS_DATA + "/conf/style.qss");
-    qApp->setProperty("APP_LAYOUT_FILE", PAPARAZZI_GCS_DATA + "/conf/default_layout.xml");
-
-}
+#include "configure.h"
 
 void launch_main_app() {
     QFile file(qApp->property("APP_STYLE_FILE").toString());
@@ -76,49 +27,58 @@ void launch_main_app() {
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    QApplication::setApplicationName("PprzGCS");
+    QApplication::setApplicationVersion("0.1");
+
+    QCommandLineParser parser;
+    parser.setApplicationDescription("Test helper");
+    parser.addHelpOption();
+    parser.addVersionOption();
+
+    QCommandLineOption config_file_option(QStringList() << "c" << "config",
+               "Start application with the given config file.",
+               "config_file");
+    parser.addOption(config_file_option);
+
+    QCommandLineOption rememberConfigOption("r", "Remember config file.");
+    parser.addOption(rememberConfigOption);
+
+    parser.process(a);
+
+    QString gcsConfigPath = parser.value(config_file_option);
+    bool remember = parser.isSet(rememberConfigOption);
 
     QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
-    qDebug() << config_path;
-
     QString  cfgFilePath = config_path + "/conf.txt";
-
     QFile conf_file(cfgFilePath);
-    if(conf_file.open(QFile::ReadOnly | QFile::Text)) {
-        qDebug() << "file exists!";
-        configure(conf_file);
-        launch_main_app();
-        return qApp->exec();
-    } else {
-        qDebug() << "no config file!";
-        auto wizard = new QWizard();
-        auto page1 = new QWizardPage(wizard);
-        page1->setTitle("App path");
-        page1->setSubTitle("PprzCGS need some configuration and data files. Configure it here!");
-        page1->setPixmap(QWizard::LogoPixmap, QPixmap(":/pictures/icon.svg"));
-        //page1->set
-        wizard->addPage(page1);
 
-        QObject::connect(wizard->button(QWizard::FinishButton), &QAbstractButton::clicked, [=]{
-            qDebug() << "wizard finised!";
-
-            // dummy config file creation, just to be able to start the application
-            QFile config_file(cfgFilePath);
-            config_file.open(QFile::WriteOnly | QFile::Text);
-            config_file.close();
-
-            QFile conf_file(cfgFilePath);
-            if(conf_file.open(QFile::ReadOnly | QFile::Text)) {
-                configure(conf_file);
-                launch_main_app();
-            } else {
-                qDebug() << "PprzGCS has not been configured ! No configuration file at " << cfgFilePath << "!";
-            }
-        });
-
-        wizard->show();
-
-        return qApp->exec();
+    // take config file from command line
+    if(gcsConfigPath != "" && remember) {
+        if(conf_file.open(QFile::WriteOnly | QFile::Text)) {
+            QFileInfo gcp(gcsConfigPath);
+            QString file_content = gcp.absoluteFilePath() + "\n";
+            conf_file.write(file_content.toStdString().c_str());
+            conf_file.close();
+        } else {
+            qWarning() << "Fail to write to " << cfgFilePath;
+        }
     }
+
+    // if config file is not provided, search in persistant config
+    if(gcsConfigPath == "") {
+        if(!conf_file.open(QFile::ReadOnly | QFile::Text)) {
+            qDebug() << "no config file! Please provide a configuration file.";
+            std::cout << parser.helpText().toStdString();
+            return -1;
+        }
+
+        gcsConfigPath = conf_file.readAll().trimmed();
+    }
+
+    // this should be the GCS configuration file.
+    configure(gcsConfigPath);
+    launch_main_app();
+    return qApp->exec();
 
 }
 

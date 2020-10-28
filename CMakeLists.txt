@@ -98,6 +98,7 @@ set(SOURCE
     src/AircraftManager.cpp
     src/srtm_manager.cpp
     src/aircraft.cpp
+    src/configure.cpp
     src/common/waypoint.cpp
     src/common/block.cpp
     src/common/flightplan.cpp
