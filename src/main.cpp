@@ -5,19 +5,15 @@
 #include <QNetworkProxy>
 #include <QProcessEnvironment>
 #include "pprz_dispatcher.h"
+#include <QWizard>
 
-int main(int argc, char *argv[])
-{
-    QApplication a(argc, argv);
-
-    //QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
-    //QCoreApplication
-    //QCommandLineParser
+void configure(QFile& config_file) {
+    assert(config_file.isOpen());
+    QTextStream stream(&config_file);
 
     if(!qEnvironmentVariableIsSet("PAPARAZZI_HOME") ||
-       !qEnvironmentVariableIsSet("PAPARAZZI_SRC")  ||
-       !qEnvironmentVariableIsSet("PAPARAZZI_GCS_DATA")) {
-        std::cerr << "Set environnements variables PAPARAZZI_HOME, PAPARAZZI_SRC and PAPARAZZI_GCS_DATA!" << std::endl;
+       !qEnvironmentVariableIsSet("PAPARAZZI_SRC")) {
+        std::cerr << "Set environnements variables PAPARAZZI_HOME, PAPARAZZI_SRC!" << std::endl;
         abort();
     }
 
@@ -25,50 +21,104 @@ int main(int argc, char *argv[])
     QString PAPARAZZI_SRC = qgetenv("PAPARAZZI_SRC");
     QString PAPARAZZI_GCS_DATA = qgetenv("PAPARAZZI_GCS_DATA");
 
+    qApp->setProperty("IVY_NAME", "QPprzControl");
+    qApp->setProperty("IVY_BUS", "127.255.255.255:2010");
+    qApp->setProperty("PPRZLINK_ID", "pprzcontrol");
 
-    a.setProperty("IVY_NAME", "QPprzControl");
-    a.setProperty("IVY_BUS", "127.255.255.255:2010");
-    a.setProperty("PPRZLINK_ID", "pprzcontrol");
+    qApp->setProperty("PPRZLINK_MESSAGES", PAPARAZZI_HOME + "/var/messages.xml");
+    qApp->setProperty("PPRZLINK_MESSAGES", PAPARAZZI_HOME + "/var/messages.xml");
+    qApp->setProperty("PATH_GCS_ICON", PAPARAZZI_HOME + "/data/pictures/gcs_icons");
+    qApp->setProperty("DEFAULT_TILE_PROVIDER", "Google");
 
-    a.setProperty("PPRZLINK_MESSAGES", PAPARAZZI_HOME + "/var/messages.xml");
-    a.setProperty("PPRZLINK_MESSAGES", PAPARAZZI_HOME + "/var/messages.xml");
-    a.setProperty("PATH_GCS_ICON", PAPARAZZI_HOME + "/data/pictures/gcs_icons");
-    a.setProperty("DEFAULT_TILE_PROVIDER", "Google");
+    qApp->setProperty("APP_DATA_PATH", PAPARAZZI_GCS_DATA);
+    qApp->setProperty("MAP_MOVE_HYSTERESIS", 20);
+    qApp->setProperty("WAYPOINTS_SIZE", 8);
+    qApp->setProperty("CIRCLE_CREATE_MIN_RADIUS", 1.0);
+    qApp->setProperty("CIRCLE_STROKE", 4);
+    qApp->setProperty("SIZE_HIGHLIGHT_FACTOR", 1.5);
 
-    a.setProperty("APP_DATA_PATH", PAPARAZZI_GCS_DATA);
-    a.setProperty("MAP_MOVE_HYSTERESIS", 20);
-    a.setProperty("WAYPOINTS_SIZE", 8);
-    a.setProperty("CIRCLE_CREATE_MIN_RADIUS", 1.0);
-    a.setProperty("CIRCLE_STROKE", 4);
-    a.setProperty("SIZE_HIGHLIGHT_FACTOR", 1.5);
+    qApp->setProperty("ITEM_Z_VALUE_HIGHLIGHTED", 100);
+    qApp->setProperty("ITEM_Z_VALUE_UNHIGHLIGHTED", 50);
+    qApp->setProperty("NAV_SHAPE_Z_VALUE", 150);
+    qApp->setProperty("AIRCRAFT_Z_VALUE", 300);
 
-    a.setProperty("ITEM_Z_VALUE_HIGHLIGHTED", 100);
-    a.setProperty("ITEM_Z_VALUE_UNHIGHLIGHTED", 50);
-    a.setProperty("NAV_SHAPE_Z_VALUE", 150);
-    a.setProperty("AIRCRAFT_Z_VALUE", 300);
+    qApp->setProperty("MAPITEMS_FONT", 18);
+    qApp->setProperty("AIRCRAFTS_SIZE", 40);
 
-    a.setProperty("MAPITEMS_FONT", 18);
-    a.setProperty("AIRCRAFTS_SIZE", 40);
+    qApp->setProperty("DEFAULT_COLOR", "red");
+    qApp->setProperty("PATH_AIRCRAFT_ICON", PAPARAZZI_GCS_DATA + "/pictures/aircraft_icons");
 
-    a.setProperty("DEFAULT_COLOR", "red");
-    a.setProperty("PATH_AIRCRAFT_ICON", PAPARAZZI_GCS_DATA + "/pictures/aircraft_icons");
+    qApp->setProperty("TRACK_MAX_CHUNKS", 10);
+    qApp->setProperty("TRACK_CHUNCK_SIZE", 20);
 
-    a.setProperty("TRACK_MAX_CHUNKS", 10);
-    a.setProperty("TRACK_CHUNCK_SIZE", 20);
 
-    QFile file(PAPARAZZI_GCS_DATA + "/conf/style.qss");
+    qApp->setProperty("APP_STYLE_FILE", PAPARAZZI_GCS_DATA + "/conf/style.qss");
+    qApp->setProperty("APP_LAYOUT_FILE", PAPARAZZI_GCS_DATA + "/conf/default_layout.xml");
+
+}
+
+void launch_main_app() {
+    QFile file(qApp->property("APP_STYLE_FILE").toString());
     file.open(QFile::ReadOnly | QFile::Text);
+    assert(file.isOpen());
     QTextStream stream(&file);
-    a.setStyleSheet(stream.readAll());
+    qApp->setStyleSheet(stream.readAll());
 
-    QString layout_path = PAPARAZZI_GCS_DATA + "/conf/default_layout.xml";
+    QString layout_path = qApp->property("APP_LAYOUT_FILE").toString();
 
     QMainWindow* w = build_layout(layout_path);
 
     PprzDispatcher::get()->start();
 
     w->show();
+}
 
-    return a.exec();
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+
+    QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    qDebug() << config_path;
+
+    QString  cfgFilePath = config_path + "/conf.txt";
+
+    QFile conf_file(cfgFilePath);
+    if(conf_file.open(QFile::ReadOnly | QFile::Text)) {
+        qDebug() << "file exists!";
+        configure(conf_file);
+        launch_main_app();
+        return qApp->exec();
+    } else {
+        qDebug() << "no config file!";
+        auto wizard = new QWizard();
+        auto page1 = new QWizardPage(wizard);
+        page1->setTitle("App path");
+        page1->setSubTitle("PprzCGS need some configuration and data files. Configure it here!");
+        page1->setPixmap(QWizard::LogoPixmap, QPixmap(":/pictures/icon.svg"));
+        //page1->set
+        wizard->addPage(page1);
+
+        QObject::connect(wizard->button(QWizard::FinishButton), &QAbstractButton::clicked, [=]{
+            qDebug() << "wizard finised!";
+
+            // dummy config file creation, just to be able to start the application
+            QFile config_file(cfgFilePath);
+            config_file.open(QFile::WriteOnly | QFile::Text);
+            config_file.close();
+
+            QFile conf_file(cfgFilePath);
+            if(conf_file.open(QFile::ReadOnly | QFile::Text)) {
+                configure(conf_file);
+                launch_main_app();
+            } else {
+                qDebug() << "PprzGCS has not been configured ! No configuration file at " << cfgFilePath << "!";
+            }
+        });
+
+        wizard->show();
+
+        return qApp->exec();
+    }
+
 }
 
