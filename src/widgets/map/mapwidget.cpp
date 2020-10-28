@@ -22,7 +22,7 @@
 #include "layer_combo.h"
 #include "lock_button.h"
 
-MapWidget::MapWidget(QWidget *parent) : Map2D(QString("://tile_sources.xml"), parent),
+MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton)
 {
     horizontalLayout = new QHBoxLayout(this);   // main layout

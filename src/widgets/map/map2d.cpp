@@ -10,9 +10,12 @@
 #include "utils.h"
 #include "maputils.h"
 #include "coordinatestransform.h"
+#include <QApplication>
 
-Map2D::Map2D(QString configFile, QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), _zoom(5.0), tile_size(256), minZoom(0.0), maxZoom(25.0)
+Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), _zoom(5.0), tile_size(256), minZoom(0.0), maxZoom(25.0)
 {
+    QString dataDir = qApp->property("APP_DATA_PATH").toString();
+    QString configFile = dataDir + "/conf/tile_sources.xml";
     loadConfig(configFile);
     qreal maxxy = pow(2, maxZoom);
 

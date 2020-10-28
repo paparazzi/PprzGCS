@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>tile_sources.xml</file>
         <file>pictures/map_layers_hover.svg</file>
         <file>pictures/map_layers_normal.svg</file>
         <file>pictures/map_layers_pressed.svg</file>
