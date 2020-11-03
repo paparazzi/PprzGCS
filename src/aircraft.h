@@ -8,6 +8,7 @@
 #include "airframe.h"
 #include "point2dlatlon.h"
 #include "pprz_dispatcher.h"
+#include "aircraft_status.h"
 
 class Aircraft
 {
@@ -23,14 +24,13 @@ public:
     //SettingMenu& getSettingMenu() {return setting_menu;}
     shared_ptr<SettingMenu> getSettingMenu() {return setting_menu;}
     Airframe& getAirframe() {return airframe;}
+    AircraftStatus* getStatus() {return status;}
 
     Point2DLatLon getPosition() {return position;}
     void setPosition(Point2DLatLon pos) {position = pos;}
 
     void setSetting(shared_ptr<Setting>, float value);
     void setSetting(uint8_t setting_no, float value);
-
-    void updateSettings(pprzlink::Message msg);
 
 private:
     QString ac_id;
@@ -40,9 +40,11 @@ private:
     FlightPlan flight_plan;
     shared_ptr<SettingMenu> setting_menu;
     Airframe airframe;
-    //SettingMenu setting_menu;
 
     Point2DLatLon position;
+
+    AircraftStatus* status;
+
 
 };
 

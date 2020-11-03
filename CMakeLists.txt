@@ -105,6 +105,7 @@ set(SOURCE
     src/common/setting_menu.cpp
     src/common/setting.cpp
     src/common/airframe.cpp
+    src/common/aircraft_status.cpp
 )
 
 include_directories(

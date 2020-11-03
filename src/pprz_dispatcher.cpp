@@ -33,7 +33,12 @@ void PprzDispatcher::bindDeftoSignal(std::string const &name, sig_ptr_t sig) {
             msg.getField("ac_id", id);
 
             if(AircraftManager::get()->aircraftExists(id.c_str())) {
+                if(!first_msg) {
+                    first_msg = true;
+                    emit(DispatcherUi::get()->ac_selected(QString(id.c_str())));
+                }
                 emit((this->*sig)(msg));
+                AircraftManager::get()->getAircraft(id.c_str()).getStatus()->updateMessage(msg);
             }
         }
     );
@@ -63,22 +68,6 @@ void PprzDispatcher::sendMessage(pprzlink::Message msg) {
 
 void PprzDispatcher::start() {
 
-    link->BindMessage(dict->getDefinition("FLIGHT_PARAM"),
-        [=](std::string ac_id, pprzlink::Message msg) {
-            (void)ac_id;
-            std::string id;
-            msg.getField("ac_id", id);
-
-            if(AircraftManager::get()->aircraftExists(id.c_str())) {
-                emit(flight_param(msg));
-                if(!first_msg) {
-                    first_msg = true;
-                    emit(DispatcherUi::get()->ac_selected(QString(id.c_str())));
-                }
-            }
-        }
-    );
-
     link->BindMessage(dict->getDefinition("WAYPOINT_MOVED"),
         [=](std::string ac_id, pprzlink::Message msg) {
             (void)ac_id;
@@ -99,6 +88,7 @@ void PprzDispatcher::start() {
     bindDeftoSignal("DL_VALUES", &PprzDispatcher::dl_values);
     bindDeftoSignal("TELEMETRY_STATUS", &PprzDispatcher::telemetry_status);
     bindDeftoSignal("FLY_BY_WIRE", &PprzDispatcher::fly_by_wire);
+    bindDeftoSignal("FLIGHT_PARAM", &PprzDispatcher::flight_param);
 
 
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint,
