@@ -15,11 +15,12 @@ void LockButton::setSize(QSize s) {
     _size = s;
     auto lock_size = QSize(_size.width()/4, _size.height()/4);
     lock_rect = QRect(_size.width() - lock_size.width(), 0, lock_size.width(), lock_size.height());
-    active_rect = QRect(_size.width()-4, _size.height()/4, 2, _size.height()-2*_size.height()/4);
     icon_margins = QMargins(_size.width()/20, _size.height()/4, _size.width()/20, _size.height()/20);
+    setActiveSide(activeSide);
 }
 
 void LockButton::setActiveSide(bool activeLeft) {
+    activeSide = activeLeft;
     auto pos_active_rect = activeLeft ? 2 : _size.width()-4;
     active_rect = QRect(pos_active_rect, _size.height()/4, 2, _size.height()-2*_size.height()/4);
 }

@@ -59,6 +59,7 @@ private:
     QIcon icon;
     QIcon icon_lock;
     QIcon icon_unlocked;
+    bool activeSide;
 
     bool _locked;
     bool active;
