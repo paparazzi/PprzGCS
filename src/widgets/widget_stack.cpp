@@ -29,6 +29,8 @@ WidgetStack::WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor,
                     }
                 }
             });
+
+    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 }
 
 void WidgetStack::handleNewAC(QString ac_id) {

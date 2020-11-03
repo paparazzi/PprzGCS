@@ -33,7 +33,6 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     columnRight = new QVBoxLayout();
     buttonsRightLayout = new QVBoxLayout();
 
-
     horizontalLayout->addItem(buttonsLeftLayout);
     horizontalLayout->addItem(columnLeft);
     horizontalLayout->addItem(spacer);
@@ -95,26 +94,23 @@ void MapWidget::addLayersWidget() {
 }
 
 void MapWidget::addWidget(QWidget* widget, LockButton* button, WidgetContainer side) {
-    QVBoxLayout* column;
-    QVBoxLayout* buttonsLayout;
     QList<LockButton*>* buttons;
     if(side == WIDGETS_LEFT) {
-        column = columnLeft;
-        buttonsLayout = buttonsLeftLayout;
+        columnLeft->insertWidget(columnLeft->count() - 1, widget);
+        buttonsLeftLayout->insertWidget(buttonsLeftLayout->count()-1, button);
+        button->setActiveSide(false);
         buttons = &buttonsLeft;
     } else  {
+        columnRight->insertWidget(columnRight->count() - 1, widget);
+        buttonsRightLayout->insertWidget(buttonsRightLayout->count()-1, button);
         button->setActiveSide(true);
-        column = columnRight;
-        buttonsLayout = buttonsRightLayout;
         buttons = &buttonsRight;
+        columnRight->setAlignment(widget, Qt::AlignRight);
     }
 
-    column->insertWidget(column->count() - 1, widget);
     widget->hide();
-
     button->setWidget(widget);
     buttons->append(button);
-    buttonsLayout->insertWidget(buttonsLayout->count()-1, button);
 
     connect(
         button, &LockButton::clicked,
