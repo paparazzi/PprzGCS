@@ -20,11 +20,17 @@ Strip::Strip(QString ac_id, QWidget *parent,  bool full) : QWidget(parent), _ac_
         full_strip->hide();
     }
 
-    connect(PprzDispatcher::get(), &PprzDispatcher::engine_status, this, &Strip::updateEngineStatus);
-    connect(PprzDispatcher::get(), &PprzDispatcher::ap_status, this, &Strip::updateApStatus);
-    connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &Strip::updateFlightParams);
-    connect(PprzDispatcher::get(), &PprzDispatcher::telemetry_status, this, &Strip::updateTelemetryStatus);
-    connect(PprzDispatcher::get(), &PprzDispatcher::fly_by_wire, this, &Strip::updateFBW);
+
+    connect(AircraftManager::get()->getAircraft(_ac_id).getStatus(),
+            &AircraftStatus::engine_status, this, &Strip::updateEngineStatus);
+    connect(AircraftManager::get()->getAircraft(_ac_id).getStatus(),
+            &AircraftStatus::flight_param, this, &Strip::updateFlightParams);
+    connect(AircraftManager::get()->getAircraft(_ac_id).getStatus(),
+            &AircraftStatus::telemetry_status, this, &Strip::updateTelemetryStatus);
+    connect(AircraftManager::get()->getAircraft(_ac_id).getStatus(),
+            &AircraftStatus::fly_by_wire, this, &Strip::updateFBW);
+    connect(AircraftManager::get()->getAircraft(_ac_id).getStatus(),
+            &AircraftStatus::ap_status, this, &Strip::updateApStatus);
 
     connect(AircraftManager::get()->getAircraft(_ac_id).getStatus(),
             &AircraftStatus::nav_status, this, &Strip::updateAltTargetDiff);
@@ -179,30 +185,28 @@ void Strip::mouseReleaseEvent(QMouseEvent *e) {
     (void)e;
 }
 
-void Strip::updateEngineStatus(pprzlink::Message msg) {
-    std::string id;
-    msg.getField("ac_id", id);
-    if(id.c_str() == _ac_id) {
+void Strip::updateEngineStatus() {
+    auto msg = AircraftManager::get()->getAircraft(_ac_id).getStatus()->getMessage("ENGINE_STATUS");
+    if(msg) {
         float bat, throttle;
-        msg.getField("throttle", throttle);
-        msg.getField("bat", bat);
+        msg->getField("throttle", throttle);
+        msg->getField("bat", bat);
         full_bat_graph->pushData(bat);
         short_jl_bat->setValue(bat);
         full_throttle_label->setValue(throttle);
     }
 }
 
-void Strip::updateApStatus(pprzlink::Message msg) {
-    std::string id;
-    msg.getField("ac_id", id);
-    if(id.c_str() == _ac_id) {
+void Strip::updateApStatus() {
+    auto msg = AircraftManager::get()->getAircraft(_ac_id).getStatus()->getMessage("AP_STATUS");
+    if(msg) {
         string ap_mode, lat_mode, horiz_mode, gaz_mode, gps_mode, kill_mode;
         uint32_t flight_time;
 
-        msg.getField("flight_time", flight_time);
-        msg.getField("kill_mode", kill_mode);
-        msg.getField("ap_mode", ap_mode);
-        msg.getField("gps_mode", gps_mode);
+        msg->getField("flight_time", flight_time);
+        msg->getField("kill_mode", kill_mode);
+        msg->getField("ap_mode", ap_mode);
+        msg->getField("gps_mode", gps_mode);
 
         int hours = static_cast<int>(static_cast<int64_t>(flight_time)/3600);
         int minutes = static_cast<int>(static_cast<int64_t>(flight_time)/60 - hours*60);
@@ -250,7 +254,7 @@ void Strip::updateAltTargetDiff() {
     std::string id;
     auto nav_status_msg = AircraftManager::get()->getAircraft(_ac_id).getStatus()->getMessage("NAV_STATUS");
     auto flight_param_msg = AircraftManager::get()->getAircraft(_ac_id).getStatus()->getMessage("FLIGHT_PARAM");
-    if(nav_status_msg.has_value() && flight_param_msg.has_value()) {
+    if(nav_status_msg && flight_param_msg) {
         float target_alt;
         nav_status_msg->getField("target_alt", target_alt);
 
@@ -263,16 +267,15 @@ void Strip::updateAltTargetDiff() {
     }
 }
 
-void Strip::updateFlightParams(pprzlink::Message msg) {
-    std::string id;
-    msg.getField("ac_id", id);
-    if(id.c_str() == _ac_id) {
+void Strip::updateFlightParams() {
+    auto msg = AircraftManager::get()->getAircraft(_ac_id).getStatus()->getMessage("FLIGHT_PARAM");
+    if(msg) {
         float speed, alt, climb, agl, airspeed;
-        msg.getField("speed", speed);
-        msg.getField("alt", alt);
-        msg.getField("climb", climb);
-        msg.getField("agl", agl);
-        msg.getField("airspeed", airspeed);
+        msg->getField("speed", speed);
+        msg->getField("alt", alt);
+        msg->getField("climb", climb);
+        msg->getField("agl", agl);
+        msg->getField("airspeed", airspeed);
         full_speed_label->setValue(speed);
         short_speed_label->setText(QString::number(speed, 'f', 1) + " m/s");
         full_alt_graph->pushData(agl);
@@ -303,12 +306,11 @@ void Strip::updateFlightParams(pprzlink::Message msg) {
 }
 
 
-void Strip::updateTelemetryStatus(pprzlink::Message msg) {
-    std::string id;
-    msg.getField("ac_id", id);
-    if(id.c_str() == _ac_id) {
+void Strip::updateTelemetryStatus() {
+    auto msg = AircraftManager::get()->getAircraft(_ac_id).getStatus()->getMessage("TELEMETRY_STATUS");
+    if(msg) {
         float time_since_last_msg;
-        msg.getField("time_since_last_msg", time_since_last_msg);
+        msg->getField("time_since_last_msg", time_since_last_msg);
         if(time_since_last_msg > 5) {
             full_link_label->setBrush(Qt::red);
         } else {
@@ -323,13 +325,12 @@ void Strip::updateTelemetryStatus(pprzlink::Message msg) {
     }
 }
 
-void Strip::updateFBW(pprzlink::Message msg) {
-    std::string id;
-    msg.getField("ac_id", id);
-    if(id.c_str() == _ac_id) {
+void Strip::updateFBW() {
+    auto msg = AircraftManager::get()->getAircraft(_ac_id).getStatus()->getMessage("FLY_BY_WIRE");
+    if(msg) {
         std::string rc_status, rc_mode;
-        msg.getField("rc_status", rc_status);
-        msg.getField("rc_mode", rc_mode);
+        msg->getField("rc_status", rc_status);
+        msg->getField("rc_mode", rc_mode);
 
         if(rc_status == "OK") {
             full_fbw_mode_label->setBrush(QColor("#7ef17e"));

@@ -29,12 +29,12 @@ private:
     void build_full_strip();
     void build_short_strip();
 
-    void updateEngineStatus(pprzlink::Message msg);
-    void updateApStatus(pprzlink::Message msg);
+    void updateEngineStatus();
+    void updateApStatus();
     void updateAltTargetDiff();
-    void updateFlightParams(pprzlink::Message msg);
-    void updateTelemetryStatus(pprzlink::Message msg);
-    void updateFBW(pprzlink::Message msg);
+    void updateFlightParams();
+    void updateTelemetryStatus();
+    void updateFBW();
 
     QString _ac_id;
 
