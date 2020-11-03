@@ -31,6 +31,7 @@ private:
 
     void updateEngineStatus(pprzlink::Message msg);
     void updateApStatus(pprzlink::Message msg);
+    void updateAltTargetDiff();
     void updateFlightParams(pprzlink::Message msg);
     void updateTelemetryStatus(pprzlink::Message msg);
     void updateFBW(pprzlink::Message msg);

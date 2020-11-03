@@ -25,6 +25,11 @@ Strip::Strip(QString ac_id, QWidget *parent,  bool full) : QWidget(parent), _ac_
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &Strip::updateFlightParams);
     connect(PprzDispatcher::get(), &PprzDispatcher::telemetry_status, this, &Strip::updateTelemetryStatus);
     connect(PprzDispatcher::get(), &PprzDispatcher::fly_by_wire, this, &Strip::updateFBW);
+
+    connect(AircraftManager::get()->getAircraft(_ac_id).getStatus(),
+            &AircraftStatus::nav_status, this, &Strip::updateAltTargetDiff);
+    connect(AircraftManager::get()->getAircraft(_ac_id).getStatus(),
+            &AircraftStatus::flight_param, this, &Strip::updateAltTargetDiff);
 }
 
 void Strip::setCompact(bool compact) {
@@ -237,6 +242,23 @@ void Strip::updateApStatus(pprzlink::Message msg) {
         }
         full_gps_mode_label->setText(gps_mode.c_str());
         short_gps_mode_label->setText(gps_mode.c_str());
+
+    }
+}
+
+void Strip::updateAltTargetDiff() {
+    std::string id;
+    auto nav_status_msg = AircraftManager::get()->getAircraft(_ac_id).getStatus()->getMessage("NAV_STATUS");
+    auto flight_param_msg = AircraftManager::get()->getAircraft(_ac_id).getStatus()->getMessage("FLIGHT_PARAM");
+    if(nav_status_msg.has_value() && flight_param_msg.has_value()) {
+        float target_alt;
+        nav_status_msg->getField("target_alt", target_alt);
+
+        float alt;
+        flight_param_msg->getField("alt", alt);
+
+        auto diff = alt - target_alt;
+        short_target_label->setText(QString::number(diff, 'f', 1) + " m");
 
     }
 }
