@@ -14,7 +14,6 @@
 #include <QApplication>
 #include "pprz_dispatcher.h"
 #include "maputils.h"
-#include "mapstrip.h"
 #include "aircraft_item.h"
 #include "dispatcher_ui.h"
 #include "AircraftManager.h"
@@ -298,7 +297,4 @@ void MapWidget::wheelEvent(QWheelEvent* event) {
 
 void MapWidget::handleNewAC(QString ac_id) {
     (void)ac_id;
-    //auto ac = AircraftManager::get()->getAircraft(ac_id);
-    //MapStrip* map_strip = new MapStrip(ac_id);
-    //columnRight->insertWidget(1, map_strip);
 }
