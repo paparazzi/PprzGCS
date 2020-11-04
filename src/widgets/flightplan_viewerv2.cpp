@@ -24,7 +24,8 @@ FlightPlanViewerV2::FlightPlanViewerV2(QString ac_id, QWidget *parent) : QTabWid
 
     addTab(new QWidget(), "Header");
 
-    connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &FlightPlanViewerV2::handleNavStatus);
+    connect(AircraftManager::get()->getAircraft(ac_id).getStatus(),
+            &AircraftStatus::engine_status, this, &FlightPlanViewerV2::handleNavStatus);
 }
 
 
@@ -225,15 +226,14 @@ QWidget* FlightPlanViewerV2::make_sectors_tab() {
     return list;
 }
 
-void FlightPlanViewerV2::handleNavStatus(pprzlink::Message msg) {
-    std::string id;
-    msg.getField("ac_id", id);
-    if(id.c_str() == ac_id) {
+void FlightPlanViewerV2::handleNavStatus() {
+    auto msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("NAV_STATUS");
+    if(msg) {
         uint8_t cur_block, cur_stage;
         //uint32_t block_time, stage_time;
         //float target_lat, target_long, target_climb, target_alt, target_course, dist_to_wp;
-        msg.getField("cur_block", cur_block);
-        msg.getField("cur_stage", cur_stage);
+        msg->getField("cur_block", cur_block);
+        msg->getField("cur_stage", cur_stage);
 
         QTimer* timer = new QTimer();
         timer->moveToThread(qApp->thread());

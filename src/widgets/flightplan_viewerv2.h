@@ -18,7 +18,7 @@ signals:
 public slots:
 
 private:
-    void handleNavStatus(pprzlink::Message msg);
+    void handleNavStatus();
     void updateNavStatus(uint8_t cur_block, uint8_t cur_stage);
 
     struct Facade {
