@@ -9,6 +9,7 @@
 #include "widget_stack.h"
 #include "flightplan_viewerv2.h"
 #include "commands.h"
+#include "gps_classic_viewer.h"
 
 QWidget* makeWidget(QString name, QWidget* parent) {
     QWidget* widget = nullptr;
@@ -52,6 +53,13 @@ QWidget* makeWidget(QString name, QWidget* parent) {
                     return new Commands(ac_id, container);
                 },
                 parent, false);
+    }
+    else if (name == "gps_classic_viewer") {
+        widget = new WidgetStack(
+                [](QString ac_id, QWidget* container) {
+                    return new GPSClassicViewer(ac_id, container);
+                },
+                parent);
     }
     else {
         std::string s = "Widget " + name.toStdString() + " unknown";

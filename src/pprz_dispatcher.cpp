@@ -89,6 +89,7 @@ void PprzDispatcher::start() {
     bindDeftoSignal("TELEMETRY_STATUS", &PprzDispatcher::telemetry_status);
     bindDeftoSignal("FLY_BY_WIRE", &PprzDispatcher::fly_by_wire);
     bindDeftoSignal("FLIGHT_PARAM", &PprzDispatcher::flight_param);
+    bindDeftoSignal("SVSINFO", &PprzDispatcher::svsinfo);
 
 
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint,

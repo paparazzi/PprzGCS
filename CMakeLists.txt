@@ -44,6 +44,7 @@ set(SOURCE
     src/widgets/widget_utils.cpp
     src/widgets/pprzmap.ui
     src/widgets/commands.cpp
+    src/widgets/gps_classic_viewer.cpp
     src/widgets/map/tileprovider.cpp
     src/widgets/map/tileproviderconfig.cpp
     src/widgets/map/tileitem.cpp

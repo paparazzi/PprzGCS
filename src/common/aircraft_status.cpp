@@ -59,6 +59,9 @@ void AircraftStatus::updateMessage(pprzlink::Message msg) {
         else if(name == "FLY_BY_WIRE") {
             emit(fly_by_wire());
         }
+        else if(name == "SVSINFO") {
+            emit(svsinfo());
+        }
     }
 }
 

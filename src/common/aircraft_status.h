@@ -25,6 +25,7 @@ signals:
     void dl_values();
     void telemetry_status();
     void fly_by_wire();
+    void svsinfo();
 
 public slots:
 

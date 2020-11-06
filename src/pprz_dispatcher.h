@@ -37,6 +37,7 @@ signals:
     void dl_values(pprzlink::Message);
     void telemetry_status(pprzlink::Message);
     void fly_by_wire(pprzlink::Message);
+    void svsinfo(pprzlink::Message);
 
 
 public slots:

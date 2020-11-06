@@ -3,6 +3,7 @@
     <widget name="map2d" size="800">
       <configure>
         <columnLeft>
+            <widget name="gps_classic_viewer" icon="gps.svg"/>
             <widget name="flight_planV2" icon="flight_plan.svg"/>
         </columnLeft>
         <columnRight>
