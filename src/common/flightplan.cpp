@@ -171,24 +171,29 @@ shared_ptr<Block> FlightPlan::getBlock(uint8_t no) {
 
 vector<shared_ptr<BlockGroup>> FlightPlan::getGroups()
 {
-    if(blocks.size() == 0) {
-        return vector<shared_ptr<BlockGroup>>();
-    }
 
-    vector<shared_ptr<BlockGroup>> v;
-
-    shared_ptr<BlockGroup> bg = make_shared<BlockGroup>();
-    bg->group_name = blocks[0]->getGroup();
-    v.push_back(bg);
+    std::map<std::string, shared_ptr<BlockGroup>> groups_map;
 
     for(auto b: blocks) {
-        if(b->getGroup() != v[v.size()-1]->group_name) {
-            shared_ptr<BlockGroup> bg = make_shared<BlockGroup>();
-            bg->group_name = b->getGroup();
-            v.push_back(bg);
+        if(groups_map.find(b->getGroup()) == groups_map.end()) {
+            groups_map[b->getGroup()] = make_shared<BlockGroup>();
+            groups_map[b->getGroup()]->group_name = b->getGroup();
         }
-        v[v.size()-1]->blocks.push_back(b);
+        groups_map[b->getGroup()]->blocks.push_back(b);
     }
 
-    return v;
+
+    vector<shared_ptr<BlockGroup>> groups;
+
+    for( auto it = groups_map.begin(); it != groups_map.end(); ++it ) {
+        groups.push_back( it->second );
+    }
+
+    sort(groups.begin(), groups.end(),
+        [](shared_ptr<BlockGroup> lb, shared_ptr<BlockGroup> rb) {
+                return lb->group_name < rb->group_name;
+    });
+
+    return groups;
+
 }
