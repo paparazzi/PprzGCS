@@ -60,9 +60,9 @@ void Commands::paintEvent(QPaintEvent* e) {
 
 void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
     auto groups = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getGroups();
-    int col = static_cast<int>(groups.size());
-    int row = 0;
+    int col = 0;
     for(auto group: groups) {
+        int row = 0;
         for(auto block: group->blocks) {
             QString icon = block->getIcon().c_str();
             QString txt = block->getText().c_str();
@@ -92,17 +92,16 @@ void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
             }
             ++row;
         }
-        --col;
-        row = 0;
+        ++col;
     }
 }
 
 void Commands::addSettingsButtons(QGridLayout* settings_buttons_layout) {
     vector<shared_ptr<SettingMenu::ButtonGroup>> groups = AircraftManager::get()->getAircraft(ac_id).getSettingMenu()->getButtonGroups();
 
-    int col = static_cast<int>(groups.size());
-    int row = 0;
+    int col = 0;
     for(auto group: groups) {
+        int row = 0;
         for(auto sb: group->buttons) {
             QString icon = sb->icon.c_str();
             QString name = sb->name.c_str();
@@ -129,8 +128,7 @@ void Commands::addSettingsButtons(QGridLayout* settings_buttons_layout) {
             }
             ++row;
         }
-        --col;
-        row = 0;
+        ++col;
     }
 }
 
