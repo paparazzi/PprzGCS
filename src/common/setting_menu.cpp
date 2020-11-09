@@ -3,7 +3,7 @@
 #include <clocale>
 #include <assert.h>
 #include <algorithm>
-
+#include <map>
 
 SettingMenu::SettingMenu()
 {
@@ -84,27 +84,25 @@ vector<shared_ptr<SettingMenu::ButtonGroup>> SettingMenu::getButtonGroups() {
         }
     }
 
-    sort(buttons.begin(), buttons.end(),
-        [](shared_ptr<Setting::StripButton> lb, shared_ptr<Setting::StripButton> rb) {
-                return lb->group < rb->group;
-    });
+
+    std::map<std::string, shared_ptr<ButtonGroup>> groups_map;
+
+    for(auto b: buttons) {
+        if(groups_map.find(b->group) == groups_map.end()) {
+            groups_map[b->group] = make_shared<ButtonGroup>();
+            groups_map[b->group]->group_name = b->group;
+        }
+        groups_map[b->group]->buttons.push_back(b);
+    }
 
 
     vector<shared_ptr<ButtonGroup>> groups;
 
-    shared_ptr<ButtonGroup> bg = make_shared<ButtonGroup>();
-    bg->group_name = buttons[0]->group;
-    groups.push_back(bg);
-
-    for(auto b: buttons) {
-        if(b->group != groups[groups.size()-1]->group_name) {
-            shared_ptr<ButtonGroup> bg = make_shared<ButtonGroup>();
-            bg->group_name = b->group;
-            groups.push_back(bg);
-        }
-        groups[groups.size()-1]->buttons.push_back(b);
+    for( auto it = groups_map.begin(); it != groups_map.end(); ++it ) {
+        groups.push_back( it->second );
     }
 
     return groups;
+
 }
 
