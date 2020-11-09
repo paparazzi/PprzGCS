@@ -1,7 +1,15 @@
 #include "airframe.h"
 #include <iostream>
+#include <algorithm>
 
-
+const char* getAttribute(XMLElement* ele, string name) {
+    const char* result = ele->Attribute(name.c_str());
+    if(result == nullptr) {
+        transform(name.begin(), name.end(), name.begin(), ::toupper);
+        result = ele->Attribute(name.c_str());
+    }
+    return result;
+}
 
 Airframe::Airframe()
 {
@@ -22,14 +30,15 @@ Airframe::Airframe(std::string uri) {
         cerr << "Error parsing " << uri << ": " << doc.ErrorStr();
     }
     else {
+
         XMLElement* air_root = doc.FirstChildElement( "airframe" );
-        const char* airframe_name = air_root->Attribute("name");
+        const char* airframe_name = getAttribute(air_root, "name");
         if(airframe_name != nullptr) {
             name = airframe_name;
         }
 
         XMLElement* firmware_node = air_root->FirstChildElement( "firmware" );
-        const char* firmware_name = firmware_node->Attribute("name");
+        const char* firmware_name = getAttribute(firmware_node, "name");
         firmware = firmware_name;
 
         //cout << "parse " << name << " with firmware " << firmware << endl;
@@ -39,8 +48,8 @@ Airframe::Airframe(std::string uri) {
         while(section_node != nullptr) {
             //cout << endl;
             struct Section section;
-            const char* section_name = section_node->Attribute("name");
-            const char* section_prefix = section_node->Attribute("prefix");
+            const char* section_name = getAttribute(section_node, "name");
+            const char* section_prefix = getAttribute(section_node, "prefix");
             if(section_name != nullptr) {
                 section.name = section_name;
                 //cout << "Section " << section_name << "  ";
@@ -54,9 +63,9 @@ Airframe::Airframe(std::string uri) {
             while(define != nullptr) {
                 struct Define def;
 
-                def.name = define->Attribute("name");
+                def.name = getAttribute(define, "name");
                 //cout << "  define{" << def.name;
-                const char* define_value = define->Attribute("value");
+                const char* define_value = getAttribute(define, "value");
                 if(define_value != nullptr) {
                     def.value = define_value;
                     //cout << ", " << define_value;
