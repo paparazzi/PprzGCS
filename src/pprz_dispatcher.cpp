@@ -51,13 +51,10 @@ void PprzDispatcher::requestConfig(std::string ac_id) {
     reqConfig.setSenderId(pprzlink_id);
     link->sendRequest(reqConfig, [=](std::string ai, pprzlink::Message msg) {
         (void)ai;
-        //std::string ac_id;
-        //msg.getField("ac_id", ac_id);
-        // the server answer with the original ID of the AC in the case of a replay.
-        //Here, we keep the real id.
-        //Remove the ac_id parameter from the addAircraft method if that is eventually fixed.
+        std::string ac_id;
+        msg.getField("ac_id", ac_id);
         if(!AircraftManager::get()->aircraftExists(ac_id.c_str())) {
-            AircraftManager::get()->addAircraft(msg, ac_id);
+            AircraftManager::get()->addAircraft(msg);
             qDebug() << "new AC:" << ac_id.c_str();
             emit(DispatcherUi::get()->new_ac_config(ac_id.c_str()));
         }
