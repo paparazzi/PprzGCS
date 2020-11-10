@@ -17,6 +17,10 @@ SettingMenu::SettingMenu(std::string uri) {
 
     if(uri.substr(0,4) == "file") {
         string path = uri.substr(7, uri.length()-7);
+        if(path == "replay") {
+            cout << "not parsing settings: replay!" << endl;
+            return;
+        }
         doc.LoadFile(path.c_str());
     }
 
