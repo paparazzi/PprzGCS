@@ -38,6 +38,7 @@ void WidgetStack::handleNewAC(QString ac_id) {
     auto sv = constructor(ac_id, this);
     stackLayout->addWidget(sv);
     viewers_widgets[ac_id] = sv;
+    sv->hide();
 }
 
 void WidgetStack::removeAC(QString ac_id) {
