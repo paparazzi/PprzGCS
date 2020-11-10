@@ -19,6 +19,8 @@ public:
 
     void setupUi(int width, int height, QWidget* centralWidget);
 
+    void setServerStatus(bool active);
+
 
 private:
     static PprzMain* singleton;
@@ -29,6 +31,8 @@ private:
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
+
+    QLabel* serverStatusLed;
 
 };
 

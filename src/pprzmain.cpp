@@ -27,6 +27,22 @@ void PprzMain::setupUi(int width, int height, QWidget* centralWidget) {
     setCentralWidget(centralWidget);
     setWindowIcon(QIcon(":/pictures/icon.svg"));
     populate_menu();
+
+    statusBar->addPermanentWidget(new QLabel("server status:"));
+
+    serverStatusLed = new QLabel(statusBar);
+    setServerStatus(false);
+    statusBar->addPermanentWidget(serverStatusLed);
+}
+
+void PprzMain::setServerStatus(bool active) {
+    QIcon ic;
+    if(active) {
+        ic = QIcon(":/pictures/green_led.svg");
+    } else {
+        ic = QIcon(":/pictures/red_led.svg");
+    }
+    serverStatusLed->setPixmap(ic.pixmap(15, 15));
 }
 
 void PprzMain::populate_menu() {

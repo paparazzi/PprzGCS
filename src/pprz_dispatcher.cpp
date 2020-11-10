@@ -4,6 +4,8 @@
 #include "dispatcher_ui.h"
 #include <QDebug>
 #include <QApplication>
+#include <QDateTime>
+#include "pprzmain.h"
 
 using namespace std;
 
@@ -23,12 +25,24 @@ PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(fa
 
     connect(this, &PprzDispatcher::dl_values, this, &PprzDispatcher::updateSettings);
 
+    connect(&server_check_timer, &QTimer::timeout, this, [this]() {
+        auto now = QDateTime::currentMSecsSinceEpoch();
+        if(now - time_msg_server > 1000) {
+            PprzMain::get()->setServerStatus(false);
+        } else {
+            PprzMain::get()->setServerStatus(true);
+        }
+    });
+
 }
 
 void PprzDispatcher::bindDeftoSignal(std::string const &name, sig_ptr_t sig) {
     link->BindMessage(dict->getDefinition(name),
-        [=](std::string ac_id, pprzlink::Message msg) {
-            (void)ac_id;
+        [=](std::string sender, pprzlink::Message msg) {
+            if(sender == "ground") {
+                time_msg_server = QDateTime::currentMSecsSinceEpoch();
+            }
+
             std::string id;
             msg.getField("ac_id", id);
 
@@ -157,6 +171,9 @@ void PprzDispatcher::start() {
             requestConfig(id);
         }
     );
+
+    server_check_timer.setInterval(1000);
+    server_check_timer.start();
 }
 
 

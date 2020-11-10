@@ -2,6 +2,7 @@
 #define DISPATCHER_H
 
 #include <QObject>
+#include <QTimer>
 #include <pprzlink/IvyLink.h>
 #include <pprzlink/Message.h>
 #include <memory>
@@ -57,6 +58,9 @@ private:
 
     bool first_msg;
     bool started;
+
+    qint64 time_msg_server;
+    QTimer server_check_timer;
 };
 
 

@@ -27,5 +27,7 @@
         <file>pictures/lock_warning.svg</file>
         <file>pictures/no_ac.svg</file>
         <file>pictures/icon.svg</file>
+        <file>pictures/green_led.svg</file>
+        <file>pictures/red_led.svg</file>
     </qresource>
 </RCC>
