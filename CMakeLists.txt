@@ -37,7 +37,6 @@ set(SOURCE
     src/widgets/pprzmap.cpp
     src/widgets/pfd.cpp
     src/widgets/strips.cpp
-    src/widgets/flightplan_viewer.cpp
     src/widgets/flightplan_viewerv2.cpp
     src/widgets/widget_stack.cpp
     src/widgets/layer_combo.cpp
@@ -83,7 +82,6 @@ set(SOURCE
     src/widgets/basics/colorlabel.cpp
     src/widgets/basics/flowlayout.cpp
     src/widgets/basics/mbpushbutton.cpp
-    src/widgets/basics/sidepanel.cpp
     src/widgets/basics/lock_button.cpp
 
     src/layout_builder.cpp

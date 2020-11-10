@@ -3,7 +3,6 @@
 #include "ac_selector.h"
 #include "pprzmap.h"
 #include "pfd.h"
-#include "flightplan_viewer.h"
 #include "layer_combo.h"
 #include "settings_viewer.h"
 #include "widget_stack.h"
@@ -30,8 +29,6 @@ QWidget* makeWidget(QString name, QWidget* parent) {
                 parent);
     } else if (name == "PFD") {
         widget = new Pfd(parent);
-    } else if (name == "flight_plan") {
-        widget = new FlightPlanViewer(parent);
     }
     else if (name == "flight_planV2") {
         widget = new WidgetStack(
