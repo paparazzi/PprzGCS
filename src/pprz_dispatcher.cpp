@@ -51,11 +51,16 @@ void PprzDispatcher::requestConfig(std::string ac_id) {
     reqConfig.setSenderId(pprzlink_id);
     link->sendRequest(reqConfig, [=](std::string ai, pprzlink::Message msg) {
         (void)ai;
-        std::string ac_id;
-        msg.getField("ac_id", ac_id);
-        AircraftManager::get()->addAircraft(msg);
-        qDebug() << "new AC !";
-        emit(DispatcherUi::get()->new_ac_config(ac_id.c_str()));
+        //std::string ac_id;
+        //msg.getField("ac_id", ac_id);
+        // the server answer with the original ID of the AC in the case of a replay.
+        //Here, we keep the real id.
+        //Remove the ac_id parameter from the addAircraft method if that is eventually fixed.
+        if(!AircraftManager::get()->aircraftExists(ac_id.c_str())) {
+            AircraftManager::get()->addAircraft(msg, ac_id);
+            qDebug() << "new AC:" << ac_id.c_str();
+            emit(DispatcherUi::get()->new_ac_config(ac_id.c_str()));
+        }
     });
 }
 
@@ -80,6 +85,29 @@ void PprzDispatcher::start() {
             }
     });
 
+    link->BindMessage(dict->getDefinition("AIRCRAFT_DIE"),
+        [=](std::string ac_id, pprzlink::Message msg) {
+            (void)ac_id;
+            std::string id;
+            msg.getField("ac_id", id);
+
+            if(AircraftManager::get()->aircraftExists(id.c_str())) {
+                // If the dying AC is the currently selected one, try to select an other.
+                if(DispatcherUi::get()->getSelectedAcId() == id.c_str()) {
+                    for(auto ac: AircraftManager::get()->getAircrafts()) {
+                        if(ac.getId() != id.c_str()) {
+                            emit(DispatcherUi::get()->ac_selected(ac.getId()));
+                            break;
+                        }
+                    }
+                }
+
+                emit(DispatcherUi::get()->ac_deleted(id.c_str()));
+                AircraftManager::get()->removeAircraft(id.c_str());
+            }
+        }
+    );
+
     bindDeftoSignal("AP_STATUS", &PprzDispatcher::ap_status);
     bindDeftoSignal("NAV_STATUS", &PprzDispatcher::nav_status);
     bindDeftoSignal("CIRCLE_STATUS", &PprzDispatcher::circle_status);
@@ -92,7 +120,7 @@ void PprzDispatcher::start() {
     bindDeftoSignal("SVSINFO", &PprzDispatcher::svsinfo);
 
 
-    connect(DispatcherUi::get(), &DispatcherUi::move_waypoint,
+    connect(DispatcherUi::get(), &DispatcherUi::move_waypoint, this,
         [=](shared_ptr<Waypoint> wp, QString ac_id) {
             pprzlink::Message msg(dict->getDefinition("MOVE_WAYPOINT"));
             msg.setSenderId(pprzlink_id);
@@ -117,7 +145,7 @@ void PprzDispatcher::start() {
         std::string id;
         std::stringstream ss(ac_list);
         while (std::getline(ss, id, ',')) {
-            if(id != "") {
+            if(id != "" && !AircraftManager::get()->aircraftExists(id.c_str())) {
                 requestConfig(id);
             }
         }
@@ -153,6 +181,9 @@ void PprzDispatcher::updateSettings(pprzlink::Message msg) {
     std::stringstream ss(values);
     std::string token;
     size_t i=0;
+    if(settings.size() == 0) {
+        return;
+    }
     while (std::getline(ss, token, ',')) {
         if(token != "?") {
             double s = stod(token);

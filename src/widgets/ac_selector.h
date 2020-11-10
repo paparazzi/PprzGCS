@@ -18,6 +18,8 @@ public:
     QSize sizeHint() const;
     QSize minimumSizeHint() const;
 
+    void removeAC(QString ac_id);
+
 protected:
 //    virtual void enterEvent(QEvent* e);
 //    virtual void leaveEvent(QEvent* e);
@@ -28,6 +30,7 @@ protected:
 
 private:
     void handleNewAC(QString ac_id);
+
 
     static int const ARROW_WIDTH = 20;
 

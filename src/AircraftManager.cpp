@@ -27,9 +27,9 @@ QList<Aircraft> AircraftManager::getAircrafts() {
     return aircrafts.values();
 }
 
-void AircraftManager::addAircraft(pprzlink::Message msg) {
-    std::string ac_id, ac_name, default_gui_color, flight_plan, airframe, radio, settings;
-    msg.getField("ac_id", ac_id);
+void AircraftManager::addAircraft(pprzlink::Message msg, std::string ac_id) {
+    std::string ac_name, default_gui_color, flight_plan, airframe, radio, settings;
+    //msg.getField("ac_id", ac_id);
     msg.getField("ac_name", ac_name);
     msg.getField("default_gui_color", default_gui_color);
     msg.getField("flight_plan", flight_plan);
@@ -62,6 +62,13 @@ bool AircraftManager::aircraftExists(QString id) {
         return true;
     } else {
         return false;
+    }
+}
+
+void AircraftManager::removeAircraft(QString ac_id) {
+    (void)ac_id;
+    if(aircraftExists(ac_id)) {
+        aircrafts.remove(ac_id);
     }
 }
 

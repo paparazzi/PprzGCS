@@ -19,6 +19,7 @@ Strips::Strips(QWidget *parent) : QWidget(parent)
 
     scroll_layout->setAlignment(Qt::AlignRight);
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &Strips::handleNewAC);
+    connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &Strips::removeAC);
 }
 
 void Strips::handleNewAC(QString ac_id) {
@@ -28,4 +29,10 @@ void Strips::handleNewAC(QString ac_id) {
     strips[ac_id] = pageWidget;
 
     scroll_layout->addWidget(pageWidget);
+}
+
+void Strips::removeAC(QString ac_id) {
+    scroll_layout->removeWidget(strips[ac_id]);
+    strips[ac_id]->deleteLater();
+    strips.remove(ac_id);
 }

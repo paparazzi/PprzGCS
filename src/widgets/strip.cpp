@@ -20,6 +20,11 @@ Strip::Strip(QString ac_id, QWidget *parent,  bool full) : QWidget(parent), _ac_
         full_strip->hide();
     }
 
+    ac_color = AircraftManager::get()->getAircraft(_ac_id).getColor();
+    int hue = ac_color.hue();
+    int sat = ac_color.saturation();
+    ac_color.setHsv(hue, static_cast<int>(sat*0.2), 255);
+
 
     connect(AircraftManager::get()->getAircraft(_ac_id).getStatus(),
             &AircraftStatus::engine_status, this, &Strip::updateEngineStatus);
@@ -165,12 +170,7 @@ void Strip::paintEvent(QPaintEvent* e) {
     path.addRect(rect());
     p.setPen(Qt::NoPen);
 
-    QColor color = AircraftManager::get()->getAircraft(_ac_id).getColor();
-    int hue = color.hue();
-    int sat = color.saturation();
-    color.setHsv(hue, static_cast<int>(sat*0.2), 255);
-
-    p.fillPath(path, color);
+    p.fillPath(path, ac_color);
     p.drawPath(path);
 
     QWidget::paintEvent(e);

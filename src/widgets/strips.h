@@ -17,8 +17,9 @@ signals:
 
 private:
     void handleNewAC(QString ac_id);
+    void removeAC(QString ac_id);
 
-    std::map<QString, Strip*> strips;
+    QMap<QString, Strip*> strips;
     QVBoxLayout* scroll_layout;
 public slots:
 };

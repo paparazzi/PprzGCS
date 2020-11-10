@@ -33,13 +33,13 @@ PprzMap::PprzMap(QWidget *parent) :
     MapScene* scene = static_cast<MapScene*>(ui->map->scene());
 
     connect(ui->map, &MapWidget::itemRemoved,
-        [=](MapItem* item) {
+        [](MapItem* item) {
             //remove this item from everywhere, including dependencies
             //if nobody know it recursively, delete it !
             delete item;
         });
 
-    connect(ui->map, &MapWidget::itemAdded,
+    connect(ui->map, &MapWidget::itemAdded, this,
         [=](MapItem* map_item) {
             saveItem(map_item);
             map_item->setHighlighted(map_item->acId() == current_ac);
@@ -49,7 +49,7 @@ PprzMap::PprzMap(QWidget *parent) :
             }
         });
 
-    connect(scene, &MapScene::eventScene,
+    connect(scene, &MapScene::eventScene, this,
         [=](SmEditEvent eventType, QGraphicsSceneMouseEvent *mouseEvent) {
             if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
                 MapItem* item = fp_edit_sm->update(eventType, mouseEvent, nullptr, current_ac);
@@ -88,6 +88,8 @@ PprzMap::PprzMap(QWidget *parent) :
     connect(PprzDispatcher::get(), &PprzDispatcher::segment_status, this, &PprzMap::updateNavShape);
 
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &PprzMap::handleNewAC);
+    connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &PprzMap::removeAC);
+
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &PprzMap::changeCurrentAC);
     connect(ui->map, &MapWidget::mouseMoved, this, &PprzMap::handleMouseMove);
 
@@ -115,7 +117,7 @@ void PprzMap::changeCurrentAC(QString id) {
 }
 
 void PprzMap::registerWaypoint(WaypointItem* waypoint) {
-    connect(waypoint, &WaypointItem::itemClicked,
+    connect(waypoint, &WaypointItem::itemClicked, this,
         [=](QPointF pos) {
             (void)pos;
             if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
@@ -234,10 +236,13 @@ void PprzMap::updateAircraftItem(pprzlink::Message msg) {
 
     if(aircraft_items.find(id) != aircraft_items.end()) {
         ai = aircraft_items[id];
-    } else {
+    } else if(AircraftManager::get()->aircraftExists(id)){
         ai = new AircraftItem(Point2DLatLon(static_cast<double>(lat), static_cast<double>(lon)), id, ui->map, 16);
         ai->setZValue(qApp->property("AIRCRAFT_Z_VALUE").toInt());
         aircraft_items[id] = ai;
+    } else {
+        // item not found, and aircraft does not exists, so abort here
+        return;
     }
     Point2DLatLon pos(static_cast<double>(lat), static_cast<double>(lon));
     ai->setPosition(pos);
@@ -267,16 +272,16 @@ void PprzMap::handleNewAC(QString ac_id) {
                 auto global_pos = ui->map->mapToGlobal(view_pos);
                 we->show(); //show just to get the width and height right.
                 we->move(global_pos - QPoint(we->width()/2, we->height()/2));
-                connect(we, &QDialog::finished, [=](int result) {
+                connect(we, &QDialog::finished, wpi, [=](int result) {
                     (void)result;
                     wpi->setMoving(false);
                 });
                 we->open();
             };
 
-            connect(wpi, &WaypointItem::waypointMoveFinished, dialog_move_waypoint);
+            connect(wpi, &WaypointItem::waypointMoveFinished, this, dialog_move_waypoint);
 
-            connect(wpi, &WaypointItem::itemDoubleClicked, dialog_move_waypoint);
+            connect(wpi, &WaypointItem::itemDoubleClicked, this, dialog_move_waypoint);
 
         }
     }
@@ -286,6 +291,53 @@ void PprzMap::handleNewAC(QString ac_id) {
     target->setEditable(false);
     //target->setForbidHighlight(false);
     targets.append(target);
+}
+
+void PprzMap::removeAC(QString ac_id) {
+    QList<WaypointItem*> to_remove_wis;
+    for(auto wi: waypointItems) {
+        if(wi->acId() == ac_id) {
+            to_remove_wis.append(wi);
+        }
+    }
+
+    for(auto wi: to_remove_wis) {
+        waypointItems.removeAll(wi);
+        ui->map->removeItem(wi);
+    }
+
+
+
+    QList<WaypointItem*> to_remove_targets;
+    for(auto wi: targets) {
+        if(wi->acId() == ac_id) {
+            to_remove_targets.append(wi);
+        }
+    }
+
+    for(auto wi: to_remove_targets) {
+        targets.removeAll(wi);
+        ui->map->removeItem(wi);
+    }
+
+
+
+    QList<MapItem*> to_remove_ns;
+    for(auto ns: current_nav_shapes) {
+        if(ns->acId() == ac_id) {
+            to_remove_ns.append(ns);
+        }
+    }
+
+    for(auto wi: to_remove_ns) {
+        current_nav_shapes.removeAll(wi);
+        ui->map->removeItem(wi);
+    }
+
+    auto ai = aircraft_items[ac_id];
+    aircraft_items.remove(ac_id);
+    ui->map->removeItem(ai);
+
 }
 
 void PprzMap::handleMouseMove(QPointF scenePos) {
@@ -323,7 +375,7 @@ void PprzMap::handleMouseMove(QPointF scenePos) {
 }
 
 QString PprzMap::sexagesimalFormat(double lat, double lon) {
-    auto sexformat = [=](double nb) {
+    auto sexformat = [](double nb) {
         int deg = static_cast<int>(nb);
         int min = static_cast<int>((nb - deg) * 60);
         int sec = static_cast<int>((((nb - deg) * 60) - min)*60);

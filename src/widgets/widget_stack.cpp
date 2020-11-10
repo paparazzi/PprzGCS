@@ -19,6 +19,7 @@ WidgetStack::WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor,
     vLayout->addWidget(contentWidget);
 
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &WidgetStack::handleNewAC);
+    connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &WidgetStack::removeAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this,
             [=](QString ac_id) {
                 for(auto id : viewers_widgets.keys()) {
@@ -37,4 +38,13 @@ void WidgetStack::handleNewAC(QString ac_id) {
     auto sv = constructor(ac_id, this);
     stackLayout->addWidget(sv);
     viewers_widgets[ac_id] = sv;
+}
+
+void WidgetStack::removeAC(QString ac_id) {
+    (void)ac_id;
+    auto w = viewers_widgets[ac_id];
+    viewers_widgets.remove(ac_id);
+    stackLayout->removeWidget(w);
+    //viewers_widgets[ac_id]->disconnect();
+    w->deleteLater();
 }

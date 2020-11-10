@@ -14,6 +14,13 @@ Aircraft::Aircraft() : position(Point2DLatLon(0,0))
 
 }
 
+Aircraft::~Aircraft()
+{
+    if(status != nullptr) {
+        //status->deleteLater();
+    }
+}
+
 void Aircraft::setSetting(shared_ptr<Setting> setting, float value) {
 
     if(value < setting->getMin() || value > setting->getMax()) {

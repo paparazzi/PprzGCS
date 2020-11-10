@@ -238,7 +238,7 @@ void FlightPlanViewerV2::handleNavStatus() {
         QTimer* timer = new QTimer();
         timer->moveToThread(qApp->thread());
         timer->setSingleShot(true);
-        QObject::connect(timer, &QTimer::timeout, [=]()
+        QObject::connect(timer, &QTimer::timeout, this, [=]()
         {
             // main thread
             updateNavStatus(cur_block, cur_stage);

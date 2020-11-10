@@ -16,6 +16,7 @@ public:
 
 private:
     void handleNewAC(QString ac_id);
+    void removeAC(QString ac_id);
 
     QMap<QString, QWidget*> viewers_widgets;
 

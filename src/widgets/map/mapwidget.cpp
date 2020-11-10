@@ -184,7 +184,7 @@ MapLayerControl* MapWidget::makeLayerControl(QString name, bool initialState, in
     MapLayerControl* layer_control = new MapLayerControl(name, thumbnail, initialState, z);
 
     connect(
-        layer_control, &MapLayerControl::showLayer,
+        layer_control, &MapLayerControl::showLayer, this,
         [=](bool state) {
             toggleTileProvider(name, state, layer_control->zValue(), layer_control->opacity());
             updateTiles();
@@ -192,14 +192,14 @@ MapLayerControl* MapWidget::makeLayerControl(QString name, bool initialState, in
     );
 
     connect(
-        layer_control, &MapLayerControl::layerOpacityChanged,
+        layer_control, &MapLayerControl::layerOpacityChanged, this,
         [=](qreal opacity) {
             setLayerOpacity(name, opacity);
         }
     );
 
     connect(
-        layer_control, &MapLayerControl::zValueChanged,
+        layer_control, &MapLayerControl::zValueChanged, this,
         [=](int z) {
             setLayerZ(name, z);
         }

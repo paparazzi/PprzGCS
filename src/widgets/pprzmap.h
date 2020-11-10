@@ -56,6 +56,7 @@ private slots:
 
 private:
     void handleNewAC(QString ac_id);
+    void removeAC(QString ac_id);
     void saveItem(MapItem* item);
     void setEditorMode();
     QString sexagesimalFormat(double lat, double lon);
@@ -66,7 +67,7 @@ private:
     QList<WaypointItem*> waypointItems;
     QList<WaypointItem*> targets;
     QList<MapItem*> current_nav_shapes;
-    std::map<QString, AircraftItem*> aircraft_items;
+    QMap<QString, AircraftItem*> aircraft_items;
 
     QString current_ac;
 

@@ -121,5 +121,12 @@ void AircraftItem::setForbidHighlight(bool fh) {
 void AircraftItem::removeFromScene() {
     assert(graphics_aircraft != nullptr);
     map->scene()->removeItem(graphics_aircraft);
+    map->scene()->removeItem(graphics_text);
+    for(auto gt: graphics_tracks) {
+        map->scene()->removeItem(gt);
+        delete gt;
+    }
+    graphics_tracks.clear();
     delete graphics_aircraft;
+    delete graphics_text;
 }

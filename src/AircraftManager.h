@@ -25,6 +25,7 @@ public:
     QList<Aircraft> getAircrafts();
     void addAircraft(pprzlink::Message msg);
     bool aircraftExists(QString id);
+    void removeAircraft(QString ac_id);
 
 private:
     static AircraftManager* singleton;

@@ -15,6 +15,7 @@ class Aircraft
 public:
     Aircraft();
     Aircraft(QString id, QColor color, QString icon, QString name, FlightPlan fp, shared_ptr<SettingMenu> setting_menu, Airframe air);
+    ~Aircraft();
 
     QColor getColor(){return color;}
     QString getId(){return ac_id;}

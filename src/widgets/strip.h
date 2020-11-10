@@ -37,6 +37,7 @@ private:
     void updateFBW();
 
     QString _ac_id;
+    QColor ac_color;
 
     QWidget* full_strip;
     QWidget* short_strip;

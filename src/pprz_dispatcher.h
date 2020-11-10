@@ -27,6 +27,7 @@ public:
     std::shared_ptr<pprzlink::MessageDictionary> getDict() {return dict;}
 
 signals:
+    void aircraft_die(pprzlink::Message);
     void flight_param(pprzlink::Message);
     void ap_status(pprzlink::Message);
     void nav_status(pprzlink::Message);
