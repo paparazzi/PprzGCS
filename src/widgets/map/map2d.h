@@ -28,6 +28,7 @@ public:
     double zoom() {return _zoom;}
 //    int zoomLevel() {return static_cast<int>(ceil(_zoom));}
     void setZoom(double z);
+    void zoomCentered(double z, QPoint eventPos);
     int tileSize() {return tile_size;}
 
     void setLayerOpacity(QString providerName, qreal opacity);
@@ -60,6 +61,7 @@ protected:
     virtual void wheelEvent(QWheelEvent* event);
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
+    virtual void keyPressEvent(QKeyEvent *event);
 
     Point2DLatLon latlonFromView(QPoint viewPos, int zoom);
 

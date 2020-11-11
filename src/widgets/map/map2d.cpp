@@ -142,7 +142,6 @@ void Map2D::resizeEvent(QResizeEvent *event){
 
 void Map2D::wheelEvent(QWheelEvent* event) {
     setResizeAnchor(QGraphicsView::NoAnchor);
-    int curZoom = zoomLevel(_zoom);
 
     wheelAccumulator += event->angleDelta().y();
     event->accept();
@@ -152,12 +151,32 @@ void Map2D::wheelEvent(QWheelEvent* event) {
     }
 
     if(wheelAccumulator > 0) {
-        _zoom += 0.5;
+        zoomCentered(_zoom + 0.5, event->pos());
     } else {
-        _zoom -= 0.5;
+        zoomCentered(_zoom - 0.5, event->pos());
     }
     wheelAccumulator = 0;
-    _zoom = clamp(_zoom, minZoom, maxZoom);
+}
+
+void Map2D::keyPressEvent(QKeyEvent *event) {
+    if(event->key() == Qt::Key_Plus) {
+        zoomCentered(_zoom + 0.5, QPoint(width()/2, height()/2));
+        event->accept();
+    } else if (event->key() == Qt::Key_Minus) {
+        zoomCentered(_zoom - 0.5, QPoint(width()/2, height()/2));
+        event->accept();
+    } else {
+        event->ignore();
+    }
+}
+
+void Map2D::setZoom(double z) {
+    zoomCentered(z, QPoint(width()/2, height()/2));
+}
+
+void Map2D::zoomCentered(double z, QPoint eventPos) {
+    int curZoom = zoomLevel(_zoom);
+    _zoom = clamp(z, minZoom, maxZoom);
 
     // save initial numericZoom
     double  numZoomIni = numericZoom;
@@ -169,13 +188,13 @@ void Map2D::wheelEvent(QWheelEvent* event) {
     double scaleFactor = pow(2, numericZoom) / pow(2, numZoomIni);
 
     // mouse pos in scene
-    QPointF oldPos = mapToScene(event->pos());
+    QPointF oldPos = mapToScene(eventPos);
     // lat lon point pointed by the mouse (at the current zoomLevel)
     auto poi = CoordinatesTransform::get()->wgs84_from_scene(oldPos, curZoom, tile_size);
 
     scale(scaleFactor, scaleFactor);    // apply scale
     // mouse pos in scene after scale
-    QPointF newPos = mapToScene(event->pos());
+    QPointF newPos = mapToScene(eventPos);
     // position of the poi in scene coordinates for the new zoom
     QPointF poi_scene = scenePoint(poi, nextZoomLevel, tile_size);
 
@@ -187,14 +206,7 @@ void Map2D::wheelEvent(QWheelEvent* event) {
     }
 
     updateTiles();
-}
 
-void Map2D::setZoom(double z) {
-    QPointF center = mapToScene(QPoint(width()/2, height()/2));
-    auto latLon = CoordinatesTransform::get()->wgs84_from_scene(center, zoomLevel(_zoom), tile_size);
-    _zoom = z;
-    updateTiles();
-    centerLatLon(latLon);
 }
 
 void Map2D::mouseMoveEvent(QMouseEvent *event) {
