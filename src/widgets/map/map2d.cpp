@@ -12,7 +12,8 @@
 #include "coordinatestransform.h"
 #include <QApplication>
 
-Map2D::Map2D(QWidget *parent) : QGraphicsView(parent), numericZoom(0.0), _zoom(5.0), tile_size(256), minZoom(0.0), maxZoom(25.0)
+Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
+    numericZoom(0.0), _zoom(5.0), tile_size(256), minZoom(0.0), maxZoom(25.0), wheelAccumulator(0)
 {
     QString dataDir = qApp->property("APP_DATA_PATH").toString();
     QString configFile = dataDir + "/conf/tile_sources.xml";
@@ -143,11 +144,19 @@ void Map2D::wheelEvent(QWheelEvent* event) {
     setResizeAnchor(QGraphicsView::NoAnchor);
     int curZoom = zoomLevel(_zoom);
 
-    if(event->angleDelta().y() > 0) {
+    wheelAccumulator += event->angleDelta().y();
+    event->accept();
+
+    if(qAbs(wheelAccumulator) < 120) {
+        return;
+    }
+
+    if(wheelAccumulator > 0) {
         _zoom += 0.5;
     } else {
         _zoom -= 0.5;
     }
+    wheelAccumulator = 0;
     _zoom = clamp(_zoom, minZoom, maxZoom);
 
     // save initial numericZoom

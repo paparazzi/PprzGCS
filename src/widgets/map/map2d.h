@@ -84,6 +84,8 @@ private:
     double maxZoom;
     QString tiles_path;
 
+    int wheelAccumulator;
+
     std::map<QString, TileProviderConfig*> sourceConfigs;
     std::map<QString, TileProvider*> tile_providers;
 
