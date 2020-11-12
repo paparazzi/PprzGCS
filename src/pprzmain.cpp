@@ -1,7 +1,9 @@
 #include "pprzmain.h"
 #include <QMessageBox>
 #include <QDebug>
-
+#include "dispatcher_ui.h"
+#include "AircraftManager.h"
+#include "pprz_dispatcher.h"
 
 PprzMain* PprzMain::singleton = nullptr;
 
@@ -33,6 +35,9 @@ void PprzMain::setupUi(int width, int height, QWidget* centralWidget) {
     serverStatusLed = new QLabel(statusBar);
     setServerStatus(false);
     statusBar->addPermanentWidget(serverStatusLed);
+
+    connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &PprzMain::newAC);
+    connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &PprzMain::removeAC);
 }
 
 void PprzMain::setServerStatus(bool active) {
@@ -58,6 +63,10 @@ void PprzMain::populate_menu() {
     auto quit = file_menu->addAction("&Quit");
     connect(quit, &QAction::triggered, qApp, QApplication::quit);
 
+
+    aircraftsTopMenu = menuBar->addMenu("&Aircrafts");
+
+    aircraftsTopMenu->addAction("Update", PprzDispatcher::get(), &PprzDispatcher::requestAircrafts);
 
     auto help_menu = menuBar->addMenu("&Help");
     auto about = help_menu->addAction("&About");
@@ -90,5 +99,36 @@ void PprzMain::populate_menu() {
         );
 
     });
+
+}
+
+
+void PprzMain::newAC(QString ac_id) {
+    QString acName = AircraftManager::get()->getAircraft(ac_id).name();
+    auto menu = new QMenu("&" + acName);
+    auto action = aircraftsTopMenu->addMenu(menu);
+
+    acMenus[ac_id] = menu;
+    acActions[ac_id] = action;
+
+    menu->addAction("Remove", [ac_id](){
+        emit(DispatcherUi::get()->ac_deleted(ac_id));
+        AircraftManager::get()->removeAircraft(ac_id);
+    });
+
+}
+
+void PprzMain::removeAC(QString ac_id) {
+    (void)ac_id;
+    auto action = acActions[ac_id];
+    auto menu = acMenus[ac_id];
+
+    acActions.remove(ac_id);
+    acMenus.remove(ac_id);
+
+    aircraftsTopMenu->removeAction(action);
+
+    menu->deleteLater();
+    action->deleteLater();
 
 }

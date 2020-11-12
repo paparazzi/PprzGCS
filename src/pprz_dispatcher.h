@@ -27,6 +27,7 @@ public:
     void sendMessage(pprzlink::Message);
     std::shared_ptr<pprzlink::MessageDictionary> getDict() {return dict;}
 
+
 signals:
     void aircraft_die(pprzlink::Message);
     void flight_param(pprzlink::Message);
@@ -43,6 +44,7 @@ signals:
 
 
 public slots:
+    void requestAircrafts();
 
 private:
     void updateSettings(pprzlink::Message msg);

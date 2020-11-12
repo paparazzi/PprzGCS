@@ -81,6 +81,26 @@ void PprzDispatcher::sendMessage(pprzlink::Message msg) {
     link->sendMessage(msg);
 }
 
+void PprzDispatcher::requestAircrafts() {
+    assert(started);
+    pprzlink::Message msg(dict->getDefinition("AIRCRAFTS_REQ"));
+    msg.setSenderId(pprzlink_id);
+    link->sendRequest(msg, [=](std::string ac_id, pprzlink::Message msg) {
+        (void)ac_id;
+        std::string ac_list;
+        msg.getField("ac_list", ac_list);
+        std::string id;
+        std::stringstream ss(ac_list);
+        while (std::getline(ss, id, ',')) {
+            if(id != "" && !AircraftManager::get()->aircraftExists(id.c_str())) {
+                requestConfig(id);
+            } else {
+                qDebug() << id.c_str() << " already exists.";
+            }
+        }
+    });
+}
+
 
 void PprzDispatcher::start() {
 
@@ -144,23 +164,9 @@ void PprzDispatcher::start() {
         });
 
     usleep(10000);
-    pprzlink::Message msg(dict->getDefinition("AIRCRAFTS_REQ"));
-    msg.setSenderId(pprzlink_id);
-
     started = true;
 
-    link->sendRequest(msg, [=](std::string ac_id, pprzlink::Message msg) {
-        (void)ac_id;
-        std::string ac_list;
-        msg.getField("ac_list", ac_list);
-        std::string id;
-        std::stringstream ss(ac_list);
-        while (std::getline(ss, id, ',')) {
-            if(id != "" && !AircraftManager::get()->aircraftExists(id.c_str())) {
-                requestConfig(id);
-            }
-        }
-    });
+    requestAircrafts();
 
 
     link->BindMessage(dict->getDefinition("NEW_AIRCRAFT"),

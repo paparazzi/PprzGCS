@@ -26,12 +26,19 @@ private:
     static PprzMain* singleton;
     explicit PprzMain(QWidget *parent = nullptr);
 
+    void newAC(QString ac_id);
+    void removeAC(QString ac_id);
+    void delete_ac(QString ac_id);
+
     void populate_menu();
 
     QMenuBar *menuBar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
 
+    QMenu* aircraftsTopMenu;
+    QMap<QString, QMenu*> acMenus;
+    QMap<QString, QAction*> acActions;
     QLabel* serverStatusLed;
 
 };
