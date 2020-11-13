@@ -7,7 +7,7 @@ set(Qt5_DIR "$HOME/Qt/5.12.5/gcc_64/lib/cmake/Qt5")
 #set(CMAKE_PREFIX_PATH  "${CMAKE_PREFIX_PATH};/home/fabien/local/lib")
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -fno-sized-deallocation")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
@@ -117,7 +117,7 @@ include_directories(
     src/widgets/map/graphics_objects/
     src/widgets/basics/
     ${PPRZLINK_PATH}
-    ${PROJ_INCLUDE_DIRS} 
+    ${PROJ4_INCLUDE_DIRS}
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE})
@@ -128,7 +128,7 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Xml
     Qt5::Network
     Qt5::Svg
-    ${PROJ_LIBRARIES}
+    ${PROJ4_LIBRARIES}
     ${Boost_LIBRARIES}
     libzippp::libzippp
 )
