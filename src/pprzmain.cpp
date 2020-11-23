@@ -54,9 +54,15 @@ void PprzMain::populate_menu() {
 
     auto file_menu = menuBar->addMenu("&File");
 
-    auto config_dir = file_menu->addAction("Open config directory");
-    connect(config_dir, &QAction::triggered, [=](){
-        QString path = QDir::toNativeSeparators(QApplication::applicationDirPath());
+    auto user_dir = file_menu->addAction("Open user directory");
+    connect(user_dir, &QAction::triggered, [=](){
+        QString path = QDir::toNativeSeparators(qApp->property("USER_DATA_PATH").toString());
+        QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+    });
+
+    auto app_dir = file_menu->addAction("Open app directory");
+    connect(app_dir, &QAction::triggered, [=](){
+        QString path = QDir::toNativeSeparators(qApp->property("APP_DATA_PATH").toString());
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
 
