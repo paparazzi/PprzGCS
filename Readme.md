@@ -44,11 +44,11 @@ __WARNING__: Some path are still harcoded, this is work in progress. If you want
 
 `mkdir build && cd build`
 
-`cmake ..`
+`cmake .. -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=./local_install`
 
 `make`
 
-`sudo make install`
+`make install`
 
 ### Build the GCS
 
