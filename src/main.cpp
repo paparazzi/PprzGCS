@@ -49,35 +49,27 @@ int main(int argc, char *argv[])
     bool remember = parser.isSet(rememberConfigOption);
 
     QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QString  cfgFilePath = config_path + "/conf.txt";
-    QFile conf_file(cfgFilePath);
-
-    // take config file from command line
-    if(gcsConfigPath != "" && remember) {
-        QFileInfo fi(cfgFilePath);
-        QDir dirName = fi.dir();
-        if(!dirName.exists()) {
-            dirName.mkpath(dirName.path());
-        }
-        if(conf_file.open(QFile::WriteOnly | QFile::Text)) {
-            QFileInfo gcp(gcsConfigPath);
-            QString file_content = gcp.absoluteFilePath() + "\n";
-            conf_file.write(file_content.toStdString().c_str());
-            conf_file.close();
-        } else {
-            qWarning() << "Fail to write to " << cfgFilePath;
-        }
+    QDir conf_dir(config_path);
+    if(!conf_dir.exists()) {
+        conf_dir.mkpath(conf_dir.path());
     }
 
-    // if config file is not provided, search in persistant config
-    if(gcsConfigPath == "") {
-        if(!conf_file.open(QFile::ReadOnly | QFile::Text)) {
-            qDebug() << "no config file! Please provide a configuration file.";
-            std::cout << parser.helpText().toStdString();
-            return -1;
-        }
+    QString  cfgFilePath = config_path + "/conf.txt";
 
-        gcsConfigPath = conf_file.readAll().trimmed();
+
+    // link conf.txt to the given config file
+    if(gcsConfigPath != "" && remember) {
+        QFile::link(QFileInfo(gcsConfigPath).absoluteFilePath(), cfgFilePath);
+    }
+
+    // if config file is not provided, take the current link
+    if(gcsConfigPath == "") {
+        if(QFile(cfgFilePath).exists()) {
+            gcsConfigPath = cfgFilePath;
+        } else {
+            qDebug() << "conf.txt not found, you must provide a config file with the -c option.";
+            exit(-1);
+        }
     }
 
     // this should be the GCS configuration file.
