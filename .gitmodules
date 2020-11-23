@@ -7,6 +7,3 @@
 [submodule "ext/tinyxml2"]
 	path = ext/tinyxml2
 	url = https://github.com/leethomason/tinyxml2.git
-[submodule "ext/libzippp"]
-	path = ext/libzippp
-	url = https://github.com/ctabin/libzippp.git

@@ -12,14 +12,16 @@
 #include <QFile>
 #include <QDebug>
 #include <QMessageBox>
-#include "libzippp/libzippp.h"
 #include <QFileInfo>
 #include <QDir>
 #include "gcs_utils.h"
+#include <zip.h>
 
-using namespace libzippp;
+//using namespace libzippp;
 
 #define TILE_SIZE 1201
+
+constexpr zip_uint64_t ZIP_LEN = TILE_SIZE*TILE_SIZE*2;
 
 SRTMManager* SRTMManager::singleton = nullptr;
 const QString SRTMManager::srtm_url = "https://dds.cr.usgs.gov/srtm/version2_1/SRTM3/";
@@ -109,17 +111,28 @@ void SRTMManager::load_tile(QString name) {
     }
 
     auto path = qApp->property("USER_DATA_PATH").toString() + "/srtm/" + name + ".hgt.zip";
-    ZipArchive zf(path.toStdString());
-    zf.open(ZipArchive::ReadOnly);
 
-    if(zf.isOpen()) {
+    zip_t* zf = zip_open(path.toStdString().c_str(), ZIP_RDONLY, nullptr);
+
+    if(zf != nullptr) {
         auto filename = name + ".hgt";
-        ZipEntry entry = zf.getEntry(filename.toStdString());
-        //
-        assert(entry.getSize() == TILE_SIZE*TILE_SIZE*2);
-        char* binaryData = static_cast<char*>(entry.readAsBinary());
-        tiles[name] = binaryData;
-        zf.close();
+
+        zip_file_t* zip_file = zip_fopen(zf, filename.toStdString().c_str(), 0);
+
+        if(zip_file != nullptr) {
+            char* binaryData = new char[ZIP_LEN];
+            zip_int64_t bytes_read = zip_fread(zip_file, binaryData, ZIP_LEN);
+            assert(bytes_read == ZIP_LEN);
+            tiles[name] = binaryData;
+            int err = zip_fclose(zip_file);
+            assert(err == 0);
+        } else {
+            qDebug() << "could not open " << filename << " in " << path;
+        }
+
+        // read only, don't save anything
+        zip_discard(zf);
+
     } else {
         //tile is already being downloaded
         if(pending_downloads.contains(name)) {

@@ -20,13 +20,9 @@ endif()
 
 find_package(Qt5 COMPONENTS Widgets Xml Network Svg REQUIRED)
 find_package(PROJ REQUIRED)
-find_package(libzippp 3.0 REQUIRED)
 
 set(PPRZLINK_PATH ext/pprzlink/lib/v2.0/C++)
 add_subdirectory(${PPRZLINK_PATH} pprzlink)
-
-#set(LIBZIPPP_PATH ext/libzippp)
-#add_subdirectory(${LIBZIPPP_PATH} pprzlink)
 
 set(SOURCE
     ${SOURCE}
@@ -131,6 +127,6 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Svg
     ${PROJ4_LIBRARIES}
     ${Boost_LIBRARIES}
-    libzippp::libzippp
+    zip
 )
 
