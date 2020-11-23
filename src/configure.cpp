@@ -52,7 +52,7 @@ void set_default_config() {
 
     qApp->setProperty("USER_DATA_PATH", QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
 
-    setEmptyProperty("MAP_PATH", qApp->property("APP_DATA_PATH").toString() + "/map");
+    setEmptyProperty("MAP_PATH", qApp->property("USER_DATA_PATH").toString() + "/map");
 }
 
 void set_user_config(QTextStream& stream) {
