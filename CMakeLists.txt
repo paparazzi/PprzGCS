@@ -11,9 +11,11 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-if(CMAKE_VERSION VERSION_LESS "3.7.0")
-    set(CMAKE_INCLUDE_CURRENT_DIR ON)
+if(NOT DEFINED APP_DATA_PATH)
+    get_filename_component(APP_DATA_PATH "./data/" ABSOLUTE)
 endif()
+
+add_definitions(-DAPP_DATA_PATH="${APP_DATA_PATH}")
 
 find_package(Qt5 COMPONENTS Widgets Xml Network Svg REQUIRED)
 

@@ -97,9 +97,7 @@ void configure(QString config_file) {
        qDebug() << "Fail to open config file " << config_file;
     }
 
-    QFileInfo fi(config_file);
-    QDir data_dir = fi.absoluteDir();
-    data_dir.cdUp();
+
 
     if(!qEnvironmentVariableIsSet("PAPARAZZI_HOME") ||
        !qEnvironmentVariableIsSet("PAPARAZZI_SRC")) {
@@ -110,8 +108,15 @@ void configure(QString config_file) {
     QString PAPARAZZI_HOME = qgetenv("PAPARAZZI_HOME");
     QString PAPARAZZI_SRC = qgetenv("PAPARAZZI_SRC");
 
-    // TODO change this data path to be relative, or something
-    qApp->setProperty("APP_DATA_PATH", data_dir.path());
+#ifdef APP_DATA_PATH
+    qApp->setProperty("APP_DATA_PATH", APP_DATA_PATH);
+#else
+#error "you need to define APP_DATA_PATH!"
+#endif
+
+
+
+
 
     QTextStream stream(&gcsConfig);
 
