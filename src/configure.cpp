@@ -8,6 +8,7 @@
 #include <iostream>
 #include <QDir>
 #include <QVariant>
+#include <QStandardPaths>
 
 void setEmptyProperty(const char* name, QVariant value) {
     if(!qApp->property(name).isValid()) {
@@ -48,6 +49,8 @@ void set_default_config() {
 
     setEmptyProperty("APP_STYLE_FILE", qApp->property("APP_DATA_PATH").toString() + "/conf/default_style.qss");
     setEmptyProperty("APP_LAYOUT_FILE", qApp->property("APP_DATA_PATH").toString() + "/conf/default_layout.xml");
+
+    qApp->setProperty("USER_DATA_PATH", QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
 
     setEmptyProperty("MAP_PATH", qApp->property("APP_DATA_PATH").toString() + "/map");
 }
@@ -106,6 +109,8 @@ void configure(QString config_file) {
 
     QString PAPARAZZI_HOME = qgetenv("PAPARAZZI_HOME");
     QString PAPARAZZI_SRC = qgetenv("PAPARAZZI_SRC");
+
+    // TODO change this data path to be relative, or something
     qApp->setProperty("APP_DATA_PATH", data_dir.path());
 
     QTextStream stream(&gcsConfig);

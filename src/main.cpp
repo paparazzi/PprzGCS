@@ -48,12 +48,17 @@ int main(int argc, char *argv[])
     QString gcsConfigPath = parser.value(config_file_option);
     bool remember = parser.isSet(rememberConfigOption);
 
-    QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation);
+    QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QString  cfgFilePath = config_path + "/conf.txt";
     QFile conf_file(cfgFilePath);
 
     // take config file from command line
     if(gcsConfigPath != "" && remember) {
+        QFileInfo fi(cfgFilePath);
+        QDir dirName = fi.dir();
+        if(!dirName.exists()) {
+            dirName.mkpath(dirName.path());
+        }
         if(conf_file.open(QFile::WriteOnly | QFile::Text)) {
             QFileInfo gcp(gcsConfigPath);
             QString file_content = gcp.absoluteFilePath() + "\n";

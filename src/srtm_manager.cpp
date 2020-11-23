@@ -13,6 +13,9 @@
 #include <QDebug>
 #include <QMessageBox>
 #include "libzippp/libzippp.h"
+#include <QFileInfo>
+#include <QDir>
+#include "gcs_utils.h"
 
 using namespace libzippp;
 
@@ -105,7 +108,7 @@ void SRTMManager::load_tile(QString name) {
         return;
     }
 
-    auto path = qApp->property("APP_DATA_PATH").toString() + "/srtm/" + name + ".hgt.zip";
+    auto path = qApp->property("USER_DATA_PATH").toString() + "/srtm/" + name + ".hgt.zip";
     ZipArchive zf(path.toStdString());
     zf.open(ZipArchive::ReadOnly);
 
@@ -164,8 +167,13 @@ void SRTMManager::handleReply(QNetworkReply *reply) {
     if(reply->error() == QNetworkReply::NetworkError::NoError) {
         auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
         if(status.toInt() == 200) {
-            auto path = qApp->property("APP_DATA_PATH").toString() + "/srtm/" + name + ".hgt.zip";
+            auto path = qApp->property("USER_DATA_PATH").toString() + "/srtm/" + name + ".hgt.zip";
             QFile file(path);
+            QFileInfo fi(path);
+            QDir dirName = fi.dir();
+            if(!dirName.exists()) {
+                dirName.mkpath(dirName.path());
+            }
             if(file.open(QIODevice::WriteOnly)) {
                 file.write(reply->readAll());
                 file.close();

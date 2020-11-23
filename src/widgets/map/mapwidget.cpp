@@ -20,6 +20,7 @@
 #include "widget_utils.h"
 #include "layer_combo.h"
 #include "lock_button.h"
+#include "gcs_utils.h"
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton)
@@ -162,7 +163,7 @@ void MapWidget::configure(QDomElement ele) {
                 throw runtime_error(s);
             }
 
-            auto icon = QIcon(qApp->property("APP_DATA_PATH").toString() + "/pictures/" + icon_src);
+            auto icon = QIcon(user_or_app_path("/pictures/" + icon_src));
             auto button = new LockButton(icon, this);
 
             addWidget(widget, button, side);
@@ -173,7 +174,7 @@ void MapWidget::configure(QDomElement ele) {
 }
 
 MapLayerControl* MapWidget::makeLayerControl(QString name, bool initialState, int z) {
-    QString path = qApp->property("APP_DATA_PATH").toString() + "/pictures/map_thumbnails/" + name + ".png";
+    QString path = user_or_app_path("/pictures/map_thumbnails/" + name + ".png");
 
     QPixmap thumbnail = QPixmap(path);
     if(thumbnail.isNull()) {
