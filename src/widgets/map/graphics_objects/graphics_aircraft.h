@@ -17,7 +17,7 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
 protected:
-    virtual void changeFocus();
+    virtual void changeFocus() override;
 
 private:
     void loadSvg(QString path);

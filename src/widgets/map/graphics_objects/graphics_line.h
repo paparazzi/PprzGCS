@@ -14,7 +14,7 @@ public:
 
     explicit GraphicsLine(QPointF a, QPointF b, QColor color, int stroke, QObject *parent = nullptr);
     void setColors(QColor color_unfocused);
-    virtual void changeFocus();
+    virtual void changeFocus() override;
     void setIgnoreEvent(bool ignore) {ignore_events = ignore;}
     //void setText(QString t) {text = t;}
     void setLine(QPointF a, QPointF b);
@@ -28,9 +28,9 @@ public:
 signals:
 
 protected:
-    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event);
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
     QPointF A;

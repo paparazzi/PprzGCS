@@ -22,8 +22,8 @@ public slots:
 
 protected:
     void paintEvent(QPaintEvent*) override;
-    virtual void mousePressEvent(QMouseEvent *e);
-    virtual void mouseReleaseEvent(QMouseEvent *e);
+    virtual void mousePressEvent(QMouseEvent *e) override;
+    virtual void mouseReleaseEvent(QMouseEvent *e) override;
 
 private:
     void build_full_strip();

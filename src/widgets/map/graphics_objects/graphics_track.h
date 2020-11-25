@@ -20,7 +20,7 @@ public:
     void setPoints(QPolygonF pts);
 
 protected:
-    virtual void changeFocus();
+    virtual void changeFocus() override;
 
 signals:
 

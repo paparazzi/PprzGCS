@@ -20,7 +20,7 @@ signals:
 public slots:
 
 protected:
-    virtual void sliderChange(SliderChange change);
+    virtual void sliderChange(SliderChange change) override;
     virtual void wheelEvent(QWheelEvent *e) override;
 
 private slots:

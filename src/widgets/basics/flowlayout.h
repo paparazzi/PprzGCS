@@ -84,8 +84,6 @@ private:
     int m_vSpace;
 
     QSize minSize;
-
-    int h;
 };
 //! [0]
 
