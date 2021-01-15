@@ -38,31 +38,18 @@ __WARNING__: Some path are still harcoded, this is work in progress. If you want
 
  `git submodule update --init --recursive`
  
-### Build and install the PROJ libraries:
-
-`cd ext/PROJ`
-
-`mkdir build && cd build`
-
-`cmake .. -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=./local_install`
-
-`make`
-
-`make install`
 
 ### Build the GCS
 
-If you just build PROj, go back to the project root:
+Set the `Qt5_DIR` environnement variable to the appropriate path. Example:
 
-`cd ../../..`
+`export Qt5_DIR="$HOME/Qt/5.12.0/gcc_64/lib/cmake/Qt5"`
 
-`mkdir build && cd build`
+Run the build script from the root of the repository:
 
-`cmake ..` (use ccmake .. to set Qt5 installation directory and installation prefix)
-
-`make`
+`./build.sh`
 
 Now you can launch it:
 
-`./PprzGCS`
+`.build/PprzGCS`
 
