@@ -59,7 +59,7 @@ FlightPlan::FlightPlan(string uri) : origin()
         }
 
         XMLElement* secs = fp_root->FirstChildElement("sectors");
-        if(vars) {
+        if(secs) {
             parse_sectors(secs);
         }
 
