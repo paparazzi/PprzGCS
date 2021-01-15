@@ -115,6 +115,8 @@ include_directories(
     src/widgets/basics/
 )
 
+link_directories(${CMAKE_PREFIX_PATH}/lib)
+
 add_executable(${PROJECT_NAME} ${SOURCE})
 
 target_link_libraries(${PROJECT_NAME}
