@@ -58,7 +58,7 @@ If you just build PROj, go back to the project root:
 
 `mkdir build && cd build`
 
-`cmake ..`
+`cmake ..` (use ccmake .. to set Qt5 installation directory and installation prefix)
 
 `make`
 

@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.10)
 
 project(PprzGCS)
 
-set(Qt5_DIR "$HOME/Qt/5.12.5/gcc_64/lib/cmake/Qt5")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -fno-sized-deallocation")
@@ -17,13 +16,13 @@ endif()
 
 add_definitions(-DAPP_DATA_PATH="${APP_DATA_PATH}")
 
-find_package(Qt5 COMPONENTS Widgets Xml Network Svg REQUIRED)
+find_package(Boost COMPONENTS system)
 
-set(PROJ4_DIR "ext/PROJ/build/local_install/lib/cmake/proj4")
+find_package(Qt5 5.11 COMPONENTS Widgets Xml Network Svg REQUIRED)
+
 find_package(PROJ4 REQUIRED)
 
-set(PPRZLINK_PATH ext/pprzlink/lib/v2.0/C++)
-add_subdirectory(${PPRZLINK_PATH} pprzlink)
+find_package(pprzlink++ REQUIRED)
 
 set(SOURCE
     ${SOURCE}
@@ -114,8 +113,6 @@ include_directories(
     src/widgets/map/fpedit_statemachines/
     src/widgets/map/graphics_objects/
     src/widgets/basics/
-    ${PPRZLINK_PATH}
-    ${PROJ4_INCLUDE_DIRS}
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE})
