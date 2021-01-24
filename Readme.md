@@ -29,10 +29,14 @@ This GCS aims at replacing the historical GCS in a near future.
 
 
 ### dependencies
-This software depend on Qt5.12 or later, tinyxml2, Ivy and boost libraries. Make sure they are installed on you system.
 
-__WARNING__: Some path are still harcoded, this is work in progress. If you want to contribute on making the build process smoother (or anything else), you are very welcome!
+This software depend on Qt5.12 or later, and the following paquets:
 
+* `ivy-c-dev`
+* `libboost-system-dev`
+* `libsqlite3-dev`
+* `libzip-dev`
+* `mesa-common-dev libglu1-mesa-dev`
 
 ### Fetch submodules:
 
