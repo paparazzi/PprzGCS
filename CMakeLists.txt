@@ -101,6 +101,7 @@ set(SOURCE
     src/common/airframe.cpp
     src/common/aircraft_status.cpp
     src/common/gcs_utils.cpp
+    src/common/units.cpp
 )
 
 include_directories(

@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <iterator>
 
+#include "units.h"
+
 Setting::Setting(XMLElement* setel, uint8_t& setting_no) : setting_no(setting_no)
 {
     //var, min, max, step
@@ -33,7 +35,21 @@ Setting::Setting(XMLElement* setel, uint8_t& setting_no) : setting_no(setting_no
         }
     }
 
-    //module, handler, type, persistent, param, unit, alt_unit, alt_unit_coef
+    const char* _unit = setel->Attribute("unit");
+    if(_unit != nullptr) {
+        unit = _unit;
+    }
+    const char* _alt_unit = setel->Attribute("alt_unit");
+    if(_alt_unit != nullptr) {
+        alt_unit = _alt_unit;
+    }
+
+    const char* _alt_unit_coef = setel->Attribute("alt_unit_coef");
+    if(_alt_unit_coef != nullptr) {
+        alt_unit_coef = stof(_alt_unit_coef);
+    }
+
+    //module, handler, type, persistent, param
     //TODO
 
 
@@ -81,6 +97,20 @@ Setting::Setting(XMLElement* setel, uint8_t& setting_no) : setting_no(setting_no
         sets = sets->NextSiblingElement();
     }
 
+}
+
+float Setting::getAltUnitCoef() {
+    if(alt_unit_coef.has_value()) {
+        return alt_unit_coef.value();
+    }
+    else if(unit.size() && alt_unit.size()) {
+        auto coef = Units::get()->getCoef(unit, alt_unit);
+        if(coef.has_value()) {
+            return coef.value();
+        }
+    }
+    //no coef found, just use 1
+    return 1.f;
 }
 
 

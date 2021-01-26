@@ -218,8 +218,6 @@ void SettingsViewer::populate_search_results(QString searched) {
 
 
 QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget* parent) {
-    (void)setting;(void)parent;
-
     QWidget* widget = new QWidget(parent);
     QVBoxLayout* vLay = new QVBoxLayout(widget);
     QHBoxLayout* hlay = new QHBoxLayout();
@@ -268,7 +266,9 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
         vLay->addWidget(combo);
 
         setters[setting] = [combo](double value) {combo->setCurrentIndex(static_cast<int>(value));};
-        label_setters[setting] = [combo, value_btn](double value) {value_btn->setText(combo->itemText(static_cast<int>(value)));};
+        label_setters[setting] = [combo, value_btn](double value) {
+            value_btn->setText(combo->itemText(static_cast<int>(value)));
+        };
 
         connect(ok_btn, &QToolButton::clicked, [=]() {
             float value = static_cast<float>(combo->currentIndex());
@@ -383,7 +383,8 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
         vLay->addLayout(vbox);
 
         connect(ok_btn, &QToolButton::clicked, [=]() {
-            float value = static_cast<float>(slider->doubleValue());
+            auto coef = setting->getAltUnitCoef();
+            float value = static_cast<float>(slider->doubleValue()) / coef;
             AircraftManager::get()->getAircraft(ac_id).setSetting(setting, value);
         });
     }
@@ -398,9 +399,10 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
 
 void SettingsViewer::updateSettings(QString id, shared_ptr<Setting> setting, float value) {
     if(ac_id == id) {
-        label_setters[setting](value);
+        auto val = setting->getAltUnitCoef() * value;
+        label_setters[setting](val);
         if(!initialized[setting]) {
-            setters[setting](value);
+            setters[setting](val);
             initialized[setting] = true;
         }
     }

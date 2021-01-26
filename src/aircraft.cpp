@@ -22,8 +22,8 @@ Aircraft::~Aircraft()
 }
 
 void Aircraft::setSetting(shared_ptr<Setting> setting, float value) {
-
-    if(value < setting->getMin() || value > setting->getMax()) {
+    auto coef = setting->getAltUnitCoef();
+    if(value < setting->getMin() / coef || value > setting->getMax() / coef) {
         qDebug() << "Warning: send setting value " << value << ", out of bounds for setting " << setting->getName().c_str();
     }
 

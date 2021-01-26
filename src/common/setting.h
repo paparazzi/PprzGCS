@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <optional>
 #include "tinyxml2.h"
 
 using namespace tinyxml2;
@@ -45,6 +46,7 @@ public:
     float getMin() {return  min;}
     float getMax() {return  max;}
 
+    float getAltUnitCoef();
 
     friend ostream& operator<<(ostream& os, const Setting& wp);
 
@@ -65,7 +67,7 @@ private:
     string param;
     string unit;
     string alt_unit;
-    string alt_unit_coef;
+    optional<float> alt_unit_coef;
 
     vector<shared_ptr<KeyPress>> key_presses;
     vector<shared_ptr<StripButton>> strip_buttons;

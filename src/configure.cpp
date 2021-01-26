@@ -23,6 +23,9 @@ void set_default_config() {
     setEmptyProperty("IVY_BUS", "127.255.255.255:2010");
     setEmptyProperty("PPRZLINK_ID", "pprzcontrol");
 
+    setEmptyProperty("PAPARAZZI_HOME", qgetenv("PAPARAZZI_HOME"));
+    setEmptyProperty("PAPARAZZI_SRC", qgetenv("PAPARAZZI_SRC"));
+
     setEmptyProperty("PPRZLINK_MESSAGES", qgetenv("PAPARAZZI_HOME") + "/var/messages.xml");
     setEmptyProperty("PATH_GCS_ICON", qgetenv("PAPARAZZI_HOME") + "/data/pictures/gcs_icons");
     setEmptyProperty("DEFAULT_TILE_PROVIDER", "Google");
