@@ -115,7 +115,7 @@ void WaypointItem::updateGraphics() {
     point->setPos(scene_pos);
     point->setScale(s);
 
-    graphics_text->setPos(scene_pos + QPointF(10, 10));
+    graphics_text->setPos(scene_pos + QPointF(10, -50));
     graphics_text->setScale(s);
 }
 
