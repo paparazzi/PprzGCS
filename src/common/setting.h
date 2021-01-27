@@ -45,6 +45,8 @@ public:
     float getPreviousValue() {return last_set_values[1];}
     float getMin() {return  min;}
     float getMax() {return  max;}
+    optional<float> getInitialValue(){return initial_value;}
+    void setInitialValue(float val) {initial_value = val;}
 
     float getAltUnitCoef();
 
@@ -73,6 +75,7 @@ private:
     vector<shared_ptr<StripButton>> strip_buttons;
 
     float last_set_values[2];   // last values set by the user from this app.
+    optional<float> initial_value;
 };
 
 #endif // SETTING_H

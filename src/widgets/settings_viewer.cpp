@@ -233,12 +233,20 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
     auto ok_btn = new QToolButton(widget);
     ok_btn->setText(QString::fromUtf8("\xE2\x9C\x93"));
     ok_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    ok_btn->setToolTip("commit");
     hlay->addWidget(ok_btn);
 
     auto undo_btn = new QToolButton(widget);
     undo_btn->setText(QString::fromUtf8("\xE2\x86\xA9"));
     undo_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    undo_btn->setToolTip("undo");
     hlay->addWidget(undo_btn);
+
+    auto reset_btn = new QToolButton(widget);
+    reset_btn->setText(QString::fromUtf8("\xE2\x86\xBA"));
+    reset_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    reset_btn->setToolTip("reset to initial");
+    hlay->addWidget(reset_btn);
 
     connect(value_btn, &QPushButton::clicked, [=]() {
         qDebug() << "setting " << setting->getNo() << " of AC " << ac_id << " clicked !";
@@ -254,6 +262,13 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
         AircraftManager::get()->getAircraft(ac_id).setSetting(setting, prev);
         setting->setValue(prev);
     });
+
+    connect(reset_btn, &QToolButton::clicked, [=]() {
+        auto initial_value = setting->getInitialValue();
+        if(initial_value.has_value()) {
+            AircraftManager::get()->getAircraft(ac_id).setSetting(setting, initial_value.value());
+            setting->setValue(initial_value.value());
+        }
 
     });
 
@@ -411,6 +426,7 @@ void SettingsViewer::updateSettings(QString id, shared_ptr<Setting> setting, flo
         label_setters[setting](val);
         if(!initialized[setting]) {
             setters[setting](val);
+            setting->setInitialValue(value);
             initialized[setting] = true;
         }
     }
