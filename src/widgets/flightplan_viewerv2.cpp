@@ -212,13 +212,10 @@ QWidget* FlightPlanViewerV2::make_sectors_tab() {
     auto list = new QListWidget(this);
     for(auto sec: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getSectors()) {
         QString txt;
-        if(sec->variant == Sector::SECTOR) {
-            txt += QString("sector ") + sec->name.c_str() + ":";
-            for(auto corner: sec->corners) {
-                txt += QString(" ") + corner.c_str();
-            }
-        } else if(sec->variant == Sector::KML) {
-            txt += QString("kml: ") + sec->kml_file.c_str();
+
+        txt += QString("sector ") + sec->getName().c_str() + ":";
+        for(auto corner: sec->getCorners()) {
+            txt += QString(" ") + corner->getName().c_str();
         }
 
         list->addItem(txt);

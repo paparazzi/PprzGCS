@@ -94,6 +94,7 @@ set(SOURCE
     src/aircraft.cpp
     src/configure.cpp
     src/common/waypoint.cpp
+    src/common/sector.cpp
     src/common/block.cpp
     src/common/flightplan.cpp
     src/common/setting_menu.cpp

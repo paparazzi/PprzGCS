@@ -101,33 +101,37 @@ void FlightPlan::parse_variables(XMLElement* vars) {
 }
 
 void FlightPlan::parse_sectors(tinyxml2::XMLElement* secs) {
+
     for(auto ele=secs->FirstChildElement(); ele!=nullptr; ele=ele->NextSiblingElement()) {
-        shared_ptr<Sector> sec;
         if(strcmp(ele->Name(), "sector") == 0) {
             // It's a sector!
-            sec = make_shared<Sector>(Sector::SECTOR);
-            sec->name = ele->Attribute("name");
+
+            auto sec_name = ele->Attribute("name");
             auto color = ele->Attribute("color");
+            optional<string> sec_color = nullopt;
             if(color != nullptr) {
-                sec->color = color;
+                sec_color = color;
             }
+
             auto type = ele->Attribute("type");
             if(type != nullptr) {
-                sec->type = type;
+                //???
             }
+            vector<shared_ptr<Waypoint>> corners;
             for(auto corner=ele->FirstChildElement(); corner!= nullptr; corner=corner->NextSiblingElement()) {
-                auto corner_name = corner->Attribute("name");
-                sec->corners.push_back(corner_name);
+                auto wp = getWaypoint(corner->Attribute("name"));
+                corners.push_back(wp);
             }
+            auto sec = make_shared<Sector>(corners, sec_name, sec_color);
+            sectors.push_back(sec);
         } else if (strcmp(ele->Name(), "kml") == 0) {
             //It's a KML!
-            sec = make_shared<Sector>(Sector::KML);
-            sec->kml_file = ele->Attribute("file");
+            throw std::runtime_error("Sector from KML not implemented!");
         } else {
             throw std::runtime_error("");
         }
 
-        sectors.push_back(sec);
+
     }
 }
 
@@ -162,6 +166,15 @@ shared_ptr<Waypoint> FlightPlan::getWaypoint(uint8_t id) {
         }
     }
     throw runtime_error("No waypoint with id " + to_string(id));
+}
+
+shared_ptr<Waypoint> FlightPlan::getWaypoint(string name) {
+    for(auto& wp: waypoints) {
+        if(wp->getName() == name) {
+            return wp;
+        }
+    }
+    throw runtime_error("No waypoint with name " + name);
 }
 
 shared_ptr<Block> FlightPlan::getBlock(uint8_t no) {

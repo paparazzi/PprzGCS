@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "waypoint.h"
+#include "sector.h"
 #include "block.h"
 #include <memory>
 #include "tinyxml2.h"
@@ -34,32 +35,6 @@ struct Variable {
     map<string, string> attributes;
 };
 
-struct Sector {
-    enum Variant {
-        SECTOR,
-        KML,
-    };
-
-    Sector(Variant t) {
-        variant = t;
-    }
-
-    Variant variant;
-
-    // should use a tagged union but well... do a PR, ok ?
-    // or just use Rust, not a 35 years old prehistoric language
-    // At that point, let's not count UBs, right ?
-
-    //sector
-    string name;
-    std::optional<string> color;   //color
-    std::optional<string> type;    //type
-    vector<string> corners;
-
-
-    //kml
-    string kml_file;
-};
 
 class FlightPlan
 {
@@ -72,6 +47,7 @@ public:
 
     vector<shared_ptr<Waypoint>>& getWaypoints() {return  waypoints;}
     shared_ptr<Waypoint> getWaypoint(uint8_t id);
+    shared_ptr<Waypoint> getWaypoint(string name);
     vector<shared_ptr<Block>>& getBlocks() {return  blocks;}
     vector<shared_ptr<BlockGroup>> getGroups();
     vector<shared_ptr<Exception>> getExeptions() {return  exceptions;}
