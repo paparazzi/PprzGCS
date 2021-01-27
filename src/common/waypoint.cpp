@@ -2,6 +2,7 @@
 #include <math.h>
 #include <iostream>
 #include "coordinatestransform.h"
+#include "gcs_utils.h"
 
 using namespace tinyxml2;
 
@@ -59,8 +60,8 @@ Waypoint::Waypoint(XMLElement* wp, uint8_t wp_id, shared_ptr<Waypoint> orig, dou
     if(lat_p != nullptr && lon_p != nullptr) {
 
         type = ABSOLUTE;
-        this->lat = stod(lat_p);
-        this->lon = stod(lon_p);
+        this->lat = parse_coordinate(lat_p);
+        this->lon = parse_coordinate(lon_p);
         this->alt = alt;
         alt_type = ALT;
 

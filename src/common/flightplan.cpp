@@ -1,5 +1,6 @@
 #include "flightplan.h"
 #include "iostream"
+#include "gcs_utils.h"
 
 #include <clocale>
 #include "coordinatestransform.h"
@@ -41,7 +42,10 @@ FlightPlan::FlightPlan(string uri) : origin()
         ground_alt = stod(gnd_alt);
         security_height = stod(sec_h);
 
-        origin = make_shared<Waypoint>("__ORIGIN", 0, stod(lat0), stod(lon0), defaultAlt);
+        double _lat0 = parse_coordinate(lat0);
+        double _lon0 = parse_coordinate(lon0);
+
+        origin = make_shared<Waypoint>("__ORIGIN", 0, _lat0, _lon0, defaultAlt);
 
         XMLElement* wps = fp_root->FirstChildElement("waypoints");
         parse_waypoints(wps);

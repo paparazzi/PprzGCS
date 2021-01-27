@@ -5,3 +5,4 @@
 
 QString user_or_app_path(QString data_path);
 
+double parse_coordinate(const char* str);

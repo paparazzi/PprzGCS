@@ -61,7 +61,7 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
 
     setMouseTracking(true);
 
-    setZoom(17);
+    setZoom(2);
     centerLatLon(Point2DLatLon(43.462344,1.273044));
     setTilesPath(qApp->property("MAP_PATH").toString());
 
@@ -298,4 +298,10 @@ void MapWidget::wheelEvent(QWheelEvent* event) {
 
 void MapWidget::handleNewAC(QString ac_id) {
     (void)ac_id;
+    auto fp = AircraftManager::get()->getAircraft(ac_id).getFlightPlan();
+    auto wp_orig = fp.getOrigin();
+    auto pt = Point2DLatLon(wp_orig->getLat(), wp_orig->getLon());
+    //TODO adapt zoom to Flightplan boundinx box
+    setZoom(17);
+    centerLatLon(pt);
 }
