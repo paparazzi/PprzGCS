@@ -37,12 +37,12 @@ public:
     vector<string>& getValues() {return values;}
     tuple<float, float, float> getBounds() {return make_tuple(min, max, step);}
     void setValue(float v) {
-        last_values[1] = last_values[0];
-        last_values[0] = v;
+        last_set_values[1] = last_set_values[0];
+        last_set_values[0] = v;
     }
 
-    float getValue() {return last_values[0];}
-    float getPreviousValue() {return last_values[1];}
+    float getValue() {return last_set_values[0];}
+    float getPreviousValue() {return last_set_values[1];}
     float getMin() {return  min;}
     float getMax() {return  max;}
 
@@ -72,7 +72,7 @@ private:
     vector<shared_ptr<KeyPress>> key_presses;
     vector<shared_ptr<StripButton>> strip_buttons;
 
-    float last_values[2];
+    float last_set_values[2];   // last values set by the user from this app.
 };
 
 #endif // SETTING_H
