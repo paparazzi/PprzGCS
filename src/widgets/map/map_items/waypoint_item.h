@@ -11,20 +11,21 @@ class WaypointItem : public MapItem
 {
         Q_OBJECT
 public:
-    WaypointItem(Point2DLatLon pt, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
-    WaypointItem(shared_ptr<Waypoint> wp, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    WaypointItem(Point2DLatLon pt, QString ac_id, qreal z_value, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    WaypointItem(shared_ptr<Waypoint> wp, QString ac_id, qreal z_value, double neutral_scale_zoom = 15, QObject *parent = nullptr);
 
     Point2DLatLon position() {return Point2DLatLon(original_waypoint);}
     shared_ptr<Waypoint> getOriginalWaypoint() {return original_waypoint;}
     shared_ptr<Waypoint> waypoint() {return _waypoint;}
     void setPosition(Point2DLatLon ll);
     QPointF scenePos();
+    virtual void addToMap(MapWidget* map);
     virtual void setHighlighted(bool h);
     virtual void setZValue(qreal z);
     virtual void setForbidHighlight(bool fh);
     virtual void setEditable(bool ed);
-    virtual void removeFromScene();
-    virtual void updateGraphics();
+    virtual void removeFromScene(MapWidget* map);
+    virtual void updateGraphics(double zoom, double scale_factor, int tile_size);
     void updatePosition();
     virtual ItemType getType() {return ITEM_WAYPOINT;}
     void setIgnoreEvent(bool ignore);

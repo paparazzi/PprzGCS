@@ -5,8 +5,8 @@
 #include <QDebug>
 #include "aircraft.h"
 
-AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
-    MapItem(ac_id, 200, map, neutral_scale_zoom, parent),
+AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom, QObject *parent) :
+    MapItem(ac_id, 200, neutral_scale_zoom, parent),
     latlon(pt), heading(0.), last_chunk_index(0)
 {
     Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
@@ -24,23 +24,28 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, MapWidget* map, doub
     for(int i=0; i<qApp->property("TRACK_MAX_CHUNKS").toInt(); i++) {
         auto gt = new GraphicsTrack(aircraft.getColor(), trackUnfocusedColor(aircraft.getColor()));
         graphics_tracks.append(gt);
-        map->scene()->addItem(gt);
         QList<Point2DLatLon> l;
         track_chuncks.append(l);
     }
 
     setZoomFactor(1.1);
-    updateGraphics();
-    map->scene()->addItem(graphics_aircraft);
-    map->scene()->addItem(graphics_text);
-
-    map->addItem(this);
 }
 
-void AircraftItem::updateGraphics() {
-    QPointF scene_pos = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());
+void AircraftItem::addToMap(MapWidget* map) {
+
+    for(auto gt: graphics_tracks) {
+        map->scene()->addItem(gt);
+    }
+
+    map->scene()->addItem(graphics_aircraft);
+    map->scene()->addItem(graphics_text);
+}
+
+void AircraftItem::updateGraphics(double zoom, double scale_factor, int tile_size) {
+    (void)tile_size;
+    QPointF scene_pos = scenePoint(latlon, zoomLevel(zoom), tile_size);
     graphics_aircraft->setPos(scene_pos);
-    double s = getScale();
+    double s = getScale(zoom, scale_factor);
     graphics_aircraft->setScale(s);
     graphics_aircraft->setRotation(heading);
 
@@ -51,7 +56,7 @@ void AircraftItem::updateGraphics() {
     for(int i = 0; i<track_chuncks.size(); i++) {
         QPolygonF scenePoints;
         for(auto pt: track_chuncks[i]) {
-            scenePoints.append(scenePoint(pt, zoomLevel(map->zoom()), map->tileSize()));
+            scenePoints.append(scenePoint(pt, zoomLevel(zoom), tile_size));
         }
         graphics_tracks[i]->setPoints(scenePoints);
     }
@@ -76,7 +81,7 @@ void AircraftItem::setPosition(Point2DLatLon pt) {
         track_chuncks[first_chunk_index].removeFirst();
     }
 
-    updateGraphics();
+    emit(itemChanged());
 }
 
 void AircraftItem::clearTrack() {
@@ -84,12 +89,12 @@ void AircraftItem::clearTrack() {
         tc.clear();
         last_chunk_index = 0;
     }
-    updateGraphics();
+    emit(itemChanged());
 }
 
 void AircraftItem::setHeading(double h) {
     heading = h;
-    updateGraphics();
+    emit(itemChanged());
 }
 
 void AircraftItem::setHighlighted(bool h) {
@@ -118,7 +123,7 @@ void AircraftItem::setForbidHighlight(bool fh) {
     graphics_aircraft->setForbidHighlight(fh);
 }
 
-void AircraftItem::removeFromScene() {
+void AircraftItem::removeFromScene(MapWidget* map) {
     assert(graphics_aircraft != nullptr);
     map->scene()->removeItem(graphics_aircraft);
     map->scene()->removeItem(graphics_text);

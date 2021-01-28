@@ -217,14 +217,19 @@ void MapWidget::setCursor(const QCursor &cur) {
 }
 
 void MapWidget::addItem(MapItem* map_item) {
-    map_item->updateGraphics();
+    map_item->addToMap(this);
+    map_item->updateGraphics(zoom(), scaleFactor(), tileSize());
     _items.append(map_item);
     emit(itemAdded(map_item));
+
+    connect(map_item, &MapItem::itemChanged, map_item, [=]() {
+        map_item->updateGraphics(zoom(), scaleFactor(), tileSize());
+    });
 }
 
 // TODO Use shared_ptr ?
 void MapWidget::removeItem(MapItem* item) {
-    item->removeFromScene();
+    item->removeFromScene(this);
     _items.removeAll(item);
     emit(itemRemoved(item));
     //the one that receive this signal shall delete the item
@@ -291,7 +296,7 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *event) {
 void MapWidget::wheelEvent(QWheelEvent* event) {
     Map2D::wheelEvent(event);
     for(auto item: _items) {
-        item->updateGraphics();
+        item->updateGraphics(zoom(), scaleFactor(), tileSize());
     }
 }
 

@@ -5,12 +5,11 @@
 #include <utility>
 #include "mapwidget.h"
 
-MapItem::MapItem(QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
+MapItem::MapItem(QString ac_id, qreal z_value, double neutral_scale_zoom, QObject *parent) :
     QObject(parent),
     ac_id(std::move(ac_id)),
     zoom_factor(1), neutral_scale_zoom(neutral_scale_zoom),
-    z_value(z_value),
-    map(map)
+    z_value(z_value)
 {
 }
 
@@ -74,6 +73,6 @@ QList<QColor> MapItem::makeColorVariants(QColor color) {
     return list;
 }
 
-double MapItem::getScale() {
-    return pow(zoom_factor, map->zoom() - neutral_scale_zoom)/map->scaleFactor();
+double MapItem::getScale(double zoom, double scale_factor) {
+    return pow(zoom_factor, zoom - neutral_scale_zoom)/scale_factor;
 }

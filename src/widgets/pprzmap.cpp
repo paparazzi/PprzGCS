@@ -12,10 +12,7 @@
 #include "waypoint_item.h"
 #include "circle_item.h"
 #include "maputils.h"
-#include "path_item.h"
-#include "waypointitem_sm.h"
-#include "circleitem_sm.h"
-#include "pathitem_sm.h"
+// #include "path_item.h"
 #include <QCursor>
 #include "AircraftManager.h"
 #include "pprzmain.h"
@@ -150,18 +147,6 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
         interaction_state = PMIS_FLIGHT_PLAN_EDIT;
         setEditorMode();
         switch (drawState) {
-        case 0:
-            fp_edit_sm = new SmWaypointItem(ui->map);
-            ui->map->setCursor(QCursor(QPixmap(":/pictures/cursor_waypoint_black.svg"),0, 0));
-            break;
-        case 1:
-            fp_edit_sm = new SmCircleItem(ui->map);
-            ui->map->setCursor(QCursor(QPixmap(":/pictures/cursor_circle_black.svg"),0, 0));
-            break;
-        case 2:
-            fp_edit_sm = new SmPathItem(ui->map);
-            ui->map->setCursor(QCursor(QPixmap(":/pictures/cursor_path_black.svg"),0, 0));
-            break;
         default:
             break;
         }
@@ -252,11 +237,13 @@ void PprzMap::handleNewAC(QString ac_id) {
                                    qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toInt();
 
     // create aircraft item at dummy position
-    auto aircraft_item = new AircraftItem(Point2DLatLon(0, 0), ac_id, ui->map, 16);
+    auto aircraft_item = new AircraftItem(Point2DLatLon(0, 0), ac_id, 16);
     aircraft_item->setZValue(qApp->property("AIRCRAFT_Z_VALUE").toInt());
+    ui->map->addItem(aircraft_item);
 
     //create carrot at dummy position
-    WaypointItem* target = new WaypointItem(Point2DLatLon(0, 0), ac_id, z, ui->map);
+    WaypointItem* target = new WaypointItem(Point2DLatLon(0, 0), ac_id, z);
+    ui->map->addItem(target);
     target->setStyle(GraphicsObject::Style::CARROT);
     target->setEditable(false);
     //target->setForbidHighlight(false);
@@ -267,7 +254,8 @@ void PprzMap::handleNewAC(QString ac_id) {
 
     for(auto wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
         if(wp->getName()[0] != '_') {
-            WaypointItem* wpi = new WaypointItem(wp, ac_id, z, ui->map);
+            WaypointItem* wpi = new WaypointItem(wp, ac_id, z);
+            ui->map->addItem(wpi);
             wpi->setEditable(true);
             wpi->setForbidHighlight(false);
             item_manager->addWaypointItem(wpi);
@@ -392,7 +380,6 @@ void PprzMap::moveWaypoint(pprzlink::Message msg) {
         for(auto wpi: ac_items_managers[ac_id]->getWaypointsItems()) {
             if(wpi->getOriginalWaypoint() == wp && !wpi->isMoving()) {
                 wpi->updatePosition();
-                wpi->updateGraphics();
             }
         }
     }
@@ -435,7 +422,8 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
 
         Point2DLatLon pos(static_cast<double>(circle_lat), static_cast<double>(circle_long));
         if(prev_item == nullptr) {
-            CircleItem* ci = new CircleItem(pos, radius, id.c_str(), z, ui->map);
+            CircleItem* ci = new CircleItem(pos, radius, ac_id, z);
+            ui->map->addItem(ci);
             ci->setStyle(GraphicsObject::Style::CURRENT_NAV);
             ac_items_managers[ac_id]->setCurrentNavShape(ci);
             //qDebug() << "circle created!";
@@ -446,6 +434,7 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
         }
 
     } else if (msg.getDefinition().getName() == "SEGMENT_STATUS") {
+        qDebug() << "Segment NAV shape not handled ! Fix PathItem !";
         if(prev_item!= nullptr && prev_item->getType() != ITEM_PATH) {
             ac_items_managers[ac_id]->setCurrentNavShape(nullptr);
             ui->map->removeItem(prev_item);
@@ -462,17 +451,18 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
         Point2DLatLon p1(static_cast<double>(segment1_lat), static_cast<double>(segment1_long));
         Point2DLatLon p2(static_cast<double>(segment2_lat), static_cast<double>(segment2_long));
         if(prev_item == nullptr) {
-            PathItem* pi = new PathItem(p1, id.c_str(), z, ui->map);
-            pi->addPoint(p2);
-            pi->setStyle(GraphicsObject::Style::CURRENT_NAV);
-            ac_items_managers[ac_id]->setCurrentNavShape(pi);
+//            PathItem* pi = new PathItem(p1, id.c_str(), z);
+//            ui->map->addItem(pi);
+//            pi->addPoint(p2);
+//            pi->setStyle(GraphicsObject::Style::CURRENT_NAV);
+//            ac_items_managers[ac_id]->setCurrentNavShape(pi);
             //qDebug() << "segment created!";
         } else {
-            PathItem* pi = static_cast<PathItem*>(prev_item);
-            auto wps = pi->getWaypoints();
-            assert(wps.size() == 2);
-            wps[0]->setPosition(p1);
-            wps[1]->setPosition(p2);
+//            PathItem* pi = static_cast<PathItem*>(prev_item);
+//            auto wps = pi->getWaypoints();
+//            assert(wps.size() == 2);
+//            wps[0]->setPosition(p1);
+//            wps[1]->setPosition(p2);
         }
 
     }

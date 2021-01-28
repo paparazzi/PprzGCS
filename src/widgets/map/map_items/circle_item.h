@@ -11,17 +11,18 @@ class CircleItem : public MapItem
 {
     Q_OBJECT
 public:
-    explicit CircleItem(Point2DLatLon pt, double radius, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15, QObject *parent = nullptr);
-    explicit CircleItem(WaypointItem* center, double radius, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom = 15);
+    explicit CircleItem(Point2DLatLon pt, double radius, QString ac_id, qreal z_value, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    explicit CircleItem(WaypointItem* center, double radius, QString ac_id, qreal z_value, double neutral_scale_zoom = 15);
     Point2DLatLon position() {return center->position();}
-    void setPosition(Point2DLatLon ll) {center->setPosition(ll);};
+    void setPosition(Point2DLatLon ll) {center->setPosition(ll);}
     GraphicsCircle* getGraphicsCircle() {return circle;}
+    virtual void addToMap(MapWidget* mw);
     virtual void setHighlighted(bool h);
     void setForbidHighlight(bool fh);
     virtual void setEditable(bool ed);
     virtual void setZValue(qreal z);
-    virtual void updateGraphics();
-    virtual void removeFromScene();
+    virtual void updateGraphics(double zoom, double scale_factor, int tile_size);
+    virtual void removeFromScene(MapWidget* map);
     virtual ItemType getType() {return ITEM_CIRCLE;}
     double radius() {return _radius;}
     ///
@@ -39,7 +40,7 @@ signals:
 protected:
 
 private:
-    void init(WaypointItem* center, double radius);
+    void init(WaypointItem* center);
     WaypointItem* center;
     GraphicsCircle* circle;
     double _radius;

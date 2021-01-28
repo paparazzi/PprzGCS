@@ -54,7 +54,7 @@ set(SOURCE
 
     src/widgets/map/map_items/map_item.cpp
     src/widgets/map/map_items/waypoint_item.cpp
-    src/widgets/map/map_items/path_item.cpp
+    # src/widgets/map/map_items/path_item.cpp
     src/widgets/map/map_items/circle_item.cpp
     src/widgets/map/map_items/aircraft_item.cpp
 
@@ -65,10 +65,10 @@ set(SOURCE
     src/widgets/map/graphics_objects/graphics_aircraft.cpp
     src/widgets/map/graphics_objects/graphics_track.cpp
 
-    src/widgets/map/fpedit_statemachines/item_edit_state_machine.cpp
-    src/widgets/map/fpedit_statemachines/waypointitem_sm.cpp
-    src/widgets/map/fpedit_statemachines/circleitem_sm.cpp
-    src/widgets/map/fpedit_statemachines/pathitem_sm.cpp
+    # src/widgets/map/fpedit_statemachines/item_edit_state_machine.cpp
+    # src/widgets/map/fpedit_statemachines/waypointitem_sm.cpp
+    # src/widgets/map/fpedit_statemachines/circleitem_sm.cpp
+    # src/widgets/map/fpedit_statemachines/pathitem_sm.cpp
 
 
     src/widgets/basics/imagebutton.cpp

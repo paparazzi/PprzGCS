@@ -8,15 +8,17 @@
 #include "AircraftManager.h"
 #include "coordinatestransform.h"
 
-WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
-    MapItem(ac_id, z_value, map, neutral_scale_zoom, parent), moving(false)
+// create WaypointItem from position -> create corresponding Waypoint.
+WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, qreal z_value, double neutral_scale_zoom, QObject *parent) :
+    MapItem(ac_id, z_value, neutral_scale_zoom, parent), moving(false)
 {
     original_waypoint = make_shared<Waypoint>("", 0, pt.lat(), pt.lon(), 0);
     init();
 }
 
-WaypointItem::WaypointItem(shared_ptr<Waypoint> wp, QString ac_id, qreal z_value, MapWidget* map, double neutral_scale_zoom, QObject *parent) :
-    MapItem(ac_id, z_value, map, neutral_scale_zoom, parent), original_waypoint(wp), moving(false)
+// create WaypointItem based on existing Waypoint
+WaypointItem::WaypointItem(shared_ptr<Waypoint> wp, QString ac_id, qreal z_value, double neutral_scale_zoom, QObject *parent) :
+    MapItem(ac_id, z_value, neutral_scale_zoom, parent), original_waypoint(wp), moving(false)
 {
     init();
 }
@@ -26,43 +28,20 @@ void WaypointItem::init() {
     Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
     int size = qApp->property("WAYPOINTS_SIZE").toInt();
     name = original_waypoint->getName().c_str();
-    QPointF scene_pos = scenePoint(Point2DLatLon(_waypoint), zoomLevel(map->zoom()), map->tileSize());
     point = new GraphicsPoint(size, aircraft.getColor(), this);
     QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
     point->setColors(color_variants[0], color_variants[1], color_variants[2]);
-    point->setPos(scene_pos);
     point->setZValue(z_value);
-    map->scene()->addItem(point);
+
 
     graphics_text = new QGraphicsTextItem(name);
     //graphics_text->setDefaultTextColor(aircraft.getColor());
     graphics_text->setDefaultTextColor(Qt::white);
     graphics_text->setZValue(z_value);
-    map->scene()->addItem(graphics_text);
+
 
     setZoomFactor(1.1);
 
-    connect(
-        point, &GraphicsPoint::pointMoved, this,
-        [=](QPointF scene_pos) {
-            moving = true;
-            Point2DLatLon latlon = CoordinatesTransform::get()->wgs84_from_scene(scene_pos, zoomLevel(map->zoom()), map->tileSize());
-            graphics_text->setPos(scene_pos + QPointF(10, 10));
-            _waypoint->setLat(latlon.lat());
-            _waypoint->setLon(latlon.lon());
-            emit(waypointMoved(latlon));
-        }
-    );
-
-    connect(
-        point, &GraphicsPoint::pointMoveFinished, this,
-        [=](QPointF scene_pos) {
-            Point2DLatLon latlon = CoordinatesTransform::get()->wgs84_from_scene(scene_pos, zoomLevel(map->zoom()), map->tileSize());
-            _waypoint->setLat(latlon.lat());
-            _waypoint->setLon(latlon.lon());
-            emit(waypointMoveFinished());
-        }
-    );
 
     connect(
         point, &GraphicsPoint::objectClicked, this,
@@ -85,8 +64,30 @@ void WaypointItem::init() {
             emit(itemGainedHighlight());
         }
     );
+}
 
-    map->addItem(this);
+void WaypointItem::addToMap(MapWidget* map) {
+    map->scene()->addItem(point);
+    map->scene()->addItem(graphics_text);
+
+    connect(
+        point, &GraphicsPoint::pointMoved, this,
+        [=](QPointF scene_pos) {
+            moving = true;
+            // reverse position: from scene (mouse) to WGS84.
+            Point2DLatLon latlon = CoordinatesTransform::get()->wgs84_from_scene(scene_pos, zoomLevel(map->zoom()), map->tileSize());
+            this->setPosition(latlon);
+        }
+    );
+
+    connect(
+        point, &GraphicsPoint::pointMoveFinished, this,
+        [=](QPointF scene_pos) {
+            Point2DLatLon latlon = CoordinatesTransform::get()->wgs84_from_scene(scene_pos, zoomLevel(map->zoom()), map->tileSize());
+            this->setPosition(latlon);
+            emit(waypointMoveFinished());
+        }
+    );
 }
 
 void WaypointItem::setHighlighted(bool h) {
@@ -109,9 +110,9 @@ void WaypointItem::setZValue(qreal z) {
     graphics_text->setZValue(z);
 }
 
-void WaypointItem::updateGraphics() {
-    QPointF scene_pos = scenePoint(Point2DLatLon(_waypoint), zoomLevel(map->zoom()), map->tileSize());
-    double s = getScale();
+void WaypointItem::updateGraphics(double zoom, double scale_factor, int tile_size) {
+    QPointF scene_pos = scenePoint(Point2DLatLon(_waypoint), zoomLevel(zoom), tile_size);
+    double s = getScale(zoom, scale_factor);
     point->setPos(scene_pos);
     point->setScale(s);
 
@@ -119,7 +120,7 @@ void WaypointItem::updateGraphics() {
     graphics_text->setScale(s);
 }
 
-void WaypointItem::removeFromScene() {
+void WaypointItem::removeFromScene(MapWidget* map) {
     map->scene()->removeItem(point);
     map->scene()->removeItem(graphics_text);
     delete point;
@@ -129,9 +130,7 @@ void WaypointItem::removeFromScene() {
 void WaypointItem::setPosition(Point2DLatLon ll) {
     _waypoint->setLat(ll.lat());
     _waypoint->setLon(ll.lon());
-    QPointF scene_pos = scenePoint(ll, zoomLevel(map->zoom()), map->tileSize());
-    point->setPos(scene_pos);
-    graphics_text->setPos(scene_pos + QPointF(10, 10));
+    emit(itemChanged());
     emit(waypointMoved(ll));
 }
 
@@ -139,6 +138,7 @@ void WaypointItem::updatePosition() {
     _waypoint->setLat(original_waypoint->getLat());
     _waypoint->setLon(original_waypoint->getLon());
     _waypoint->setAlt(original_waypoint->getAlt());
+    emit(itemChanged());
 }
 
 QPointF WaypointItem::scenePos() {
