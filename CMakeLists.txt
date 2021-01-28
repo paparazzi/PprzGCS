@@ -50,6 +50,7 @@ set(SOURCE
     src/widgets/map/mapscene.cpp
     src/widgets/map/maputils.cpp
     src/widgets/map/waypointeditor.cpp
+    src/widgets/map/acitemmanager.cpp
 
     src/widgets/map/map_items/map_item.cpp
     src/widgets/map/map_items/waypoint_item.cpp

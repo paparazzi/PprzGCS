@@ -12,6 +12,7 @@
 #include "layer_combo.h"
 #include "maplayercontrol.h"
 #include "configurable.h"
+#include "acitemmanager.h"
 
 namespace Ui {
 class PprzMap;
@@ -64,10 +65,8 @@ private:
     int drawState;
     InteractionState interaction_state;
     ItemEditStateMachine* fp_edit_sm;
-    QList<WaypointItem*> waypointItems;
-    QList<WaypointItem*> targets;
-    QList<MapItem*> current_nav_shapes;
-    QMap<QString, AircraftItem*> aircraft_items;
+
+    QMap<QString, shared_ptr<ACItemManager>> ac_items_managers;
 
     QString current_ac;
 

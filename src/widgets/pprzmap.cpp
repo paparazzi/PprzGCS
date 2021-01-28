@@ -224,30 +224,23 @@ void PprzMap::setEditorMode() {
 }
 
 void PprzMap::updateAircraftItem(pprzlink::Message msg) {
-    std::string ac_id;
+    std::string id;
     float lat, lon, heading;
-    msg.getField("ac_id", ac_id);
+    msg.getField("ac_id", id);
     msg.getField("lat", lat);
     msg.getField("long", lon);
     msg.getField("heading", heading);
 
-    QString id = QString(ac_id.c_str());
-    AircraftItem* ai;
+    QString ac_id = QString(id.c_str());
 
-    if(aircraft_items.find(id) != aircraft_items.end()) {
-        ai = aircraft_items[id];
-    } else if(AircraftManager::get()->aircraftExists(id)){
-        ai = new AircraftItem(Point2DLatLon(static_cast<double>(lat), static_cast<double>(lon)), id, ui->map, 16);
-        ai->setZValue(qApp->property("AIRCRAFT_Z_VALUE").toInt());
-        aircraft_items[id] = ai;
-    } else {
-        // item not found, and aircraft does not exists, so abort here
-        return;
+    if(AircraftManager::get()->aircraftExists(ac_id)) {
+        auto ai = ac_items_managers[ac_id]->getAircraftItem();
+        Point2DLatLon pos(static_cast<double>(lat), static_cast<double>(lon));
+        ai->setPosition(pos);
+        ai->setHeading(static_cast<double>(heading));
+        AircraftManager::get()->getAircraft(ac_id).setPosition(pos);
     }
-    Point2DLatLon pos(static_cast<double>(lat), static_cast<double>(lon));
-    ai->setPosition(pos);
-    ai->setHeading(static_cast<double>(heading));
-    AircraftManager::get()->getAircraft(id).setPosition(pos);
+
 }
 
 void PprzMap::handleNewAC(QString ac_id) {
@@ -258,12 +251,26 @@ void PprzMap::handleNewAC(QString ac_id) {
     int z = (current_ac == ac_id) ? qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toInt():
                                    qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toInt();
 
+    // create aircraft item at dummy position
+    auto aircraft_item = new AircraftItem(Point2DLatLon(0, 0), ac_id, ui->map, 16);
+    aircraft_item->setZValue(qApp->property("AIRCRAFT_Z_VALUE").toInt());
+
+    //create carrot at dummy position
+    WaypointItem* target = new WaypointItem(Point2DLatLon(0, 0), ac_id, z, ui->map);
+    target->setStyle(GraphicsObject::Style::CARROT);
+    target->setEditable(false);
+    //target->setForbidHighlight(false);
+
+    //create the ACItemManager for this aircraft
+    auto item_manager = make_shared<ACItemManager>(ac_id, target, aircraft_item);
+    ac_items_managers[ac_id] = item_manager;
+
     for(auto wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
         if(wp->getName()[0] != '_') {
             WaypointItem* wpi = new WaypointItem(wp, ac_id, z, ui->map);
             wpi->setEditable(true);
             wpi->setForbidHighlight(false);
-            waypointItems.append(wpi);
+            item_manager->addWaypointItem(wpi);
 
             auto dialog_move_waypoint = [=]() {
                 wpi->setMoving(true);
@@ -286,58 +293,30 @@ void PprzMap::handleNewAC(QString ac_id) {
         }
     }
 
-    WaypointItem* target = new WaypointItem(Point2DLatLon(0, 0), ac_id, z, ui->map);
-    target->setStyle(GraphicsObject::Style::CARROT);
-    target->setEditable(false);
-    //target->setForbidHighlight(false);
-    targets.append(target);
+
 }
 
 void PprzMap::removeAC(QString ac_id) {
-    QList<WaypointItem*> to_remove_wis;
-    for(auto wi: waypointItems) {
-        if(wi->acId() == ac_id) {
-            to_remove_wis.append(wi);
-        }
-    }
 
-    for(auto wi: to_remove_wis) {
-        waypointItems.removeAll(wi);
+    auto item_manager = ac_items_managers[ac_id];
+
+    for(auto wi: item_manager->getWaypointsItems()) {
         ui->map->removeItem(wi);
     }
 
+    auto target = item_manager->getTarget();
+    ui->map->removeItem(target);
 
 
-    QList<WaypointItem*> to_remove_targets;
-    for(auto wi: targets) {
-        if(wi->acId() == ac_id) {
-            to_remove_targets.append(wi);
-        }
+    auto nav_shape = item_manager->getCurrentNavShape();
+    if(nav_shape != nullptr) {
+        ui->map->removeItem(nav_shape);
     }
 
-    for(auto wi: to_remove_targets) {
-        targets.removeAll(wi);
-        ui->map->removeItem(wi);
-    }
+    auto ac_item = item_manager->getAircraftItem();
+    ui->map->removeItem(ac_item);
 
-
-
-    QList<MapItem*> to_remove_ns;
-    for(auto ns: current_nav_shapes) {
-        if(ns->acId() == ac_id) {
-            to_remove_ns.append(ns);
-        }
-    }
-
-    for(auto wi: to_remove_ns) {
-        current_nav_shapes.removeAll(wi);
-        ui->map->removeItem(wi);
-    }
-
-    auto ai = aircraft_items[ac_id];
-    aircraft_items.remove(ac_id);
-    ui->map->removeItem(ai);
-
+    ac_items_managers.remove(ac_id);
 }
 
 void PprzMap::handleMouseMove(QPointF scenePos) {
@@ -403,13 +382,14 @@ void PprzMap::moveWaypoint(pprzlink::Message msg) {
     msg.getField("long", lon);
     msg.getField("alt", alt);
     msg.getField("ground_alt", ground_alt);
-    if(AircraftManager::get()->aircraftExists(id.c_str()) && wp_id != 0) {
+    auto ac_id = QString(id.c_str());
+    if(AircraftManager::get()->aircraftExists(ac_id) && wp_id != 0) {
         shared_ptr<Waypoint> wp = AircraftManager::get()->getAircraft(id.c_str()).getFlightPlan().getWaypoint(wp_id);
         wp->setLat(static_cast<double>(lat));
         wp->setLon(static_cast<double>(lon));
         wp->setAlt(static_cast<double>(alt));
 
-        for(auto wpi: waypointItems) {
+        for(auto wpi: ac_items_managers[ac_id]->getWaypointsItems()) {
             if(wpi->getOriginalWaypoint() == wp && !wpi->isMoving()) {
                 wpi->updatePosition();
                 wpi->updateGraphics();
@@ -424,35 +404,26 @@ void PprzMap::updateTarget(pprzlink::Message msg) {
     msg.getField("ac_id", id);
     msg.getField("target_lat", target_lat);
     msg.getField("target_long", target_lon);
-
-    for(auto wp: targets) {
-        if(wp->acId() == id.c_str()) {
-            wp->setPosition(Point2DLatLon(static_cast<double>(target_lat), static_cast<double>(target_lon)));
-        }
+    auto ac_id = QString(id.c_str());
+    if(AircraftManager::get()->aircraftExists(ac_id)) {
+        ac_items_managers[ac_id]->getTarget()->setPosition(Point2DLatLon(static_cast<double>(target_lat), static_cast<double>(target_lon)));
     }
 }
 
 void PprzMap::updateNavShape(pprzlink::Message msg) {
     std::string id;
     msg.getField("ac_id", id);
+    QString ac_id(id.c_str());
 
-    MapItem* prev_item = nullptr;
-    for(auto item: current_nav_shapes) {
-        if(item->acId() == QString(id.c_str())) {
-            prev_item = item;
-        }
-    }
+    MapItem* prev_item = ac_items_managers[ac_id]->getCurrentNavShape();
 
     int z = qApp->property("NAV_SHAPE_Z_VALUE").toInt();
-(void)prev_item;
-    (void)z;
 
     if(msg.getDefinition().getName() == "CIRCLE_STATUS") {
         if(prev_item!= nullptr && prev_item->getType() != ITEM_CIRCLE) {
-            current_nav_shapes.removeAll(prev_item);
+            ac_items_managers[ac_id]->setCurrentNavShape(nullptr);
             ui->map->removeItem(prev_item);
             prev_item = nullptr;
-            //qDebug() << "segment removed!";
         }
 
         float circle_lat, circle_long;
@@ -466,7 +437,7 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
         if(prev_item == nullptr) {
             CircleItem* ci = new CircleItem(pos, radius, id.c_str(), z, ui->map);
             ci->setStyle(GraphicsObject::Style::CURRENT_NAV);
-            current_nav_shapes.append(ci);
+            ac_items_managers[ac_id]->setCurrentNavShape(ci);
             //qDebug() << "circle created!";
         } else {
             CircleItem* ci = static_cast<CircleItem*>(prev_item);
@@ -476,7 +447,7 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
 
     } else if (msg.getDefinition().getName() == "SEGMENT_STATUS") {
         if(prev_item!= nullptr && prev_item->getType() != ITEM_PATH) {
-            current_nav_shapes.removeAll(prev_item);
+            ac_items_managers[ac_id]->setCurrentNavShape(nullptr);
             ui->map->removeItem(prev_item);
             prev_item = nullptr;
             //qDebug() << "circle removed!";
@@ -494,7 +465,7 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
             PathItem* pi = new PathItem(p1, id.c_str(), z, ui->map);
             pi->addPoint(p2);
             pi->setStyle(GraphicsObject::Style::CURRENT_NAV);
-            current_nav_shapes.append(pi);
+            ac_items_managers[ac_id]->setCurrentNavShape(pi);
             //qDebug() << "segment created!";
         } else {
             PathItem* pi = static_cast<PathItem*>(prev_item);
