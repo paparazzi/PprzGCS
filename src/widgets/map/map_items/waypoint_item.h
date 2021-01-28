@@ -13,7 +13,7 @@ class WaypointItem : public MapItem
 public:
     WaypointItem(Point2DLatLon pt, QString ac_id, qreal z_value, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     WaypointItem(shared_ptr<Waypoint> wp, QString ac_id, qreal z_value, double neutral_scale_zoom = 15, QObject *parent = nullptr);
-
+    // return position of the underlying "real" waypoint
     Point2DLatLon position() {return Point2DLatLon(original_waypoint);}
     shared_ptr<Waypoint> getOriginalWaypoint() {return original_waypoint;}
     shared_ptr<Waypoint> waypoint() {return _waypoint;}
@@ -45,6 +45,7 @@ private:
     GraphicsPoint * point;
     QGraphicsTextItem* graphics_text;
     shared_ptr<Waypoint> original_waypoint;
+    // waypoint used to draw this WaypointItem
     shared_ptr<Waypoint> _waypoint;
     int altitude;
     bool highlighted;

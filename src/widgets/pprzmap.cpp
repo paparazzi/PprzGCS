@@ -422,14 +422,17 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
 
         Point2DLatLon pos(static_cast<double>(circle_lat), static_cast<double>(circle_long));
         if(prev_item == nullptr) {
-            CircleItem* ci = new CircleItem(pos, radius, ac_id, z);
+            auto wcenter = new WaypointItem(pos, ac_id, z);
+            ui->map->addItem(wcenter);
+            CircleItem* ci = new CircleItem(wcenter, radius, ac_id, z);
             ui->map->addItem(ci);
             ci->setStyle(GraphicsObject::Style::CURRENT_NAV);
             ac_items_managers[ac_id]->setCurrentNavShape(ci);
-            //qDebug() << "circle created!";
         } else {
             CircleItem* ci = static_cast<CircleItem*>(prev_item);
-            ci->setPosition(pos);
+            ci->getCenter()->getOriginalWaypoint()->setLat(pos.lat());
+            ci->getCenter()->getOriginalWaypoint()->setLon(pos.lon());
+            ci->getCenter()->updatePosition();
             ci->setRadius(radius);
         }
 

@@ -9,16 +9,6 @@
 #include "map_item.h"
 #include "AircraftManager.h"
 
-CircleItem::CircleItem(Point2DLatLon pt, double radius, QString ac_id, qreal z_value, double neutral_scale_zoom, QObject *parent) :
-    MapItem(ac_id, z_value, neutral_scale_zoom, parent),
-    _radius(radius)
-{
-    center = new WaypointItem(pt, ac_id, z_value, neutral_scale_zoom, parent);
-    center->setZoomFactor(1.1);
-    stroke = qApp->property("CIRCLE_STROKE").toInt();
-    init(center);
-}
-
 CircleItem::CircleItem(WaypointItem* center, double radius, QString ac_id, qreal z_value, double neutral_scale_zoom):
   MapItem(ac_id, z_value, neutral_scale_zoom),
   center(center), _radius(radius)
