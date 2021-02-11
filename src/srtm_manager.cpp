@@ -17,14 +17,14 @@
 #include "gcs_utils.h"
 #include <zip.h>
 
-//using namespace libzippp;
-
-#define TILE_SIZE 1201
+// with 1 arc-second resolution, there is 3600 samples per degree
+#define SAMPLES_PER_DEG 3600
+constexpr uint32_t TILE_SIZE = SAMPLES_PER_DEG + 1;
 
 constexpr zip_uint64_t ZIP_LEN = TILE_SIZE*TILE_SIZE*2;
 
 SRTMManager* SRTMManager::singleton = nullptr;
-const QString SRTMManager::srtm_url = "https://dds.cr.usgs.gov/srtm/version2_1/SRTM3/";
+const QString SRTMManager::srtm_url = "https://step.esa.int/auxdata/dem/SRTMGL1/";
 
 SRTMManager::SRTMManager(): QObject ()
 {
@@ -84,11 +84,9 @@ optional<int> SRTMManager::get_elevation(double lat, double lon) {
         return nullopt;
     }
 
-    //See https://dds.cr.usgs.gov/srtm/version2_1/Documentation/SRTM_Topo.pdf
-
-    int y = static_cast<int>((lat-bottom)*1200.+0.5);
-    int x = static_cast<int>((lon-left)*1200.+0.5);
-    int pos = (2*((TILE_SIZE-y)*TILE_SIZE+x)) ;
+    uint32_t y = static_cast<uint32_t>((lat-bottom)*SAMPLES_PER_DEG+0.5);
+    uint32_t x = static_cast<uint32_t>((lon-left)*SAMPLES_PER_DEG+0.5);
+    size_t pos = (2*((TILE_SIZE-y)*TILE_SIZE+x)) ;
 
     char* first = tiles[name];
     uint8_t msb = static_cast<uint8_t>(first[pos]);
@@ -110,7 +108,7 @@ void SRTMManager::load_tile(QString name) {
         return;
     }
 
-    auto path = qApp->property("USER_DATA_PATH").toString() + "/srtm/" + name + ".hgt.zip";
+    auto path = qApp->property("USER_DATA_PATH").toString() + "/srtm/" + name + ".SRTMGL1.hgt.zip";
 
     zip_t* zf = zip_open(path.toStdString().c_str(), ZIP_RDONLY, nullptr);
 
@@ -146,9 +144,7 @@ void SRTMManager::load_tile(QString name) {
                     QMessageBox::Yes|QMessageBox::No);
 
         if (reply == QMessageBox::Yes) {
-            auto region = get_tile_region(name);
-            if(!region) { return; }
-            QUrl url = srtm_url + region.value() + "/" + name + ".hgt.zip";
+            QUrl url = srtm_url + name + ".SRTMGL1.hgt.zip";
             QNetworkRequest request = QNetworkRequest(url);
             request.setAttribute(QNetworkRequest::User, name);
             manager->get(request);
@@ -157,30 +153,12 @@ void SRTMManager::load_tile(QString name) {
     }
 }
 
-optional<QString> SRTMManager::get_tile_region(QString name) {
-    auto path = qApp->property("APP_DATA_PATH").toString() + "/srtm/" + "srtm.data";
-    QFile file(path);
-    if(file.open(QIODevice::ReadOnly)) {
-        QTextStream tt(&file);
-        QString line = tt.readLine();
-        while (!line.isNull()) {
-            auto list = line.split(' ');
-            assert(list.size() == 2);
-            if(name == list[0]) {
-                return list[1];
-            }
-            line = tt.readLine();
-        }
-    }
-    return nullopt;
-}
-
 void SRTMManager::handleReply(QNetworkReply *reply) {
     auto name = reply->request().attribute(QNetworkRequest::User).toString();
     if(reply->error() == QNetworkReply::NetworkError::NoError) {
         auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
         if(status.toInt() == 200) {
-            auto path = qApp->property("USER_DATA_PATH").toString() + "/srtm/" + name + ".hgt.zip";
+            auto path = qApp->property("USER_DATA_PATH").toString() + "/srtm/" + name + ".SRTMGL1.hgt.zip";
             QFile file(path);
             QFileInfo fi(path);
             QDir dirName = fi.dir();
