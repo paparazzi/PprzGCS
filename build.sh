@@ -2,6 +2,8 @@
 
 wd=$(pwd)
 
+git submodule update --recursive
+
 tinymxl2_src=$wd/ext/tinyxml2
 tinymxl2_build=$wd/build/ext/tinymxl2
 
