@@ -10,17 +10,28 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-if(NOT DEFINED APP_DATA_PATH)
+
+if(BUILD_TARGET STREQUAL "DEV_18_04")
+    find_package(PROJ4 REQUIRED)
     get_filename_component(APP_DATA_PATH "./data/" ABSOLUTE)
+elseif(BUILD_TARGET STREQUAL "BUILD_DEB_20_04")
+    set(APP_DATA_PATH /usr/share/pprzgcs)
+    set(PROJ4_LIBRARIES proj)
+elseif(BUILD_TARGET STREQUAL "BUILD_DEB_18_04")
+    set(APP_DATA_PATH /usr/share/pprzgcs)
+elseif(BUILD_TARGET STREQUAL "BUILD_MAC")
+    message(FATAL_ERROR "Building for MAC not yet supported!")
+else()
+    message(FATAL_ERROR "You must define BUILD_TARGET to one of: DEV_18_04, BUILD_DEB_20_04, BUILD_DEB_18_04, BUILD_MAC")
 endif()
+
+
 
 add_definitions(-DAPP_DATA_PATH="${APP_DATA_PATH}")
 
 find_package(Boost COMPONENTS system)
 
 find_package(Qt5 5.11 COMPONENTS Widgets Xml Network Svg REQUIRED)
-
-find_package(PROJ4 REQUIRED)
 
 find_package(pprzlink++ REQUIRED)
 
@@ -118,6 +129,7 @@ include_directories(
     src/widgets/basics/
 )
 
+include_directories(${CMAKE_PREFIX_PATH}/include)
 link_directories(${CMAKE_PREFIX_PATH}/lib)
 
 add_executable(${PROJECT_NAME} ${SOURCE})
@@ -132,4 +144,5 @@ target_link_libraries(${PROJECT_NAME}
     ${Boost_LIBRARIES}
     zip
 )
+
 
