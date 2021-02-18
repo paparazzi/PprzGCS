@@ -1,34 +1,23 @@
 
-# A new Ground Control Station for Paparazzi UAV
+# Ground Control Station for Paparazzi UAV
 
-What is Paparazzi? => See the Wiki: http://wiki.paparazziuav.org/wiki/Main_Page
+GCS for [Paparazzi UAV](http://wiki.paparazziuav.org/wiki/Main_Page) in C++/QT5, aiming at replacing the historical GCS in a near future.
 
-Paparazzi has an historical GCS made with OCaml/GTK2. OCaml is not the most popular language out there, and support for some components of GTK2 has been dropped in last Ubuntu releases. That are th main reasons this GCS started to be develloped in a popular technology choice: C++/QT5.
-
-This GCS aims at replacing the historical GCS in a near future.
-
-## Some screenshots
-
-![GCS clear](screenshots/GCS_clear.png)
-
-**Map overlay with transparency**
-
-![GCS map](screenshots/GCS_map.png)
-
-**Settings and GPS widgets**
-
-![GCS settings GPS](screenshots/GCS_settings_GPS.png)
-
-**Flight Plan, Strip and "PFD" widgets**
 
 ![GCS FP strip PFD](screenshots/GCS_fp_strip_PFD.png)
 
 
-
 ## INSTALLATION
 
+Binary is available for Ubuntu 20.04. For other OS, you have to built it from sources.
 
-### dependencies
+## Ubuntu 20.04
+
+Get the latest [release](https://github.com/Fabien-B/PprzGCS/releases) and follow the instructions.
+
+## Ubuntu 18.04
+
+#### dependencies
 
 This software depend on Qt5.12 or later, and the following paquets:
 
@@ -38,12 +27,12 @@ This software depend on Qt5.12 or later, and the following paquets:
 * `libzip-dev`
 * `mesa-common-dev libglu1-mesa-dev`
 
-### Fetch submodules:
+#### Fetch submodules:
 
  `git submodule update --init --recursive`
  
 
-### Build the GCS
+#### Build the GCS
 
 Set the `Qt5_DIR` environnement variable to the appropriate path. Example:
 
@@ -56,4 +45,10 @@ Run the build script from the root of the repository:
 Now you can launch it:
 
 `.build/PprzGCS`
+
+## Mac
+
+PprzGCS can be built for Mac, although is not yet officially supported.
+
+
 
