@@ -2,7 +2,7 @@
 
 # Ubuntu 20.04
 
-Add PaparazziUAV apt repository (needed for ivy-c):
+Add Paparazzi UAV apt repository (needed for ivy-c):
 
 `sudo add-apt-repository -y ppa:paparazzi-uav/ppa`
 
