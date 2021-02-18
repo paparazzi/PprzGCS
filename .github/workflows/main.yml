@@ -52,11 +52,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          tag_name: r_${{ github.ref }}
-          release_name: Release r_${{ github.ref }}
-          body: |
-            Last buiild
-            This is the last build of the last commit.
+          tag_name: release_${{ github.sha }}
+          release_name: Release ${{ github.sha }}
+          body_path: ${{ github.workspace }}/misc/release_body.md
           draft: false
           prerelease: false
               
@@ -68,6 +66,6 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: pprzgcs.deb
-          asset_name: pprzgcs.deb
+          asset_name: pprzgcs_${{ runner.os }}.deb
           asset_content_type: application/vnd.debian.binary-package
         
