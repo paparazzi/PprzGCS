@@ -7,11 +7,19 @@
 #include "pprz_dispatcher.h"
 #include <QWizard>
 #include "configure.h"
+#include "gcs_utils.h"
+
+#ifndef APP_DATA_PATH
+#error "you need to define APP_DATA_PATH!"
+#endif
+
 
 void launch_main_app() {
     QFile file(qApp->property("APP_STYLE_FILE").toString());
-    file.open(QFile::ReadOnly | QFile::Text);
-    assert(file.isOpen());
+    if(!file.open(QFile::ReadOnly | QFile::Text)) {
+        qDebug() << "could not open " << qApp->property("APP_STYLE_FILE").toString();
+        exit(-1);
+    }
     QTextStream stream(&file);
     qApp->setStyleSheet(stream.readAll());
 
@@ -22,6 +30,31 @@ void launch_main_app() {
     PprzDispatcher::get()->start();
 
     w->show();
+}
+
+QString get_config_path(QString arg_conf, bool remember) {
+    // standard config path
+    QString standard_config_path =
+            QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    // link to user config
+    QString  conf_link_path = standard_config_path + "/conf.txt";
+    if(arg_conf != "") {
+        //user provided a conf file
+        if(remember) {
+            //user asked to remember this conf file
+
+            QFile::link(QFileInfo(arg_conf).absoluteFilePath(), conf_link_path);
+        }
+        return arg_conf;
+    } else {
+        //no config file was provided
+        if(!QFile(conf_link_path).exists()) {
+            //no link exists. create it to the default file
+            auto config_path = user_or_app_path("conf/config.txt");
+            QFile::link(QFileInfo(config_path).absoluteFilePath(), conf_link_path);
+        }
+        return conf_link_path;
+    }
 }
 
 int main(int argc, char *argv[])
@@ -45,7 +78,7 @@ int main(int argc, char *argv[])
 
     parser.process(a);
 
-    QString gcsConfigPath = parser.value(config_file_option);
+    QString arg_config_path = parser.value(config_file_option);
     bool remember = parser.isSet(rememberConfigOption);
 
     QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -53,29 +86,14 @@ int main(int argc, char *argv[])
     if(!conf_dir.exists()) {
         conf_dir.mkpath(conf_dir.path());
     }
+    qApp->setProperty("USER_DATA_PATH", config_path);
+    qApp->setProperty("APP_DATA_PATH", APP_DATA_PATH);
 
-    QString  cfgFilePath = config_path + "/conf.txt";
-
-
-    // link conf.txt to the given config file
-    if(gcsConfigPath != "" && remember) {
-        QFile::link(QFileInfo(gcsConfigPath).absoluteFilePath(), cfgFilePath);
-    }
-
-    // if config file is not provided, take the current link
-    if(gcsConfigPath == "") {
-        if(QFile(cfgFilePath).exists()) {
-            gcsConfigPath = cfgFilePath;
-        } else {
-            qDebug() << "conf.txt not found, you must provide a config file with the -c option.";
-            exit(-1);
-        }
-    }
+    auto gcsConfigPath = get_config_path(arg_config_path, remember);
 
     // this should be the GCS configuration file.
     configure(gcsConfigPath);
     launch_main_app();
     return qApp->exec();
-
 }
 

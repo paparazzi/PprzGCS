@@ -53,8 +53,6 @@ void set_default_config() {
     setEmptyProperty("APP_STYLE_FILE", qApp->property("APP_DATA_PATH").toString() + "/conf/default_style.qss");
     setEmptyProperty("APP_LAYOUT_FILE", qApp->property("APP_DATA_PATH").toString() + "/conf/default_layout.xml");
 
-    qApp->setProperty("USER_DATA_PATH", QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
-
     setEmptyProperty("MAP_PATH", qApp->property("USER_DATA_PATH").toString() + "/map");
 }
 
@@ -98,6 +96,7 @@ void configure(QString config_file) {
     QFile gcsConfig(config_file);
     if(!gcsConfig.open(QFile::ReadOnly | QFile::Text)) {
        qDebug() << "Fail to open config file " << config_file;
+       exit(-1);
     }
 
 
@@ -110,15 +109,6 @@ void configure(QString config_file) {
 
     QString PAPARAZZI_HOME = qgetenv("PAPARAZZI_HOME");
     QString PAPARAZZI_SRC = qgetenv("PAPARAZZI_SRC");
-
-#ifdef APP_DATA_PATH
-    qApp->setProperty("APP_DATA_PATH", APP_DATA_PATH);
-#else
-#error "you need to define APP_DATA_PATH!"
-#endif
-
-
-
 
 
     QTextStream stream(&gcsConfig);
