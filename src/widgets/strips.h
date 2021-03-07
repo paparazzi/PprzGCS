@@ -5,6 +5,7 @@
 #include <QLayout>
 #include "configurable.h"
 #include "strip.h"
+#include "mini_strip.h"
 
 class Strips : public QWidget, public Configurable
 {
@@ -19,7 +20,7 @@ private:
     void handleNewAC(QString ac_id);
     void removeAC(QString ac_id);
 
-    QMap<QString, Strip*> strips;
+    QMap<QString, MiniStrip*> strips;
     QVBoxLayout* scroll_layout;
 public slots:
 };

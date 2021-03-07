@@ -29,5 +29,12 @@
         <file>pictures/icon.svg</file>
         <file>pictures/green_led.svg</file>
         <file>pictures/red_led.svg</file>
+        <file>pictures/airspeed.svg</file>
+        <file>pictures/flight_time.svg</file>
+        <file>pictures/ground_speed.svg</file>
+        <file>pictures/msl.svg</file>
+        <file>pictures/agl.svg</file>
+        <file>pictures/throttle_killed.svg</file>
+        <file>pictures/throttle_on.svg</file>
     </qresource>
 </RCC>

@@ -44,6 +44,7 @@ set(SOURCE
     src/widgets/pprzmap.cpp
     src/widgets/pfd.cpp
     src/widgets/strips.cpp
+    src/widgets/mini_strip.cpp
     src/widgets/flightplan_viewerv2.cpp
     src/widgets/widget_stack.cpp
     src/widgets/layer_combo.cpp

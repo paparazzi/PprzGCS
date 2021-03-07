@@ -2,6 +2,7 @@
 #include "dispatcher_ui.h"
 #include "AircraftManager.h"
 #include "strip.h"
+#include "mini_strip.h"
 
 Strips::Strips(QWidget *parent) : QWidget(parent)
 {
@@ -25,7 +26,8 @@ Strips::Strips(QWidget *parent) : QWidget(parent)
 void Strips::handleNewAC(QString ac_id) {
     auto ac = AircraftManager::get()->getAircraft(ac_id);
 
-    Strip* pageWidget = new Strip(ac_id, this);
+    //Strip* pageWidget = new Strip(ac_id, this);
+    MiniStrip* pageWidget = new MiniStrip(ac_id, this);
     strips[ac_id] = pageWidget;
 
     scroll_layout->addWidget(pageWidget);

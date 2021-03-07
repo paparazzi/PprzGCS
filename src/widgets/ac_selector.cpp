@@ -85,6 +85,9 @@ void ACSelector::paintEvent(QPaintEvent* e) {
 }
 
 void ACSelector::mousePressEvent(QMouseEvent *e) {
+    if(ac_ids.size() == 0) {
+        return;
+    }
 
     QRect arrow_left_rect = QRect(0, this->rect().height()/2, ARROW_WIDTH, this->rect().height()/2);
     QRect arrow_right_rect = QRect(this->rect().width()-ARROW_WIDTH, this->rect().height()/2, ARROW_WIDTH, this->rect().height()/2);
