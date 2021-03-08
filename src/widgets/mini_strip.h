@@ -9,8 +9,11 @@
 class MiniStrip : public QWidget
 {
     Q_OBJECT
+    Q_PROPERTY(int size READ getSizeProperty WRITE setSizeProperty DESIGNABLE true)
 public:
     explicit MiniStrip(QString ac_id, QWidget *parent = nullptr);
+    void setSizeProperty(int s) {icons_size = QSize(s, s);}
+    int getSizeProperty() {return icons_size.width();}
 
 protected:
     bool eventFilter(QObject *obj, QEvent *ev) override;

@@ -7,3 +7,8 @@ LockButton {
     qproperty-size: 80;
 }
 
+MiniStrip {
+    qproperty-size: 30;
+}
+
+
