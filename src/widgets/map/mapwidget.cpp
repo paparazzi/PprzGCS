@@ -6,10 +6,8 @@
 #include <QPushButton>
 #include <QLayout>
 #include <QHBoxLayout>
-#include <QSpacerItem>
 #include <QScrollArea>
 #include <QDebug>
-#include <QSpacerItem>
 #include "maplayercontrol.h"
 #include <QApplication>
 #include "pprz_dispatcher.h"
@@ -26,35 +24,21 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton)
 {
     horizontalLayout = new QHBoxLayout(this);   // main layout
-
     buttonsLeftLayout = new QVBoxLayout();
     columnLeft = new QVBoxLayout();
-    spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
     columnRight = new QVBoxLayout();
     buttonsRightLayout = new QVBoxLayout();
 
     horizontalLayout->addItem(buttonsLeftLayout);
     horizontalLayout->addItem(columnLeft);
-    horizontalLayout->addItem(spacer);
+    horizontalLayout->addStretch(1);
     horizontalLayout->addItem(columnRight);
     horizontalLayout->addItem(buttonsRightLayout);
-    horizontalLayout->setStretch(2, 1);
 
-    auto bspacer_left = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-    buttonsLeftLayout->addItem(bspacer_left);
-    buttonsLeftLayout->setStretch(0, 1);
-
-    auto bspacer_right = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-    buttonsRightLayout->addItem(bspacer_right);
-    buttonsRightLayout->setStretch(0, 1);
-
-    auto vspacer_left = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-    columnLeft->addItem(vspacer_left);
-    columnLeft->setStretch(0, 1);
-
-    auto vspacer_right = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-    columnRight->addItem(vspacer_right);
-    columnRight->setStretch(0, 1);
+    buttonsLeftLayout->addStretch(1);
+    buttonsRightLayout->addStretch(1);
+    columnLeft->addStretch(1);
+    columnRight->addStretch(1);
 
     setDragMode(QGraphicsView::NoDrag);
     setMouseLoadTileMask(Qt::MiddleButton | Qt::LeftButton);

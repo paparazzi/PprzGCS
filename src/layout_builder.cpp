@@ -119,15 +119,7 @@ QLayout* layout_rec_build(QDomElement &ele, QWidget* parent) {
             layout->addWidget(widget);
         }
         else if (child_ele.tagName() == "spacer") {
-            QSpacerItem* spacer;
-            if(child_ele.attribute("orientation") == "vertical") {
-                spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-            } else {
-                spacer = new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum);
-            }
-            layout->addItem(spacer);
-            int i = layout->indexOf(spacer);
-            layout->setStretch(i, 1);
+            layout->addStretch();
         }
 
     }

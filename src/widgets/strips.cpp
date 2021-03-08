@@ -17,8 +17,7 @@ Strips::Strips(QWidget *parent) : QWidget(parent)
 
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
-    auto spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
-    scroll_layout->addItem(spacer);
+    scroll_layout->addStretch(0);
 
     //scroll_layout->setAlignment(Qt::AlignRight);
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &Strips::handleNewAC);

@@ -6,7 +6,6 @@
 #include <QLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QSpacerItem>
 #include "map2d.h"
 #include "tileprovider.h"
 #include "maplayercontrol.h"
@@ -71,7 +70,6 @@ private:
     //ButtonBand
     QVBoxLayout* buttonsLeftLayout;
     QVBoxLayout* columnLeft;
-    QSpacerItem* spacer;
     QVBoxLayout* columnRight;
     QVBoxLayout* buttonsRightLayout;
 

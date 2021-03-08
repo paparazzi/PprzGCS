@@ -88,8 +88,8 @@ void SettingsViewer::init(QString ac_id) {
     last_path_index = path_indexes[settings];
 
     auto result_widget = new QWidget(scroll_content);
-    new QVBoxLayout(result_widget);
-    result_widget->layout()->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    auto result_layout = new QVBoxLayout(result_widget);
+    result_layout->addStretch();
     search_result_index = scroll_content->addWidget(result_widget);
     auto search_label = new QLabel("  searching...", path);
     search_path_index = path->addWidget(search_label);
@@ -142,8 +142,7 @@ void SettingsViewer::create_widgets(shared_ptr<SettingMenu> setting_menu, QList<
                 }
             );
         }
-
-        current_path_layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum));
+        current_path_layout->addStretch();
     }
 
     int index_path = path->addWidget(path_widget);
@@ -173,7 +172,7 @@ void SettingsViewer::create_widgets(shared_ptr<SettingMenu> setting_menu, QList<
         menu_layout->addWidget(setting_widget);
         setting_widgets[set] = setting_widget;
     }
-    menu_layout->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
+    menu_layout->addStretch();
     int index_widget = scroll_content->addWidget(widget);
     widgets_indexes[setting_menu] = index_widget;
 }
