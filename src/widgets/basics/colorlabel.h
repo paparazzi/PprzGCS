@@ -7,7 +7,7 @@ class ColorLabel : public QWidget
 {
     Q_OBJECT
 public:
-    explicit ColorLabel(QWidget *parent = nullptr);
+    explicit ColorLabel(qreal radius, QWidget *parent = nullptr);
     void setText(QString t) {text = t; update();}
     void setBrush(QBrush b) {brush = b; update();}
     void setMinSize(QSize s) {minSize = s;}
@@ -25,6 +25,7 @@ private:
     QString text;
     QBrush brush;
     QSize minSize;
+    qreal radius;
 };
 
 #endif // COLORLABEL_H

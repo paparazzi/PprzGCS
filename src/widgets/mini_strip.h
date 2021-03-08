@@ -12,6 +12,12 @@ class MiniStrip : public QWidget
 public:
     explicit MiniStrip(QString ac_id, QWidget *parent = nullptr);
 
+protected:
+    bool eventFilter(QObject *obj, QEvent *ev) override;
+
+
+signals:
+    void updated();
 private:
 
     void updateFBW();
@@ -22,6 +28,7 @@ private:
     void updateNavStatus();
 
     QString ac_id;
+    QSize icons_size;
 
     QLabel* flight_time_label;
 
@@ -56,7 +63,16 @@ private:
     QIcon link_lost;
 
     QLabel* gps_icon;
+    QIcon gps_ok;
+    QIcon gps_lost;
+
     QLabel* rc_icon;
+    QIcon rc_ok;
+    QIcon rc_lost;
+
+    QLabel* imu_icon;
+    QIcon imu_ok;
+    QIcon imu_lost;
 
 };
 

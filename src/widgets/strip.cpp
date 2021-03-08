@@ -84,7 +84,7 @@ void Strip::build_full_strip() {
     full_bat_graph->setUnit("V");
     lay_bat_link->addWidget(full_bat_graph);
 
-    full_link_label = new ColorLabel(full_strip);
+    full_link_label = new ColorLabel(0, full_strip);
     full_link_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     lay_bat_link->addWidget(full_link_label);
 
@@ -92,16 +92,16 @@ void Strip::build_full_strip() {
     lay_body->addLayout(status_layout);
     status_layout->addWidget(new QLabel("status", full_strip));
 
-    full_ap_mode_label = new ColorLabel(full_strip);
+    full_ap_mode_label = new ColorLabel(0, full_strip);
     full_ap_mode_label->setToolTip("Navigation mode");
     status_layout->addWidget(full_ap_mode_label);
 
-    full_fbw_mode_label = new ColorLabel(full_strip);
+    full_fbw_mode_label = new ColorLabel(0, full_strip);
     full_fbw_mode_label->setToolTip("Radio Command status");
     status_layout->addWidget(full_fbw_mode_label);
 
 
-    full_gps_mode_label = new ColorLabel(full_strip);
+    full_gps_mode_label = new ColorLabel(0, full_strip);
     full_gps_mode_label->setToolTip("GPS status");
     status_layout->addWidget(full_gps_mode_label);
 
@@ -153,9 +153,9 @@ void Strip::build_short_strip() {
     grid->addWidget(short_vspeed_label, 2, 1);
     grid->addWidget(short_target_label, 3, 1);
 
-    short_ap_mode_label = new ColorLabel(short_strip);
-    short_fbw_mode_label = new ColorLabel(short_strip);
-    short_gps_mode_label = new ColorLabel(short_strip);
+    short_ap_mode_label = new ColorLabel(0, short_strip);
+    short_fbw_mode_label = new ColorLabel(0, short_strip);
+    short_gps_mode_label = new ColorLabel(0, short_strip);
 
     sLay->addWidget(short_ap_mode_label);
     sLay->addWidget(short_fbw_mode_label);

@@ -22,6 +22,7 @@ private:
 
     QMap<QString, MiniStrip*> strips;
     QVBoxLayout* scroll_layout;
+    QScrollArea* scroll;
 public slots:
 };
 

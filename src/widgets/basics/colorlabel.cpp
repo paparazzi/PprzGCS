@@ -5,8 +5,8 @@
 #include <QDebug>
 #include <math.h>
 
-ColorLabel::ColorLabel(QWidget *parent) : QWidget(parent),
-    text(""), brush(Qt::red), minSize(QSize(10, 10))
+ColorLabel::ColorLabel(qreal radius, QWidget *parent) : QWidget(parent),
+    text(""), brush(Qt::red), minSize(QSize(10, 10)), radius(radius)
 {
 
 }
@@ -29,7 +29,7 @@ void ColorLabel::paintEvent(QPaintEvent *e) {
     // Draw background
     p.setPen(Qt::NoPen);
     p.setBrush(brush);
-    p.drawRect(rect());
+    p.drawRoundedRect(rect(), radius, radius);
 
     // Draw text
     p.setFont(font);

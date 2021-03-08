@@ -36,5 +36,11 @@
         <file>pictures/agl.svg</file>
         <file>pictures/throttle_killed.svg</file>
         <file>pictures/throttle_on.svg</file>
+        <file>pictures/gps_nok.svg</file>
+        <file>pictures/gps_ok.svg</file>
+        <file>pictures/rc_nok.svg</file>
+        <file>pictures/rc_ok.svg</file>
+        <file>pictures/imu_nok.svg</file>
+        <file>pictures/imu_ok.svg</file>
     </qresource>
 </RCC>

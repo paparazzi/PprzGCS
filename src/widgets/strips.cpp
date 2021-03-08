@@ -6,7 +6,7 @@
 
 Strips::Strips(QWidget *parent) : QWidget(parent)
 {
-    auto scroll = new QScrollArea(this);
+    scroll = new QScrollArea(this);
     auto scroll_content = new QWidget(scroll);
     scroll_layout = new QVBoxLayout(scroll_content);
     auto main_layout  = new QVBoxLayout(this);
@@ -17,8 +17,10 @@ Strips::Strips(QWidget *parent) : QWidget(parent)
 
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
+    auto spacer = new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+    scroll_layout->addItem(spacer);
 
-    scroll_layout->setAlignment(Qt::AlignRight);
+    //scroll_layout->setAlignment(Qt::AlignRight);
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &Strips::handleNewAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &Strips::removeAC);
 }
@@ -26,11 +28,13 @@ Strips::Strips(QWidget *parent) : QWidget(parent)
 void Strips::handleNewAC(QString ac_id) {
     auto ac = AircraftManager::get()->getAircraft(ac_id);
 
-    //Strip* pageWidget = new Strip(ac_id, this);
     MiniStrip* pageWidget = new MiniStrip(ac_id, this);
     strips[ac_id] = pageWidget;
 
-    scroll_layout->addWidget(pageWidget);
+    scroll_layout->insertWidget(scroll_layout->count()-1, pageWidget);
+    connect(pageWidget, &MiniStrip::updated, this, [=]() {
+        scroll->setMinimumWidth(scroll_layout->sizeHint().width());
+    });
 }
 
 void Strips::removeAC(QString ac_id) {
