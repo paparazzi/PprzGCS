@@ -18,7 +18,7 @@ static const char* DEFAULT_HEIGHT = "600";
 
 QWidget* rec_build(QDomNode &node, QSplitter* parent, int* size) {
     if(!node.isElement()) {
-        throw invalid_node("node is not an Element.");
+        return nullptr;
     } else {
         QDomElement ele = node.toElement();
         *size = ele.attribute("size", "10").toInt();
