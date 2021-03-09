@@ -116,7 +116,7 @@ void WaypointItem::updateGraphics(double zoom, double scale_factor, int tile_siz
     point->setPos(scene_pos);
     point->setScale(s);
 
-    graphics_text->setPos(scene_pos + QPointF(10, -50));
+    graphics_text->setPos(scene_pos + QPointF(5*s, -30*s));
     graphics_text->setScale(s);
 }
 
