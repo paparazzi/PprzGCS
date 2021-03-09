@@ -38,7 +38,6 @@ PprzMap::PprzMap(QWidget *parent) :
 
     connect(ui->map, &MapWidget::itemAdded, this,
         [=](MapItem* map_item) {
-            saveItem(map_item);
             map_item->setHighlighted(map_item->acId() == current_ac);
 
             if(map_item->getType() == ITEM_WAYPOINT) {
@@ -179,18 +178,6 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
     }
 }
 
-
-void PprzMap::saveItem(MapItem* item) {
-    item->setForbidHighlight(true);
-    item->setEditable(false);
-
-    connect(item, &MapItem::itemGainedHighlight,
-        [=]() {
-            QString ac_id = item->acId();
-            emit(DispatcherUi::get()->ac_selected(ac_id));
-        });
-}
-
 void PprzMap::setEditorMode() {
     switch(interaction_state) {
         case PMIS_FLIGHT_PLAN_EDIT:
@@ -256,8 +243,8 @@ void PprzMap::handleNewAC(QString ac_id) {
         if(wp->getName()[0] != '_') {
             WaypointItem* wpi = new WaypointItem(wp, ac_id, z);
             ui->map->addItem(wpi);
-            wpi->setEditable(true);
-            wpi->setForbidHighlight(false);
+            //wpi->setEditable(true);
+            //wpi->setForbidHighlight(false);
             item_manager->addWaypointItem(wpi);
 
             auto dialog_move_waypoint = [=]() {
@@ -443,7 +430,6 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
             ac_items_managers[ac_id]->setCurrentNavShape(nullptr);
             ui->map->removeItem(prev_item);
             prev_item = nullptr;
-            //qDebug() << "circle removed!";
         }
 
         float segment1_lat, segment1_long, segment2_lat, segment2_long;

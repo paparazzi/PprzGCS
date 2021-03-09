@@ -209,6 +209,11 @@ void MapWidget::addItem(MapItem* map_item) {
     connect(map_item, &MapItem::itemChanged, map_item, [=]() {
         map_item->updateGraphics(zoom(), scaleFactor(), tileSize());
     });
+
+    connect(map_item, &MapItem::itemGainedHighlight, [=]() {
+        QString ac_id = map_item->acId();
+        emit(DispatcherUi::get()->ac_selected(ac_id));
+    });
 }
 
 // TODO Use shared_ptr ?
