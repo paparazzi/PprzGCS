@@ -49,7 +49,7 @@ QWidget* makeWidget(QString name, QWidget* parent) {
                 [](QString ac_id, QWidget* container) {
                     return new Commands(ac_id, container);
                 },
-                parent, false);
+                parent);
     }
     else if (name == "gps_classic_viewer") {
         widget = new WidgetStack(
