@@ -425,6 +425,7 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
             auto wcenter = new WaypointItem(pos, ac_id, z);
             ui->map->addItem(wcenter);
             CircleItem* ci = new CircleItem(wcenter, radius, ac_id, z);
+            ci->setOwnCenter(true);
             ui->map->addItem(ci);
             ci->setStyle(GraphicsObject::Style::CURRENT_NAV);
             ac_items_managers[ac_id]->setCurrentNavShape(ci);

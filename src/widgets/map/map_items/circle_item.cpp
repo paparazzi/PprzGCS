@@ -11,7 +11,7 @@
 
 CircleItem::CircleItem(WaypointItem* center, double radius, QString ac_id, qreal z_value, double neutral_scale_zoom):
   MapItem(ac_id, z_value, neutral_scale_zoom),
-  center(center), _radius(radius)
+  center(center), _radius(radius), own_center(false)
 {
     stroke = qApp->property("CIRCLE_STROKE").toInt();
     init(center);
@@ -113,7 +113,9 @@ void CircleItem::updateGraphics(double zoom, double scale_factor, int tile_size)
 void CircleItem::removeFromScene(MapWidget* map) {
     map->scene()->removeItem(circle);
     delete circle;
-    // do not remove the waypoint. It still lives !
+    if(own_center) {        // remove the waypoint only if it owns it.
+        map->removeItem(center);
+    }
 }
 
 void CircleItem::setRadius(double radius) {

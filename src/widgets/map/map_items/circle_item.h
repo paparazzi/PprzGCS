@@ -14,6 +14,7 @@ public:
     explicit CircleItem(WaypointItem* center, double radius, QString ac_id, qreal z_value, double neutral_scale_zoom = 15);
     WaypointItem* getCenter() { return center;}
     GraphicsCircle* getGraphicsCircle() {return circle;}
+    void setOwnCenter(bool own) {own_center = own;}
     virtual void addToMap(MapWidget* mw);
     virtual void setHighlighted(bool h);
     void setForbidHighlight(bool fh);
@@ -46,6 +47,7 @@ private:
     int stroke;
 
     bool highlighted;
+    bool own_center;
 };
 
 #endif // CIRCLEITEM_H
