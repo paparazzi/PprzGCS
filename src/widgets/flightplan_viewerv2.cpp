@@ -62,8 +62,12 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
                 PprzDispatcher::get()->sendMessage(msg);
             });
         auto child_button = new QToolButton(widget);
-        child_button->setText(">");
+        child_button->setText("+");
+
+        lay->addWidget(child_button);
+        lay->addWidget(go_button);
         lay->addWidget(lbl);
+
         if(icon != "") {
             QString icon_path = qApp->property("PATH_GCS_ICON").toString() + "/" + icon;
             auto ll = new QLabel(widget);
@@ -71,8 +75,7 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
             ll->setToolTip(txt);
             lay->addWidget(ll);
         }
-        lay->addWidget(go_button);
-        lay->addWidget(child_button);
+
         w_layout->addLayout(lay);
 
         auto facade = new Facade();
