@@ -96,6 +96,8 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
 
     }
 
+    w_layout->addStretch();
+
     if(facades.size() > 0) {
         labels_stylesheet = facades[0]->label->styleSheet();
         buttons_stylesheet = facades[0]->button->styleSheet();
