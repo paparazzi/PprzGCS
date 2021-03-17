@@ -33,7 +33,7 @@ public:
     QColor trackUnfocusedColor(const QColor&);
     QColor labelUnfocusedColor(const QColor&);
     virtual void addToMap(MapWidget* map) = 0;
-    virtual void updateGraphics(double zoom, double scale_factor, int tile_size) = 0;
+    virtual void updateGraphics(MapWidget* map) = 0;
     virtual void removeFromScene(MapWidget* map) = 0;
     virtual void setHighlighted(bool h) = 0;
     virtual void setForbidHighlight(bool fh) = 0;

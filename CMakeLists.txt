@@ -66,7 +66,7 @@ set(SOURCE
 
     src/widgets/map/map_items/map_item.cpp
     src/widgets/map/map_items/waypoint_item.cpp
-    # src/widgets/map/map_items/path_item.cpp
+    src/widgets/map/map_items/path_item.cpp
     src/widgets/map/map_items/circle_item.cpp
     src/widgets/map/map_items/aircraft_item.cpp
 

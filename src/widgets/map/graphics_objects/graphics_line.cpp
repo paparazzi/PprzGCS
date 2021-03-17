@@ -84,7 +84,6 @@ void GraphicsLine::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         qDebug() << "Line move ignored !";
         return;
     }
-    (void)event;
     qDebug() << "Line MOVED !";
 }
 
@@ -102,8 +101,6 @@ void GraphicsLine::setLine(QPointF a, QPointF b) {
     A=a;
     B=b;
     prepareGeometryChange();
-    update();
-    //qDebug() << "plop";
 }
 
 void GraphicsLine::setStyle(Style s) {

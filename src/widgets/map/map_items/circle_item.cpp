@@ -98,15 +98,14 @@ void CircleItem::setZValue(qreal z) {
     circle->setZValue(z);
 }
 
-void CircleItem::updateGraphics(double zoom, double scale_factor, int tile_size) {
-    (void)tile_size;
-    double s = getScale(zoom, scale_factor);
+void CircleItem::updateGraphics(MapWidget* map) {
+    double s = getScale(map->zoom(), map->scaleFactor());
     circle->setScaleFactor(s);
 
-    QPointF scene_pos = scenePoint(center->position(), zoomLevel(zoom), tile_size);
+    QPointF scene_pos = scenePoint(center->position(), zoomLevel(map->zoom()), map->tileSize());
     circle->setPos(scene_pos);
 
-    double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(zoom))*tile_size;
+    double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(map->zoom()))*map->tileSize();
     circle->setRadius(pixelRadius);
 }
 
@@ -115,6 +114,7 @@ void CircleItem::removeFromScene(MapWidget* map) {
     delete circle;
     if(own_center) {        // remove the waypoint only if it owns it.
         map->removeItem(center);
+        center = nullptr;
     }
 }
 

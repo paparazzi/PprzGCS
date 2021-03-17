@@ -41,11 +41,10 @@ void AircraftItem::addToMap(MapWidget* map) {
     map->scene()->addItem(graphics_text);
 }
 
-void AircraftItem::updateGraphics(double zoom, double scale_factor, int tile_size) {
-    (void)tile_size;
-    QPointF scene_pos = scenePoint(latlon, zoomLevel(zoom), tile_size);
+void AircraftItem::updateGraphics(MapWidget* map) {
+    QPointF scene_pos = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());
     graphics_aircraft->setPos(scene_pos);
-    double s = getScale(zoom, scale_factor);
+    double s = getScale(map->zoom(), map->scaleFactor());
     graphics_aircraft->setScale(s);
     graphics_aircraft->setRotation(heading);
 
@@ -56,7 +55,7 @@ void AircraftItem::updateGraphics(double zoom, double scale_factor, int tile_siz
     for(int i = 0; i<track_chuncks.size(); i++) {
         QPolygonF scenePoints;
         for(auto pt: track_chuncks[i]) {
-            scenePoints.append(scenePoint(pt, zoomLevel(zoom), tile_size));
+            scenePoints.append(scenePoint(pt, zoomLevel(map->zoom()), map->tileSize()));
         }
         graphics_tracks[i]->setPoints(scenePoints);
     }

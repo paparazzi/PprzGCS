@@ -110,9 +110,9 @@ void WaypointItem::setZValue(qreal z) {
     graphics_text->setZValue(z);
 }
 
-void WaypointItem::updateGraphics(double zoom, double scale_factor, int tile_size) {
-    QPointF scene_pos = scenePoint(Point2DLatLon(_waypoint), zoomLevel(zoom), tile_size);
-    double s = getScale(zoom, scale_factor);
+void WaypointItem::updateGraphics(MapWidget* map) {
+    QPointF scene_pos = scenePoint(Point2DLatLon(_waypoint), zoomLevel(map->zoom()), map->tileSize());
+    double s = getScale(map->zoom(), map->scaleFactor());
     point->setPos(scene_pos);
     point->setScale(s);
 

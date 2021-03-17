@@ -30,7 +30,7 @@ signals:
 public slots:
 
 protected:
-    virtual void updateGraphics(double zoom, double scale_factor, int tile_size);
+    virtual void updateGraphics(MapWidget* map);
 
 private:
     GraphicsAircraft* graphics_aircraft;

@@ -20,7 +20,7 @@ public:
     void setForbidHighlight(bool fh);
     virtual void setEditable(bool ed);
     virtual void setZValue(qreal z);
-    virtual void updateGraphics(double zoom, double scale_factor, int tile_size);
+    virtual void updateGraphics(MapWidget* map);
     virtual void removeFromScene(MapWidget* map);
     virtual ItemType getType() {return ITEM_CIRCLE;}
     double radius() {return _radius;}

@@ -12,7 +12,7 @@
 #include "waypoint_item.h"
 #include "circle_item.h"
 #include "maputils.h"
-// #include "path_item.h"
+#include "path_item.h"
 #include <QCursor>
 #include "AircraftManager.h"
 #include "pprzmain.h"
@@ -412,6 +412,7 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
             auto wcenter = new WaypointItem(pos, ac_id, z);
             ui->map->addItem(wcenter);
             CircleItem* ci = new CircleItem(wcenter, radius, ac_id, z);
+            ci->setEditable(false);
             ci->setOwnCenter(true);
             ui->map->addItem(ci);
             ci->setStyle(GraphicsObject::Style::CURRENT_NAV);
@@ -425,7 +426,6 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
         }
 
     } else if (msg.getDefinition().getName() == "SEGMENT_STATUS") {
-        qDebug() << "Segment NAV shape not handled ! Fix PathItem !";
         if(prev_item!= nullptr && prev_item->getType() != ITEM_PATH) {
             ac_items_managers[ac_id]->setCurrentNavShape(nullptr);
             ui->map->removeItem(prev_item);
@@ -441,18 +441,29 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
         Point2DLatLon p1(static_cast<double>(segment1_lat), static_cast<double>(segment1_long));
         Point2DLatLon p2(static_cast<double>(segment2_lat), static_cast<double>(segment2_long));
         if(prev_item == nullptr) {
-//            PathItem* pi = new PathItem(p1, id.c_str(), z);
-//            ui->map->addItem(pi);
-//            pi->addPoint(p2);
-//            pi->setStyle(GraphicsObject::Style::CURRENT_NAV);
-//            ac_items_managers[ac_id]->setCurrentNavShape(pi);
+            PathItem* pi = new PathItem(id.c_str(), z);
+
+            auto w1 = new WaypointItem(p1, ac_id, z);
+            ui->map->addItem(w1);
+            auto w2 = new WaypointItem(p2, ac_id, z);
+            ui->map->addItem(w2);
+            pi->addPoint(w1);
+            pi->addPoint(w2);
+            pi->setStyle(GraphicsObject::Style::CURRENT_NAV);
+            ui->map->addItem(pi);
+            ac_items_managers[ac_id]->setCurrentNavShape(pi);
             //qDebug() << "segment created!";
         } else {
-//            PathItem* pi = static_cast<PathItem*>(prev_item);
-//            auto wps = pi->getWaypoints();
-//            assert(wps.size() == 2);
-//            wps[0]->setPosition(p1);
-//            wps[1]->setPosition(p2);
+            PathItem* pi = static_cast<PathItem*>(prev_item);
+            auto wps = pi->getWaypoints();
+            assert(wps.size() == 2);
+            wps[0]->getOriginalWaypoint()->setLat(p1.lat());
+            wps[0]->getOriginalWaypoint()->setLon(p1.lon());
+            wps[0]->updatePosition();
+
+            wps[1]->getOriginalWaypoint()->setLat(p2.lat());
+            wps[1]->getOriginalWaypoint()->setLon(p2.lon());
+            wps[1]->updatePosition();
         }
 
     }
