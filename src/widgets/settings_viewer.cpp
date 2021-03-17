@@ -309,12 +309,11 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
 
         vLay->addLayout(hbox);
 
-
-        setters[setting] = [sw](double value) {sw->setChecked(value > 0.5);};
-        label_setters[setting] = [setting, value_btn, s1, s2](double value) {
+        setters[setting] = [sw, min=min, step=step](double value) {sw->setChecked(value > (min + step/2));};
+        label_setters[setting] = [setting, value_btn, s1, s2, min=min, step=step, max=max](double value) {
             QString txt;
-            if(setting->getValues().size() == 2) {
-                txt = value < 0.5 ? s1: s2;
+            if(setting->getValues().size() == 2 && value >= min && value <= max) {
+                txt = value < (min + step/2) ? s1: s2;
             } else {
                 txt = QString::number(value);
             }
@@ -322,8 +321,8 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
             value_btn->setText(txt);
         };
 
-        connect(ok_btn, &QToolButton::clicked, [=]() {
-            float value = static_cast<float>(sw->isChecked());
+        connect(ok_btn, &QToolButton::clicked, [=, min=min, max=max]() {
+            float value = sw->isChecked() ? max : min;
             AircraftManager::get()->getAircraft(ac_id).setSetting(setting, value);
             setting->setValue(value);
         });
