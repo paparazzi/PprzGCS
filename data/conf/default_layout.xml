@@ -5,7 +5,6 @@
         <columnLeft>
             <widget name="commands" icon="nav.svg"/>
             <widget name="gps_classic_viewer" icon="gps.svg"/>
-            <widget name="flight_planV2" icon="flight_plan.svg"/>
         </columnLeft>
         <columnRight>
             <widget name="map_strip" icon="strips.png"/>
@@ -16,6 +15,7 @@
     </widget>
     <rows size="200">
         <widget name="strips"/>
+        <widget name="flight_planV2"/>
     </rows>
   </columns>
 </layout>
