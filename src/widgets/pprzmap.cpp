@@ -284,25 +284,7 @@ void PprzMap::handleNewAC(QString ac_id) {
 }
 
 void PprzMap::removeAC(QString ac_id) {
-
-    auto item_manager = ac_items_managers[ac_id];
-
-    for(auto wi: item_manager->getWaypointsItems()) {
-        ui->map->removeItem(wi);
-    }
-
-    auto target = item_manager->getTarget();
-    ui->map->removeItem(target);
-
-
-    auto nav_shape = item_manager->getCurrentNavShape();
-    if(nav_shape != nullptr) {
-        ui->map->removeItem(nav_shape);
-    }
-
-    auto ac_item = item_manager->getAircraftItem();
-    ui->map->removeItem(ac_item);
-
+    ac_items_managers[ac_id]->removeItems(ui->map);
     ac_items_managers.remove(ac_id);
 }
 

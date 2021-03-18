@@ -5,6 +5,7 @@
 #include "waypoint_item.h"
 #include "aircraft_item.h"
 #include "path_item.h"
+#include "mapwidget.h"
 
 class ACItemManager
 {
@@ -20,6 +21,7 @@ public:
     WaypointItem* getTarget() {return target;}
     MapItem* getCurrentNavShape() {return current_nav_shape;}
     AircraftItem* getAircraftItem() {return aircraft_item;}
+    void removeItems(MapWidget* map);
 
 private:
     QString ac_id;
