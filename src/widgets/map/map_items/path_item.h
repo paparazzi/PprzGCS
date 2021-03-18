@@ -12,6 +12,7 @@ class PathItem : public MapItem
 public:
     explicit PathItem(QString ac_id, qreal z_value, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     void addPoint(WaypointItem* waypoint, bool own=false);
+    void setClosedPath(bool closed);
     virtual void setHighlighted(bool h);
     virtual void setForbidHighlight(bool sh);
     virtual void setEditable(bool ed);
@@ -22,8 +23,8 @@ public:
     virtual ItemType getType() {return ITEM_PATH;}
     WaypointItem* getLastWaypoint() {return waypoints.last();}
     QList<WaypointItem*> getWaypoints() {return waypoints;}
-    void setLinesIgnoreEvents(bool ignore);
-    void setLastLineIgnoreEvents(bool ignore);
+//    void setLinesIgnoreEvents(bool ignore);
+//    void setLastLineIgnoreEvents(bool ignore);
     void removeLastWaypoint();
 
     void setStyle(GraphicsLine::Style s);
@@ -42,6 +43,7 @@ private:
     QList<QGraphicsItem*> to_be_added;
     QList<QGraphicsItem*> to_be_removed;
     QList<WaypointItem*> waypoints_to_remove;
+    GraphicsLine* closing_line;
     int line_width;
     bool highlighted;
 };
