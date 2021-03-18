@@ -4,6 +4,7 @@
 #include "map_item.h"
 #include <QBrush>
 #include "graphics_point.h"
+#include "graphics_text.h"
 #include "waypoint.h"
 #include <memory>
 
@@ -30,7 +31,7 @@ public:
     virtual ItemType getType() {return ITEM_WAYPOINT;}
     void setIgnoreEvent(bool ignore);
     bool isMoving() {return moving;}
-    void setStyle(GraphicsPoint::Style s){point->setStyle(s);}
+    void setStyle(GraphicsPoint::Style s){point->setStyle(s); graphics_text->setStyle(s);}
     void setMoving(bool m) {moving = m;}
 
 signals:
@@ -43,7 +44,7 @@ private:
     void init();
     QString name;
     GraphicsPoint * point;
-    QGraphicsTextItem* graphics_text;
+    GraphicsText* graphics_text;
     shared_ptr<Waypoint> original_waypoint;
     // waypoint used to draw this WaypointItem
     shared_ptr<Waypoint> _waypoint;

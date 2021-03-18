@@ -18,7 +18,7 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
     QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
 
     graphics_aircraft = new GraphicsAircraft(aircraft.getColor(), aircraft.getIcon(), size);
-    graphics_text = new QGraphicsTextItem(aircraft.name());
+    graphics_text = new GraphicsText(aircraft.name());
     graphics_text->setDefaultTextColor(aircraft.getColor());
 
     for(int i=0; i<qApp->property("TRACK_MAX_CHUNKS").toInt(); i++) {

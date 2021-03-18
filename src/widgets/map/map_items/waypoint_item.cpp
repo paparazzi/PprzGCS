@@ -34,7 +34,7 @@ void WaypointItem::init() {
     point->setZValue(z_value);
 
 
-    graphics_text = new QGraphicsTextItem(name);
+    graphics_text = new GraphicsText(name, this);
     //graphics_text->setDefaultTextColor(aircraft.getColor());
     graphics_text->setDefaultTextColor(Qt::white);
     graphics_text->setZValue(z_value);
@@ -93,7 +93,7 @@ void WaypointItem::addToMap(MapWidget* map) {
 void WaypointItem::setHighlighted(bool h) {
     highlighted = h;
     point->setHighlighted(h);
-    graphics_text->setVisible(h);
+    graphics_text->setHighlighted(h);
 }
 
 void WaypointItem::setForbidHighlight(bool fh) {

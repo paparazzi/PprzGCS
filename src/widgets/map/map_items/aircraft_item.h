@@ -3,6 +3,7 @@
 
 #include "map_item.h"
 #include "graphics_aircraft.h"
+#include "graphics_text.h"
 #include "QGraphicsTextItem"
 #include "graphics_track.h"
 
@@ -34,7 +35,7 @@ protected:
 
 private:
     GraphicsAircraft* graphics_aircraft;
-    QGraphicsTextItem* graphics_text;
+    GraphicsText* graphics_text;
     Point2DLatLon latlon;
     double heading;
     QList<GraphicsTrack*> graphics_tracks;

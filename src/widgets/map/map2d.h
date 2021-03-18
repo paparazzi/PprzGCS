@@ -5,7 +5,6 @@
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QWheelEvent>
-#include <QGraphicsTextItem>
 #include "tileprovider.h"
 #include "tileproviderconfig.h"
 #include <QMap>
