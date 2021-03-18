@@ -240,10 +240,8 @@ void MapWidget::updateHighlights(QString ac_id) {
     for(auto item: _items) {
         if(item->acId() == ac_id) {
             item->setHighlighted(true);
-            item->setZValue(qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toInt());
         } else {
             item->setHighlighted(false);
-            item->setZValue(qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toInt());
         }
     }
 }

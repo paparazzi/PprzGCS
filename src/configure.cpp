@@ -36,10 +36,12 @@ void set_default_config() {
     setEmptyProperty("CIRCLE_STROKE", 4);
     setEmptyProperty("SIZE_HIGHLIGHT_FACTOR", 1.5);
 
-    setEmptyProperty("ITEM_Z_VALUE_HIGHLIGHTED", 100);
-    setEmptyProperty("ITEM_Z_VALUE_UNHIGHLIGHTED", 50);
-    setEmptyProperty("NAV_SHAPE_Z_VALUE", 150);
-    setEmptyProperty("AIRCRAFT_Z_VALUE", 300);
+    setEmptyProperty("ITEM_Z_VALUE_UNHIGHLIGHTED", 100);
+    setEmptyProperty("ITEM_Z_VALUE_HIGHLIGHTED", 200);
+    setEmptyProperty("TRACK_Z_VALUE", 300);
+    setEmptyProperty("AIRCRAFT_Z_VALUE", 400);
+    setEmptyProperty("NAV_SHAPE_Z_VALUE", 500);
+
 
     setEmptyProperty("MAPITEMS_FONT", 18);
     setEmptyProperty("AIRCRAFTS_SIZE", 40);

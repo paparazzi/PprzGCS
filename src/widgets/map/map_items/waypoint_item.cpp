@@ -9,21 +9,25 @@
 #include "coordinatestransform.h"
 
 // create WaypointItem from position -> create corresponding Waypoint.
-WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, qreal z_value, double neutral_scale_zoom, QObject *parent) :
-    MapItem(ac_id, z_value, neutral_scale_zoom, parent), moving(false)
+WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom, QObject *parent) :
+    MapItem(ac_id, neutral_scale_zoom, parent), moving(false)
 {
     original_waypoint = make_shared<Waypoint>("", 0, pt.lat(), pt.lon(), 0);
     init();
 }
 
 // create WaypointItem based on existing Waypoint
-WaypointItem::WaypointItem(shared_ptr<Waypoint> wp, QString ac_id, qreal z_value, double neutral_scale_zoom, QObject *parent) :
-    MapItem(ac_id, z_value, neutral_scale_zoom, parent), original_waypoint(wp), moving(false)
+WaypointItem::WaypointItem(shared_ptr<Waypoint> wp, QString ac_id, double neutral_scale_zoom, QObject *parent) :
+    MapItem(ac_id, neutral_scale_zoom, parent), original_waypoint(wp), moving(false)
 {
     init();
 }
 
 void WaypointItem::init() {
+    z_value_highlighted = qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toDouble();
+    z_value_unhighlighted = qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toDouble();
+    z_value = z_value_unhighlighted;
+
     _waypoint = make_shared<Waypoint>(*original_waypoint);
     Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
     int size = qApp->property("WAYPOINTS_SIZE").toInt();
@@ -91,9 +95,11 @@ void WaypointItem::addToMap(MapWidget* map) {
 }
 
 void WaypointItem::setHighlighted(bool h) {
-    highlighted = h;
+    MapItem::setHighlighted(h);
     point->setHighlighted(h);
     graphics_text->setHighlighted(h);
+
+    updateZValue();
 }
 
 void WaypointItem::setForbidHighlight(bool fh) {
@@ -104,10 +110,9 @@ void WaypointItem::setEditable(bool ed) {
     point->setEditable(ed);
 }
 
-void WaypointItem::setZValue(qreal z) {
-    z_value = z;
-    point->setZValue(z);
-    graphics_text->setZValue(z);
+void WaypointItem::updateZValue() {
+    point->setZValue(z_value);
+    graphics_text->setZValue(z_value);
 }
 
 void WaypointItem::updateGraphics(MapWidget* map) {

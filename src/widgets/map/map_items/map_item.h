@@ -27,7 +27,7 @@ class MapItem : public QObject
 {
     Q_OBJECT
 public:
-    MapItem(QString ac_id, qreal z_value, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    MapItem(QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     QList<QColor> makeColorVariants(QColor);
     QColor unfocusedColor(const QColor&);
     QColor trackUnfocusedColor(const QColor&);
@@ -35,17 +35,25 @@ public:
     virtual void addToMap(MapWidget* map) = 0;
     virtual void updateGraphics(MapWidget* map) = 0;
     virtual void removeFromScene(MapWidget* map) = 0;
-    virtual void setHighlighted(bool h) = 0;
+    virtual void setHighlighted(bool h) {
+        highlighted = h;
+        z_value = h ? z_value_highlighted : z_value_unhighlighted;
+    }
     virtual void setForbidHighlight(bool fh) = 0;
     virtual void setEditable(bool ed) = 0;
     virtual ItemType getType() = 0;
     double zoomFactor() {return zoom_factor;}
     double neutralScaleZoom() {return neutral_scale_zoom;}
     void setZoomFactor(double zf) {zoom_factor = zf;}
-    virtual void setZValue(qreal z) = 0;
+    virtual void updateZValue() = 0;
     qreal zValue() {return z_value;}
     QString acId() {return ac_id;}
     void requestUpdate() {emit(itemChanged());}
+    void setZValues(qreal zh, qreal zuh) {
+        z_value_highlighted = zh;
+        z_value_unhighlighted = zuh;
+        updateZValue();
+    }
 
 signals:
     void itemClicked(QPointF scene_pos);
@@ -61,6 +69,10 @@ protected:
     double zoom_factor;
     double neutral_scale_zoom;
     qreal z_value;
+    bool highlighted;
+
+    qreal z_value_highlighted;
+    qreal z_value_unhighlighted;
 
 };
 

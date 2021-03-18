@@ -6,9 +6,13 @@
 #include "aircraft.h"
 
 AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom, QObject *parent) :
-    MapItem(ac_id, 200, neutral_scale_zoom, parent),
+    MapItem(ac_id, neutral_scale_zoom, parent),
     latlon(pt), heading(0.), last_chunk_index(0)
 {
+    z_value_highlighted = qApp->property("AIRCRAFT_Z_VALUE").toDouble();
+    z_value_unhighlighted = qApp->property("AIRCRAFT_Z_VALUE").toDouble();
+    z_value = z_value_unhighlighted;
+
     Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
     int size = qApp->property("AIRCRAFTS_SIZE").toInt();
 
@@ -97,6 +101,7 @@ void AircraftItem::setHeading(double h) {
 }
 
 void AircraftItem::setHighlighted(bool h) {
+    MapItem::setHighlighted(h);
     graphics_aircraft->setHighlighted(h);
     for(auto gt: graphics_tracks) {
         gt->setHighlighted(h);
@@ -106,16 +111,17 @@ void AircraftItem::setHighlighted(bool h) {
     } else {
         graphics_text->setDefaultTextColor(color_unfocused);
     }
+
+    updateZValue();
 }
 
-void AircraftItem::setZValue(qreal z) {
-    //aircrafts are on top of everything else
-    graphics_aircraft->setZValue(z + 100);
-    graphics_text->setZValue(z);
+void AircraftItem::updateZValue() {
+    graphics_aircraft->setZValue(z_value);
+    graphics_text->setZValue(z_value);
+    double z_tracks = qApp->property("AIRCRAFT_Z_VALUE").toDouble();
     for(auto gt: graphics_tracks) {
-        gt->setZValue(z);
+        gt->setZValue(z_tracks);
     }
-
 }
 
 void AircraftItem::setForbidHighlight(bool fh) {

@@ -5,11 +5,13 @@
 #include "map_item.h"
 #include "AircraftManager.h"
 
-PathItem::PathItem(QString ac_id, qreal z_value, double neutral_scale_zoom, QObject *parent) :
-    MapItem(ac_id, z_value, neutral_scale_zoom, parent),
+PathItem::PathItem(QString ac_id, double neutral_scale_zoom, QObject *parent) :
+    MapItem(ac_id, neutral_scale_zoom, parent),
     closing_line(nullptr), line_width(5)
 {
-
+    z_value_highlighted = qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toDouble();
+    z_value_unhighlighted = qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toDouble();
+    z_value = z_value_unhighlighted;
 }
 
 void PathItem::addPoint(WaypointItem* wp, bool own) {
@@ -59,7 +61,7 @@ void PathItem::setClosedPath(bool closed) {
 }
 
 void PathItem::setHighlighted(bool h) {
-    highlighted = h;
+    MapItem::setHighlighted(h);
     for(auto wp: waypoints) {
         wp->setHighlighted(h);
     }
@@ -70,7 +72,7 @@ void PathItem::setHighlighted(bool h) {
     for(auto line: lines) {
         line->setHighlighted(h);
     }
-
+    updateZValue();
 }
 
 void PathItem::setForbidHighlight(bool sh) {
@@ -97,17 +99,17 @@ void PathItem::setEditable(bool ed) {
     }
 }
 
-void PathItem::setZValue(qreal z) {
-    z_value = z;
+void PathItem::updateZValue() {
+
     //waypoints above lines
     for(auto w:waypoints) {
-        w->setZValue(z);
+        w->updateZValue();
     }
     for(auto l:lines) {
-        l->setZValue(z-0.5);
+        l->setZValue(z_value-0.5);
     }
     if(closing_line) {
-        closing_line->setZValue(z-0.5);
+        closing_line->setZValue(z_value-0.5);
     }
 }
 

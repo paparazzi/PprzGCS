@@ -10,13 +10,13 @@ class PathItem : public MapItem
 {
     Q_OBJECT
 public:
-    explicit PathItem(QString ac_id, qreal z_value, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    explicit PathItem(QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     void addPoint(WaypointItem* waypoint, bool own=false);
     void setClosedPath(bool closed);
     virtual void setHighlighted(bool h);
     virtual void setForbidHighlight(bool sh);
     virtual void setEditable(bool ed);
-    virtual void setZValue(qreal z);
+    virtual void updateZValue();
     virtual void updateGraphics(MapWidget* map);
     virtual void removeFromScene(MapWidget* map);
     virtual void addToMap(MapWidget* mw);
@@ -45,7 +45,6 @@ private:
     QList<WaypointItem*> waypoints_to_remove;
     GraphicsLine* closing_line;
     int line_width;
-    bool highlighted;
 };
 
 #endif // SEGMENT_H

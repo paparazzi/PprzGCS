@@ -220,16 +220,12 @@ void PprzMap::handleNewAC(QString ac_id) {
         auto orig = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getOrigin();
         CoordinatesTransform::get()->init_WGS84_UTM(orig->getLat(), orig->getLon());
     }
-    int z = (current_ac == ac_id) ? qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toInt():
-                                   qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toInt();
-
     // create aircraft item at dummy position
     auto aircraft_item = new AircraftItem(Point2DLatLon(0, 0), ac_id, 16);
-    aircraft_item->setZValue(qApp->property("AIRCRAFT_Z_VALUE").toInt());
     ui->map->addItem(aircraft_item);
 
     //create carrot at dummy position
-    WaypointItem* target = new WaypointItem(Point2DLatLon(0, 0), ac_id, z);
+    WaypointItem* target = new WaypointItem(Point2DLatLon(0, 0), ac_id);
     ui->map->addItem(target);
     target->setStyle(GraphicsObject::Style::CARROT);
     target->setEditable(false);
@@ -239,7 +235,7 @@ void PprzMap::handleNewAC(QString ac_id) {
     ac_items_managers[ac_id] = item_manager;
 
     for(auto wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
-        WaypointItem* wpi = new WaypointItem(wp, ac_id, z);
+        WaypointItem* wpi = new WaypointItem(wp, ac_id);
         ui->map->addItem(wpi);
         item_manager->addWaypointItem(wpi);
 
@@ -269,7 +265,7 @@ void PprzMap::handleNewAC(QString ac_id) {
     for(auto sector: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getSectors()) {
         // static sector are not supported
         if(sector->getType() == Sector::DYNAMIC) {
-            PathItem* pi = new PathItem(ac_id, z);
+            PathItem* pi = new PathItem(ac_id);
             for(auto wp: sector->getCorners()) {
                 for(auto wpi: item_manager->getWaypointsItems()) {
                     if(wpi->getOriginalWaypoint() == wp) {
@@ -405,7 +401,7 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
 
     MapItem* prev_item = ac_items_managers[ac_id]->getCurrentNavShape();
 
-    int z = qApp->property("NAV_SHAPE_Z_VALUE").toInt();
+    double z = qApp->property("NAV_SHAPE_Z_VALUE").toDouble();
 
     if(msg.getDefinition().getName() == "CIRCLE_STATUS") {
         if(prev_item!= nullptr && prev_item->getType() != ITEM_CIRCLE) {
@@ -423,9 +419,11 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
 
         Point2DLatLon pos(static_cast<double>(circle_lat), static_cast<double>(circle_long));
         if(prev_item == nullptr) {
-            auto wcenter = new WaypointItem(pos, ac_id, z);
+            auto wcenter = new WaypointItem(pos, ac_id);
+            wcenter->setZValues(z, z);
             ui->map->addItem(wcenter);
-            CircleItem* ci = new CircleItem(wcenter, radius, ac_id, z);
+            CircleItem* ci = new CircleItem(wcenter, radius, ac_id);
+            ci->setZValues(z, z);
             ci->setEditable(false);
             ci->setOwnCenter(true);
             ui->map->addItem(ci);
@@ -455,11 +453,14 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
         Point2DLatLon p1(static_cast<double>(segment1_lat), static_cast<double>(segment1_long));
         Point2DLatLon p2(static_cast<double>(segment2_lat), static_cast<double>(segment2_long));
         if(prev_item == nullptr) {
-            PathItem* pi = new PathItem(id.c_str(), z);
+            PathItem* pi = new PathItem(id.c_str());
+            pi->setZValues(z, z);
 
-            auto w1 = new WaypointItem(p1, ac_id, z);
+            auto w1 = new WaypointItem(p1, ac_id);
+            w1->setZValues(z, z);
             ui->map->addItem(w1);
-            auto w2 = new WaypointItem(p2, ac_id, z);
+            auto w2 = new WaypointItem(p2, ac_id);
+            w2->setZValues(z, z);
             ui->map->addItem(w2);
             pi->addPoint(w1);
             pi->addPoint(w2);

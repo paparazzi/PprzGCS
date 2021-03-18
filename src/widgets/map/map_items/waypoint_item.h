@@ -12,8 +12,8 @@ class WaypointItem : public MapItem
 {
         Q_OBJECT
 public:
-    WaypointItem(Point2DLatLon pt, QString ac_id, qreal z_value, double neutral_scale_zoom = 15, QObject *parent = nullptr);
-    WaypointItem(shared_ptr<Waypoint> wp, QString ac_id, qreal z_value, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    WaypointItem(shared_ptr<Waypoint> wp, QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     // return position of the underlying "real" waypoint
     Point2DLatLon position() {return Point2DLatLon(original_waypoint);}
     shared_ptr<Waypoint> getOriginalWaypoint() {return original_waypoint;}
@@ -22,7 +22,7 @@ public:
     QPointF scenePos();
     virtual void addToMap(MapWidget* map);
     virtual void setHighlighted(bool h);
-    virtual void setZValue(qreal z);
+    virtual void updateZValue();
     virtual void setForbidHighlight(bool fh);
     virtual void setEditable(bool ed);
     virtual void removeFromScene(MapWidget* map);
@@ -49,7 +49,6 @@ private:
     // waypoint used to draw this WaypointItem
     shared_ptr<Waypoint> _waypoint;
     int altitude;
-    bool highlighted;
     bool moving;
 };
 

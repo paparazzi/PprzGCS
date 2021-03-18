@@ -15,7 +15,7 @@ public:
     explicit AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
 
     virtual void setHighlighted(bool h);
-    virtual void setZValue(qreal z);
+    virtual void updateZValue();
     virtual void setForbidHighlight(bool fh);
     virtual void setEditable(bool ed){(void)ed;}
     virtual void removeFromScene(MapWidget* map);

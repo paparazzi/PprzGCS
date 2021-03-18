@@ -9,11 +9,14 @@
 #include "map_item.h"
 #include "AircraftManager.h"
 
-CircleItem::CircleItem(WaypointItem* center, double radius, QString ac_id, qreal z_value, double neutral_scale_zoom):
-  MapItem(ac_id, z_value, neutral_scale_zoom),
+CircleItem::CircleItem(WaypointItem* center, double radius, QString ac_id, double neutral_scale_zoom):
+  MapItem(ac_id, neutral_scale_zoom),
   center(center), _radius(radius), own_center(false)
 {
     stroke = qApp->property("CIRCLE_STROKE").toInt();
+    z_value_highlighted = qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toDouble();
+    z_value_unhighlighted = qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toDouble();
+    z_value = z_value_unhighlighted;
     init(center);
 }
 
@@ -76,9 +79,11 @@ void CircleItem::addToMap(MapWidget* map) {
 
 
 void CircleItem::setHighlighted(bool h) {
-    highlighted = h;
+    MapItem::setHighlighted(h);
     center->setHighlighted(h);
     circle->setHighlighted(h);
+
+    updateZValue();
 }
 
 void CircleItem::setForbidHighlight(bool fh) {
@@ -91,11 +96,10 @@ void CircleItem::setEditable(bool ed) {
     circle->setEditable(ed);
 }
 
-void CircleItem::setZValue(qreal z) {
-    z_value = z;
+void CircleItem::updateZValue() {
     //the circle is above the waypoint
-    center->setZValue(z-0.5);
-    circle->setZValue(z);
+    center->updateZValue();
+    circle->setZValue(z_value+0.5);
 }
 
 void CircleItem::updateGraphics(MapWidget* map) {
