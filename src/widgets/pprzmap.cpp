@@ -233,42 +233,55 @@ void PprzMap::handleNewAC(QString ac_id) {
     ui->map->addItem(target);
     target->setStyle(GraphicsObject::Style::CARROT);
     target->setEditable(false);
-    //target->setForbidHighlight(false);
 
     //create the ACItemManager for this aircraft
     auto item_manager = make_shared<ACItemManager>(ac_id, target, aircraft_item);
     ac_items_managers[ac_id] = item_manager;
 
     for(auto wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
-        if(wp->getName()[0] != '_') {
-            WaypointItem* wpi = new WaypointItem(wp, ac_id, z);
-            ui->map->addItem(wpi);
-            //wpi->setEditable(true);
-            //wpi->setForbidHighlight(false);
-            item_manager->addWaypointItem(wpi);
+        WaypointItem* wpi = new WaypointItem(wp, ac_id, z);
+        ui->map->addItem(wpi);
+        item_manager->addWaypointItem(wpi);
 
-            auto dialog_move_waypoint = [=]() {
-                wpi->setMoving(true);
-                auto we = new WaypointEditor(wpi, ac_id);
-                auto view_pos = ui->map->mapFromScene(wpi->scenePos());
-                auto global_pos = ui->map->mapToGlobal(view_pos);
-                we->show(); //show just to get the width and height right.
-                we->move(global_pos - QPoint(we->width()/2, we->height()/2));
-                connect(we, &QDialog::finished, wpi, [=](int result) {
-                    (void)result;
-                    wpi->setMoving(false);
-                });
-                we->open();
-            };
+        auto dialog_move_waypoint = [=]() {
+            wpi->setMoving(true);
+            auto we = new WaypointEditor(wpi, ac_id);
+            auto view_pos = ui->map->mapFromScene(wpi->scenePos());
+            auto global_pos = ui->map->mapToGlobal(view_pos);
+            we->show(); //show just to get the width and height right.
+            we->move(global_pos - QPoint(we->width()/2, we->height()/2));
+            connect(we, &QDialog::finished, wpi, [=](int result) {
+                (void)result;
+                wpi->setMoving(false);
+            });
+            we->open();
+        };
 
-            connect(wpi, &WaypointItem::waypointMoveFinished, this, dialog_move_waypoint);
+        connect(wpi, &WaypointItem::waypointMoveFinished, this, dialog_move_waypoint);
 
-            connect(wpi, &WaypointItem::itemDoubleClicked, this, dialog_move_waypoint);
+        connect(wpi, &WaypointItem::itemDoubleClicked, this, dialog_move_waypoint);
 
+        if(wp->getName()[0] == '_') {
+            wpi->setStyle(GraphicsPoint::Style::CURRENT_NAV);
         }
     }
 
+    for(auto sector: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getSectors()) {
+        // static sector are not supported
+        if(sector->getType() == Sector::DYNAMIC) {
+            PathItem* pi = new PathItem(ac_id, z);
+            for(auto wp: sector->getCorners()) {
+                for(auto wpi: item_manager->getWaypointsItems()) {
+                    if(wpi->getOriginalWaypoint() == wp) {
+                        pi->addPoint(wpi);
+                    }
+                }
+            }
 
+            ui->map->addItem(pi);
+            item_manager->addPathItem(pi);
+        }
+    }
 }
 
 void PprzMap::removeAC(QString ac_id) {

@@ -11,14 +11,22 @@ using namespace std;
 class Sector
 {
 public:
+
+    enum Type {
+        STATIC,
+        DYNAMIC,
+    };
+
     Sector();
-    Sector(vector<shared_ptr<Waypoint>> corners, string name, optional<string> color=nullopt);
+    Sector(vector<shared_ptr<Waypoint>> corners, string name, Type type=STATIC, optional<string> color=nullopt);
 
     string getName() {return name;}
+    Type getType() {return type;}
     vector<shared_ptr<Waypoint>> getCorners() {return corners;}
 
 private:
     string name;
+    Type type;
     optional<string> color;   // override AC color
     vector<shared_ptr<Waypoint>> corners;
 };

@@ -114,15 +114,16 @@ void FlightPlan::parse_sectors(tinyxml2::XMLElement* secs) {
             }
 
             auto type = ele->Attribute("type");
-            if(type != nullptr) {
-                //???
+            Sector::Type t = Sector::DYNAMIC;
+            if(type != nullptr && strcmp(type, "static") == 0) {
+                t = Sector::STATIC;
             }
             vector<shared_ptr<Waypoint>> corners;
             for(auto corner=ele->FirstChildElement(); corner!= nullptr; corner=corner->NextSiblingElement()) {
                 auto wp = getWaypoint(corner->Attribute("name"));
                 corners.push_back(wp);
             }
-            auto sec = make_shared<Sector>(corners, sec_name, sec_color);
+            auto sec = make_shared<Sector>(corners, sec_name, t, sec_color);
             sectors.push_back(sec);
         } else if (strcmp(ele->Name(), "kml") == 0) {
             //It's a KML!

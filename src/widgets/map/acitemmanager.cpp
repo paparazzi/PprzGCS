@@ -10,6 +10,10 @@ void ACItemManager::addWaypointItem(WaypointItem* wi) {
     waypointItems.append(wi);
 }
 
+void ACItemManager::addPathItem(PathItem* pi) {
+    pathItems.append(pi);
+}
+
 void ACItemManager::setCurrentNavShape(MapItem* mi) {
     current_nav_shape = mi;
 }
