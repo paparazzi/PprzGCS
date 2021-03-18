@@ -40,8 +40,8 @@ void set_default_config() {
     setEmptyProperty("ITEM_Z_VALUE_HIGHLIGHTED", 200);
     setEmptyProperty("TRACK_Z_VALUE", 300);
     setEmptyProperty("AIRCRAFT_Z_VALUE", 400);
-    setEmptyProperty("NAV_SHAPE_Z_VALUE", 500);
-
+    setEmptyProperty("CARROT_Z_VALUE", 500);
+    setEmptyProperty("NAV_SHAPE_Z_VALUE", 600);
 
     setEmptyProperty("MAPITEMS_FONT", 18);
     setEmptyProperty("AIRCRAFTS_SIZE", 40);

@@ -229,6 +229,8 @@ void PprzMap::handleNewAC(QString ac_id) {
     ui->map->addItem(target);
     target->setStyle(GraphicsObject::Style::CARROT);
     target->setEditable(false);
+    double z_carrot = qApp->property("CARROT_Z_VALUE").toDouble();
+    target->setZValues(z_carrot, z_carrot);
 
     //create the ACItemManager for this aircraft
     auto item_manager = make_shared<ACItemManager>(ac_id, target, aircraft_item);
