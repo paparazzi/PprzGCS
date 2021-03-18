@@ -9,7 +9,7 @@
 GraphicsPoint::GraphicsPoint(int size, QColor color, QObject *parent) :
     GraphicsObject(parent),
     QGraphicsItem (),
-    halfSize(size), move_state(PMS_IDLE), current_color(nullptr), ignore_events(false), style(DEFAULT)
+    halfSize(size), move_state(PMS_IDLE), current_color(nullptr), style(DEFAULT)
 {
     color_idle = color;
     current_color = &color_idle;

@@ -15,6 +15,9 @@ public:
     WaypointItem* getCenter() { return center;}
     GraphicsCircle* getGraphicsCircle() {return circle;}
     void setOwnCenter(bool own) {own_center = own;}
+    void setScalable(bool scalable) {
+        circle->setIgnoreEvent(!scalable);
+    }
     virtual void addToMap(MapWidget* mw);
     virtual void setHighlighted(bool h);
     void setForbidHighlight(bool fh);

@@ -408,6 +408,7 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
             ui->map->addItem(wcenter);
             CircleItem* ci = new CircleItem(wcenter, radius, ac_id);
             ci->setZValues(z, z);
+            ci->setScalable(false);
             ci->setEditable(false);
             ci->setOwnCenter(true);
             ui->map->addItem(ci);

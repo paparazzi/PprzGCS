@@ -22,6 +22,7 @@ public:
     void setForbidHighlight(bool fh) {forbid_highlight = fh;}
     void setEditable(bool ed) {editable = ed;}
     void setScaleFactor(double s) {scale_factor = s;}
+    void setIgnoreEvent(bool ignore) {ignore_events = ignore;}
 
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
@@ -29,6 +30,7 @@ protected:
     bool forbid_highlight;
     bool editable;
     double scale_factor;
+    bool ignore_events;
 
 signals:
     void objectClicked(QPointF scene_pos);
@@ -38,7 +40,6 @@ signals:
 private:
     bool highlighted;
 
-private:
 
 
 };

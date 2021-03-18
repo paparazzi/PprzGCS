@@ -110,6 +110,11 @@ QPainterPath GraphicsCircle::shape() const
 
 
 void GraphicsCircle::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+    if(ignore_events) {
+        event->ignore();
+        return;
+    }
+
     textPos = event->pos();
     QPointF pressPos = QPointF(event->pos().x() * scale(), event->pos().y() * scale());
     dr = sqrt(pressPos.x()*pressPos.x() + pressPos.y()*pressPos.y()) - radius;
@@ -120,6 +125,11 @@ void GraphicsCircle::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void GraphicsCircle::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    if(ignore_events) {
+        event->ignore();
+        return;
+    }
+
     QPointF mousePos = event->pos();
     double r = sqrt(mousePos.x()*mousePos.x() + mousePos.y()*mousePos.y()) - dr;
 
@@ -138,7 +148,11 @@ void GraphicsCircle::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 }
 
 void GraphicsCircle::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
-    (void)event;
+    if(ignore_events) {
+        event->ignore();
+        return;
+    }
+
     if(scale_state == CSS_PRESSED) {
         emit(objectClicked(event->scenePos()));
     }

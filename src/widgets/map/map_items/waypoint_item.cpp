@@ -108,6 +108,7 @@ void WaypointItem::setForbidHighlight(bool fh) {
 
 void WaypointItem::setEditable(bool ed) {
     point->setEditable(ed);
+    point->setIgnoreEvent(!ed);
 }
 
 void WaypointItem::updateZValue() {

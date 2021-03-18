@@ -71,7 +71,6 @@ void GraphicsLine::setColors(QColor colUnfocused) {
 void GraphicsLine::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if(ignore_events) {
         event->ignore();
-        qDebug() << "Line press ignored !";
         return;
     }
     GraphicsObject::mousePressEvent(event);
@@ -81,7 +80,6 @@ void GraphicsLine::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 void GraphicsLine::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     if(ignore_events) {
         event->ignore();
-        qDebug() << "Line move ignored !";
         return;
     }
     qDebug() << "Line MOVED !";
@@ -90,7 +88,6 @@ void GraphicsLine::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
 void GraphicsLine::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     if(ignore_events) {
         event->ignore();
-        qDebug() << "Line release ignored !";
         return;
     }
     (void)event;

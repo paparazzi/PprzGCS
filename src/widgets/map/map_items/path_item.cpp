@@ -22,6 +22,7 @@ void PathItem::addPoint(WaypointItem* wp, bool own) {
     if(waypoints.size() > 1){
         Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
         GraphicsLine* line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), aircraft.getColor(), line_width, this);
+        line->setIgnoreEvent(true);
 
         QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
         line->setColors(color_variants[2]);
@@ -47,6 +48,7 @@ void PathItem::setClosedPath(bool closed) {
             Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
             QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
             closing_line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), aircraft.getColor(), line_width, this);
+            closing_line->setIgnoreEvent(true);
             closing_line->setColors(color_variants[2]);
             to_be_added.append(closing_line);
             closing_line->setZValue(z_value - 0.5);

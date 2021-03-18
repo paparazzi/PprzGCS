@@ -1,7 +1,8 @@
 #include "graphics_object.h"
 #include <QDebug>
 
-GraphicsObject::GraphicsObject(QObject *parent) : QObject(parent), editable(true), scale_factor(1.0), highlighted(true)
+GraphicsObject::GraphicsObject(QObject *parent) : QObject(parent),
+    editable(true), scale_factor(1.0), ignore_events(false), highlighted(true)
 {
 
 }
