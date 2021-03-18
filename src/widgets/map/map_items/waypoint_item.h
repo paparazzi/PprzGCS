@@ -31,7 +31,7 @@ public:
     virtual ItemType getType() {return ITEM_WAYPOINT;}
     void setIgnoreEvent(bool ignore);
     bool isMoving() {return moving;}
-    void setStyle(GraphicsPoint::Style s){point->setStyle(s); graphics_text->setStyle(s);}
+    void setStyle(GraphicsPoint::Style s);
     void setMoving(bool m) {moving = m;}
 
 signals:

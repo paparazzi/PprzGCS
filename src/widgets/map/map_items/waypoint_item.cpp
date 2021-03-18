@@ -147,6 +147,12 @@ void WaypointItem::updatePosition() {
     emit(itemChanged());
 }
 
+void WaypointItem::setStyle(GraphicsPoint::Style s){
+    point->setStyle(s);
+    graphics_text->setStyle(s);
+    requestUpdate();
+}
+
 QPointF WaypointItem::scenePos() {
     if(point != nullptr) {
         return point->scenePos();

@@ -77,6 +77,20 @@ PprzMap::PprzMap(QWidget *parent) :
 
     });
 
+    connect(DispatcherUi::get(), &DispatcherUi::showHiddenWaypoints, this, [=](bool state) {
+        for(auto &itemManager: ac_items_managers) {
+            for(auto &wpi: itemManager->getWaypointsItems()) {
+                if(state) {
+                    wpi->setStyle(GraphicsObject::Style::DEFAULT);
+                } else {
+                    if(wpi->getOriginalWaypoint()->getName()[0] == '_') {
+                        wpi->setStyle(GraphicsPoint::Style::CURRENT_NAV);
+                    }
+                }
+            }
+        }
+    });
+
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &PprzMap::updateAircraftItem);
     connect(PprzDispatcher::get(), &PprzDispatcher::waypoint_moved, this, &PprzMap::moveWaypoint);
     connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &PprzMap::updateTarget);
