@@ -153,7 +153,7 @@ void GraphicsCircle::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 
 void GraphicsCircle::setRadius(double r) {
     prepareGeometryChange();
-    radius = r;
+    radius = abs(r);
 }
 
 void GraphicsCircle::changeFocus() {
