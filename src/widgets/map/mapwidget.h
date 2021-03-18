@@ -13,6 +13,7 @@
 #include <QCursor>
 #include "configurable.h"
 #include "lock_button.h"
+#include "papget.h"
 
 class MapItem;
 
@@ -50,6 +51,9 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
     virtual void wheelEvent(QWheelEvent* event);
+    virtual void dragEnterEvent(QDragEnterEvent *event);
+    virtual void dropEvent(QDropEvent *event);
+    virtual void dragMoveEvent(QDragMoveEvent *event);
 
 private:
 
@@ -63,6 +67,7 @@ private:
     void addWidget(QWidget* w, LockButton* button, WidgetContainer side);
 
     QList<MapItem*> _items;
+    QList<Papget*> papgets;
 
     QHBoxLayout* horizontalLayout;
 

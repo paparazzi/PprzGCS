@@ -52,7 +52,7 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     addLayersWidget();
 
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &MapWidget::handleNewAC);
-
+    setAcceptDrops(true);
 }
 
 void MapWidget::addLayersWidget() {
@@ -264,12 +264,13 @@ void MapWidget::mouseMoveEvent(QMouseEvent *event) {
                 pan_state = PAN_MOVE;
             }
         } else if(pan_state == PAN_MOVE) {
-
-
-
             QPoint dp = event->pos()-lastPos;
             translate(dp.x()/scaleFactor(), dp.y()/scaleFactor());
             lastPos = event->pos();
+        }
+
+        for(auto papget: papgets) {
+            papget->updateGraphics(this);
         }
     }
     emit(mouseMoved(mapToScene(event->pos())));
@@ -285,8 +286,45 @@ void MapWidget::wheelEvent(QWheelEvent* event) {
     for(auto item: _items) {
         item->updateGraphics(this);
     }
+    for(auto papget: papgets) {
+        papget->updateGraphics(this);
+    }
 }
 
+void MapWidget::dragEnterEvent(QDragEnterEvent *event) {
+    if (event->mimeData()->hasFormat("text/plain")) {
+        event->acceptProposedAction();
+    }
+}
+
+void MapWidget::dragMoveEvent(QDragMoveEvent *event) {
+    event->accept();
+}
+
+void MapWidget::dropEvent(QDropEvent *event) {
+    // "2:telemetry:WP_MOVED:utm_north:1."
+    QString text = event->mimeData()->text();
+    QStringList args = text.split(QString(":"));
+    if(args.size() == 5) {
+        QString ac_id = args[0];
+        QString msg_class = args[1];
+        QString msg_name = args[2];
+        QString field = args[3];
+        // QString unknown_params = args[4];
+
+        struct Papget::DataDef datadef = {
+            ac_id,
+            msg_name,
+            field,
+        };
+
+        Papget* papget = new Papget(datadef, event->pos());
+        scene()->addItem(papget);
+        papget->setZValue(1000);
+        papgets.append(papget);
+        papget->updateGraphics(this);
+    }
+}
 
 void MapWidget::handleNewAC(QString ac_id) {
     (void)ac_id;

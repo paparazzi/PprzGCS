@@ -27,6 +27,14 @@ public:
     void sendMessage(pprzlink::Message);
     std::shared_ptr<pprzlink::MessageDictionary> getDict() {return dict;}
 
+    /**
+     * @brief bind message to callback. Use it only for messages not handled by default by the application
+     * @param msg_name
+     * @param cb
+     * @return
+     */
+    long bind(std::string msg_name, pprzlink::messageCallback_t cb);
+
 
 signals:
     void aircraft_die(pprzlink::Message);

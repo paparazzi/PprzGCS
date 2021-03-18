@@ -101,6 +101,10 @@ void PprzDispatcher::requestAircrafts() {
     });
 }
 
+long PprzDispatcher::bind(std::string msg_name, pprzlink::messageCallback_t cb) {
+    long ret = link->BindMessage(dict->getDefinition(msg_name), cb);
+    return ret;
+}
 
 void PprzDispatcher::start() {
 
