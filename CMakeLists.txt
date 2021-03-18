@@ -61,7 +61,6 @@ set(SOURCE
     src/widgets/map/map2d.cpp
     src/widgets/map/mapwidget.cpp
     src/widgets/map/maplayercontrol.cpp
-    src/widgets/map/layertab.cpp
     src/widgets/map/mapscene.cpp
     src/widgets/map/maputils.cpp
     src/widgets/map/waypointeditor.cpp

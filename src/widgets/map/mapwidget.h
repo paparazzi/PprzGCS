@@ -10,7 +10,6 @@
 #include "tileprovider.h"
 #include "maplayercontrol.h"
 #include "imagebutton.h"
-#include "layertab.h"
 #include <QCursor>
 #include "configurable.h"
 #include "lock_button.h"
