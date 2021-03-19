@@ -38,6 +38,8 @@ public:
     void itemsEditable(bool ed);
     void updateHighlights(QString ac_id);
     MapScene* scene() {return _scene;}
+    void centerLatLon(Point2DLatLon latLon) override;
+    void setZoom(double z) override;
 
     void configure(QDomElement);
 

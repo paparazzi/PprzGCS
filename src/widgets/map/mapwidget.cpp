@@ -246,6 +246,20 @@ void MapWidget::updateHighlights(QString ac_id) {
     }
 }
 
+void MapWidget::centerLatLon(Point2DLatLon latLon) {
+    Map2D::centerLatLon(latLon);
+    for(auto papget: papgets) {
+        papget->updateGraphics(this);
+    }
+}
+
+void MapWidget::setZoom(double z) {
+    Map2D::setZoom(z);
+    for(auto papget: papgets) {
+        papget->updateGraphics(this);
+    }
+}
+
 void MapWidget::mousePressEvent(QMouseEvent *event) {
     Map2D::mousePressEvent(event);
     if(event->buttons() & pan_mouse_mask && !event->isAccepted()) {

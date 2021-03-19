@@ -95,7 +95,7 @@ bool Papget::try_this(pprzlink::Message msg, U &dst) {
         msg.getField(datadef.field.toStdString(), value);
         dst = value;
         return true;
-    } catch (std::bad_any_cast ex) {
+    } catch (std::bad_any_cast &ex) {
         return false;
     }
 }

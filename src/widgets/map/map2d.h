@@ -18,7 +18,7 @@ class Map2D : public QGraphicsView
     Q_OBJECT
 public:
     explicit Map2D(QWidget *parent = nullptr);
-    void centerLatLon(Point2DLatLon latLon);
+    virtual void centerLatLon(Point2DLatLon latLon);
     void toggleTileProvider(QString providerName, bool enable, int zValue = 0, qreal opacity = 1);
     std::map<QString, TileProviderConfig*>* tileProviders() {return &sourceConfigs;}
     QList<QString> tileProvidersNames();
@@ -26,7 +26,7 @@ public:
     void getViewPoints(Point2DLatLon& nw, Point2DLatLon& sw);
     double zoom() {return _zoom;}
 //    int zoomLevel() {return static_cast<int>(ceil(_zoom));}
-    void setZoom(double z);
+    virtual void setZoom(double z);
     void zoomCentered(double z, QPoint eventPos);
     int tileSize() {return tile_size;}
 
