@@ -315,16 +315,40 @@ void MapWidget::dragMoveEvent(QDragMoveEvent *event) {
     event->accept();
 }
 
+/**
+ * @brief MapWidget::dropEvent handle drop for mime type text/plain
+ * @param event
+ * Two format are supported : Paparazzi messages, and geo URI
+ * Paparazzi messages : "<id>:<class>:<msg name>:<field>:<???>" ex: "2:telemetry:WP_MOVED:utm_north:1."
+ * geo URI : "geo:<lat>,<lon>[,<alt>][?z=<zoom>]"
+ */
 void MapWidget::dropEvent(QDropEvent *event) {
-    // "2:telemetry:WP_MOVED:utm_north:1."
     QString text = event->mimeData()->text();
     QStringList args = text.split(QString(":"));
-    if(args.size() == 5) {
-        QString ac_id = args[0];
-        QString msg_class = args[1];
-        QString msg_name = args[2];
-        QString field = args[3];
-        // QString unknown_params = args[4];
+
+    QRegularExpression geo_re("^geo:(\\d+\\.\\d+),(-?\\d+\\.\\d+)(?:,-?\\d+\\.?\\d*)?(?:\\?z=(\\d+))?$");
+    QRegularExpressionMatch geo_match = geo_re.match(text);
+
+    QRegularExpression pprz_msg_re("^(\\w+):(\\w+):(\\w+):(\\w+):.*$");
+    QRegularExpressionMatch pprz_msg_match = pprz_msg_re.match(text);
+
+    if (geo_match.hasMatch()) {
+        //geo URI, format : geo:<lat>,<lon>[,<alt>][?z=<zoom>]
+        // example: geo:37.786971,-122.399677,120.23?z=12
+        double lat = geo_match.captured(1).toDouble();
+        double lon = geo_match.captured(2).toDouble();
+        centerLatLon(Point2DLatLon(lat, lon));
+
+        if(geo_match.lastCapturedIndex() == 3) {
+            int z = geo_match.captured(3).toInt();
+            setZoom(z);
+        }
+    } else if(pprz_msg_match.hasMatch()) {
+        // Paparazzi message, ex: "2:telemetry:WP_MOVED:utm_north:1."
+        QString ac_id = pprz_msg_match.captured(1);
+        // QString msg_class = pprz_msg_match.captured(2);
+        QString msg_name = pprz_msg_match.captured(3);
+        QString field = pprz_msg_match.captured(4);
 
         struct Papget::DataDef datadef = {
             ac_id,
@@ -337,6 +361,7 @@ void MapWidget::dropEvent(QDropEvent *event) {
         papget->setZValue(1000);
         papgets.append(papget);
         papget->updateGraphics(this);
+
     }
 }
 
