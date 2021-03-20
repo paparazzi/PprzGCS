@@ -28,8 +28,16 @@ public:
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
     //QPainterPath shape() const override;
     void updateGraphics(MapWidget* map);
+    void setPosition(QPoint viewPos) {pos_view = viewPos;}
 
 signals:
+    void moved(QPointF);
+
+protected:
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
+    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) override;
+    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override;
 
 private:
 
@@ -40,6 +48,12 @@ private:
         FLOAT,
         STR,
         CHAR,
+    };
+
+    enum MoveState {
+        IDLE,
+        PRESSED,
+        MOVED,
     };
 
     struct DataDef datadef;
@@ -64,6 +78,8 @@ private:
     QRectF bounding_rect;
     double scale_factor;
     QPoint pos_view;
+    QPointF pressPos;
+    MoveState move_state;
 
 };
 

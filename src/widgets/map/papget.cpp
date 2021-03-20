@@ -9,7 +9,7 @@
 //TODO must unbind message in destructor, somehow
 
 Papget::Papget(struct DataDef datadef, QPoint pos_view, QObject *parent) : QObject(parent), QGraphicsItem(),
-    datadef(datadef), type(Type::NONE), style(Style::TEXT), pos_view(pos_view)
+    datadef(datadef), type(Type::NONE), style(Style::TEXT), pos_view(pos_view), move_state(MoveState::IDLE)
 {
     bindRet = PprzDispatcher::get()->bind(datadef.msg_name.toStdString(),
         [=](std::string sender, pprzlink::Message msg) {
@@ -104,12 +104,40 @@ bool Papget::try_this(pprzlink::Message msg, U &dst) {
 void Papget::updateGraphics(MapWidget* map) {
     scale_factor = 1.0/map->scaleFactor();
     QPointF pos_scene = map->mapToScene(pos_view);
-    setPos(pos_scene);
+    if(move_state == IDLE) {
+        setPos(pos_scene);
+    }
+
+}
+
+void Papget::mousePressEvent(QGraphicsSceneMouseEvent *event){
+    //QGraphicsItem::mousePressEvent(event);
+    pressPos = QPointF(event->pos().x() * scale(), event->pos().y() * scale());
+    move_state = PRESSED;
+}
+
+void Papget::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    if(move_state == PRESSED) {
+        QPointF dp = event->pos() - pressPos;
+        double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());
+        if(d > qApp->property("MAP_MOVE_HYSTERESIS").toInt()) {
+            move_state = MOVED;
+        }
+    } else if(move_state == MOVED) {
+        setPos(event->scenePos() - pressPos);
+    }
+}
+void Papget::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
+    (void)event;
+    move_state = IDLE;
+    emit moved(pos());
+}
+void Papget::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+    (void)event;
 }
 
 QRectF Papget::boundingRect() const {
-    return  bounding_rect.marginsAdded(QMarginsF(20, 20, 20, 20));
-    //return QRectF(0, 0, 100, 50);
+    return  bounding_rect;
 }
 
 void Papget::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
@@ -149,10 +177,7 @@ void Papget::paint_text(QPainter *painter, const QStyleOptionGraphicsItem *optio
 
     QFontMetrics fm(font);
 
-    double w = fm.horizontalAdvance(text);
-    auto h = fm.height();
-
-    bounding_rect = QRectF(0, 0, w*scale_factor, h*scale_factor);
+    bounding_rect = fm.boundingRect(text);//QRectF(0, 0, w*scale_factor, h*scale_factor);
 }
 
 //QPainterPath Papget::shape() const {

@@ -360,6 +360,12 @@ void MapWidget::dropEvent(QDropEvent *event) {
         scene()->addItem(papget);
         papget->setZValue(1000);
         papgets.append(papget);
+
+        connect(papget, &Papget::moved, this, [=](QPointF pos) {
+            QPoint viewPos = mapFromScene(pos);
+            papget->setPosition(viewPos);
+        });
+
         papget->updateGraphics(this);
 
     }
