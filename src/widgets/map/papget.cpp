@@ -5,18 +5,25 @@
 #include <QApplication>
 #include <mapwidget.h>
 #include <type_traits>
+#include "AircraftManager.h"
+#include "papgetconfig.h"
 
 //TODO must unbind message in destructor, somehow
 
 Papget::Papget(struct DataDef datadef, QPoint pos_view, QObject *parent) : QObject(parent), QGraphicsItem(),
-    datadef(datadef), type(Type::NONE), style(Style::TEXT), pos_view(pos_view), move_state(MoveState::IDLE)
+    datadef(datadef), type(Type::NONE), pos_view(pos_view), move_state(MoveState::IDLE)
 {
+    params.style = Style::TEXT;
+    auto ac = AircraftManager::get()->getAircraft(datadef.ac_id);
+    params.color = ac.getColor();
+    params.fontSize = qApp->property("MAPITEMS_FONT").toInt();
+
     bindRet = PprzDispatcher::get()->bind(datadef.msg_name.toStdString(),
         [=](std::string sender, pprzlink::Message msg) {
             QTimer* timer = new QTimer();
             timer->moveToThread(qApp->thread());
             timer->setSingleShot(true);
-            QObject::connect(timer, &QTimer::timeout, [=]()
+            QObject::connect(timer, &QTimer::timeout, this, [=]()
             {
                 // main thread
                 callback(sender, msg);
@@ -25,6 +32,7 @@ Papget::Papget(struct DataDef datadef, QPoint pos_view, QObject *parent) : QObje
             QMetaObject::invokeMethod(timer, "start", Qt::QueuedConnection, Q_ARG(int, 0));
 
         });
+
 }
 
 
@@ -134,6 +142,20 @@ void Papget::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 }
 void Papget::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     (void)event;
+    Params old_params = params;
+    auto pc = new PapgetConfig(datadef, params);
+
+    connect(pc, &PapgetConfig::paramsChanged, this, [=](Params new_params) mutable {
+            params = new_params;
+    });
+
+    connect(pc, &QDialog::finished, this, [=](int result) mutable {
+        if(!result) {
+            params = old_params;
+        }
+    });
+
+    pc->open();
 }
 
 QRectF Papget::boundingRect() const {
@@ -141,7 +163,7 @@ QRectF Papget::boundingRect() const {
 }
 
 void Papget::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    if(style == Style::TEXT) {
+    if(params.style == Style::TEXT) {
         paint_text(painter, option, widget);
     }
 }
@@ -166,18 +188,18 @@ void Papget::paint_text(QPainter *painter, const QStyleOptionGraphicsItem *optio
         qDebug() << "Papget: no good value";
     }
 
-    QPainterPath path_draw;
     QFont font;
-    font.setPointSize (static_cast<int>(qApp->property("MAPITEMS_FONT").toInt()*scale_factor));
+    font.setPointSize (params.fontSize*scale_factor);
     font.setWeight(QFont::DemiBold);
+    QPainterPath path_draw;
     path_draw.addText(0, 0, font, text);
-    painter->setBrush(Qt::red);
+    painter->setBrush(params.color);
     painter->setPen(Qt::NoPen);
     painter->drawPath(path_draw);
 
     QFontMetrics fm(font);
 
-    bounding_rect = fm.boundingRect(text);//QRectF(0, 0, w*scale_factor, h*scale_factor);
+    bounding_rect = fm.boundingRect(text);
 }
 
 //QPainterPath Papget::shape() const {

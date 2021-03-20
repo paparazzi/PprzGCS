@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QGraphicsItem>
 #include "pprz_dispatcher.h"
+#include <QFont>
 
 class MapWidget;
 
@@ -20,6 +21,12 @@ public:
 
     enum Style {
         TEXT,
+    };
+
+    struct Params {
+        Style style;
+        QColor color;
+        int fontSize;
     };
 
     explicit Papget(struct DataDef datadef, QPoint pos_view, QObject *parent = nullptr);
@@ -56,6 +63,8 @@ private:
         MOVED,
     };
 
+
+
     struct DataDef datadef;
     long bindRet;
 
@@ -67,7 +76,6 @@ private:
     void paint_text(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
 
     Type type;
-    Style style;
 
     uint32_t val_u32;
     int32_t val_32;
@@ -80,6 +88,8 @@ private:
     QPoint pos_view;
     QPointF pressPos;
     MoveState move_state;
+
+    struct Params params;
 
 };
 

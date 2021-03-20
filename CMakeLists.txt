@@ -80,6 +80,7 @@ set(SOURCE
     src/widgets/map/graphics_objects/graphics_track.cpp
     src/widgets/map/graphics_objects/graphics_text.cpp
     src/widgets/map/papget.cpp
+    src/widgets/map/papgetconfig.cpp
 
     # src/widgets/map/fpedit_statemachines/item_edit_state_machine.cpp
     # src/widgets/map/fpedit_statemachines/waypointitem_sm.cpp
