@@ -1,0 +1,51 @@
+name: Doc
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - name: checkout
+      uses: actions/checkout@v2
+    
+    - name: build sphinx doc
+      uses: ammaraskar/sphinx-action@master
+      with:
+        build-command: "make html"
+        docs-folder: "docs"
+       
+    - name: Check files
+      run: ls docs/build
+  
+          
+    - name: Commit documentation changes
+      run: |
+        git clone https://github.com/$GITHUB_REPOSITORY.git --branch gh-pages --single-branch gh-pages
+        rm -r gh-pages/*
+        cp -r docs/build/html/* gh-pages/
+        cd gh-pages
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git commit -m "Update PprzGCS doc" -a || true
+        # The above command will fail if no changes were present, so we ignore
+        # the return code.
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        branch: gh-pages
+        directory: gh-pages
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        #force: true
+
