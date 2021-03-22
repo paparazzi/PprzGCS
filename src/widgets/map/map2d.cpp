@@ -28,10 +28,9 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     setTransformationAnchor(QGraphicsView::NoAnchor);
     setResizeAnchor(QGraphicsView::AnchorViewCenter);
-    setBackgroundBrush(QBrush(QColor("#353535")));
+    setBackgroundBrush(QBrush(QColor(151515)));
 
     Point2DLatLon initLatLon(43.462344,1.273044);
-    centerLatLon(initLatLon);
 }
 
 void Map2D::toggleTileProvider(QString providerName, bool enable, int zValue, qreal opacity) {
@@ -71,7 +70,7 @@ void Map2D::setLayerZ(QString providerName, int z) {
 
 void Map2D::setTilesPath(QString path) {
     tiles_path = path;
-    for(auto tp: tile_providers) {
+    for(auto &tp: tile_providers) {
         tp.second->setTilesPath(tiles_path);
     }
 }
@@ -201,7 +200,7 @@ void Map2D::zoomCentered(double z, QPoint eventPos) {
     QPointF delta = newPos - poi_scene;
     translate(delta.x(), delta.y());
 
-    for(auto elt: tile_providers) {
+    for(auto &elt: tile_providers) {
         elt.second->setZoomLevel(nextZoomLevel);
     }
 
@@ -223,7 +222,7 @@ void Map2D::updateTiles() {
     int yCenter = static_cast<int>(center.y()/tile_size);
     int N = std::max(width(), height()) / (tile_size);
 
-    for(auto elt: tile_providers) {
+    for(auto &elt: tile_providers) {
         TileProvider* tileProvider = elt.second;
         if(tileProvider->isVisible()) {
 
@@ -280,7 +279,7 @@ void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {
 
 QList<QString> Map2D::tileProvidersNames() {
     QList<QString> names;
-    for(auto tp:sourceConfigs) {
+    for(auto &tp: sourceConfigs) {
         names.append(tp.first);
     }
     return names;

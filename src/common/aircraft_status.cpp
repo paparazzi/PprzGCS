@@ -30,37 +30,37 @@ void AircraftStatus::updateMessage(pprzlink::Message msg) {
         last_messages[name] = msg;
 
         if(name == "FLIGHT_PARAM") {
-            emit(flight_param());
+            emit flight_param();
         }
         else if(name == "AP_STATUS") {
-            emit(ap_status());
+            emit ap_status();
         }
         else if(name == "NAV_STATUS") {
-            emit(nav_status());
+            emit nav_status();
         }
         else if(name == "CIRCLE_STATUS") {
-            emit(circle_status());
+            emit circle_status();
         }
         else if(name == "SEGMENT_STATUS") {
-            emit(segment_status());
+            emit segment_status();
         }
         else if(name == "ENGINE_STATUS") {
-            emit(engine_status());
+            emit engine_status();
         }
         else if(name == "WAYPOINT_MOVED") {
-            emit(waypoint_moved());
+            emit waypoint_moved();
         }
         else if(name == "DL_VALUES") {
-            emit(dl_values());
+            emit dl_values();
         }
         else if(name == "TELEMETRY_STATUS") {
-            emit(telemetry_status());
+            emit telemetry_status();
         }
         else if(name == "FLY_BY_WIRE") {
-            emit(fly_by_wire());
+            emit fly_by_wire();
         }
         else if(name == "SVSINFO") {
-            emit(svsinfo());
+            emit svsinfo();
         }
     }
 }

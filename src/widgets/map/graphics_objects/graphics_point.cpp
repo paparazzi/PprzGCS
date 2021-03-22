@@ -105,7 +105,7 @@ void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         }
     } else if(move_state == PMS_MOVED) {
         setPos(event->scenePos() - pressPos);
-        emit(pointMoved(event->scenePos() - pressPos));
+        emit pointMoved(event->scenePos() - pressPos);
     }
 }
 
@@ -115,10 +115,10 @@ void GraphicsPoint::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         return;
     }
     if(move_state == PMS_PRESSED) {
-        emit(objectClicked(event->scenePos()));
+        emit objectClicked(event->scenePos());
     }
     else if(move_state == PMS_MOVED) {
-        emit(pointMoveFinished(event->scenePos() - pressPos));
+        emit pointMoveFinished(event->scenePos() - pressPos);
     }
     move_state = PMS_IDLE;
     changeFocus();
@@ -129,7 +129,7 @@ void GraphicsPoint::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
         event->ignore();
         return;
     }
-    emit(objectDoubleClicked(event->scenePos()));
+    emit objectDoubleClicked(event->scenePos());
 }
 
 void GraphicsPoint::changeFocus() {

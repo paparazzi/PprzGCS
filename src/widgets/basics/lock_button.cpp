@@ -67,7 +67,7 @@ void LockButton::paintEvent(QPaintEvent* e) {
     }
 
     if(active) {
-        painter.setBrush(QBrush("#50e050"));
+        painter.setBrush(QBrush(0x50e050));
         painter.drawRect(active_rect);
     }
 }
@@ -95,12 +95,12 @@ void LockButton::mouseReleaseEvent(QMouseEvent *e) {
 
     if(lock_rect.contains(e->pos())) {
         _locked = !_locked;
-        emit(locked(_locked));
+        emit locked(_locked);
 
     } else {
         active = !active;
         state = HOVER;
-        emit(clicked(active));
+        emit clicked(active);
     }
 
     repaint();

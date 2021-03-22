@@ -20,7 +20,7 @@ void MbPushButton::mousePressEvent(QMouseEvent *e) {
 void MbPushButton::mouseReleaseEvent(QMouseEvent *e) {
     QPushButton::mouseReleaseEvent(e);
     if(e->button() == Qt::RightButton) {
-        emit(rightClicked());
+        emit rightClicked();
     }
 }
 
@@ -29,11 +29,11 @@ void MbPushButton::mouseMoveEvent(QMouseEvent *e) {
 }
 
 void MbPushButton::enterEvent(QEvent *event) {
-    emit(enter());
+    emit enter();
     QPushButton::enterEvent(event);
 }
 
 void MbPushButton::leaveEvent(QEvent *event) {
-    emit(leave());
+    emit leave();
     QPushButton::leaveEvent(event);
 }

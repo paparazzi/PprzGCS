@@ -46,7 +46,7 @@ MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState
         opacitySlider, &QSlider::valueChanged,
         [=](int value) {
             (void) value;
-            emit(layerOpacityChanged(opacity()));
+            emit layerOpacityChanged(opacity());
         });
 
 }
@@ -73,11 +73,11 @@ void MapLayerControl::toggleShowState() {
     } else {
         setShowState(true);
     }
-    emit(showLayer(showState));
+    emit showLayer(showState);
 }
 
 void MapLayerControl::setZValue(int z) {
     z_value = z;
-    emit(zValueChanged(z));
+    emit zValueChanged(z);
 }
 

@@ -190,7 +190,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     connect(AircraftManager::get()->getAircraft(ac_id).getStatus(),
             &AircraftStatus::nav_status, this, &MiniStrip::updateNavStatus);
 
-    emit(updated());
+    emit updated();
 }
 
 void MiniStrip::updateEngineStatus() {
@@ -202,7 +202,7 @@ void MiniStrip::updateEngineStatus() {
         bat_label->setText(QString::number(bat) + " V");
         /// TODO: change bat icon : full/half/low
         throttle_label->setText(QString::number(throttle) + " %");
-        emit(updated());
+        emit updated();
     }
 }
 
@@ -236,9 +236,9 @@ void MiniStrip::updateApStatus() {
         if(ap_mode == "HOME" || ap_mode == "FAILSAFE") {
             ap_mode_label->setBrush(Qt::red);
         } else if (ap_mode == "MANUAL") {
-            ap_mode_label->setBrush(QColor("#ffa500"));
+            ap_mode_label->setBrush(QColor(0xffa500));
         } else {
-            ap_mode_label->setBrush(QColor("#7ef17e"));
+            ap_mode_label->setBrush(QColor(0x7ef17e));
         }
         ap_mode_label->setText(ap_mode.c_str());
 
@@ -256,7 +256,7 @@ void MiniStrip::updateApStatus() {
             imu_icon->setPixmap(imu_lost.pixmap(icons_size));
         }
         imu_icon->setToolTip("IMU " + QString(state_filter_mode.c_str()));
-        emit(updated());
+        emit updated();
     }
 }
 
@@ -282,7 +282,7 @@ void MiniStrip::updateFlightParams() {
             speed_label->setText(QString::number(airspeed, 'f', 1) + " m/s");
         }
 
-        emit(updated());
+        emit updated();
 
 //        QString txt = QString::number(climb, 'f', 1);
 //        if(climb > 0) {
@@ -322,7 +322,7 @@ void MiniStrip::updateTelemetryStatus() {
             link_icon->setPixmap(link_ok.pixmap(icons_size));
             link_icon->setToolTip("Link");
         }
-        emit(updated());
+        emit updated();
     }
 }
 
@@ -340,7 +340,7 @@ void MiniStrip::updateFBW() {
         }
 
         rc_icon->setToolTip("RC " + QString(rc_status.c_str()));
-        emit(updated());
+        emit updated();
     }
 }
 
@@ -367,14 +367,14 @@ void MiniStrip::updateNavStatus() {
             block_icon->setText(QString::fromUtf8("\xE2\x88\x85"));
         }
     }
-    emit(updated());
+    emit updated();
 }
 
 bool MiniStrip::eventFilter(QObject *object, QEvent *event)
 {
     (void) object;
     if (event->type() == QEvent::MouseButtonPress) {
-        emit(DispatcherUi::get()->ac_selected(ac_id));
+        emit DispatcherUi::get()->ac_selected(ac_id);
         return true;
     }
     return false;

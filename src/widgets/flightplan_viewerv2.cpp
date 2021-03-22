@@ -53,7 +53,7 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
 
         auto go_button = new QToolButton(widget);
         go_button->setText("go");
-        connect(go_button, &QPushButton::clicked,
+        connect(go_button, &QPushButton::clicked, this,
             [=]() {
                 auto ACId = ac_id.toStdString();
                 pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("JUMP_TO_BLOCK"));
@@ -122,7 +122,7 @@ QWidget* FlightPlanViewerV2::make_tree(shared_ptr<Block> block, std::function<vo
     hlay->addWidget(lbl);
 
     connect(ret_but, &QToolButton::clicked, return_home);
-    connect(lbl, &QPushButton::clicked,
+    connect(lbl, &QPushButton::clicked, this,
         [=]() {
             auto ACId = ac_id.toStdString();
             pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("JUMP_TO_BLOCK"));
@@ -136,13 +136,13 @@ QWidget* FlightPlanViewerV2::make_tree(shared_ptr<Block> block, std::function<vo
     tree->setColumnCount(3);
     tree->setHeaderLabels(QStringList() << "Instr" << "Attrib" << "Value");
     //tree->setHeaderHidden(true);
-    for(auto stage: block->getStages()) {
+    for(auto &stage: block->getStages()) {
         auto instruction = stage.instruction.c_str();
         auto item = new QTreeWidgetItem(tree);
 
         item->setText(0, instruction);
         tree->addTopLevelItem(item);
-        for(auto [k, v]: stage.attributes) {
+        for(auto &[k, v]: stage.attributes) {
             auto attr_item = new QTreeWidgetItem(item);
 
             QString val = v.c_str();
@@ -172,7 +172,7 @@ QWidget* FlightPlanViewerV2::make_waypoints_tab() {
     for(auto waypoint: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
         QString txt = waypoint->getName().c_str() + QString("\t");
 
-        for(auto att: waypoint->getXmlAttributes()) {
+        for(auto &att: waypoint->getXmlAttributes()) {
             if(att.first != "name") {
                 txt += QString("\t") + att.first.c_str() + "=" + att.second.c_str();
             }
@@ -187,7 +187,7 @@ QWidget* FlightPlanViewerV2::make_waypoints_tab() {
 
 QWidget* FlightPlanViewerV2::make_exceptions_tab() {
     auto list = new QListWidget(this);
-    for(auto ex: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getExeptions()) {
+    for(auto &ex: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getExeptions()) {
         QString txt = QString("cond: ") + ex->cond.c_str() + QString("\tderoute: ") + ex->deroute.c_str();
         list->addItem(txt);
     }
@@ -196,7 +196,7 @@ QWidget* FlightPlanViewerV2::make_exceptions_tab() {
 
 QWidget* FlightPlanViewerV2::make_variables_tab() {
     auto list = new QListWidget(this);
-    for(auto var: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getVariables()) {
+    for(auto &var: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getVariables()) {
         QString txt;
         if(var->type == Variable::VARIABLE) {
             txt += QString("var: ");
@@ -204,7 +204,7 @@ QWidget* FlightPlanViewerV2::make_variables_tab() {
             txt += QString("abi_binding: ");
         }
 
-        for(auto att:var->attributes) {
+        for(auto &att:var->attributes) {
             txt += QString("  ") + att.first.c_str() + "=" + att.second.c_str();
         }
 
@@ -219,7 +219,7 @@ QWidget* FlightPlanViewerV2::make_sectors_tab() {
         QString txt;
 
         txt += QString("sector ") + sec->getName().c_str() + ":";
-        for(auto corner: sec->getCorners()) {
+        for(auto &corner: sec->getCorners()) {
             txt += QString(" ") + corner->getName().c_str();
         }
 

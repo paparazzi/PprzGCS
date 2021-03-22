@@ -98,7 +98,7 @@ void SettingsViewer::init(QString ac_id) {
     scroll_content->setCurrentIndex(widgets_indexes[settings]);
 
     connect(
-        button_home, &QToolButton::clicked,
+        button_home, &QToolButton::clicked, this,
         [=]() {
             scroll_content->setCurrentIndex(widgets_indexes[settings]);
             path->setCurrentIndex(path_indexes[settings]);
@@ -130,7 +130,7 @@ void SettingsViewer::create_widgets(shared_ptr<SettingMenu> setting_menu, QList<
             current_path_layout->addWidget(button);
 
             connect(
-                button, &QPushButton::clicked,
+                button, &QPushButton::clicked, this,
                 [=]() {
 
                     scroll_content->setCurrentIndex(widgets_indexes[setm]);
@@ -156,7 +156,7 @@ void SettingsViewer::create_widgets(shared_ptr<SettingMenu> setting_menu, QList<
 
         create_widgets(sets, new_stack);
         connect(
-            button, &QPushButton::clicked,
+            button, &QPushButton::clicked, this,
             [=]() {
                 scroll_content->setCurrentIndex(widgets_indexes[sets]);
                 path->setCurrentIndex(path_indexes[sets]);
@@ -167,7 +167,7 @@ void SettingsViewer::create_widgets(shared_ptr<SettingMenu> setting_menu, QList<
             }
         );
     }
-    for(auto set: setting_menu->getSettings()) {
+    for(auto &set: setting_menu->getSettings()) {
         auto setting_widget = makeSettingWidget(set, widget);
         menu_layout->addWidget(setting_widget);
         setting_widgets[set] = setting_widget;
@@ -247,7 +247,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
     reset_btn->setToolTip("reset to initial");
     hlay->addWidget(reset_btn);
 
-    connect(value_btn, &QPushButton::clicked, [=]() {
+    connect(value_btn, &QPushButton::clicked, this, [=]() {
         qDebug() << "setting " << setting->getNo() << " of AC " << ac_id << " clicked !";
         value_btn->setText("?");
         pprzlink::Message getSetting(PprzDispatcher::get()->getDict()->getDefinition("GET_DL_SETTING"));
@@ -256,13 +256,13 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
         PprzDispatcher::get()->sendMessage(getSetting);
     });
 
-    connect(undo_btn, &QToolButton::clicked, [=]() {
+    connect(undo_btn, &QToolButton::clicked, this, [=]() {
         auto prev = setting->getPreviousValue();
         AircraftManager::get()->getAircraft(ac_id).setSetting(setting, prev);
         setting->setValue(prev);
     });
 
-    connect(reset_btn, &QToolButton::clicked, [=]() {
+    connect(reset_btn, &QToolButton::clicked, this, [=]() {
         auto initial_value = setting->getInitialValue();
         if(initial_value.has_value()) {
             AircraftManager::get()->getAircraft(ac_id).setSetting(setting, initial_value.value());
@@ -278,7 +278,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
     if(setting->getValues().size() > 2) {
         // named values -> combo box
         QComboBox* combo = new QComboBox(widget);
-        for(string s:setting->getValues()) {
+        for(string &s:setting->getValues()) {
             combo->addItem(s.c_str());
         }
         vLay->addWidget(combo);
@@ -288,7 +288,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
             value_btn->setText(combo->itemText(static_cast<int>(value)));
         };
 
-        connect(ok_btn, &QToolButton::clicked, [=]() {
+        connect(ok_btn, &QToolButton::clicked, this, [=]() {
             float value = static_cast<float>(combo->currentIndex());
             AircraftManager::get()->getAircraft(ac_id).setSetting(setting, value);
             setting->setValue(value);
@@ -321,7 +321,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
             value_btn->setText(txt);
         };
 
-        connect(ok_btn, &QToolButton::clicked, [=, min=min, max=max]() {
+        connect(ok_btn, &QToolButton::clicked, this, [=, min=min, max=max]() {
             float value = sw->isChecked() ? max : min;
             AircraftManager::get()->getAircraft(ac_id).setSetting(setting, value);
             setting->setValue(value);
@@ -335,7 +335,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
         uniq_val->setAlignment(Qt::AlignCenter);
         vLay->addWidget(uniq_val);
 
-        connect(ok_btn, &QToolButton::clicked, [=]() {
+        connect(ok_btn, &QToolButton::clicked, this, [=]() {
             AircraftManager::get()->getAircraft(ac_id).setSetting(setting, value);
             setting->setValue(value);
         });
@@ -373,7 +373,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
                 }
             });
 
-        connect(raw_edit, &QLineEdit::returnPressed,
+        connect(raw_edit, &QLineEdit::returnPressed, this,
             [=, min=min, max=max]() {
                 auto txt = raw_edit->text();
                 bool ok;
@@ -402,7 +402,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
         vbox->addWidget(expert_button);
         vLay->addLayout(vbox);
 
-        connect(ok_btn, &QToolButton::clicked, [=]() {
+        connect(ok_btn, &QToolButton::clicked, this, [=]() {
             auto coef = setting->getAltUnitCoef();
             float value = static_cast<float>(slider->doubleValue()) / coef;
             AircraftManager::get()->getAircraft(ac_id).setSetting(setting, value);

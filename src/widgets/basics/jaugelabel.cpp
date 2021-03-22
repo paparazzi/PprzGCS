@@ -10,8 +10,8 @@ JaugeLabel::JaugeLabel(QWidget *parent) : JaugeLabel(0, 1, "%",  parent)
 JaugeLabel::JaugeLabel(double min, double max, QString unit, QWidget *parent) :
     QWidget(parent), min(min), max(max), unit(unit), precision(2), minSize(20,10)
 {
-    brushBackEnabled = QColor("#ffa500");
-    brushLeft = QColor("#7ef17e");
+    brushBackEnabled = QColor(0xffa500);
+    brushLeft = QColor(0x7ef17e);
     brushBackDisabled = Qt::red;
 }
 

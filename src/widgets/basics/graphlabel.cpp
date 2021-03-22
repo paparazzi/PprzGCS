@@ -7,8 +7,8 @@
 
 GraphLabel::GraphLabel(QWidget *parent) : QWidget(parent)
 {
-    brushTop = QColor("#ffa500");
-    brushBottom = QColor("#7ef17e");
+    brushTop = QColor(0xffa500);
+    brushBottom = QColor(0x7ef17e);
     timespan = 6;
     max = 14;
     min = 8;
@@ -17,8 +17,8 @@ GraphLabel::GraphLabel(QWidget *parent) : QWidget(parent)
 GraphLabel::GraphLabel(double min, double max, QWidget *parent) : QWidget (parent), min(min), max(max),
     unit(""), precision(2), dual_text(false), indicator_angle(0.0)
 {
-    brushTop = QColor("#ffa500");
-    brushBottom = QColor("#7ef17e");
+    brushTop = QColor(0xffa500);
+    brushBottom = QColor(0x7ef17e);
     timespan = 10;
 }
 
@@ -47,7 +47,7 @@ void GraphLabel::paintEvent(QPaintEvent *e) {
     p.drawRoundedRect(rect(), 5, 5);
 
     QPolygonF polygon;
-    for(auto [t, v]: data) {
+    for(auto &[t, v]: data) {
         double y = (1 -std::clamp((v - min) / (max - min), 0., 1.)) * rect().height();
         double x = (1 - std::clamp(t.msecsTo(QTime::currentTime())/(timespan*1000.), 0., 1.)) * rect().width();
         polygon.prepend(QPointF(x, y));

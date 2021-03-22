@@ -76,7 +76,7 @@ void Pfd::paintEvent(QPaintEvent *event) {
         }
 
     } else {
-        auto no_ac_color = QColor("#808080");
+        auto no_ac_color = QColor(0x808080);
         QRect rect = placeRect(0);
         QPointF center = placeCenter(0);
         paintPitch(rect, center, no_ac_color, 0, 0);
@@ -98,7 +98,7 @@ void Pfd::paintPitch(QRect rect,  QPointF center, QColor ac_color, float pitch, 
     painter.setRenderHint(QPainter::Antialiasing);
     painter.translate(center);
 
-    painter.setBrush(QBrush(QColor("#00b0ea")));
+    painter.setBrush(QBrush(QColor(0x00b0ea)));
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(rect);
 
@@ -106,7 +106,7 @@ void Pfd::paintPitch(QRect rect,  QPointF center, QColor ac_color, float pitch, 
     double y = sin(alpha) * rect.height() / 2;
     double x = cos(alpha) * rect.width() / 2 - border_stroke;
 
-    painter.setBrush(QColor("#986701"));
+    painter.setBrush(QColor(0x986701));
     painter.drawChord(rect, static_cast<int>(16*(alpha - M_PI)*180.0/M_PI), static_cast<int>(16*(2*(M_PI_2-alpha))*180.0/M_PI));
 
     QPen pen = QPen(Qt::white, 4);
@@ -137,7 +137,7 @@ void Pfd::paintRoll(QRect rect,  QPointF center, QColor ac_color, float pitch, f
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.translate(center);
-    painter.setBrush(QBrush(QColor("#00b0ea")));
+    painter.setBrush(QBrush(QColor(0x00b0ea)));
     painter.setPen(Qt::NoPen);
     painter.drawEllipse(rect);
 
@@ -145,7 +145,7 @@ void Pfd::paintRoll(QRect rect,  QPointF center, QColor ac_color, float pitch, f
     double y = sin(alpha) * rect.height() / 2;
     double x = cos(alpha) * rect.width() / 2 - border_stroke;
 
-    painter.setBrush(QColor("#986701"));
+    painter.setBrush(QColor(0x986701));
     painter.drawChord(rect, static_cast<int>(16*(alpha - M_PI)*180.0/M_PI), static_cast<int>(16*(2*(M_PI_2-alpha))*180.0/M_PI));
 
     QPen pen = QPen(Qt::white, 4);
@@ -176,7 +176,7 @@ void Pfd::paintYaw(QRect rect, QPointF center, QColor ac_color, float yaw) {
     painter.setRenderHint(QPainter::Antialiasing);
     painter.translate(center);
     painter.setPen(Qt::NoPen);
-    painter.setBrush(QBrush(QColor("#000000")));
+    painter.setBrush(QBrush(QColor(Qt::black)));
     painter.drawEllipse(rect);
 
     QRect rect_rose = QRect(rect.left() + border_stroke, rect.top() + border_stroke, rect.width()-2*border_stroke, rect.height()-2*border_stroke);

@@ -16,7 +16,7 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     auto combo = new QComboBox(this);
     combo->addItem("WGS84");
     combo->addItem("WGS84 sexa");
-    for(auto wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
+    for(auto &wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
         combo->addItem(wp->getName().c_str());
     }
     infoLay->addWidget(combo);
@@ -130,13 +130,13 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     lay->addWidget(buttonBox);
 
-    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, [=](){
-        emit(DispatcherUi::get()->move_waypoint(wi->waypoint(), ac_id));
+    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [=](){
+        emit DispatcherUi::get()->move_waypoint(wi->waypoint(), ac_id);
         accept();
 
     });
 
-    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, [=](){
+    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=](){
         reject();
     });
 }

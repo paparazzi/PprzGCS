@@ -61,7 +61,7 @@ void Commands::paintEvent(QPaintEvent* e) {
 void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
     auto groups = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getGroups();
     int col = 0;
-    for(auto group: groups) {
+    for(auto &group: groups) {
         int row = 0;
         for(auto block: group->blocks) {
             QString icon = block->getIcon().c_str();
@@ -82,7 +82,7 @@ void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
 
             if(b != nullptr) {
                 fp_buttons_layout->addWidget(b, row, col);
-                  connect(b, &QPushButton::clicked,
+                  connect(b, &QPushButton::clicked, this,
                     [=]() {
                         pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("JUMP_TO_BLOCK"));
                         msg.addField("ac_id", ac_id.toStdString());
@@ -100,9 +100,9 @@ void Commands::addSettingsButtons(QGridLayout* settings_buttons_layout) {
     vector<shared_ptr<SettingMenu::ButtonGroup>> groups = AircraftManager::get()->getAircraft(ac_id).getSettingMenu()->getButtonGroups();
 
     int col = 0;
-    for(auto group: groups) {
+    for(auto &group: groups) {
         int row = 0;
-        for(auto sb: group->buttons) {
+        for(auto &sb: group->buttons) {
             QString icon = sb->icon.c_str();
             QString name = sb->name.c_str();
             QPushButton* b = nullptr;
@@ -121,7 +121,7 @@ void Commands::addSettingsButtons(QGridLayout* settings_buttons_layout) {
 
             if(b != nullptr) {
                 settings_buttons_layout->addWidget(b, row, col);
-                  connect(b, &QPushButton::clicked,
+                  connect(b, &QPushButton::clicked, this,
                     [=]() {
                         AircraftManager::get()->getAircraft(ac_id).setSetting(sb->setting_no, sb->value);
                 });

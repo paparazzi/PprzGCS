@@ -109,10 +109,6 @@ void configure(QString config_file) {
         abort();
     }
 
-    QString PAPARAZZI_HOME = qgetenv("PAPARAZZI_HOME");
-    QString PAPARAZZI_SRC = qgetenv("PAPARAZZI_SRC");
-
-
     QTextStream stream(&gcsConfig);
 
     set_default_config();

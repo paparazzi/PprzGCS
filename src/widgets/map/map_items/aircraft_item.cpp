@@ -19,8 +19,6 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
     color_idle = aircraft.getColor();
     color_unfocused = labelUnfocusedColor(aircraft.getColor());
 
-    QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
-
     graphics_aircraft = new GraphicsAircraft(aircraft.getColor(), aircraft.getIcon(), size);
     graphics_text = new GraphicsText(aircraft.name());
     graphics_text->setDefaultTextColor(aircraft.getColor());
@@ -84,7 +82,7 @@ void AircraftItem::setPosition(Point2DLatLon pt) {
         track_chuncks[first_chunk_index].removeFirst();
     }
 
-    emit(itemChanged());
+    emit itemChanged();
 }
 
 void AircraftItem::clearTrack() {
@@ -92,12 +90,12 @@ void AircraftItem::clearTrack() {
         tc.clear();
         last_chunk_index = 0;
     }
-    emit(itemChanged());
+    emit itemChanged();
 }
 
 void AircraftItem::setHeading(double h) {
     heading = h;
-    emit(itemChanged());
+    emit itemChanged();
 }
 
 void AircraftItem::setHighlighted(bool h) {

@@ -22,7 +22,7 @@ WidgetStack::WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor,
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &WidgetStack::removeAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this,
             [=](QString ac_id) {
-                for(auto id : viewers_widgets.keys()) {
+                for(auto &id : viewers_widgets.keys()) {
                     if(id == ac_id) {
                         viewers_widgets[id]->show();
                     } else {

@@ -12,7 +12,7 @@ void GraphicsObject::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     (void)event;
     if(!highlighted && !forbid_highlight) {
         highlighted = true;
-        emit(objectGainedHighlight());
+        emit objectGainedHighlight();
     }
 }
 

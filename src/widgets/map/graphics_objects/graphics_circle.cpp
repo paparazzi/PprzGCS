@@ -143,7 +143,7 @@ void GraphicsCircle::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         radius = static_cast<int>(r);
         textPos = mousePos;
         update();
-        emit(circleScaled(radius));
+        emit circleScaled(radius);
     }
 }
 
@@ -154,10 +154,10 @@ void GraphicsCircle::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     }
 
     if(scale_state == CSS_PRESSED) {
-        emit(objectClicked(event->scenePos()));
+        emit objectClicked(event->scenePos());
     }
     else if(scale_state == CSS_SCALED) {
-        emit(circleScaleFinished());
+        emit circleScaleFinished();
     }
     scale_state = CSS_IDLE;
     display_radius = false;

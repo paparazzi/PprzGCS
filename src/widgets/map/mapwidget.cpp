@@ -60,7 +60,7 @@ void MapWidget::addLayersWidget() {
     //layer_combo->setStyleSheet("QWidget{background-color: #31363b;} QLabel{color:white;}");
 
     int i = tileProvidersNames().length();
-    for(auto tp: tileProvidersNames() ) {
+    for(auto &tp: tileProvidersNames() ) {
         bool shown = false;
         if(tp == qApp->property("DEFAULT_TILE_PROVIDER").toString()) {
             toggleTileProvider(tp, true, i, 1);
@@ -287,7 +287,7 @@ void MapWidget::mouseMoveEvent(QMouseEvent *event) {
             papget->updateGraphics(this);
         }
     }
-    emit(mouseMoved(mapToScene(event->pos())));
+    emit mouseMoved(mapToScene(event->pos()));
 }
 
 void MapWidget::mouseReleaseEvent(QMouseEvent *event) {

@@ -37,7 +37,7 @@ SRTMManager::SRTMManager(): QObject ()
 
 SRTMManager::~SRTMManager()
 {
-    for(auto tile: tiles) {
+    for(auto &tile: tiles) {
         delete tile.second;
     }
     tiles.clear();

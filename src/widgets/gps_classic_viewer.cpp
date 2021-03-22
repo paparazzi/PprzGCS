@@ -23,18 +23,18 @@ void GPSClassicViewer::paintEvent(QPaintEvent *event) {
     auto [pacc, infos] = getData();
 
     int nb_sat_used = 0;
-    for(auto info: infos) {
+    for(auto &info: infos) {
         if(info.flags & 0x01) {
             nb_sat_used++;
         }
     }
 
     if(pacc > 800 || nb_sat_used <= 4) {
-        p.setBrush(QColor("#ff8888"));
+        p.setBrush(QColor(0xff8888));
     } else if(pacc > 400 || nb_sat_used <= 6) {
-        p.setBrush(QColor("#ffc088"));
+        p.setBrush(QColor(0xffc088));
     } else {
-        p.setBrush(QColor("#88ff88"));
+        p.setBrush(QColor(0x88ff88));
     }
     p.setPen(Qt::NoPen);
     p.drawRect(rect());
@@ -62,12 +62,12 @@ void GPSClassicViewer::paintEvent(QPaintEvent *event) {
 
             p.setPen(Qt::NoPen);
             if(age > 4) {
-                p.setBrush(QColor("#888888"));
+                p.setBrush(QColor(0x888888));
             } else {
                 if(flags & 0x01) {
-                    p.setBrush(QColor("#00a000"));
+                    p.setBrush(QColor(0x00a000));
                 } else {
-                    p.setBrush(QColor("#cc0000"));
+                    p.setBrush(QColor(0xcc0000));
                 }
             }
 
@@ -150,7 +150,7 @@ std::tuple<uint16_t, QList<struct GPSClassicViewer::SvInfo>> GPSClassicViewer::g
 
     QList< struct SvInfo> infos;
 
-    for(auto id: QString(_svids.c_str()).split(',')) {
+    for(auto &id: QString(_svids.c_str()).split(',')) {
         svids.append(id.toInt());
     }
 
@@ -158,13 +158,13 @@ std::tuple<uint16_t, QList<struct GPSClassicViewer::SvInfo>> GPSClassicViewer::g
 //        svids.append(sv.toInt());
 //    }
 
-    for(auto fls: QString(_flags.c_str()).split(',')) {
+    for(auto &fls: QString(_flags.c_str()).split(',')) {
         flags.append(fls.toInt());
     }
 
     // qis
 
-    for(auto cn: QString(_cnos.c_str()).split(',')) {
+    for(auto &cn: QString(_cnos.c_str()).split(',')) {
         cno.append(cn.toInt());
     }
 
@@ -172,7 +172,7 @@ std::tuple<uint16_t, QList<struct GPSClassicViewer::SvInfo>> GPSClassicViewer::g
 
     // azims
 
-    for(auto age: QString(_msg_ages.c_str()).split(',')) {
+    for(auto &age: QString(_msg_ages.c_str()).split(',')) {
         msg_age.append(age.toInt());
     }
 

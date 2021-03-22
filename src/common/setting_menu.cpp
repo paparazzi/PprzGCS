@@ -83,7 +83,7 @@ vector<shared_ptr<SettingMenu::ButtonGroup>> SettingMenu::getButtonGroups() {
 
     vector<shared_ptr<Setting::StripButton>> buttons;
     for(auto setting: getAllSettings()) {
-        for(auto sb: setting->getStripButtons()) {
+        for(auto &sb: setting->getStripButtons()) {
             buttons.push_back(sb);
         }
     }
@@ -91,7 +91,7 @@ vector<shared_ptr<SettingMenu::ButtonGroup>> SettingMenu::getButtonGroups() {
 
     std::map<std::string, shared_ptr<ButtonGroup>> groups_map;
 
-    for(auto b: buttons) {
+    for(auto &b: buttons) {
         if(groups_map.find(b->group) == groups_map.end()) {
             groups_map[b->group] = make_shared<ButtonGroup>();
             groups_map[b->group]->group_name = b->group;

@@ -91,9 +91,9 @@ Airframe::Airframe(std::string uri) {
 
 
 string Airframe::getIconName() {
-    for(auto s: sections) {
+    for(auto &s: sections) {
         if(s.name == "GCS") {
-            for(auto d: s.defines) {
+            for(auto &d: s.defines) {
                 if(d.name == "AC_ICON") {
                     return d.value;
                 }
@@ -105,9 +105,9 @@ string Airframe::getIconName() {
 }
 
 float Airframe::getAltShiftPlus() {
-    for(auto s: sections) {
+    for(auto &s: sections) {
         if(s.name == "GCS") {
-            for(auto d: s.defines) {
+            for(auto &d: s.defines) {
                 if(d.name == "ALT_SHIFT_PLUS") {
                     return stof(d.value);
                 }
@@ -126,9 +126,9 @@ float Airframe::getAltShiftPlus() {
 }
 
 float Airframe::getAltShiftPlusPlus() {
-    for(auto s: sections) {
+    for(auto &s: sections) {
         if(s.name == "GCS") {
-            for(auto d: s.defines) {
+            for(auto &d: s.defines) {
                 if(d.name == "ALT_SHIFT_PLUS_PLUS") {
                     return stof(d.value);
                 }
@@ -146,9 +146,9 @@ float Airframe::getAltShiftPlusPlus() {
 }
 
 float Airframe::getAltShiftMinus() {
-    for(auto s: sections) {
+    for(auto &s: sections) {
         if(s.name == "GCS") {
-            for(auto d: s.defines) {
+            for(auto &d: s.defines) {
                 if(d.name == "ALT_SHIFT_MINUS") {
                     return stof(d.value);
                 }

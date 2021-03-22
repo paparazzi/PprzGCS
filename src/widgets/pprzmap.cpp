@@ -56,12 +56,12 @@ PprzMap::PprzMap(QWidget *parent) :
     connect(ui->srtm_button, &QPushButton::clicked, [=]() {
 
         // Download SRTM tile(s) for each flightplan footprint
-        for(auto ac: AircraftManager::get()->getAircrafts()) {
+        for(auto &ac: AircraftManager::get()->getAircrafts()) {
             double min_lat = 90;
             double min_lon = 180;
             double max_lat = -90;
             double max_lon = -180;
-            for(auto wp: ac.getFlightPlan().getWaypoints()) {
+            for(auto &wp: ac.getFlightPlan().getWaypoints()) {
                 min_lat = min(min_lat, wp->getLat());
                 max_lat = max(max_lat, wp->getLat());
                 min_lon = min(min_lon, wp->getLon());
@@ -116,7 +116,7 @@ void PprzMap::changeCurrentAC(QString id) {
             ui->reference_combobox->removeItem(2);
         }
 
-        for(auto wp: waypoints) {
+        for(auto &wp: waypoints) {
             if(wp->getName()[0] != '_') {
                 ui->reference_combobox->addItem(wp->getName().c_str());
             }
@@ -250,7 +250,7 @@ void PprzMap::handleNewAC(QString ac_id) {
     auto item_manager = make_shared<ACItemManager>(ac_id, target, aircraft_item);
     ac_items_managers[ac_id] = item_manager;
 
-    for(auto wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
+    for(auto &wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
         WaypointItem* wpi = new WaypointItem(wp, ac_id);
         ui->map->addItem(wpi);
         item_manager->addWaypointItem(wpi);
@@ -282,7 +282,7 @@ void PprzMap::handleNewAC(QString ac_id) {
         // static sector are not supported
         if(sector->getType() == Sector::DYNAMIC) {
             PathItem* pi = new PathItem(ac_id);
-            for(auto wp: sector->getCorners()) {
+            for(auto &wp: sector->getCorners()) {
                 for(auto wpi: item_manager->getWaypointsItems()) {
                     if(wpi->getOriginalWaypoint() == wp) {
                         pi->addPoint(wpi);

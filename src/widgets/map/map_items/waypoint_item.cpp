@@ -50,14 +50,14 @@ void WaypointItem::init() {
     connect(
         point, &GraphicsPoint::objectClicked, this,
         [=](QPointF scene_pos) {
-            emit(itemClicked(scene_pos));
+            emit itemClicked(scene_pos);
         }
     );
 
     connect(
         point, &GraphicsPoint::objectDoubleClicked, this,
         [=](QPointF scene_pos) {
-            emit(itemDoubleClicked(scene_pos));
+            emit itemDoubleClicked(scene_pos);
         }
     );
 
@@ -65,7 +65,7 @@ void WaypointItem::init() {
         point, &GraphicsPoint::objectGainedHighlight, this,
         [=]() {
             setHighlighted(true);
-            emit(itemGainedHighlight());
+            emit itemGainedHighlight();
         }
     );
 }
@@ -89,7 +89,7 @@ void WaypointItem::addToMap(MapWidget* map) {
         [=](QPointF scene_pos) {
             Point2DLatLon latlon = CoordinatesTransform::get()->wgs84_from_scene(scene_pos, zoomLevel(map->zoom()), map->tileSize());
             this->setPosition(latlon);
-            emit(waypointMoveFinished());
+            emit waypointMoveFinished();
         }
     );
 }
@@ -136,15 +136,15 @@ void WaypointItem::removeFromScene(MapWidget* map) {
 void WaypointItem::setPosition(Point2DLatLon ll) {
     _waypoint->setLat(ll.lat());
     _waypoint->setLon(ll.lon());
-    emit(itemChanged());
-    emit(waypointMoved(ll));
+    emit itemChanged();
+    emit waypointMoved(ll);
 }
 
 void WaypointItem::updatePosition() {
     _waypoint->setLat(original_waypoint->getLat());
     _waypoint->setLon(original_waypoint->getLon());
     _waypoint->setAlt(original_waypoint->getAlt());
-    emit(itemChanged());
+    emit itemChanged();
 }
 
 void WaypointItem::setStyle(GraphicsPoint::Style s){

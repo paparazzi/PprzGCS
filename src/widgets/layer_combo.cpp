@@ -38,7 +38,7 @@ void LayerCombo::addLayerControl(MapLayerControl* mlc) {
 }
 
 void LayerCombo::mousePressEvent(QMouseEvent* e) {
-    for(auto mlc: map_layer_controls) {
+    for(auto &mlc: map_layer_controls) {
         if(mlc->underMouse()) {
             moved_layer_control = mlc;
             press_pos = e->pos();
@@ -97,7 +97,7 @@ void LayerCombo::mouseReleaseEvent(QMouseEvent* e) {
         int new_z = top_mlc->zValue();
 
 
-        for(auto mlc: map_layer_controls) {
+        for(auto &mlc: map_layer_controls) {
             int pos_y = mlc->pos().y() + mlc->size().height()/2;
             if(release_y > pos_y) {
                 new_z--;
@@ -119,11 +119,11 @@ void LayerCombo::mouseReleaseEvent(QMouseEvent* e) {
         });
 
         content_layout->removeWidget(moved_layer_control);
-        for(auto mlc: map_layer_controls) {
+        for(auto &mlc: map_layer_controls) {
             content_layout->removeWidget(mlc);
         }
 
-        for(auto mlc: map_layer_controls) {
+        for(auto &mlc: map_layer_controls) {
             content_layout->addWidget(mlc);
         }
 

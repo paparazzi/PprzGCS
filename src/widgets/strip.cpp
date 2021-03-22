@@ -178,7 +178,7 @@ void Strip::paintEvent(QPaintEvent* e) {
 
 void Strip::mousePressEvent(QMouseEvent *e) {
     (void)e;
-    emit(DispatcherUi::get()->ac_selected(_ac_id));
+    emit DispatcherUi::get()->ac_selected(_ac_id);
 }
 
 void Strip::mouseReleaseEvent(QMouseEvent *e) {
@@ -224,11 +224,11 @@ void Strip::updateApStatus() {
             full_ap_mode_label->setBrush(Qt::red);
             short_ap_mode_label->setBrush(Qt::red);
         } else if (ap_mode == "MANUAL") {
-            full_ap_mode_label->setBrush(QColor("#ffa500"));
-            short_ap_mode_label->setBrush(QColor("#ffa500"));
+            full_ap_mode_label->setBrush(QColor(0xffa500));
+            short_ap_mode_label->setBrush(QColor(0xffa500));
         } else {
-            full_ap_mode_label->setBrush(QColor("#7ef17e"));
-            short_ap_mode_label->setBrush(QColor("#7ef17e"));
+            full_ap_mode_label->setBrush(QColor(0x7ef17e));
+            short_ap_mode_label->setBrush(QColor(0x7ef17e));
         }
         full_ap_mode_label->setText(ap_mode.c_str());
         short_ap_mode_label->setText(ap_mode.c_str());
@@ -238,11 +238,11 @@ void Strip::updateApStatus() {
             full_gps_mode_label->setBrush(Qt::red);
             short_gps_mode_label->setBrush(Qt::red);
         } else if (gps_mode == "NA" || gps_mode == "2D") {
-            full_gps_mode_label->setBrush(QColor("#ffa500"));
-            short_gps_mode_label->setBrush(QColor("#ffa500"));
+            full_gps_mode_label->setBrush(QColor(0xffa500));
+            short_gps_mode_label->setBrush(QColor(0xffa500));
         } else {
-            full_gps_mode_label->setBrush(QColor("#7ef17e"));
-            short_gps_mode_label->setBrush(QColor("#7ef17e"));
+            full_gps_mode_label->setBrush(QColor(0x7ef17e));
+            short_gps_mode_label->setBrush(QColor(0x7ef17e));
         }
         full_gps_mode_label->setText(gps_mode.c_str());
         short_gps_mode_label->setText(gps_mode.c_str());
@@ -314,7 +314,7 @@ void Strip::updateTelemetryStatus() {
         if(time_since_last_msg > 5) {
             full_link_label->setBrush(Qt::red);
         } else {
-            full_link_label->setBrush(QColor("#7ef17e"));
+            full_link_label->setBrush(QColor(0x7ef17e));
         }
 
         if(time_since_last_msg > 2) {
@@ -333,14 +333,14 @@ void Strip::updateFBW() {
         msg->getField("rc_mode", rc_mode);
 
         if(rc_status == "OK") {
-            full_fbw_mode_label->setBrush(QColor("#7ef17e"));
-            short_fbw_mode_label->setBrush(QColor("#7ef17e"));
+            full_fbw_mode_label->setBrush(QColor(0x7ef17e));
+            short_fbw_mode_label->setBrush(QColor(0x7ef17e));
         } else if (rc_status == "LOST" || rc_status == "REALLY_LOST") {
             full_fbw_mode_label->setBrush(Qt::red);
             short_fbw_mode_label->setBrush(Qt::red);
         } else {
-            full_fbw_mode_label->setBrush(QColor("#ffa500"));
-            short_fbw_mode_label->setBrush(QColor("#ffa500"));
+            full_fbw_mode_label->setBrush(QColor(0xffa500));
+            short_fbw_mode_label->setBrush(QColor(0xffa500));
         }
 
         full_fbw_mode_label->setText(rc_status.c_str());

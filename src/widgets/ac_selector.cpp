@@ -46,7 +46,7 @@ void ACSelector::paintEvent(QPaintEvent* e) {
 
     if(ac_ids.size() == 0) {
         painter.setPen(Qt::NoPen);
-        painter.setBrush(QColor("#808080"));
+        painter.setBrush(QColor(0x808080));
         auto r = QRect(ARROW_WIDTH, rect().height()/2, rect().width()-2*ARROW_WIDTH, rect().height()/2);
         painter.drawRect(r);
         painter.setPen(Qt::white);
@@ -66,8 +66,8 @@ void ACSelector::paintEvent(QPaintEvent* e) {
         painter.setBrush(ac.getColor());
         painter.drawRoundedRect(rect, 10, 10);
 
-        auto dark = QColor("#101010");
-        auto light = QColor("#f0f0f0");
+        auto dark = QColor(0x101010);
+        auto light = QColor(0xf0f0f0);
 
         auto L1 = 0.2126 * (ac.getColor().red()/255.) + 0.7152 * (ac.getColor().green()/255.) + 0.0722 * (ac.getColor().blue()/255.);
         auto Ldark = 0.2126 * (dark.red()/255.) + 0.7152 * (dark.green()/255.) + 0.0722 * (dark.blue()/255.);
@@ -95,12 +95,12 @@ void ACSelector::mousePressEvent(QMouseEvent *e) {
     if(arrow_left_rect.contains(e->pos())) {
         auto index = ac_ids.indexOf(current_ac_id) - 1;
         if(index >= 0) {
-            emit(DispatcherUi::get()->ac_selected(ac_ids[index]));
+            emit DispatcherUi::get()->ac_selected(ac_ids[index]);
         }
     } else if (arrow_right_rect.contains(e->pos())) {
         auto index = ac_ids.indexOf(current_ac_id) + 1;
         if(index < ac_ids.size()) {
-            emit(DispatcherUi::get()->ac_selected(ac_ids[index]));
+            emit DispatcherUi::get()->ac_selected(ac_ids[index]);
         }
     } else {
         QString pressed_ac_id = "";
@@ -120,7 +120,7 @@ void ACSelector::mousePressEvent(QMouseEvent *e) {
         }
 
         if(pressed_ac_id != "") {
-            emit(DispatcherUi::get()->ac_selected(pressed_ac_id));
+            emit DispatcherUi::get()->ac_selected(pressed_ac_id);
         }
     }
 }
@@ -129,7 +129,7 @@ void ACSelector::wheelEvent(QWheelEvent *event) {
     auto incr = event->angleDelta().y() > 0 ? 1 : -1;
     auto index = ac_ids.indexOf(current_ac_id) + incr;
     if(index >= 0 && index < ac_ids.size()) {
-        emit(DispatcherUi::get()->ac_selected(ac_ids[index]));
+        emit DispatcherUi::get()->ac_selected(ac_ids[index]);
     }
 }
 

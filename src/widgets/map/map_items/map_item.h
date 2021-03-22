@@ -48,7 +48,7 @@ public:
     virtual void updateZValue() = 0;
     qreal zValue() {return z_value;}
     QString acId() {return ac_id;}
-    void requestUpdate() {emit(itemChanged());}
+    void requestUpdate() {emit itemChanged();}
     void setZValues(qreal zh, qreal zuh) {
         z_value_highlighted = zh;
         z_value_unhighlighted = zuh;

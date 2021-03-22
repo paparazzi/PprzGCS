@@ -23,7 +23,7 @@ void MapScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
         QGraphicsScene::mousePressEvent(mouseEvent);
     }
     if(!mouseEvent->isAccepted()) {
-        emit(eventScene(FPEE_SC_PRESS, mouseEvent));
+        emit eventScene(FPEE_SC_PRESS, mouseEvent);
     }
 }
 
@@ -32,7 +32,7 @@ void MapScene::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) {
         QGraphicsScene::mouseMoveEvent(mouseEvent);
     }
     if(!mouseEvent->isAccepted()) {
-        emit(eventScene(FPEE_SC_MOVE, mouseEvent));
+        emit eventScene(FPEE_SC_MOVE, mouseEvent);
     }
 }
 
@@ -41,7 +41,7 @@ void MapScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) {
         QGraphicsScene::mouseReleaseEvent(mouseEvent);
     }
     if(!mouseEvent->isAccepted()) {
-            emit(eventScene(FPEE_SC_RELEASE, mouseEvent));
+        emit eventScene(FPEE_SC_RELEASE, mouseEvent);
     }
 }
 
@@ -50,6 +50,6 @@ void MapScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent) {
         QGraphicsScene::mouseDoubleClickEvent(mouseEvent);
     }
     if(!mouseEvent->isAccepted()) {
-            emit(eventScene(FPEE_SC_DOUBLE_CLICK, mouseEvent));
+        emit eventScene(FPEE_SC_DOUBLE_CLICK, mouseEvent);
     }
 }

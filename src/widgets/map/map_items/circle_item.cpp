@@ -36,7 +36,7 @@ void CircleItem::init(WaypointItem* center) {
     connect(
         center, &WaypointItem::itemChanged, this,
         [=]() {
-            emit(itemChanged());
+            emit itemChanged();
         }
     );
 
@@ -51,7 +51,7 @@ void CircleItem::init(WaypointItem* center) {
         circle, &GraphicsCircle::objectGainedHighlight, this,
         [=]() {
             setHighlighted(true);
-            emit(itemGainedHighlight());
+            emit itemGainedHighlight();
         }
     );
 
@@ -59,7 +59,7 @@ void CircleItem::init(WaypointItem* center) {
         center, &MapItem::itemGainedHighlight, this,
         [=]() {
             setHighlighted(true);
-            emit(itemGainedHighlight());
+            emit itemGainedHighlight();
         }
     );
 }
@@ -72,7 +72,7 @@ void CircleItem::addToMap(MapWidget* map) {
         [=](qreal size) {
             _radius = distTile2Meters(circle->pos().y()/map->tileSize(), size/map->tileSize(), zoomLevel(map->zoom()));
             circle->setText(QString::number(static_cast<int>(_radius)) + "m");
-            emit(circleScaled(_radius));
+            emit circleScaled(_radius);
         }
     );
 }
@@ -125,7 +125,7 @@ void CircleItem::removeFromScene(MapWidget* map) {
 void CircleItem::setRadius(double radius) {
     _radius = radius;
 
-    emit(itemChanged());
+    emit itemChanged();
 }
 
 void CircleItem::setStyle(GraphicsCircle::Style s) {
