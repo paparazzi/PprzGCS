@@ -41,7 +41,7 @@ public:
     void centerLatLon(Point2DLatLon latLon) override;
     void setZoom(double z) override;
 
-    void configure(QDomElement);
+    void configure(QDomElement) override;
 
 signals:
     void mouseMoved(QPointF scenePos);
@@ -49,13 +49,13 @@ signals:
     void itemRemoved(MapItem* item);
 
 protected:
-    virtual void mousePressEvent(QMouseEvent *event);
-    virtual void mouseMoveEvent(QMouseEvent *event);
-    virtual void mouseReleaseEvent(QMouseEvent *event);
-    virtual void wheelEvent(QWheelEvent* event);
-    virtual void dragEnterEvent(QDragEnterEvent *event);
-    virtual void dropEvent(QDropEvent *event);
-    virtual void dragMoveEvent(QDragMoveEvent *event);
+    virtual void mousePressEvent(QMouseEvent *event) override;
+    virtual void mouseMoveEvent(QMouseEvent *event) override;
+    virtual void mouseReleaseEvent(QMouseEvent *event) override;
+    virtual void wheelEvent(QWheelEvent* event) override;
+    virtual void dragEnterEvent(QDragEnterEvent *event) override;
+    virtual void dropEvent(QDropEvent *event) override;
+    virtual void dragMoveEvent(QDragMoveEvent *event) override;
 
 private:
 
