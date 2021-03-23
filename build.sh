@@ -49,5 +49,6 @@ fi
 if [ $build_app = "app" ]
 then
     cmake -S . -B $WD/build -DCMAKE_PREFIX_PATH="$local_install" -DBUILD_TARGET=$BUILD_TARGET
-    cmake --build $WD/build -j$(nproc)
+    export MAKEFLAGS=-j$(nproc)
+    cmake --build $WD/build
 fi

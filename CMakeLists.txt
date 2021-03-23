@@ -14,18 +14,19 @@ set(CMAKE_AUTOUIC ON)
 if(BUILD_TARGET STREQUAL "DEV_18_04")
     find_package(PROJ4 REQUIRED)
     get_filename_component(APP_DATA_PATH "./data/" ABSOLUTE)
-elseif(BUILD_TARGET STREQUAL "BUILD_DEB_20_04")
+elseif(BUILD_TARGET STREQUAL "BUILD_DEB_18_04")
+    find_package(PROJ4 REQUIRED)
     set(APP_DATA_PATH /usr/share/pprzgcs)
-    set(PROJ4_LIBRARIES proj)
 elseif(BUILD_TARGET STREQUAL "DEV_20_04")
     get_filename_component(APP_DATA_PATH "./data/" ABSOLUTE)
     set(PROJ4_LIBRARIES proj)
-elseif(BUILD_TARGET STREQUAL "BUILD_DEB_18_04")
+elseif(BUILD_TARGET STREQUAL "BUILD_DEB_20_04")
     set(APP_DATA_PATH /usr/share/pprzgcs)
+    set(PROJ4_LIBRARIES proj)
 elseif(BUILD_TARGET STREQUAL "BUILD_MAC")
     message(FATAL_ERROR "Building for MAC not yet supported!")
 else()
-    message(FATAL_ERROR "You must define BUILD_TARGET to one of: DEV_18_04, BUILD_DEB_20_04, BUILD_DEB_18_04, BUILD_MAC")
+    message(FATAL_ERROR "You must define BUILD_TARGET to one of: DEV_18_04, DEV_20_04, BUILD_DEB_20_04, BUILD_DEB_18_04, BUILD_MAC")
 endif()
 
 
@@ -34,7 +35,7 @@ add_definitions(-DAPP_DATA_PATH="${APP_DATA_PATH}")
 
 find_package(Boost COMPONENTS system)
 
-find_package(Qt5 5.11 COMPONENTS Widgets Xml Network Svg REQUIRED)
+find_package(Qt5 5.12 COMPONENTS Widgets Xml Network Svg REQUIRED)
 
 find_package(pprzlink++ REQUIRED)
 
