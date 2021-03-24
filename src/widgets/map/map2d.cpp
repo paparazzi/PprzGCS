@@ -28,7 +28,7 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     setTransformationAnchor(QGraphicsView::NoAnchor);
     setResizeAnchor(QGraphicsView::AnchorViewCenter);
-    setBackgroundBrush(QBrush(QColor(151515)));
+    setBackgroundBrush(QBrush(QColor(0x151515)));
 
     Point2DLatLon initLatLon(43.462344,1.273044);
 }
