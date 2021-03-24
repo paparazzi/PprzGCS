@@ -45,10 +45,21 @@ FlightPlan::FlightPlan(string uri) : origin()
         double _lat0 = parse_coordinate(lat0);
         double _lon0 = parse_coordinate(lon0);
 
+        auto frame = fp_root->Attribute("wp_frame");
+
+        auto frame_type = Waypoint::WpFrame::UTM;
+        if(frame) {
+            string f = frame;
+            std::transform(f.begin(), f.end(),f.begin(), ::toupper);
+            if(f == "LTP") {
+                frame_type = Waypoint::WpFrame::LTP;
+            }
+        }
+
         origin = make_shared<Waypoint>("__ORIGIN", 0, _lat0, _lon0, defaultAlt);
 
         XMLElement* wps = fp_root->FirstChildElement("waypoints");
-        parse_waypoints(wps);
+        parse_waypoints(wps, frame_type);
         XMLElement* blks = fp_root->FirstChildElement("blocks");
         parse_blocks(blks);
 
@@ -131,17 +142,13 @@ void FlightPlan::parse_sectors(tinyxml2::XMLElement* secs) {
         } else {
             throw std::runtime_error("");
         }
-
-
     }
 }
 
-void FlightPlan::parse_waypoints(XMLElement* wps) {
-    CoordinatesTransform::get()->init_WGS84_UTM(origin->getLat(), origin->getLon());
-
+void FlightPlan::parse_waypoints(XMLElement* wps, Waypoint::WpFrame frame_type) {
     uint8_t wp_id = 1;
     for(auto wp=wps->FirstChildElement(); wp!=nullptr; wp=wp->NextSiblingElement()) {
-        auto waypoint = make_shared<Waypoint>(wp, wp_id, origin, defaultAlt);
+        auto waypoint = make_shared<Waypoint>(wp, wp_id, origin, defaultAlt, frame_type);
         waypoints.push_back(waypoint);
         ++wp_id;
     }

@@ -12,6 +12,10 @@ class Waypoint
 {
 public:
 
+    enum WpFrame {
+        UTM,
+        LTP
+    };
     enum WpType {
         ABSOLUTE,
         RELATIVE
@@ -25,7 +29,7 @@ public:
     Waypoint(string name, uint8_t id);
     Waypoint(string name, uint8_t id, double lat, double lon, double alt);
     Waypoint(string name, uint8_t id, double x, double y, double alt, shared_ptr<Waypoint> orig, WpAltType altType);
-    Waypoint(tinyxml2::XMLElement* wp, uint8_t wp_id, shared_ptr<Waypoint> orig, double defaultAlt);
+    Waypoint(tinyxml2::XMLElement* wp, uint8_t wp_id, shared_ptr<Waypoint> orig, double defaultAlt, WpFrame frame_type);
 
     uint8_t getId() const {return id;}
     double getLat() const;

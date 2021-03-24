@@ -230,10 +230,6 @@ void PprzMap::updateAircraftItem(pprzlink::Message msg) {
 }
 
 void PprzMap::handleNewAC(QString ac_id) {
-    if(!CoordinatesTransform::get()->isInitialized()) {
-        auto orig = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getOrigin();
-        CoordinatesTransform::get()->init_WGS84_UTM(orig->getLat(), orig->getLon());
-    }
     // create aircraft item at dummy position
     auto aircraft_item = new AircraftItem(Point2DLatLon(0, 0), ac_id, 16);
     ui->map->addItem(aircraft_item);

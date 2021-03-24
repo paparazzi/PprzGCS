@@ -34,7 +34,7 @@ Waypoint::Waypoint(string name, uint8_t id, double lat, double lon, double alt, 
 }
 
 
-Waypoint::Waypoint(XMLElement* wp, uint8_t wp_id, shared_ptr<Waypoint> orig, double defaultAlt) {
+Waypoint::Waypoint(XMLElement* wp, uint8_t wp_id, shared_ptr<Waypoint> orig, double defaultAlt, WpFrame frame_type) {
     const char* name_p = wp->Attribute("name");
     const char* lat_p = wp->Attribute("lat");
     const char* lon_p = wp->Attribute("lon");
@@ -70,7 +70,16 @@ Waypoint::Waypoint(XMLElement* wp, uint8_t wp_id, shared_ptr<Waypoint> orig, dou
         }
     }
     else if(x_p !=nullptr && y_p != nullptr) {
-        CoordinatesTransform::get()->relative_to_wgs84(orig->getLat(), orig->getLon(), stod(x_p), stod(y_p), &this->lat, &this->lon);
+        if(frame_type == WpFrame::UTM) {
+            auto latlon = CoordinatesTransform::get()->relative_utm_to_wgs84(orig, stod(x_p), stod(y_p));
+            this->lat = latlon.lat();
+            this->lon = latlon.lon();
+        } else if(frame_type == WpFrame::LTP) {
+            auto latlon = CoordinatesTransform::get()->relative_ltp_to_wgs84(orig, stod(x_p), stod(y_p));
+            this->lat = latlon.lat();
+            this->lon = latlon.lon();
+        }
+
 
         type = RELATIVE;
         this->alt = alt;

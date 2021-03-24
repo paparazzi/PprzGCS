@@ -63,7 +63,7 @@ private:
     void parse_exceptions(tinyxml2::XMLElement* exs);
     void parse_variables(tinyxml2::XMLElement* vars);
     void parse_sectors(tinyxml2::XMLElement* secs);
-    void parse_waypoints(tinyxml2::XMLElement* wps);
+    void parse_waypoints(tinyxml2::XMLElement* wps, Waypoint::WpFrame frame_type);
     void parse_blocks(tinyxml2::XMLElement* blks);
     void parse_block_stages(tinyxml2::XMLElement* blk, shared_ptr<Block> block);
 
