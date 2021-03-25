@@ -52,11 +52,19 @@ Point2DLatLon CoordinatesTransform::wgs84_from_scene(QPointF scenePoint, int zoo
 Point2DLatLon CoordinatesTransform::relative_ltp_to_wgs84(Point2DLatLon origin, double x, double y) {
     const std::lock_guard<std::recursive_mutex> lock(mtx);
 
-    auto pm_orig = WGS84_to_pseudoMercator(origin);
-    Point2DPseudoMercator pm(pm_orig.x() + x, pm_orig.y() + y);
-    auto geo = pseudoMercator_to_WGS84(pm);
+    // cf https://proj.org/operations/projections/ortho.html
+    auto source = QString("+proj=ortho +lat_0=%1 +lon_0=%2").arg(origin.lat()).arg(origin.lon());
 
-    return geo;
+    QString proj_name = source + "_EPSG:4326";
+    if(!projectors.contains(proj_name)) {
+        auto proj = proj_create_crs_to_crs (pj_context, source.toStdString().c_str(), "EPSG:4326", nullptr);
+        projectors[proj_name] = proj;
+    }
+
+    auto enu = proj_coord (x, y, 0, 0);
+    PJ_COORD geo = proj_trans (projectors[proj_name], PJ_FWD, enu);
+
+    return Point2DLatLon(geo.lp.lam, geo.lp.phi);
 }
 
 Point2DLatLon CoordinatesTransform::relative_utm_to_wgs84(Point2DLatLon origin, double x, double y) {
