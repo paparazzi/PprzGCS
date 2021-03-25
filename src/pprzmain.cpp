@@ -66,6 +66,14 @@ void PprzMain::populate_menu() {
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
 
+    auto silent_mode_action = file_menu->addAction("Silent mode");
+    silent_mode_action->setCheckable(true);
+    silent_mode_action->setChecked(PprzDispatcher::get()->isSilent());
+
+    connect(silent_mode_action, &QAction::toggled, [=](bool checked) {
+        PprzDispatcher::get()->setSilent(checked);
+    });
+
     auto quit = file_menu->addAction("&Quit");
     connect(quit, &QAction::triggered, qApp, QApplication::quit);
 

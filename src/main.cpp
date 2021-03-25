@@ -76,6 +76,9 @@ int main(int argc, char *argv[])
     QCommandLineOption rememberConfigOption("r", "Remember config file.");
     parser.addOption(rememberConfigOption);
 
+    QCommandLineOption silentModeOption("s", "Silent mode");
+    parser.addOption(silentModeOption);
+
     parser.process(a);
 
     QString arg_config_path = parser.value(config_file_option);
@@ -93,6 +96,9 @@ int main(int argc, char *argv[])
 
     // this should be the GCS configuration file.
     configure(gcsConfigPath);
+
+    PprzDispatcher::get()->setSilent(parser.isSet(silentModeOption));
+
     launch_main_app();
     return qApp->exec();
 }

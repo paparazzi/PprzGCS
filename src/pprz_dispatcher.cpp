@@ -13,7 +13,7 @@ PprzDispatcher* PprzDispatcher::singleton = nullptr;
 
 Q_DECLARE_METATYPE(pprzlink::Message)
 
-PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(false), started(false)
+PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(false), started(false), silent_mode(false)
 {
     std::string ivy_name = qApp->property("IVY_NAME").toString().toStdString();
     pprzlink_id = qApp->property("PPRZLINK_ID").toString().toStdString();
@@ -33,7 +33,6 @@ PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(fa
             PprzMain::get()->setServerStatus(true);
         }
     });
-
 }
 
 void PprzDispatcher::bindDeftoSignal(std::string const &name, sig_ptr_t sig) {
@@ -77,8 +76,10 @@ void PprzDispatcher::requestConfig(std::string ac_id) {
 
 void PprzDispatcher::sendMessage(pprzlink::Message msg) {
     assert(started);
-    msg.setSenderId(pprzlink_id);
-    link->sendMessage(msg);
+    if(!silent_mode) {
+        msg.setSenderId(pprzlink_id);
+        link->sendMessage(msg);
+    }
 }
 
 void PprzDispatcher::requestAircrafts() {
@@ -164,7 +165,9 @@ void PprzDispatcher::start() {
             msg.addField("lat", wp->getLat());
             msg.addField("long", wp->getLon());
             msg.addField("alt", wp->getAlt());
-            link->sendMessage(msg);
+            if(started) {
+                this->sendMessage(msg);
+            }
         });
 
     usleep(10000);

@@ -35,6 +35,10 @@ public:
      */
     long bind(std::string msg_name, pprzlink::messageCallback_t cb);
 
+    bool isSilent() {return silent_mode;}
+    void setSilent(bool silent) {
+        silent_mode = silent;
+    }
 
 signals:
     void aircraft_die(pprzlink::Message);
@@ -68,6 +72,7 @@ private:
 
     bool first_msg;
     bool started;
+    bool silent_mode;
 
     qint64 time_msg_server;
     QTimer server_check_timer;
