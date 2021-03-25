@@ -286,9 +286,10 @@ void PprzMap::handleNewAC(QString ac_id) {
                 }
             }
 
+            pi->setClosedPath(true);
             ui->map->addItem(pi);
             item_manager->addPathItem(pi);
-            pi->setClosedPath(true);
+
         }
     }
 }
