@@ -18,6 +18,7 @@ It aims at replacing the old one which use deprecated OCaml libraries.
    :maxdepth: 2
    
    developer_guide/index_developer
+   user_guide/index_user
 
 
 Indices and tables
