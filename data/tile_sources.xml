@@ -6,6 +6,13 @@
 	    tileSize="256"
 	    format=".jpeg"
 	/>
+	        <source
+            name="Voliere" dir="VOLIERE"
+            addr=""
+            zoomMin="17" zoomMax="24"
+            tileSize="256"
+            format=".png"
+        />
         <source
             name="Muret" dir="muret"
             addr=""

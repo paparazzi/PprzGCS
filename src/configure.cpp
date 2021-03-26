@@ -52,8 +52,8 @@ void set_default_config() {
     setEmptyProperty("TRACK_MAX_CHUNKS", 10);
     setEmptyProperty("TRACK_CHUNCK_SIZE", 20);
 
-    setEmptyProperty("APP_STYLE_FILE", qApp->property("APP_DATA_PATH").toString() + "/conf/default_style.qss");
-    setEmptyProperty("APP_LAYOUT_FILE", qApp->property("APP_DATA_PATH").toString() + "/conf/default_layout.xml");
+    setEmptyProperty("APP_STYLE_FILE", qApp->property("APP_DATA_PATH").toString() + "/default_style.qss");
+    setEmptyProperty("APP_LAYOUT_FILE", qApp->property("APP_DATA_PATH").toString() + "/default_layout.xml");
 
     setEmptyProperty("MAP_PATH", qApp->property("USER_DATA_PATH").toString() + "/map");
 }

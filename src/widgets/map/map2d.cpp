@@ -16,7 +16,7 @@
 Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     numericZoom(0.0), _zoom(5.0), tile_size(256), minZoom(0.0), maxZoom(25.0), wheelAccumulator(0)
 {
-    QString configFile = user_or_app_path("conf/tile_sources.xml");
+    QString configFile = user_or_app_path("tile_sources.xml");
     loadConfig(configFile);
     qreal maxxy = pow(2, maxZoom);
 
