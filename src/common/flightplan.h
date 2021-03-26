@@ -58,12 +58,13 @@ public:
     double getGroundAlt() {return ground_alt;}
     void setGroundAlt(double ga) {ground_alt = ga;}
     shared_ptr<Waypoint> getOrigin() {return origin;}
+    Waypoint::WpFrame getFrame() {return frame_type;}
 
 private:
     void parse_exceptions(tinyxml2::XMLElement* exs);
     void parse_variables(tinyxml2::XMLElement* vars);
     void parse_sectors(tinyxml2::XMLElement* secs);
-    void parse_waypoints(tinyxml2::XMLElement* wps, Waypoint::WpFrame frame_type);
+    void parse_waypoints(tinyxml2::XMLElement* wps);
     void parse_blocks(tinyxml2::XMLElement* blks);
     void parse_block_stages(tinyxml2::XMLElement* blk, shared_ptr<Block> block);
 
@@ -79,6 +80,8 @@ private:
     double max_dist_from_home;
     double ground_alt;
     double security_height;
+
+    Waypoint::WpFrame frame_type;
 
 
 };

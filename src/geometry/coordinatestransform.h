@@ -34,7 +34,9 @@ public:
     Point2DLatLon wgs84_from_scene(QPointF scenePoint, int zoom, int tile_size);
 
     Point2DLatLon relative_utm_to_wgs84(Point2DLatLon origin, double x, double y);
-    Point2DLatLon relative_ltp_to_wgs84(Point2DLatLon origin, double x, double y);
+    void wgs84_to_relative_utm(Point2DLatLon origin, Point2DLatLon geo, double& x, double& y);
+    Point2DLatLon ltp_to_wgs84(Point2DLatLon origin, double x, double y);
+    void wgs84_to_ltp(Point2DLatLon origin, Point2DLatLon geo, double& x, double& y);
 
     void distance_azimut(Point2DLatLon pt1, Point2DLatLon pt2, double& distance, double& azimut);
 

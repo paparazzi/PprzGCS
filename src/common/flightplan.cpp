@@ -47,7 +47,7 @@ FlightPlan::FlightPlan(string uri) : origin()
 
         auto frame = fp_root->Attribute("wp_frame");
 
-        auto frame_type = Waypoint::WpFrame::UTM;
+        frame_type = Waypoint::WpFrame::UTM;
         if(frame) {
             string f = frame;
             std::transform(f.begin(), f.end(),f.begin(), ::toupper);
@@ -59,7 +59,7 @@ FlightPlan::FlightPlan(string uri) : origin()
         origin = make_shared<Waypoint>("__ORIGIN", 0, _lat0, _lon0, defaultAlt);
 
         XMLElement* wps = fp_root->FirstChildElement("waypoints");
-        parse_waypoints(wps, frame_type);
+        parse_waypoints(wps);
         XMLElement* blks = fp_root->FirstChildElement("blocks");
         parse_blocks(blks);
 
@@ -145,7 +145,7 @@ void FlightPlan::parse_sectors(tinyxml2::XMLElement* secs) {
     }
 }
 
-void FlightPlan::parse_waypoints(XMLElement* wps, Waypoint::WpFrame frame_type) {
+void FlightPlan::parse_waypoints(XMLElement* wps) {
     uint8_t wp_id = 1;
     for(auto wp=wps->FirstChildElement(); wp!=nullptr; wp=wp->NextSiblingElement()) {
         auto waypoint = make_shared<Waypoint>(wp, wp_id, origin, defaultAlt, frame_type);

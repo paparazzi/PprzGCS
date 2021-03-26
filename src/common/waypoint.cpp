@@ -3,11 +3,12 @@
 #include <iostream>
 #include "coordinatestransform.h"
 #include "gcs_utils.h"
+#include <QDebug>
 
 using namespace tinyxml2;
 
 Waypoint::Waypoint(string name, uint8_t id) :
-    type(ABSOLUTE), id(id), lat(0), lon(0), origin(nullptr), alt(0), name(name)
+    type(WGS84), id(id), lat(0), lon(0), origin(nullptr), alt(0), name(name)
 {
 
 }
@@ -15,23 +16,13 @@ Waypoint::Waypoint(string name, uint8_t id) :
 Waypoint::Waypoint(string name, uint8_t id, double lat, double lon, double alt):
     Waypoint(name, id)
 {
-    type = ABSOLUTE;
+    type = WGS84;
     this->lat = lat;
     this->lon = lon;
     this->alt = alt;
     alt_type = ALT;
 }
 
-Waypoint::Waypoint(string name, uint8_t id, double lat, double lon, double alt, shared_ptr<Waypoint> orig, WpAltType altType):
-    Waypoint(name, id)
-{
-    type = RELATIVE;
-    this->alt = alt;
-    this->lat = lat;
-    this->lon = lon;
-    origin = orig;
-    this->alt_type = altType;
-}
 
 
 Waypoint::Waypoint(XMLElement* wp, uint8_t wp_id, shared_ptr<Waypoint> orig, double defaultAlt, WpFrame frame_type) {
@@ -59,7 +50,7 @@ Waypoint::Waypoint(XMLElement* wp, uint8_t wp_id, shared_ptr<Waypoint> orig, dou
 
     if(lat_p != nullptr && lon_p != nullptr) {
 
-        type = ABSOLUTE;
+        type = WGS84;
         this->lat = parse_coordinate(lat_p);
         this->lon = parse_coordinate(lon_p);
         this->alt = alt;
@@ -75,13 +66,12 @@ Waypoint::Waypoint(XMLElement* wp, uint8_t wp_id, shared_ptr<Waypoint> orig, dou
             this->lat = latlon.lat();
             this->lon = latlon.lon();
         } else if(frame_type == WpFrame::LTP) {
-            auto latlon = CoordinatesTransform::get()->relative_ltp_to_wgs84(orig, stod(x_p), stod(y_p));
+            auto latlon = CoordinatesTransform::get()->ltp_to_wgs84(orig, stod(x_p), stod(y_p));
             this->lat = latlon.lat();
             this->lon = latlon.lon();
         }
 
-
-        type = RELATIVE;
+        type = frame_type;
         this->alt = alt;
         this->origin = orig;
         this->alt_type = altType;
@@ -116,7 +106,7 @@ void Waypoint::setLon(double lon) {
 ostream& operator<<(ostream& os, const Waypoint& wp) {
 
     os << wp.name << " : ";
-    if(wp.type == Waypoint::ABSOLUTE) {
+    if(wp.type == Waypoint::WGS84) {
         os << wp.lat << "N, " << wp.lon << "E";
     } else {
         os << "not implemented!";//<< wp.x << "m, " << wp.y << "m";

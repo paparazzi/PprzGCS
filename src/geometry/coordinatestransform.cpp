@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <math.h>
 #include <mutex>
+#include <QDebug>
 
 namespace { std::recursive_mutex mtx; }
 
@@ -49,7 +50,7 @@ Point2DLatLon CoordinatesTransform::wgs84_from_scene(QPointF scenePoint, int zoo
 }
 
 
-Point2DLatLon CoordinatesTransform::relative_ltp_to_wgs84(Point2DLatLon origin, double x, double y) {
+Point2DLatLon CoordinatesTransform::ltp_to_wgs84(Point2DLatLon origin, double x, double y) {
     const std::lock_guard<std::recursive_mutex> lock(mtx);
 
     // cf https://proj.org/operations/projections/ortho.html
@@ -67,6 +68,24 @@ Point2DLatLon CoordinatesTransform::relative_ltp_to_wgs84(Point2DLatLon origin, 
     return Point2DLatLon(geo.lp.lam, geo.lp.phi);
 }
 
+void CoordinatesTransform::wgs84_to_ltp(Point2DLatLon origin, Point2DLatLon geo, double& x, double& y) {
+    const std::lock_guard<std::recursive_mutex> lock(mtx);
+    auto target = QString("+proj=ortho +lat_0=%1 +lon_0=%2").arg(origin.lat()).arg(origin.lon());
+
+    QString proj_name = "EPSG:4326_" + target;
+    //const auto proj = proj_create_crs_to_crs (pj_context, "EPSG:4326", target.toStdString().c_str(), nullptr);
+    if(!projectors.contains(proj_name)) {
+        auto proj = proj_create_crs_to_crs (pj_context, "EPSG:4326", target.toStdString().c_str(), nullptr);
+        projectors[proj_name] = proj;
+    }
+
+    auto coord = proj_coord(geo.lat(), geo.lon(), 0, 0);
+    PJ_COORD enu = proj_trans (projectors[proj_name], PJ_FWD, coord);
+
+    x = enu.enu.e;
+    y = enu.enu.n;
+}
+
 Point2DLatLon CoordinatesTransform::relative_utm_to_wgs84(Point2DLatLon origin, double x, double y) {
     const std::lock_guard<std::recursive_mutex> lock(mtx);
 
@@ -78,20 +97,43 @@ Point2DLatLon CoordinatesTransform::relative_utm_to_wgs84(Point2DLatLon origin, 
     }
 
     auto coord = proj_coord (origin.lat(), origin.lon(), 0, 0);
-    PJ_COORD pos_utm = proj_trans (projectors[proj_name], PJ_INV, coord);
+    PJ_COORD pos_utm = proj_trans (projectors[proj_name], PJ_FWD, coord);
     pos_utm.xy.x += x;
     pos_utm.xy.y += y;
-    PJ_COORD pos_latlon = proj_trans (projectors[proj_name], PJ_FWD, pos_utm);
+    PJ_COORD pos_latlon = proj_trans (projectors[proj_name], PJ_INV, pos_utm);
 
     return Point2DLatLon(pos_latlon.lp.lam, pos_latlon.lp.phi);
 }
 
+void CoordinatesTransform::wgs84_to_relative_utm(Point2DLatLon origin, Point2DLatLon geo, double& x, double& y) {
+    const std::lock_guard<std::recursive_mutex> lock(mtx);
+
+    auto epsg = utm_epsg(origin.lat(), origin.lon());
+    QString proj_name = "EPSG:4326_" + epsg;
+    if(!projectors.contains(proj_name)) {
+        auto proj = proj_create_crs_to_crs (pj_context, "EPSG:4326", epsg.toStdString().c_str(), nullptr);
+        projectors[proj_name] = proj;
+    }
+    auto coord_orig = proj_coord (origin.lat(), origin.lon(), 0, 0);
+    auto coord_geo = proj_coord (geo.lat(), geo.lon(), 0, 0);
+
+    PJ_COORD orig_utm = proj_trans (projectors[proj_name], PJ_FWD, coord_orig);
+    PJ_COORD pos_utm = proj_trans (projectors[proj_name], PJ_FWD, coord_geo);
+
+    x = pos_utm.xy.x - orig_utm.xy.x;
+    y = pos_utm.xy.y - orig_utm.xy.y;
+
+}
 
 void CoordinatesTransform::distance_azimut(Point2DLatLon pt1, Point2DLatLon pt2, double& distance, double& azimut) {
     const std::lock_guard<std::recursive_mutex> lock(mtx);
 
     auto epsg = utm_epsg(pt1.lat(), pt1.lon());
     QString proj_name = "EPSG:4326_" + epsg;
+    if(!projectors.contains(proj_name)) {
+        PJ* proj = proj_create_crs_to_crs (pj_context, "EPSG:4326", epsg.toStdString().c_str(), nullptr);
+        projectors[proj_name] = proj;
+    }
 
     auto geo1 = proj_coord (pt1.lat(), pt1.lon(), 0, 0);
     auto geo2 = proj_coord (pt2.lat(), pt2.lon(), 0, 0);

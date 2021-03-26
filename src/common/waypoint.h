@@ -13,12 +13,9 @@ class Waypoint
 public:
 
     enum WpFrame {
+        WGS84,
         UTM,
         LTP
-    };
-    enum WpType {
-        ABSOLUTE,
-        RELATIVE
     };
 
     enum WpAltType {
@@ -28,7 +25,6 @@ public:
 
     Waypoint(string name, uint8_t id);
     Waypoint(string name, uint8_t id, double lat, double lon, double alt);
-    Waypoint(string name, uint8_t id, double x, double y, double alt, shared_ptr<Waypoint> orig, WpAltType altType);
     Waypoint(tinyxml2::XMLElement* wp, uint8_t wp_id, shared_ptr<Waypoint> orig, double defaultAlt, WpFrame frame_type);
 
     uint8_t getId() const {return id;}
@@ -38,7 +34,7 @@ public:
     void setLon(double lon);
     void setAlt(double alt) {this->alt = alt;}
     double getAlt() const {return alt;}
-    WpType getType() const {return type;}
+    WpFrame getType() const {return type;}
     string getName() const {return name;}
     shared_ptr<Waypoint> getOrigin() {return origin;}
     std::map<string, string> getXmlAttributes() { return xml_attibutes;}
@@ -46,7 +42,7 @@ public:
     friend ostream& operator<<(ostream& os, const Waypoint& wp);
 
 private:
-    WpType type;
+    WpFrame type;
 
     uint8_t id;
 
