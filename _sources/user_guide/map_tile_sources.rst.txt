@@ -40,6 +40,11 @@ A tile source is identified by an xml node of this form:
 + **tileSize** is the size in pixel of the tiles. A current size is 256.
 + **format** is the file extension of the tiles. A current format is `.png`.
 
+When you add a tile source, you also have to add a thumbnail for this source in ``pictures/map_thumbnails/<name>.png``. The thumbnail should be a 200x100 pixels png.
+
+.. note::
+
+	These directories will probably not exist the first time you add a layer, just create them !
 
 
 Make your own tiles
