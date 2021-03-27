@@ -220,7 +220,7 @@ void Map2D::updateTiles() {
 
     int xCenter = static_cast<int>(center.x()/tile_size);
     int yCenter = static_cast<int>(center.y()/tile_size);
-    int N = std::max(width(), height()) / (tile_size);
+    int N = ceil(std::max(width(), height()) / (2.0 * tile_size)) + 1;
 
     for(auto &elt: tile_providers) {
         TileProvider* tileProvider = elt.second;
@@ -229,7 +229,7 @@ void Map2D::updateTiles() {
             Point2DTile coor = Point2DTile(xCenter, yCenter, zoomLevel(_zoom));
             tileProvider->fetch_tile(coor, coor);
 
-            for(int n=0; n<N+1; n++) {
+            for(int n=0; n<=N; n++) {
                 for(int i=-n; i<=n; i++) {
                     coor = Point2DTile(xCenter + i, yCenter + n, zoomLevel(_zoom));
                     tileProvider->fetch_tile(coor, coor);
