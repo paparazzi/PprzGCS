@@ -56,7 +56,7 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
     TileItem* tileObj = getTile(tObj);
 
     if(t.zoom() < config.zoomMin - 1) {  // no bigger tile
-        tile->setRequestStatus(TILE_ERROR);
+        tile->setRequestStatus(TILE_DO_NOT_EXISTS);
         return;
     }
 
@@ -123,10 +123,12 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
         return; // request pending
     }
     else if(tile->requestStatus() == TILE_REQUEST_FAILED ||
-              tile->requestStatus() == TILE_ERROR) {
+            tile->requestStatus() == TILE_ERROR) {
         if(tileObj->hasData()) {
             sendTile(tileObj, tileObj); // display the previously inherited data
         }
+    } else if(tile->requestStatus() == TILE_DO_NOT_EXISTS) {
+        // do nothing
     }
     else {
         throw "Error: All case should be handled!";
@@ -134,38 +136,17 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
 }
 
 void TileProvider::downloadTile(TileItem* tile, TileItem* tileObj) {
-    int checkPassed = true;
     if(!tile->coordinates().isValid()) {    // invalid tile coordinate
         tile->setRequestStatus(TILE_ERROR);
-        checkPassed = false;
         throw "Tile coordinates invalid, but it should have been checked before!";
     }
     if(!tileObj->coordinates().isValid()) { // invalid tile coordinate
         tile->setRequestStatus(TILE_ERROR);
-        checkPassed = false;
         throw "Tile coordinates invalid, but it should have been checked before!";
     }
 
-    if(tile->coordinates().zoom() > config.zoomMax ||
-       tile->coordinates().zoom() < config.zoomMin) {  // zoom imcompatible with this tile source
-        tile->setRequestStatus(TILE_ERROR);
-        checkPassed = false;
-    }
-
-    int dz = tile->coordinates().zoom() - config.zoomMin;
-    int xMin = config.xMin << dz;
-    int yMin = config.yMin << dz;
-    int xMax = ((config.xMax + 1) << dz) - 1;
-    int yMax = ((config.yMax + 1) << dz) - 1;
-
-    if(tile->coordinates().xi() < xMin ||
-       tile->coordinates().xi() > xMax ||
-       tile->coordinates().yi() < yMin ||
-       tile->coordinates().yi() > yMax) {
-        checkPassed = false;
-    }
-
-    if(!checkPassed) {
+    if(!config.isValid(tile->coordinates())) {
+        tile->setRequestStatus(TILE_DO_NOT_EXISTS);
         return;
     }
 
@@ -246,7 +227,7 @@ bool TileProvider::load_tile_from_disk(TileItem* item) {
 void TileProvider::sendTile(TileItem* tileReady, TileItem* tileObj) {
     tileObj->setZValue(zValue());
     tileObj->setOpacity(alpha);
-    emit(displayTile(tileReady, tileObj));
+    emit displayTile(tileReady, tileObj);
 }
 
 void TileProvider::setZoomLevel(int z) {

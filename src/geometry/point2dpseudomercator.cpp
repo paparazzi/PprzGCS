@@ -20,3 +20,8 @@ Point2DTile Point2DPseudoMercator::toTile(int zoom) {
     double yTile = ((1<<zoom)*(-_y/EXTENT+ 1))/2.;
     return Point2DTile(xTile, yTile, zoom);
 }
+
+
+QRectF Point2DPseudoMercator::getBounds() {
+    return QRectF(-EXTENT, -EXTENT, 2*EXTENT, 2*EXTENT);
+}

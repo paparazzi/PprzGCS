@@ -2,6 +2,8 @@
 #define POINT2DPSEUDOMERCATOR_H
 
 #include <string>
+#include <QRectF>
+
 class Point2DTile;
 
 class Point2DPseudoMercator
@@ -12,6 +14,8 @@ public:
 
     double x() { return _x; }
     double y() { return _y; }
+
+    static QRectF getBounds();
 
 
     Point2DTile toTile(int zoom);

@@ -3,14 +3,16 @@
 
 #include <QString>
 #include <memory>
+#include "point2dtile.h"
+#include <QtXml>
 
 class TileProviderConfig
 {
 public:
-    class builder;
 
+    TileProviderConfig(QDomElement ele);
     TileProviderConfig(QString name, QString dir, QString addr,
-                       int zoomMin, int zoomMax, int xMin, int xMax, int yMin, int yMax,
+                       int zoomMin, int zoomMax, double xMin, double xMax, double yMin, double yMax,
                        int tileSize, QString format):
         name(name), dir(dir), addr(addr),
         zoomMin(zoomMin), zoomMax(zoomMax), xMin(xMin), xMax(xMax), yMin(yMin), yMax(yMax),
@@ -19,68 +21,19 @@ public:
     }
 
     void printConfig();
+    bool isValid(Point2DTile pt_tile);
 
-    const QString name;
-    const QString dir;
-    const QString addr;
-    const int zoomMin;
-    const int zoomMax;
-    const int xMin;
-    const int xMax;
-    const int yMin;
-    const int yMax;
-    const int tileSize;
-    const QString format;
-};
-
-class TileProviderConfig::builder
-{
-public:
-    builder& setName(QString value) { name = value; return *this;}
-    builder& setDir(QString value) { dir = value; return *this;}
-    builder& setAddr(QString value) { addr = value; return *this;}
-    builder& setZoomMin(int value) { zoomMin = value; return *this;}
-    builder& setZoomMax(int value) { zoomMax = value; return *this;}
-    builder& setXMin(int value) { xMin = value; return *this;}
-    builder& setXMax(int value) { xMax = value; return *this;}
-    builder& setYMin(int value) { yMin = value; return *this;}
-    builder& setYMax(int value) { yMax = value; return *this;}
-    builder& setTileSize(int value) { tileSize = value; return *this;}
-    builder& setFormat(QString value) { format = value; return *this;}
-
-    TileProviderConfig build() const {
-        return TileProviderConfig(name, dir, addr,
-                zoomMin, zoomMax, xMin, xMax, yMin, yMax,
-                tileSize, format);
-    }
-
-    TileProviderConfig* newBuild() const {
-        return new TileProviderConfig(name, dir, addr,
-                    zoomMin, zoomMax, xMin, xMax, yMin, yMax,
-                    tileSize, format);
-    }
-
-    std::unique_ptr<TileProviderConfig> buildUnique() const {
-        return std::unique_ptr<TileProviderConfig>(
-                    new TileProviderConfig(name, dir, addr,
-                        zoomMin, zoomMax, xMin, xMax, yMin, yMax,
-                        tileSize, format)
-        );
-    }
-
-private:
     QString name;
     QString dir;
     QString addr;
     int zoomMin;
     int zoomMax;
-    int xMin;
-    int xMax;
-    int yMin;
-    int yMax;
+    double xMin;
+    double xMax;
+    double yMin;
+    double yMax;
     int tileSize;
     QString format;
-
 };
 
 #endif // TILEPROVIDERCONFIG_H

@@ -12,6 +12,7 @@ enum TileRequestStatus {
     TILE_REQUEST_FAILED,    // network request failed
     TILE_OK,                // tile loaded
     TILE_ERROR,             // other generic error
+    TILE_DO_NOT_EXISTS,     // tile not in the extent
 };
 
 class TileItem : public QGraphicsPixmapItem
