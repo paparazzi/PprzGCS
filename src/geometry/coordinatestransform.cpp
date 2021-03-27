@@ -105,6 +105,23 @@ Point2DLatLon CoordinatesTransform::relative_utm_to_wgs84(Point2DLatLon origin, 
     return Point2DLatLon(pos_latlon.lp.lam, pos_latlon.lp.phi);
 }
 
+Point2DLatLon CoordinatesTransform::utm_to_wgs84(double east, double north, int zone, bool isNorth) {
+    const std::lock_guard<std::recursive_mutex> lock(mtx);
+
+    QString epsg = utm_epsg(zone, isNorth);
+
+    QString proj_name = "EPSG:4326_" + epsg;
+    if(!projectors.contains(proj_name)) {
+        auto proj = proj_create_crs_to_crs (pj_context, "EPSG:4326", epsg.toStdString().c_str(), nullptr);
+        projectors[proj_name] = proj;
+    }
+
+    auto utm_coord = proj_coord (east, north, 0, 0);
+    PJ_COORD pos_latlon = proj_trans (projectors[proj_name], PJ_INV, utm_coord);
+
+    return Point2DLatLon(pos_latlon.lp.lam, pos_latlon.lp.phi);
+}
+
 void CoordinatesTransform::wgs84_to_relative_utm(Point2DLatLon origin, Point2DLatLon geo, double& x, double& y) {
     const std::lock_guard<std::recursive_mutex> lock(mtx);
 
@@ -160,4 +177,9 @@ QString CoordinatesTransform::utm_epsg(double lat, double lon) {
     int zone_nb = (static_cast<int>(lon) + 180)/6 + 1;
     epsg += QString("%1").arg(zone_nb, 2, 10, QChar('0'));
     return epsg;
+}
+
+QString CoordinatesTransform::utm_epsg(int zone, bool isNorth) {
+    char ns = isNorth ? '6': '7';
+    return QString("EPSG:32%1%2").arg(ns).arg(zone, 2, 10, QChar('0'));
 }

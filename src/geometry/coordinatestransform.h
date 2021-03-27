@@ -37,6 +37,7 @@ public:
     void wgs84_to_relative_utm(Point2DLatLon origin, Point2DLatLon geo, double& x, double& y);
     Point2DLatLon ltp_to_wgs84(Point2DLatLon origin, double x, double y);
     void wgs84_to_ltp(Point2DLatLon origin, Point2DLatLon geo, double& x, double& y);
+    Point2DLatLon utm_to_wgs84(double east, double north, int zone, bool isNorth);
 
     void distance_azimut(Point2DLatLon pt1, Point2DLatLon pt2, double& distance, double& azimut);
 
@@ -46,6 +47,7 @@ private:
     static CoordinatesTransform* singleton;
 
     static QString utm_epsg(double lat, double lon);
+    static QString utm_epsg(int zone, bool isNorth);
 
     PJ_CONTEXT* pj_context;
     QMap<QString, PJ*> projectors;

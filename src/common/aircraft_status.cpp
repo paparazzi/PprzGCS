@@ -1,5 +1,7 @@
 #include "aircraft_status.h"
 #include <QDebug>
+#include "coordinatestransform.h"
+#include "AircraftManager.h"
 
 namespace { std::mutex mtx; }
 
@@ -12,6 +14,39 @@ static std::set<std::thread::id> thread_ids;
 AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent),
     ac_id(ac_id)
 {
+    //listen for NAVIGATION_REF to update origin waypoint of fixedwings
+    PprzDispatcher::get()->bind("NAVIGATION_REF", [=](std::string sender, pprzlink::Message msg) {
+        if(QString::fromStdString(sender) == ac_id) {
+            int32_t utm_east, utm_north;
+            uint8_t utm_zone;
+            float ground_alt;
+            msg.getField("utm_east", utm_east);
+            msg.getField("utm_north", utm_north);
+            msg.getField("utm_zone", utm_zone);
+            msg.getField("ground_alt", ground_alt);
+
+            auto latlon = CoordinatesTransform::get()->utm_to_wgs84(utm_east, utm_north, utm_zone, true);
+            auto orig = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getOrigin();
+            orig->setLat(latlon.lat());
+            orig->setLon(latlon.lon());
+        }
+    });
+
+    //listen for NAVIGATION_REF to update origin waypoint of rotorcrafts
+    PprzDispatcher::get()->bind("INS_REF", [=](std::string sender, pprzlink::Message msg) {
+        if(QString::fromStdString(sender) == ac_id) {
+
+            int32_t lat0, lon0, alt0;
+            msg.getField("lat0", lat0);
+            msg.getField("lon0", lon0);
+            msg.getField("alt0", alt0);
+
+            auto orig = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getOrigin();
+            orig->setLat(lat0/1e7);
+            orig->setLon(lon0/1e7);
+            orig->setAlt(alt0/1e3);
+        }
+    });
 
 }
 
