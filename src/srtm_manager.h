@@ -7,6 +7,8 @@
 #include <QNetworkAccessManager>
 #include <QNetworkDiskCache>
 #include <QObject>
+#include <QDialog>
+#include <QKeyEvent>
 
 using namespace std;
 
@@ -22,8 +24,10 @@ public:
         return singleton;
     }
 
-    void load_srtm(double _lat_min, double _lat_max, double _lon_min, double _lon_max);
     optional<int> get_elevation(double lat, double lon);
+    void load_tiles(QList<QString> names);
+    int load_tile(QString name, bool dl);
+    QList<QString> get_tile_names(double _lat_min, double _lat_max, double _lon_min, double _lon_max);
 
 private slots:
     void handleReply(QNetworkReply *reply);
@@ -33,7 +37,6 @@ private:
     explicit SRTMManager();
 
     QString get_tile_name(int lat, int lon);
-    void load_tile(QString name);
     optional<QString> get_tile_region(QString name);
 
     static const QString srtm_url;
@@ -43,6 +46,19 @@ private:
     QNetworkAccessManager* manager;
     QNetworkDiskCache* diskCache;
     QList<QString> pending_downloads;
+};
+
+
+class SRTMDialog : public QDialog{
+    Q_OBJECT
+public:
+    explicit SRTMDialog(QList<QString> tiles_names, QWidget *parent = nullptr);
+
+signals:
+    void tilesConfirmed(QList<QString>);
+
+protected:
+    void keyPressEvent(QKeyEvent *e) override;
 };
 
 #endif // SRTM_MANAGER_H

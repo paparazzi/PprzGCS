@@ -16,6 +16,7 @@
 #include <QDir>
 #include "gcs_utils.h"
 #include <zip.h>
+#include <QtWidgets>
 
 // with 1 arc-second resolution, there is 3600 samples per degree
 #define SAMPLES_PER_DEG 3600
@@ -43,7 +44,7 @@ SRTMManager::~SRTMManager()
     tiles.clear();
 }
 
-void SRTMManager::load_srtm(double _lat_min, double _lat_max, double _lon_min, double _lon_max) {
+QList<QString> SRTMManager::get_tile_names(double _lat_min, double _lat_max, double _lon_min, double _lon_max) {
     int lat_min = static_cast<int>(floor(_lat_min));
     int lat_max = static_cast<int>(ceil(_lat_max));
     int lon_min = static_cast<int>(floor(_lon_min));
@@ -52,14 +53,16 @@ void SRTMManager::load_srtm(double _lat_min, double _lat_max, double _lon_min, d
     assert(lat_min < lat_max);
     assert(lon_min < lon_max);
 
+    QList<QString> names;
+
     for(int lat=lat_min; lat<lat_max; lat++) {
         for(int lon=lon_min; lon<lon_max; lon++) {
-            auto name = get_tile_name(lat, lon);
-            load_tile(name);
+            names.append(get_tile_name(lat, lon));
         }
     }
-
+    return names;
 }
+
 
 QString SRTMManager::get_tile_name(int lat, int lon) {
     QString ss;
@@ -103,9 +106,33 @@ optional<int> SRTMManager::get_elevation(double lat, double lon) {
     return static_cast<int>(ele);
 }
 
-void SRTMManager::load_tile(QString name) {
+void SRTMManager::load_tiles(QList<QString> names) {
+
+    // load all tiles that are on the disk
+    QList<QString> tiles_dl;
+    for(auto &name: names) {
+        if(!load_tile(name, false)) {
+            tiles_dl.append(name);
+        }
+    }
+
+    // open the dialog for the tiles to be downloaded
+    if(tiles_dl.size() > 0) {
+        auto dialog = new SRTMDialog(tiles_dl);
+
+        connect(dialog, &SRTMDialog::tilesConfirmed, this, [=](QList<QString> tiles_confirmed) {
+            for(auto &name: tiles_confirmed) {
+                load_tile(name, true);
+            }
+        });
+
+        dialog->exec();
+    }
+}
+
+int SRTMManager::load_tile(QString name, bool dl) {
     if(tiles.find(name) != tiles.end()) {
-        return;
+        return true;
     }
 
     auto path = qApp->property("USER_DATA_PATH").toString() + "/srtm/" + name + ".SRTMGL1.hgt.zip";
@@ -131,25 +158,25 @@ void SRTMManager::load_tile(QString name) {
         // read only, don't save anything
         zip_discard(zf);
 
+        return true;
+
     } else {
         //tile is already being downloaded
         if(pending_downloads.contains(name)) {
-            return;
+            return true;
         }
-        QMessageBox::StandardButton reply;
-        reply = QMessageBox::question(
-                    nullptr,
-                    "SRTM",
-                    "Do you want to download SRTM tile " + name + "?",
-                    QMessageBox::Yes|QMessageBox::No);
 
-        if (reply == QMessageBox::Yes) {
+        if(dl) {
             QUrl url = srtm_url + name + ".SRTMGL1.hgt.zip";
             QNetworkRequest request = QNetworkRequest(url);
             request.setAttribute(QNetworkRequest::User, name);
             manager->get(request);
             pending_downloads.append(name);
+            return true;
+        } else {
+            return false;
         }
+
     }
 }
 
@@ -170,7 +197,7 @@ void SRTMManager::handleReply(QNetworkReply *reply) {
                 file.close();
                 reply->deleteLater();
                 pending_downloads.removeAll(name);
-                load_tile(name);
+                load_tile(name, false);
             }
         } else {
             qDebug() << "Error fetching SRTM tile, http status: " << status.toString();
@@ -178,4 +205,61 @@ void SRTMManager::handleReply(QNetworkReply *reply) {
     } else {
         qDebug() << "Error fetching SRTM tile " << reply->errorString() << "! " << QString(reply->readAll());
     }
+}
+
+
+SRTMDialog::SRTMDialog(QList<QString> tiles_names, QWidget *parent) : QDialog(parent)
+{
+    setWindowTitle("Load SRTM tiles");
+
+    auto lay = new QVBoxLayout(this);
+
+    auto select_all = new QCheckBox("Select all", this);
+    lay->addWidget(select_all);
+    select_all->setChecked(true);
+
+    QFrame* line = new QFrame();
+    line->setFrameShape(QFrame::HLine);
+    line->setFrameShadow(QFrame::Sunken);
+    lay->addWidget(line);
+
+    QList<QCheckBox*> chk_tiles;
+    for(auto &name: tiles_names) {
+        auto ck = new QCheckBox(name, this);
+        ck->setChecked(true);
+        lay->addWidget(ck);
+        chk_tiles.append(ck);
+    }
+
+    connect(select_all, &QCheckBox::toggled, this, [=](bool checked) {
+        for(auto &ck: chk_tiles) {
+            ck->setChecked(checked);
+        }
+    });
+
+
+    auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
+    lay->addWidget(buttonBox);
+
+    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [=]() {
+        QList<QString> tiles_ok;
+        for(auto ck: chk_tiles) {
+            if(ck->isChecked()) {
+                tiles_ok.append(ck->text());
+            }
+        }
+        emit tilesConfirmed(tiles_ok);
+        accept();
+    });
+
+    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=](){
+        reject();
+    });
+}
+
+void SRTMDialog::keyPressEvent(QKeyEvent *e) {
+    // keep ESC to exit dialog:
+    // if closed with ESC, the mouse tracking
+    // stop working on the map...
+    (void)e;
 }

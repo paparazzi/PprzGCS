@@ -19,6 +19,7 @@
 #include "waypointeditor.h"
 #include "srtm_manager.h"
 #include "point2dpseudomercator.h"
+#include <QSet>
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
@@ -55,6 +56,8 @@ PprzMap::PprzMap(QWidget *parent) :
 
     connect(ui->srtm_button, &QPushButton::clicked, [=]() {
 
+        QSet<QString> tiles;
+
         // Download SRTM tile(s) for each flightplan footprint
         for(auto &ac: AircraftManager::get()->getAircrafts()) {
             double min_lat = 90;
@@ -67,13 +70,17 @@ PprzMap::PprzMap(QWidget *parent) :
                 min_lon = min(min_lon, wp->getLon());
                 max_lon = max(max_lon, wp->getLon());
             }
-            SRTMManager::get()->load_srtm(min_lat, max_lat, min_lon, max_lon);
+            auto tile_names = SRTMManager::get()->get_tile_names(min_lat, max_lat, min_lon, max_lon);
+            tiles.unite(tile_names.toSet());
         }
 
         // Download SRTM tile(s) for view footprint
         Point2DLatLon nw(0, 0), se(0, 0);
         ui->map->getViewPoints(nw, se);
-        SRTMManager::get()->load_srtm(se.lat(), nw.lat(), nw.lon(), se.lon());
+        auto tile_names = SRTMManager::get()->get_tile_names(se.lat(), nw.lat(), nw.lon(), se.lon());
+        tiles.unite(tile_names.toSet());
+
+        SRTMManager::get()->load_tiles(tiles.toList());
 
     });
 
