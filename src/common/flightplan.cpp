@@ -222,3 +222,30 @@ vector<shared_ptr<BlockGroup>> FlightPlan::getGroups()
     return groups;
 
 }
+
+std::tuple<Point2DLatLon, Point2DLatLon> FlightPlan::boundingBox() {
+    double min_lat = 90;
+    double min_lon = 180;
+    double max_lat = -90;
+    double max_lon = -180;
+    for(auto &wp: waypoints) {
+        min_lat = min(min_lat, wp->getLat());
+        max_lat = max(max_lat, wp->getLat());
+        min_lon = min(min_lon, wp->getLon());
+        max_lon = max(max_lon, wp->getLon());
+    }
+
+    //NW, SE
+    return make_tuple(Point2DLatLon(max_lat, min_lon), Point2DLatLon(min_lat, max_lon));
+}
+
+std::tuple<Point2DLatLon, Point2DLatLon> FlightPlan::boundingBoxWith(Point2DLatLon pt) {
+    auto [nw, se] = boundingBox();
+
+    double min_lat = min(pt.lat(), se.lat());
+    double max_lat = max(pt.lat(), nw.lat());
+    double min_lon = min(pt.lon(), nw.lat());
+    double max_lon = max(pt.lon(), se.lon());
+
+    return make_tuple(Point2DLatLon(max_lat, min_lon), Point2DLatLon(min_lat, max_lon));
+}

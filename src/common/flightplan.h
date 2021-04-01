@@ -8,6 +8,7 @@
 #include "block.h"
 #include <memory>
 #include "tinyxml2.h"
+#include "point2dlatlon.h"
 
 struct BlockGroup {
     string group_name;
@@ -40,8 +41,6 @@ class FlightPlan
 {
 public:
 
-
-
     FlightPlan();
     FlightPlan(std::string uri);
 
@@ -59,6 +58,19 @@ public:
     void setGroundAlt(double ga) {ground_alt = ga;}
     shared_ptr<Waypoint> getOrigin() {return origin;}
     Waypoint::WpFrame getFrame() {return frame_type;}
+
+    /**
+     * @brief boundingBox of the flightPlan (NW, SE)
+     * @return NW, SE
+     */
+    std::tuple<Point2DLatLon, Point2DLatLon> boundingBox();
+
+    /**
+     * @brief boundingBoxWith boundingBox of the flightPlan + given point
+     * @param pt
+     * @return NW, SE
+     */
+    std::tuple<Point2DLatLon, Point2DLatLon> boundingBoxWith(Point2DLatLon pt);
 
 private:
     void parse_exceptions(tinyxml2::XMLElement* exs);

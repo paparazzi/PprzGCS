@@ -89,6 +89,29 @@ void Map2D::centerLatLon(Point2DLatLon latLon) {
     updateTiles();
 }
 
+/**
+ * @brief Map2D::zoomBox
+ * @param nw
+ * @param se
+ * @return max zoom fitting nw and se.
+ */
+double Map2D::zoomBox(Point2DLatLon nw, Point2DLatLon se) {
+    double targetZoom = 0;
+    while(targetZoom < 25) {
+        Point2DTile pnw(nw, zoomLevel(targetZoom));
+        Point2DTile pse(se, zoomLevel(targetZoom));
+        double sf = pow(2, targetZoom - zoomLevel(targetZoom));
+        int dx = (pse.x() - pnw.x()) * tileSize() / sf;
+        int dy = (pse.y() - pnw.y()) * tileSize() / sf;
+
+        if(dx >= viewport()->rect().width() || dy >= viewport()->rect().height()) {
+            break;
+        }
+        targetZoom += 0.5;
+    }
+    return targetZoom;
+}
+
 void Map2D::loadConfig(QString filename) {
     QDomDocument xmlLayout;
     QFile f(filename);

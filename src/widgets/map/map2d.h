@@ -19,6 +19,7 @@ class Map2D : public QGraphicsView
 public:
     explicit Map2D(QWidget *parent = nullptr);
     virtual void centerLatLon(Point2DLatLon latLon);
+    double zoomBox(Point2DLatLon nw, Point2DLatLon se);
     void toggleTileProvider(QString providerName, bool enable, int zValue = 0, qreal opacity = 1);
     std::map<QString, TileProviderConfig*>* tileProviders() {return &sourceConfigs;}
     QList<QString> tileProvidersNames();

@@ -60,17 +60,8 @@ PprzMap::PprzMap(QWidget *parent) :
 
         // Download SRTM tile(s) for each flightplan footprint
         for(auto &ac: AircraftManager::get()->getAircrafts()) {
-            double min_lat = 90;
-            double min_lon = 180;
-            double max_lat = -90;
-            double max_lon = -180;
-            for(auto &wp: ac.getFlightPlan().getWaypoints()) {
-                min_lat = min(min_lat, wp->getLat());
-                max_lat = max(max_lat, wp->getLat());
-                min_lon = min(min_lon, wp->getLon());
-                max_lon = max(max_lon, wp->getLon());
-            }
-            auto tile_names = SRTMManager::get()->get_tile_names(min_lat, max_lat, min_lon, max_lon);
+            auto [nw, se] = ac.getFlightPlan().boundingBox();
+            auto tile_names = SRTMManager::get()->get_tile_names(se.lat(), nw.lat(), nw.lon(), se.lon());
             tiles.unite(tile_names.toSet());
         }
 
@@ -192,8 +183,15 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
     }
     else if (event->key() == Qt::Key_C) {
         if(AircraftManager::get()->aircraftExists(current_ac)) {
-           Point2DLatLon pos = AircraftManager::get()->getAircraft(current_ac).getPosition();
-           ui->map->centerLatLon(pos);
+
+
+
+            Point2DLatLon pos = AircraftManager::get()->getAircraft(current_ac).getPosition();
+            auto [nw, se] = AircraftManager::get()->getAircraft(current_ac).getFlightPlan().boundingBoxWith(pos);
+            double zoo = ui->map->zoomBox(nw, se);
+            ui->map->setZoom(zoo);
+            Point2DLatLon center((nw.lat()+se.lat()) / 2.0, (nw.lon()+se.lon()) / 2.0);
+            ui->map->centerLatLon(center);
         }
         ui->map->itemsForbidHighlight(false);
     }
