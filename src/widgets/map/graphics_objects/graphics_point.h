@@ -19,7 +19,6 @@ class GraphicsPoint : public GraphicsObject, public QGraphicsItem
 public:
     explicit GraphicsPoint(int size, QColor color, QObject *parent = nullptr);
     void setColors(QColor colPressed, QColor colMoving, QColor colUnfocused);
-    void setStyle(Style s) {style = s;}
 
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -50,7 +49,6 @@ private:
     QColor color_pressed;
     QColor color_moved;
     QColor color_unfocused;
-    Style style;
 };
 
 #endif // GRAPHICSPOINT_H

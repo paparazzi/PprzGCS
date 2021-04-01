@@ -3,8 +3,7 @@
 
 GraphicsText::GraphicsText(const QString &text, QObject *parent):
     GraphicsObject(parent),
-    QGraphicsTextItem (text),
-    style(DEFAULT)
+    QGraphicsTextItem (text)
 
 {
 
@@ -32,7 +31,7 @@ void GraphicsText::changeFocus() {
 }
 
 void GraphicsText::setStyle(Style s) {
-    style = s;
+    GraphicsObject::setStyle(s);
     changeFocus();
 }
 

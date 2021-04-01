@@ -8,8 +8,7 @@ GraphicsLine::GraphicsLine(QPointF a, QPointF b, QColor color, int stroke, QObje
     QGraphicsItem (),
     A(a), B(b),
     color_idle(color), color_unfocused(color),
-    base_stroke(stroke), stroke(stroke),
-    style(DEFAULT)
+    base_stroke(stroke), stroke(stroke)
 {
     current_color = &color_idle;
 }
@@ -98,9 +97,4 @@ void GraphicsLine::setLine(QPointF a, QPointF b) {
     A=a;
     B=b;
     prepareGeometryChange();
-}
-
-void GraphicsLine::setStyle(Style s) {
-    qDebug() << "NAV style bro!";
-    style = s;
 }

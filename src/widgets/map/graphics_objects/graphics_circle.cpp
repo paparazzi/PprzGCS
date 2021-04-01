@@ -13,7 +13,7 @@ GraphicsCircle::GraphicsCircle(double radius, QColor color, int stroke, QObject 
         QGraphicsItem (),
         radius(radius), scale_state(CSS_IDLE),
         current_color(nullptr), color_idle(color), color_pressed(color), color_scaling(color), color_unfocused(color),
-        base_stroke(stroke), stroke(stroke), text(), display_radius(true), style(DEFAULT)
+        base_stroke(stroke), stroke(stroke), text(), display_radius(true)
 {
     current_color = &color_idle;
 }

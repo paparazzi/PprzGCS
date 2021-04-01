@@ -23,6 +23,7 @@ public:
     void setEditable(bool ed) {editable = ed;}
     void setScaleFactor(double s) {scale_factor = s;}
     void setIgnoreEvent(bool ignore) {ignore_events = ignore;}
+    void setStyle(Style s) {style = s;}
 
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
@@ -31,6 +32,7 @@ protected:
     bool editable;
     double scale_factor;
     bool ignore_events;
+    Style style;
 
 signals:
     void objectClicked(QPointF scene_pos);

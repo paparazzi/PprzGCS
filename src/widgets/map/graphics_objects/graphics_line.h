@@ -18,7 +18,6 @@ public:
     void setIgnoreEvent(bool ignore) {ignore_events = ignore;}
     //void setText(QString t) {text = t;}
     void setLine(QPointF a, QPointF b);
-    void setStyle(Style s);
 
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -48,8 +47,6 @@ private:
 
     bool ignore_events;
     //QString text;
-
-    Style style;
 };
 
 #endif // GRAPHICSLINE_H

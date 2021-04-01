@@ -14,8 +14,6 @@ public:
 protected:
     virtual void changeFocus() override;
 
-private:
-    Style style;
 };
 
 #endif // GRAPHICS_TEXT_H
