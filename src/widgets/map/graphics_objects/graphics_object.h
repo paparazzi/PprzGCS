@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QGraphicsSceneMouseEvent>
 #include <QColor>
+#include <QTimer>
 
 class GraphicsObject : public QObject
 {
@@ -16,6 +17,11 @@ public:
         CARROT,
     };
 
+    enum Animation {
+        NONE,
+        WP_MOVING,
+    };
+
     explicit GraphicsObject(QObject *parent = nullptr);
     bool isHighlighted() {return highlighted;}
     virtual void setHighlighted(bool h);
@@ -24,6 +30,7 @@ public:
     void setScaleFactor(double s) {scale_factor = s;}
     void setIgnoreEvent(bool ignore) {ignore_events = ignore;}
     void setStyle(Style s) {style = s;}
+    void setAnimation(Animation a);
 
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event);
@@ -33,6 +40,9 @@ protected:
     double scale_factor;
     bool ignore_events;
     Style style;
+    Animation animation;
+
+    QTimer* animation_timer;
 
 signals:
     void objectClicked(QPointF scene_pos);

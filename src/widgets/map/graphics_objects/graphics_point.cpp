@@ -5,14 +5,22 @@
 #include <QDebug>
 #include <QPainter>
 #include <QPainterPath>
+#include <QTimer>
 
 GraphicsPoint::GraphicsPoint(int size, QColor color, QObject *parent) :
     GraphicsObject(parent),
     QGraphicsItem (),
-    halfSize(size), move_state(PMS_IDLE), current_color(nullptr)
+    halfSize(size), move_state(PMS_IDLE), current_color(nullptr), animation_couter(0)
 {
     color_idle = color;
     current_color = &color_idle;
+
+    animation_timer->setInterval(500);
+    connect(animation_timer, &QTimer::timeout, this, [=]()
+    {
+        animation_couter += 1;
+        prepareGeometryChange();
+    });
 }
 
 void GraphicsPoint::setColors(QColor colPressed, QColor colMoving, QColor colUnfocused) {
@@ -20,7 +28,6 @@ void GraphicsPoint::setColors(QColor colPressed, QColor colMoving, QColor colUnf
     color_moved = colMoving;
     color_unfocused = colUnfocused;
 }
-
 
 QRectF GraphicsPoint::boundingRect() const {
     return QRectF(-halfSize-1, -halfSize-1, 2*halfSize+2, 2*halfSize+2);
@@ -31,6 +38,7 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     (void)option;
     (void)widget;
 
+    QPainterPath path;
 
     if(style == DEFAULT) {
         double fx = 0.8;
@@ -48,12 +56,11 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         poly.append(QPointF(-halfSize*fx, 0));
         poly.append(QPointF(0, halfSize*fy));
 
-        QPainterPath path;
+
         path.addPolygon(poly);
 
         painter->setBrush(QBrush(*current_color));
         //painter->setPen(Qt::NoPen);
-        painter->drawPath(path);
 
     } else if (style == CARROT) {
         QPolygonF poly;
@@ -61,14 +68,18 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         poly.append(QPointF(halfSize*cos(5*M_PI/6), -halfSize*sin(5*M_PI/6)));
         poly.append(QPointF(halfSize*cos(3*M_PI/2), -halfSize*sin(3*M_PI/2)));
 
-        QPainterPath path;
         path.addPolygon(poly);
         painter->setBrush(QBrush(QColor(255, 170, 0)));
         painter->setPen(Qt::NoPen);
-        painter->drawPath(path);
     } else if (style == CURRENT_NAV) {
         //draw nothing
     }
+
+    if(animation == WP_MOVING) {
+        painter->rotate(animation_couter * 45 + 1);
+    }
+
+    painter->drawPath(path);
 }
 
 QPainterPath GraphicsPoint::shape() const {

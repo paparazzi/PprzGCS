@@ -268,6 +268,7 @@ void PprzMap::handleNewAC(QString ac_id) {
             connect(we, &QDialog::finished, wpi, [=](int result) {
                 (void)result;
                 wpi->setMoving(false);
+
             });
             we->open();
         };
@@ -275,6 +276,10 @@ void PprzMap::handleNewAC(QString ac_id) {
         connect(wpi, &WaypointItem::waypointMoveFinished, this, dialog_move_waypoint);
 
         connect(wpi, &WaypointItem::itemDoubleClicked, this, dialog_move_waypoint);
+
+        connect(wpi, &WaypointItem::waypointMoved, this, [=](){
+            wpi->setAnimate(true);
+        });
 
         if(wp->getName()[0] == '_') {
             wpi->setStyle(GraphicsPoint::Style::CURRENT_NAV);
@@ -379,6 +384,7 @@ void PprzMap::moveWaypoint(pprzlink::Message msg) {
         for(auto wpi: ac_items_managers[ac_id]->getWaypointsItems()) {
             if(wpi->getOriginalWaypoint() == wp && !wpi->isMoving()) {
                 wpi->updatePosition();
+                wpi->setAnimate(false);
             }
         }
     }

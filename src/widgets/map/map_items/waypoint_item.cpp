@@ -153,6 +153,18 @@ void WaypointItem::setStyle(GraphicsPoint::Style s){
     requestUpdate();
 }
 
+void WaypointItem::setAnimation(GraphicsObject::Animation a) {
+    point->setAnimation(a);
+}
+
+void WaypointItem::setAnimate(bool animate) {
+    if(animate) {
+        point->setAnimation(GraphicsObject::Animation::WP_MOVING);
+    } else {
+        point->setAnimation(GraphicsObject::Animation::NONE);
+    }
+}
+
 QPointF WaypointItem::scenePos() {
     if(point != nullptr) {
         return point->scenePos();

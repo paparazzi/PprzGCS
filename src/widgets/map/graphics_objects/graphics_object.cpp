@@ -2,9 +2,9 @@
 #include <QDebug>
 
 GraphicsObject::GraphicsObject(QObject *parent) : QObject(parent),
-    editable(true), scale_factor(1.0), ignore_events(false), highlighted(true)
+    editable(true), scale_factor(1.0), ignore_events(false), style(DEFAULT), animation(NONE), highlighted(true)
 {
-
+    animation_timer = new QTimer(this);
 }
 
 
@@ -19,4 +19,13 @@ void GraphicsObject::mousePressEvent(QGraphicsSceneMouseEvent *event) {
 void GraphicsObject::setHighlighted(bool h) {
     highlighted = h;
     changeFocus();
+}
+
+void GraphicsObject::setAnimation(Animation a) {
+    animation = a;
+    if(a == NONE && animation_timer->isActive()) {
+        animation_timer->stop();
+    } else if(a != NONE && !animation_timer->isActive()) {
+        animation_timer->start();
+    }
 }

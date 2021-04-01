@@ -49,6 +49,8 @@ private:
     QColor color_pressed;
     QColor color_moved;
     QColor color_unfocused;
+
+    int animation_couter;
 };
 
 #endif // GRAPHICSPOINT_H
