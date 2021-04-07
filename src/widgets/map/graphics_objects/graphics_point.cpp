@@ -6,6 +6,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QTimer>
+#include <QSettings>
 
 GraphicsPoint::GraphicsPoint(int size, QColor color, QObject *parent) :
     GraphicsObject(parent),
@@ -37,7 +38,7 @@ QRectF GraphicsPoint::boundingRect() const {
 void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     (void)option;
     (void)widget;
-
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     QPainterPath path;
 
     if(style == DEFAULT) {
@@ -45,8 +46,8 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         double fy = 1.0;
         if(!isHighlighted()) {
             current_color = &color_unfocused;
-            fx /= qApp->property("SIZE_HIGHLIGHT_FACTOR").toDouble();
-            fy /= qApp->property("SIZE_HIGHLIGHT_FACTOR").toDouble();
+            fx /= settings.value("map/size_highlight_factor").toDouble();
+            fy /= settings.value("map/size_highlight_factor").toDouble();
         }
 
         QPolygonF poly;
@@ -107,10 +108,11 @@ void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         event->ignore();
         return;
     }
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     if(move_state == PMS_PRESSED) {
         QPointF dp = event->pos() - pressPos;
         double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());
-        if(d > qApp->property("MAP_MOVE_HYSTERESIS").toInt() && editable) {
+        if(d > settings.value("map/move_hyteresis").toInt() && editable) {
             move_state = PMS_MOVED;
             changeFocus();
         }

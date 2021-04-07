@@ -8,6 +8,7 @@
 #include "flightplan.h"
 #include "setting_menu.h"
 #include "airframe.h"
+#include <QSettings>
 
 AircraftManager* AircraftManager::singleton = nullptr;
 
@@ -28,6 +29,8 @@ QList<Aircraft> AircraftManager::getAircrafts() {
 }
 
 void AircraftManager::addAircraft(pprzlink::Message msg) {
+    QSettings app_settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+
     std::string ac_id, ac_name, default_gui_color, flight_plan, airframe, radio, settings;
     msg.getField("ac_id", ac_id);
     msg.getField("ac_name", ac_name);
@@ -51,7 +54,7 @@ void AircraftManager::addAircraft(pprzlink::Message msg) {
 
     Airframe air(airframe.c_str());
 
-    QString icon = qApp->property("PATH_AIRCRAFT_ICON").toString() + "/" + QString(air.getIconName().c_str()) + ".svg";
+    QString icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(air.getIconName().c_str()) + ".svg";
     qDebug() << "icon: " << icon;
 
     aircrafts[id] = Aircraft(id, color, icon, QString::fromStdString(ac_name), fp, sm, air);
@@ -75,6 +78,7 @@ void AircraftManager::removeAircraft(QString ac_id) {
 
 QColor AircraftManager::parseColor(std::string str) {
     QColor color = QColor();
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
 
     if(str[0] == '#' && str.size() == 13) {
         int r = std::stoi(str.substr(1, 4), nullptr, 16) >> 8;
@@ -86,7 +90,7 @@ QColor AircraftManager::parseColor(std::string str) {
     }
 
     if(!color.isValid()) {
-        color = QColor(qApp->property("DEFAULT_COLOR").toString());
+        color = QColor(settings.value("aircraft_default_color").toString());
     }
 
     return color;

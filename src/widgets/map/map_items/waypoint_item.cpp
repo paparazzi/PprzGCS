@@ -1,12 +1,12 @@
 #include "waypoint_item.h"
 #include "math.h"
-#include <QApplication>
 #include <QDebug>
 #include "maputils.h"
 #include <QGraphicsScene>
 #include "mapwidget.h"
 #include "AircraftManager.h"
 #include "coordinatestransform.h"
+#include <QSettings>
 
 // create WaypointItem from position -> create corresponding Waypoint.
 WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom, QObject *parent) :
@@ -24,13 +24,14 @@ WaypointItem::WaypointItem(shared_ptr<Waypoint> wp, QString ac_id, double neutra
 }
 
 void WaypointItem::init() {
-    z_value_highlighted = qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toDouble();
-    z_value_unhighlighted = qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toDouble();
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    z_value_highlighted = settings.value("map/z_values/highlighted").toDouble();
+    z_value_unhighlighted = settings.value("map/z_values/unhighlighted").toDouble();
     z_value = z_value_unhighlighted;
 
     _waypoint = make_shared<Waypoint>(*original_waypoint);
     Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
-    int size = qApp->property("WAYPOINTS_SIZE").toInt();
+    int size = settings.value("map/waypoint/size").toInt();
     name = original_waypoint->getName().c_str();
     point = new GraphicsPoint(size, aircraft.getColor(), this);
     QList<QColor> color_variants = makeColorVariants(aircraft.getColor());

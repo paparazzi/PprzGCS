@@ -4,17 +4,20 @@
 #include <QApplication>
 #include <QDebug>
 #include "aircraft.h"
+#include <QSettings>
 
 AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, neutral_scale_zoom, parent),
     latlon(pt), heading(0.), last_chunk_index(0)
 {
-    z_value_highlighted = qApp->property("AIRCRAFT_Z_VALUE").toDouble();
-    z_value_unhighlighted = qApp->property("AIRCRAFT_Z_VALUE").toDouble();
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+
+    z_value_highlighted = settings.value("map/z_values/aircraft").toDouble();
+    z_value_unhighlighted = settings.value("map/z_values/aircraft").toDouble();
     z_value = z_value_unhighlighted;
 
     Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
-    int size = qApp->property("AIRCRAFTS_SIZE").toInt();
+    int size = settings.value("map/aircraft/size").toInt();
 
     color_idle = aircraft.getColor();
     color_unfocused = labelUnfocusedColor(aircraft.getColor());
@@ -23,7 +26,7 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
     graphics_text = new GraphicsText(aircraft.name());
     graphics_text->setDefaultTextColor(aircraft.getColor());
 
-    for(int i=0; i<qApp->property("TRACK_MAX_CHUNKS").toInt(); i++) {
+    for(int i=0; i<settings.value("map/aircraft/track_max_chunk").toInt(); i++) {
         auto gt = new GraphicsTrack(aircraft.getColor(), trackUnfocusedColor(aircraft.getColor()));
         graphics_tracks.append(gt);
         QList<Point2DLatLon> l;
@@ -65,10 +68,10 @@ void AircraftItem::updateGraphics(MapWidget* map) {
 
 void AircraftItem::setPosition(Point2DLatLon pt) {
     latlon = pt;
-
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     track_chuncks[last_chunk_index].append(pt);
 
-    if(track_chuncks[last_chunk_index].size() >= qApp->property("TRACK_CHUNCK_SIZE").toInt()) {
+    if(track_chuncks[last_chunk_index].size() >= settings.value("map/aircraft/track_chunk_size").toInt()) {
         last_chunk_index = (last_chunk_index + 1) % track_chuncks.size();
         assert(track_chuncks[last_chunk_index].size() == 0 || track_chuncks[last_chunk_index].size() == 1);
         if(!track_chuncks[last_chunk_index].isEmpty()) {
@@ -114,9 +117,10 @@ void AircraftItem::setHighlighted(bool h) {
 }
 
 void AircraftItem::updateZValue() {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     graphics_aircraft->setZValue(z_value);
     graphics_text->setZValue(z_value);
-    double z_tracks = qApp->property("AIRCRAFT_Z_VALUE").toDouble();
+    double z_tracks = settings.value("map/z_values/aircraft").toDouble();
     for(auto gt: graphics_tracks) {
         gt->setZValue(z_tracks);
     }

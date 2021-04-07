@@ -1,6 +1,7 @@
 #include "units.h"
 #include <QApplication>
 #include "tinyxml2.h"
+#include <QSettings>
 #include <QDebug>
 #include "iostream"
 
@@ -11,7 +12,8 @@ Units* Units::singleton = nullptr;
 
 Units::Units()
 {
-    auto filename = qApp->property("PAPARAZZI_HOME").toString() + "/var/units.xml";
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto filename = settings.value("PAPARAZZI_HOME").toString() + "/var/units.xml";
 
     setlocale(LC_ALL, "C"); // needed for stod() to use '.' as decimal separator instead of ',' (at least in France)
     XMLDocument doc;

@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QPainter>
 #include <QApplication>
+#include <QSettings>
 
 GraphicsLine::GraphicsLine(QPointF a, QPointF b, QColor color, int stroke, QObject *parent) :
     GraphicsObject(parent),
@@ -53,9 +54,10 @@ QPainterPath GraphicsLine::shape() const {
 }
 
 void GraphicsLine::changeFocus() {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     if(!isHighlighted()) {
         current_color = &color_unfocused;
-        stroke = static_cast<int>(base_stroke / qApp->property("SIZE_HIGHLIGHT_FACTOR").toDouble());
+        stroke = static_cast<int>(base_stroke / settings.value("map/size_highlight_factor").toDouble());
     } else {
         stroke = base_stroke;
         current_color = &color_idle;

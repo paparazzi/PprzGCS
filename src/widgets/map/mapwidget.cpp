@@ -19,10 +19,13 @@
 #include "layer_combo.h"
 #include "lock_button.h"
 #include "gcs_utils.h"
+#include <QSettings>
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton)
 {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+
     horizontalLayout = new QHBoxLayout(this);   // main layout
     buttonsLeftLayout = new QVBoxLayout();
     columnLeft = new QVBoxLayout();
@@ -47,7 +50,7 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
 
     setZoom(2);
     centerLatLon(Point2DLatLon(43.462344,1.273044));
-    setTilesPath(qApp->property("MAP_PATH").toString());
+    setTilesPath(settings.value("map/tiles_path").toString());
 
     addLayersWidget();
 
@@ -56,13 +59,15 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
 }
 
 void MapWidget::addLayersWidget() {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+
     auto layer_combo = new LayerCombo(this);
     //layer_combo->setStyleSheet("QWidget{background-color: #31363b;} QLabel{color:white;}");
 
     int i = tileProvidersNames().length();
     for(auto &tp: tileProvidersNames() ) {
         bool shown = false;
-        if(tp == qApp->property("DEFAULT_TILE_PROVIDER").toString()) {
+        if(tp == settings.value("map/default_tiles").toString()) {
             toggleTileProvider(tp, true, i, 1);
             shown = true;
         }
@@ -71,8 +76,7 @@ void MapWidget::addLayersWidget() {
         i--;
     }
 
-
-    auto button = new LockButton(QIcon(qApp->property("APP_DATA_PATH").toString() + "/pictures/" + "map_layers_normal.svg"), this);
+    auto button = new LockButton(QIcon(settings.value("APP_DATA_PATH").toString() + "/pictures/" + "map_layers_normal.svg"), this);
 
     addWidget(layer_combo, button, WIDGETS_LEFT);
 }
@@ -159,10 +163,10 @@ void MapWidget::configure(QDomElement ele) {
 
 MapLayerControl* MapWidget::makeLayerControl(QString name, bool initialState, int z) {
     QString path = user_or_app_path("pictures/map_thumbnails/" + name + ".png");
-
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     QPixmap thumbnail = QPixmap(path);
     if(thumbnail.isNull()) {
-        path = qApp->property("APP_DATA_PATH").toString() + "/pictures/map_thumbnails/default.png";
+        path = user_or_app_path("pictures/map_thumbnails/default.png");
         thumbnail = QPixmap(path);
     }
 
@@ -270,11 +274,12 @@ void MapWidget::mousePressEvent(QMouseEvent *event) {
 
 void MapWidget::mouseMoveEvent(QMouseEvent *event) {
     Map2D::mouseMoveEvent(event);
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     if(event->buttons() & pan_mouse_mask) {
         if(pan_state == PAN_PRESSED) {
             QPoint dp = event->pos()-lastPos;
             double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());
-            if(d > qApp->property("MAP_MOVE_HYSTERESIS").toInt()) {
+            if(d > settings.value("map/move_hyteresis").toInt()) {
                 pan_state = PAN_MOVE;
             }
         } else if(pan_state == PAN_MOVE) {

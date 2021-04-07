@@ -3,6 +3,7 @@
 #include "AircraftManager.h"
 #include "pprz_dispatcher.h"
 #include "aircraft.h"
+#include <QSettings>
 
 Commands::Commands(QString ac_id, QWidget *parent) : QWidget(parent),
     ac_id(ac_id)
@@ -59,6 +60,7 @@ void Commands::paintEvent(QPaintEvent* e) {
 
 
 void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     auto groups = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getGroups();
     int col = 0;
     for(auto &group: groups) {
@@ -70,7 +72,7 @@ void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
 
             if(icon != "") {
                 b = new QPushButton(this);
-                QString icon_path = qApp->property("PATH_GCS_ICON").toString() + "/" + icon;
+                QString icon_path = settings.value("path/gcs_icons").toString() + "/" + icon;
                 b->setIcon(QIcon(icon_path));
                 if(txt != "") {
                     b->setToolTip(txt);
@@ -97,6 +99,7 @@ void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
 }
 
 void Commands::addSettingsButtons(QGridLayout* settings_buttons_layout) {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     vector<shared_ptr<SettingMenu::ButtonGroup>> groups = AircraftManager::get()->getAircraft(ac_id).getSettingMenu()->getButtonGroups();
 
     int col = 0;
@@ -109,7 +112,7 @@ void Commands::addSettingsButtons(QGridLayout* settings_buttons_layout) {
 
             if(icon != "") {
                 b = new QPushButton(this);
-                QString icon_path = qApp->property("PATH_GCS_ICON").toString() + "/" + icon;
+                QString icon_path = settings.value("path/gcs_icons").toString() + "/" + icon;
                 b->setIcon(QIcon(icon_path));
                 if(name != "") {
                     b->setToolTip(name);
@@ -195,8 +198,9 @@ void Commands::addSpecialCommands(QGridLayout* glay) {
 }
 
 void Commands::addCommandButton(QGridLayout* glay,QString icon, int row, int col, std::function<void()> callback) {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     auto button = new QToolButton(this);
-    QString icon_path = qApp->property("PATH_GCS_ICON").toString() + "/" + icon;
+    QString icon_path = settings.value("path/gcs_icons").toString() + "/" + icon;
     button->setIcon(QIcon(icon_path));
     glay->addWidget(button, row, col);
     connect(button, &QToolButton::clicked, callback);

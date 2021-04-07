@@ -9,109 +9,221 @@
 #include <QDir>
 #include <QVariant>
 #include <QStandardPaths>
+#include <QSettings>
+#include <QtWidgets>
+#include <QFileInfo>
 
-void setEmptyProperty(const char* name, QVariant value) {
-    if(!qApp->property(name).isValid()) {
-        qApp->setProperty(name, value);
+void default_setting(QString key, QVariant value) {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+
+    if(!settings.contains(key)) {
+        settings.setValue(key, value);
+    }
+}
+
+void configure() {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+
+    default_setting("ivy/name", "PprzGCS");
+    default_setting("pprzlink/id", "pprzcontrol");
+    default_setting("ivy/bus", "127.255.255.255:2010");
+
+    default_setting("PAPARAZZI_HOME", QString(qgetenv("PAPARAZZI_HOME")));
+    default_setting("PAPARAZZI_SRC", QString(qgetenv("PAPARAZZI_SRC")));
+
+    default_setting("pprzlink/messages", settings.value("PAPARAZZI_HOME").toString() + "/var/messages.xml");
+    default_setting("path/gcs_icons", settings.value("PAPARAZZI_HOME").toString() + "/data/pictures/gcs_icons");
+    default_setting("path/aircraft_icon", settings.value("APP_DATA_PATH").toString() + "/pictures/aircraft_icons");
+    default_setting("map/default_tiles", "Google");
+
+    default_setting("map/move_hyteresis", 20);
+    default_setting("map/waypoint/size", 8);
+    default_setting("map/circle/stroke", 4);
+    default_setting("map/size_highlight_factor", 1.5);
+
+    default_setting("map/z_values/unhighlighted", 100);
+    default_setting("map/z_values/highlighted", 200);
+    default_setting("map/z_values/aircraft", 400);
+    default_setting("map/z_values/carrot", 500);
+    default_setting("map/z_values/nav_shape", 600);
+
+    default_setting("map/items_font", 18);
+    default_setting("map/aircraft/size", 40);
+
+    default_setting("map/tiles_path", settings.value("USER_DATA_PATH").toString() + "/map");
+
+
+    default_setting("map/aircraft/track_max_chunk", 10);
+    default_setting("map/aircraft/track_chunk_size", 20);
+
+    default_setting("aircraft_default_color", "red");
+
+    default_setting("APP_STYLE_FILE", settings.value("APP_DATA_PATH").toString() + "/default_style.qss");
+    default_setting("APP_LAYOUT_FILE", settings.value("APP_DATA_PATH").toString() + "/default_layout.xml");
+
+}
+
+
+
+SettingsEditor::SettingsEditor(QWidget* parent): QDialog(parent)
+{
+    setWindowTitle("Settings Editor");
+    auto lay = new QVBoxLayout(this);
+
+    auto tabWidget = new QTabWidget(this);
+    lay->addWidget(tabWidget);
+
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+
+    // Tab Ivy
+    auto w_ivy = new QWidget(tabWidget);
+    auto l_ivy = new QGridLayout(w_ivy);
+    int row = 0;
+    auto cb = addSetting("Ivy name", "ivy/name", w_ivy, l_ivy, row, Type::STRING);
+    callbacks.append(cb);
+    cb = addSetting("Bus", "ivy/bus", w_ivy, l_ivy, row, Type::STRING);
+    callbacks.append(cb);
+    cb = addSetting("Pprzlink ID", "pprzlink/id", w_ivy, l_ivy, row, Type::STRING);
+    callbacks.append(cb);
+    tabWidget->addTab(w_ivy, "Ivy");
+
+    // Tab Map
+    auto w_map = new QWidget(tabWidget);
+    auto l_map = new QGridLayout(w_map);
+    row = 0;
+    cb = addSetting("Waypoint Size", "map/waypoint/size", w_map, l_map, row, Type::INT);
+    callbacks.append(cb);
+    cb = addSetting("Items Font", "map/items_font", w_map, l_map, row, Type::INT);
+    callbacks.append(cb);
+    cb = addSetting("Tiles path", "map/tiles_path", w_map, l_map, row, Type::PATH_DIR);
+    callbacks.append(cb);
+    cb = addSetting("Move Hysteresis", "map/move_hyteresis", w_map, l_map, row, Type::INT);
+    callbacks.append(cb);
+    cb = addSetting("Size highlight factor", "map/size_highlight_factor", w_map, l_map, row, Type::DOUBLE);
+    callbacks.append(cb);
+    cb = addSetting("Aircraft Size", "map/aircraft/size", w_map, l_map, row, Type::INT);
+    callbacks.append(cb);
+    cb = addSetting("Track size", "map/aircraft/track_max_chunk", w_map, l_map, row, Type::INT);
+    callbacks.append(cb);
+    tabWidget->addTab(w_map, "Map");
+
+    // Tab General
+    auto w_general = new QWidget(tabWidget);
+    auto l_general = new QGridLayout(w_general);
+    row = 0;
+    cb = addSetting("Layout", "APP_LAYOUT_FILE", w_general, l_general, row, Type::PATH_FILE);
+    callbacks.append(cb);
+    cb = addSetting("Style", "APP_STYLE_FILE", w_general, l_general, row, Type::PATH_FILE);
+    callbacks.append(cb);
+    tabWidget->addTab(w_general, "General");
+
+
+    auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply, this);
+    lay->addWidget(buttonBox);
+
+    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [=](){
+        for(auto &cb:callbacks) {
+            cb();
+        }
+        accept();
+    });
+
+    connect(buttonBox->button(QDialogButtonBox::Apply), &QPushButton::clicked, this, [=](){
+        for(auto &cb:callbacks) {
+            cb();
+        }
+    });
+
+    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=](){
+        reject();
+    });
+}
+
+
+std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWidget* w, QGridLayout* gl, int &row, Type type) {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto label = new QLabel(name, w);
+
+    int r = row;
+    row += 1;
+
+
+    gl->addWidget(label, r, 0);
+
+    if(type == Type::STRING) {
+        auto edit = new QLineEdit(settings.value(key).toString(), w);
+        gl->addWidget(edit, r, 1);
+
+        auto cb = [=]() {
+          QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+          settings.setValue(key, edit->text());
+        };
+
+        return cb;
+    } else if(type == Type::INT) {
+        auto edit = new QLineEdit(settings.value(key).toString(), w);
+        gl->addWidget(edit, r, 1);
+
+        auto cb = [=]() {
+          QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+          settings.setValue(key, edit->text().toInt());
+        };
+
+        return cb;
+    } else if(type == Type::DOUBLE) {
+        auto edit = new QLineEdit(settings.value(key).toString(), w);
+        gl->addWidget(edit, r, 1);
+
+        auto cb = [=]() {
+          QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+          settings.setValue(key, edit->text().toDouble());
+        };
+
+        return cb;
+    } else if(type == Type::PATH_DIR) {
+        auto edit = new QLineEdit(settings.value(key).toString(), w);
+        gl->addWidget(edit, r, 1);
+
+        QToolButton* but = new QToolButton(w);
+        but->setIcon(style()->standardIcon(QStyle::SP_DirOpenIcon));
+        gl->addWidget(but, r, 2);
+        connect(but, &QToolButton::clicked, this, [=]() {
+            auto dir = QFileDialog::getExistingDirectory(w, name, edit->text());
+            qDebug() << dir;
+            if(dir != "") {
+                edit->setText(dir);
+            }
+        });
+
+        auto cb = [=]() {
+          QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+          settings.setValue(key, edit->text());
+        };
+
+        return cb;
+    }  else if(type == Type::PATH_FILE) {
+        auto edit = new QLineEdit(settings.value(key).toString(), w);
+        gl->addWidget(edit, r, 1);
+
+        QToolButton* but = new QToolButton(w);
+        but->setIcon(style()->standardIcon(QStyle::SP_DirOpenIcon));
+        gl->addWidget(but, r, 2);
+        connect(but, &QToolButton::clicked, this, [=]() {
+            QFileInfo fi = (edit->text());
+            auto dir = QFileDialog::getOpenFileName(w, name, fi.absoluteDir().path());
+            qDebug() << dir;
+            if(dir != "") {
+                edit->setText(dir);
+            }
+        });
+
+        auto cb = [=]() {
+          QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+          settings.setValue(key, edit->text());
+        };
+
+        return cb;
     } else {
-        qDebug() << "property "<< name << " already exists with value: " << value;
+        throw std::runtime_error("Error: Setting type not handled !");
     }
-}
-
-void set_default_config() {
-    setEmptyProperty("IVY_NAME", "PprzGCS");
-    setEmptyProperty("IVY_BUS", "127.255.255.255:2010");
-    setEmptyProperty("PPRZLINK_ID", "pprzcontrol");
-
-    setEmptyProperty("PAPARAZZI_HOME", qgetenv("PAPARAZZI_HOME"));
-    setEmptyProperty("PAPARAZZI_SRC", qgetenv("PAPARAZZI_SRC"));
-
-    setEmptyProperty("PPRZLINK_MESSAGES", qgetenv("PAPARAZZI_HOME") + "/var/messages.xml");
-    setEmptyProperty("PATH_GCS_ICON", qgetenv("PAPARAZZI_HOME") + "/data/pictures/gcs_icons");
-    setEmptyProperty("DEFAULT_TILE_PROVIDER", "Google");
-
-    setEmptyProperty("MAP_MOVE_HYSTERESIS", 20);
-    setEmptyProperty("WAYPOINTS_SIZE", 8);
-    setEmptyProperty("CIRCLE_CREATE_MIN_RADIUS", 1.0);
-    setEmptyProperty("CIRCLE_STROKE", 4);
-    setEmptyProperty("SIZE_HIGHLIGHT_FACTOR", 1.5);
-
-    setEmptyProperty("ITEM_Z_VALUE_UNHIGHLIGHTED", 100);
-    setEmptyProperty("ITEM_Z_VALUE_HIGHLIGHTED", 200);
-    setEmptyProperty("TRACK_Z_VALUE", 300);
-    setEmptyProperty("AIRCRAFT_Z_VALUE", 400);
-    setEmptyProperty("CARROT_Z_VALUE", 500);
-    setEmptyProperty("NAV_SHAPE_Z_VALUE", 600);
-
-    setEmptyProperty("MAPITEMS_FONT", 18);
-    setEmptyProperty("AIRCRAFTS_SIZE", 40);
-
-    setEmptyProperty("DEFAULT_COLOR", "red");
-    setEmptyProperty("PATH_AIRCRAFT_ICON", qApp->property("APP_DATA_PATH").toString() + "/pictures/aircraft_icons");
-
-    setEmptyProperty("TRACK_MAX_CHUNKS", 10);
-    setEmptyProperty("TRACK_CHUNCK_SIZE", 20);
-
-    setEmptyProperty("APP_STYLE_FILE", qApp->property("APP_DATA_PATH").toString() + "/default_style.qss");
-    setEmptyProperty("APP_LAYOUT_FILE", qApp->property("APP_DATA_PATH").toString() + "/default_layout.xml");
-
-    setEmptyProperty("MAP_PATH", qApp->property("USER_DATA_PATH").toString() + "/map");
-}
-
-void set_user_config(QTextStream& stream) {
-    QString line;
-    while (stream.readLineInto(&line)) {
-        if(line.startsWith("#") || line == "") {
-            continue;
-        }
-
-        auto strList = line.split(' ');
-
-        if(strList.size() != 2) {
-            qDebug() << "config line illformed: " << line;
-            continue;
-        }
-
-        auto key = strList[0];
-        auto value = strList[1];
-
-        auto prop = qApp->property(key.toLocal8Bit().data());
-        if(prop.isValid()) {
-           auto type = prop.type();
-           auto variant = QVariant(value);
-           bool converted = variant.convert(static_cast<int>(type));
-           if(converted) {
-               qApp->setProperty(key.toLocal8Bit().data(), variant);
-               // qDebug() << "property " << key << " set to " << variant;
-           } else {
-               qDebug() << "property " << key << ": can't convert " << value << " to " << prop.typeName();
-           }
-        } else {
-            qApp->setProperty(key.toLocal8Bit().data(), value);
-        }
-
-    }
-}
-
-void configure(QString config_file) {
-
-    QFile gcsConfig(config_file);
-    if(!gcsConfig.open(QFile::ReadOnly | QFile::Text)) {
-       qDebug() << "Fail to open config file " << config_file;
-       exit(-1);
-    }
-
-
-
-    if(!qEnvironmentVariableIsSet("PAPARAZZI_HOME") ||
-       !qEnvironmentVariableIsSet("PAPARAZZI_SRC")) {
-        std::cerr << "Set environnements variables PAPARAZZI_HOME, PAPARAZZI_SRC!" << std::endl;
-        abort();
-    }
-
-    QTextStream stream(&gcsConfig);
-
-    set_default_config();
-    set_user_config(stream);
-
 }

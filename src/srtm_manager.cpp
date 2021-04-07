@@ -17,6 +17,7 @@
 #include "gcs_utils.h"
 #include <zip.h>
 #include <QtWidgets>
+#include <QSettings>
 
 // with 1 arc-second resolution, there is 3600 samples per degree
 #define SAMPLES_PER_DEG 3600
@@ -134,8 +135,9 @@ int SRTMManager::load_tile(QString name, bool dl) {
     if(tiles.find(name) != tiles.end()) {
         return true;
     }
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
 
-    auto path = qApp->property("USER_DATA_PATH").toString() + "/srtm/" + name + ".SRTMGL1.hgt.zip";
+    auto path = settings.value("USER_DATA_PATH").toString() + "/srtm/" + name + ".SRTMGL1.hgt.zip";
 
     zip_t* zf = zip_open(path.toStdString().c_str(), ZIP_RDONLY, nullptr);
 
@@ -181,11 +183,13 @@ int SRTMManager::load_tile(QString name, bool dl) {
 }
 
 void SRTMManager::handleReply(QNetworkReply *reply) {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+
     auto name = reply->request().attribute(QNetworkRequest::User).toString();
     if(reply->error() == QNetworkReply::NetworkError::NoError) {
         auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
         if(status.toInt() == 200) {
-            auto path = qApp->property("USER_DATA_PATH").toString() + "/srtm/" + name + ".SRTMGL1.hgt.zip";
+            auto path = settings.value("USER_DATA_PATH").toString() + "/srtm/" + name + ".SRTMGL1.hgt.zip";
             QFile file(path);
             QFileInfo fi(path);
             QDir dirName = fi.dir();

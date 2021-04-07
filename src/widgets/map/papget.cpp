@@ -7,16 +7,18 @@
 #include <type_traits>
 #include "AircraftManager.h"
 #include "papgetconfig.h"
+#include <QSettings>
 
 //TODO must unbind message in destructor, somehow
 
 Papget::Papget(struct DataDef datadef, QPoint pos_view, QObject *parent) : QObject(parent), QGraphicsItem(),
     datadef(datadef), type(Type::NONE), pos_view(pos_view), move_state(MoveState::IDLE)
 {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     params.style = Style::TEXT;
     auto ac = AircraftManager::get()->getAircraft(datadef.ac_id);
     params.color = ac.getColor();
-    params.fontSize = qApp->property("MAPITEMS_FONT").toInt();
+    params.fontSize = settings.value("map/items_font").toInt();
 
     bindRet = PprzDispatcher::get()->bind(datadef.msg_name.toStdString(),
         [=](std::string sender, pprzlink::Message msg) {
@@ -125,10 +127,11 @@ void Papget::mousePressEvent(QGraphicsSceneMouseEvent *event){
 }
 
 void Papget::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     if(move_state == PRESSED) {
         QPointF dp = event->pos() - pressPos;
         double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());
-        if(d > qApp->property("MAP_MOVE_HYSTERESIS").toInt()) {
+        if(d > settings.value("map/move_hyteresis").toInt()) {
             move_state = MOVED;
         }
     } else if(move_state == MOVED) {

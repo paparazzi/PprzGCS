@@ -4,6 +4,8 @@
 #include "dispatcher_ui.h"
 #include "AircraftManager.h"
 #include "pprz_dispatcher.h"
+#include <QSettings>
+#include "configure.h"
 
 PprzMain* PprzMain::singleton = nullptr;
 
@@ -56,14 +58,22 @@ void PprzMain::populate_menu() {
 
     auto user_dir = file_menu->addAction("Open user directory");
     connect(user_dir, &QAction::triggered, [=](){
-        QString path = QDir::toNativeSeparators(qApp->property("USER_DATA_PATH").toString());
+        QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+        QString path = QDir::toNativeSeparators(settings.value("USER_DATA_PATH").toString());
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
 
     auto app_dir = file_menu->addAction("Open app directory");
     connect(app_dir, &QAction::triggered, [=](){
-        QString path = QDir::toNativeSeparators(qApp->property("APP_DATA_PATH").toString());
+        QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+        QString path = QDir::toNativeSeparators(settings.value("APP_DATA_PATH").toString());
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+    });
+
+    auto edit_settings = file_menu->addAction("Edit Settings");
+    connect(edit_settings, &QAction::triggered, [=](){
+        auto se = new SettingsEditor();
+        se->open();
     });
 
     auto silent_mode_action = file_menu->addAction("Silent mode");

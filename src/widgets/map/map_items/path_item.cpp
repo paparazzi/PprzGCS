@@ -4,13 +4,15 @@
 #include "mapwidget.h"
 #include "map_item.h"
 #include "AircraftManager.h"
+#include <QSettings>
 
 PathItem::PathItem(QString ac_id, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, neutral_scale_zoom, parent),
     closing_line(nullptr), line_width(5)
 {
-    z_value_highlighted = qApp->property("ITEM_Z_VALUE_HIGHLIGHTED").toDouble();
-    z_value_unhighlighted = qApp->property("ITEM_Z_VALUE_UNHIGHLIGHTED").toDouble();
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    z_value_highlighted = settings.value("map/z_values/highlighted").toDouble();
+    z_value_unhighlighted = settings.value("map/z_values/unhighlighted").toDouble();
     z_value = z_value_unhighlighted;
 }
 

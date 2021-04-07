@@ -7,6 +7,7 @@
 #include <QColor>
 #include <QPainter>
 #include <QPainterPath>
+#include <QSettings>
 
 GraphicsCircle::GraphicsCircle(double radius, QColor color, int stroke, QObject *parent) :
         GraphicsObject(parent),
@@ -48,7 +49,7 @@ void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
     (void)option;
     (void)widget;
     path_draw = QPainterPath();
-
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     if(style == DEFAULT) {
         double out_draw = radius + stroke*scale_factor;
         double in_draw = radius - stroke*scale_factor;
@@ -86,7 +87,7 @@ void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
     if(display_radius) {
         path_draw = QPainterPath();
         QFont font;
-        font.setPointSize (qApp->property("MAPITEMS_FONT").toInt()*scale_factor);
+        font.setPointSize (settings.value("map/items_font").toInt()*scale_factor);
         font.setWeight(QFont::DemiBold);
         path_draw.addText(textPos.x()+10, textPos.y(), font, text);
         painter->setBrush(QBrush(color_idle));
@@ -129,12 +130,12 @@ void GraphicsCircle::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         event->ignore();
         return;
     }
-
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     QPointF mousePos = event->pos();
     double r = sqrt(mousePos.x()*mousePos.x() + mousePos.y()*mousePos.y()) - dr;
 
     if(scale_state == CSS_PRESSED) {
-        if(qAbs(radius - r) > qApp->property("MAP_MOVE_HYSTERESIS").toInt() && editable) {
+        if(qAbs(radius - r) > settings.value("map/move_hyteresis").toInt() && editable) {
             scale_state = CSS_SCALED;
             changeFocus();
         }
@@ -171,9 +172,10 @@ void GraphicsCircle::setRadius(double r) {
 }
 
 void GraphicsCircle::changeFocus() {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     if(!isHighlighted()) {
         current_color = &color_unfocused;
-        stroke = static_cast<int>(base_stroke / qApp->property("SIZE_HIGHLIGHT_FACTOR").toDouble());
+        stroke = static_cast<int>(base_stroke / settings.value("map/size_highlight_factor").toDouble());
     } else {
         stroke = base_stroke;
         switch (scale_state) {

@@ -20,6 +20,7 @@
 #include "srtm_manager.h"
 #include "point2dpseudomercator.h"
 #include <QSet>
+#include <QSettings>
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
@@ -235,6 +236,7 @@ void PprzMap::updateAircraftItem(pprzlink::Message msg) {
 }
 
 void PprzMap::handleNewAC(QString ac_id) {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     // create aircraft item at dummy position
     auto aircraft_item = new AircraftItem(Point2DLatLon(0, 0), ac_id, 16);
     ui->map->addItem(aircraft_item);
@@ -244,7 +246,7 @@ void PprzMap::handleNewAC(QString ac_id) {
     ui->map->addItem(target);
     target->setStyle(GraphicsObject::Style::CARROT);
     target->setEditable(false);
-    double z_carrot = qApp->property("CARROT_Z_VALUE").toDouble();
+    double z_carrot = settings.value("map/z_values/carrot").toDouble();
     target->setZValues(z_carrot, z_carrot);
 
     //create the ACItemManager for this aircraft
@@ -401,13 +403,15 @@ void PprzMap::updateTarget(pprzlink::Message msg) {
 }
 
 void PprzMap::updateNavShape(pprzlink::Message msg) {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+
     std::string id;
     msg.getField("ac_id", id);
     QString ac_id(id.c_str());
 
     MapItem* prev_item = ac_items_managers[ac_id]->getCurrentNavShape();
 
-    double z = qApp->property("NAV_SHAPE_Z_VALUE").toDouble();
+    double z = settings.value("map/z_values/nav_shape").toDouble();
 
     if(msg.getDefinition().getName() == "CIRCLE_STATUS") {
         if(prev_item!= nullptr && prev_item->getType() != ITEM_CIRCLE) {

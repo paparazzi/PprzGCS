@@ -3,6 +3,7 @@
 #include "gcs_utils.h"
 #include "dispatcher_ui.h"
 #include <QDebug>
+#include <QSettings>
 
 MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     ac_id(ac_id), icons_size(QSize(30, 30)), alt_mode(true), speed_mode(true)
@@ -345,6 +346,7 @@ void MiniStrip::updateFBW() {
 }
 
 void MiniStrip::updateNavStatus() {
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     auto msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("NAV_STATUS");
     if(msg) {
         uint8_t cur_block;
@@ -361,7 +363,7 @@ void MiniStrip::updateNavStatus() {
 
         QString icon_name = block->getIcon().c_str();
         if(icon_name != "") {
-            QString icon_path = qApp->property("PATH_GCS_ICON").toString() + "/" + icon_name;
+            QString icon_path = settings.value("path/gcs_icons").toString() + "/" + icon_name;
             block_icon->setPixmap(QIcon(icon_path).pixmap(icons_size));
         } else {
             block_icon->setText(QString::fromUtf8("\xE2\x88\x85"));

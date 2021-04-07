@@ -8,6 +8,7 @@
 #include <QWizard>
 #include "configure.h"
 #include "gcs_utils.h"
+#include <QSettings>
 
 #ifndef APP_DATA_PATH
 #error "you need to define APP_DATA_PATH!"
@@ -15,15 +16,16 @@
 
 
 void launch_main_app() {
-    QFile file(qApp->property("APP_STYLE_FILE").toString());
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    QFile file(settings.value("APP_STYLE_FILE").toString());
     if(!file.open(QFile::ReadOnly | QFile::Text)) {
-        qDebug() << "could not open " << qApp->property("APP_STYLE_FILE").toString();
+        qDebug() << "could not open " << settings.value("APP_STYLE_FILE").toString();
         exit(-1);
     }
     QTextStream stream(&file);
     qApp->setStyleSheet(stream.readAll());
 
-    QString layout_path = qApp->property("APP_LAYOUT_FILE").toString();
+    QString layout_path = settings.value("APP_LAYOUT_FILE").toString();
 
     QMainWindow* w = build_layout(layout_path);
 
@@ -35,8 +37,8 @@ void launch_main_app() {
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    QApplication::setApplicationName("PprzGCS");
-    QApplication::setApplicationVersion("0.1");
+    QCoreApplication::setApplicationName("PprzGCS");
+    QCoreApplication::setApplicationVersion("0.1");
 
     QCommandLineParser parser;
     parser.setApplicationDescription("Test helper");
@@ -53,6 +55,10 @@ int main(int argc, char *argv[])
 
     parser.process(a);
 
+    auto settings_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/settings.conf";
+    qApp->setProperty("SETTINGS_PATH", settings_path);
+    QSettings settings(settings_path, QSettings::IniFormat);
+
     QString arg_config_path = parser.value(config_file_option);
 
     QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -60,19 +66,11 @@ int main(int argc, char *argv[])
     if(!conf_dir.exists()) {
         conf_dir.mkpath(conf_dir.path());
     }
-    qApp->setProperty("USER_DATA_PATH", config_path);
-    qApp->setProperty("APP_DATA_PATH", APP_DATA_PATH);
 
+    settings.setValue("USER_DATA_PATH", config_path);
+    settings.setValue("APP_DATA_PATH", APP_DATA_PATH);
 
-    //default config path
-    auto gcsConfigPath = user_or_app_path("conf.txt");
-    if(arg_config_path != "") {
-        //user provided a conf file
-        gcsConfigPath = arg_config_path;
-    }
-
-    // this should be the GCS configuration file.
-    configure(gcsConfigPath);
+    configure();
 
     PprzDispatcher::get()->setSilent(parser.isSet(silentModeOption));
 

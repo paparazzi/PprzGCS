@@ -6,6 +6,7 @@
 #include <QApplication>
 #include <QDateTime>
 #include "pprzmain.h"
+#include <QSettings>
 
 using namespace std;
 
@@ -15,11 +16,13 @@ Q_DECLARE_METATYPE(pprzlink::Message)
 
 PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(false), started(false), silent_mode(false)
 {
-    std::string ivy_name = qApp->property("IVY_NAME").toString().toStdString();
-    pprzlink_id = qApp->property("PPRZLINK_ID").toString().toStdString();
+    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
 
-    dict = std::make_shared<pprzlink::MessageDictionary>(qApp->property("PPRZLINK_MESSAGES").toString().toStdString());
-    link = std::make_unique<pprzlink::IvyLink>(*dict, ivy_name, qApp->property("IVY_BUS").toString().toStdString(), true);
+    std::string ivy_name = settings.value("ivy/name").toString().toStdString();
+    pprzlink_id = settings.value("pprzlink/id").toString().toStdString();
+
+    dict = std::make_shared<pprzlink::MessageDictionary>(settings.value("pprzlink/messages").toString().toStdString());
+    link = std::make_unique<pprzlink::IvyLink>(*dict, ivy_name, settings.value("ivy/bus").toString().toStdString(), true);
 
     qRegisterMetaType<pprzlink::Message>();
 
