@@ -10,6 +10,7 @@ class SRTMManager;
 class PprzDispatcher;
 class CoordinatesTransform;
 class Units;
+class DispatcherUi;
 
 class PprzToolbox : public QObject
 {
@@ -22,6 +23,7 @@ public:
     PprzDispatcher*       pprzDispatcher       () {return _pprzDispatcher      ;}
     CoordinatesTransform* coordinatesTransform () {return _coordinatesTransform;}
     Units*                units                () {return _units               ;}
+    DispatcherUi*         dispatcherUi         () {return _dispatcherUi        ;}
 
 private:
     void setChildToolboxes(void);
@@ -30,6 +32,7 @@ private:
     PprzDispatcher*       _pprzDispatcher       = nullptr;
     CoordinatesTransform* _coordinatesTransform = nullptr;
     Units*                _units                = nullptr;
+    DispatcherUi*         _dispatcherUi         = nullptr;
 
     friend class PprzApplication;
 

@@ -4,22 +4,19 @@
 #include <QObject>
 #include "waypoint.h"
 #include "point2dlatlon.h"
+#include "PprzToolbox.h"
+#include "PprzApplication.h"
 
 class Setting;
 
-class DispatcherUi : public QObject
+class DispatcherUi : public PprzTool
 {
     Q_OBJECT
 
-    static DispatcherUi* singleton;
-    explicit DispatcherUi(QObject *parent = nullptr);
-
 public:
-    static DispatcherUi* get(QObject *parent = nullptr) {
-        if(!singleton) {
-            singleton = new DispatcherUi(parent);
-        }
-        return singleton;
+    explicit DispatcherUi(PprzApplication* app, PprzToolbox* toolbox);
+    static DispatcherUi* get() {
+        return pprzApp()->toolbox()->dispatcherUi();
     }
 
     QString getSelectedAcId() { return selected_ac_id;}
