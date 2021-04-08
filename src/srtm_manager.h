@@ -9,19 +9,19 @@
 #include <QObject>
 #include <QDialog>
 #include <QKeyEvent>
+#include "PprzToolbox.h"
+#include "PprzApplication.h"
 
 using namespace std;
 
-class SRTMManager : public QObject
+class SRTMManager : public PprzTool
 {
     Q_OBJECT
 public:
+    explicit SRTMManager(PprzApplication* app, PprzToolbox* toolbox);
     ~SRTMManager();
     static SRTMManager* get() {
-        if(singleton == nullptr) {
-            singleton = new SRTMManager();
-        }
-        return singleton;
+        return pprzApp()->toolbox()->srtmManager();
     }
 
     optional<int> get_elevation(double lat, double lon);
@@ -33,9 +33,6 @@ private slots:
     void handleReply(QNetworkReply *reply);
 
 private:
-    static SRTMManager* singleton;
-    explicit SRTMManager();
-
     QString get_tile_name(int lat, int lon);
     optional<QString> get_tile_region(QString name);
 

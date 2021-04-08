@@ -25,10 +25,9 @@ constexpr uint32_t TILE_SIZE = SAMPLES_PER_DEG + 1;
 
 constexpr zip_uint64_t ZIP_LEN = TILE_SIZE*TILE_SIZE*2;
 
-SRTMManager* SRTMManager::singleton = nullptr;
 const QString SRTMManager::srtm_url = "https://step.esa.int/auxdata/dem/SRTMGL1/";
 
-SRTMManager::SRTMManager(): QObject ()
+SRTMManager::SRTMManager(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox)
 {
     manager = new QNetworkAccessManager();
     diskCache = new QNetworkDiskCache();

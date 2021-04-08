@@ -1,13 +1,16 @@
 #include "PprzToolbox.h"
 #include "AircraftManager.h"
+#include "srtm_manager.h"
 
 PprzToolbox::PprzToolbox(PprzApplication* app)
 {
     _aircraftManager = new AircraftManager(app, this);
+    _srtmManager     = new SRTMManager    (app, this);
 }
 
 void PprzToolbox::setChildToolboxes(void) {
     _aircraftManager->setToolbox(this);
+    _srtmManager->setToolbox(this);
 }
 
 

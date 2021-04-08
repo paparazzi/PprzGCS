@@ -6,6 +6,7 @@
 
 class PprzApplication;
 class AircraftManager;
+class SRTMManager;
 
 class PprzToolbox : public QObject
 {
@@ -14,10 +15,12 @@ public:
     explicit PprzToolbox(PprzApplication* app);
 
     AircraftManager* aircraftManager() {return _aircraftManager;}
+    SRTMManager    * srtmManager     () {return _srtmManager    ;}
 
 private:
     void setChildToolboxes(void);
     AircraftManager* _aircraftManager = nullptr;
+    SRTMManager*     _srtmManager     = nullptr;
 
     friend class PprzApplication;
 

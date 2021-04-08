@@ -12,7 +12,6 @@
 #include <pprzlink/Message.h>
 #include <QMap>
 #include "PprzToolbox.h"
-
 #include "PprzApplication.h"
 
 
