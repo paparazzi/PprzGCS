@@ -38,6 +38,12 @@ void launch_main_app() {
 int main(int argc, char *argv[])
 {
     PprzApplication a(argc, argv);
+
+    auto settings_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/settings.conf";
+    pprzApp()->setProperty("SETTINGS_PATH", settings_path);
+    QSettings settings(settings_path, QSettings::IniFormat);
+
+    a.init();
     QCoreApplication::setApplicationName("PprzGCS");
     QCoreApplication::setApplicationVersion("0.1");
 
@@ -56,9 +62,6 @@ int main(int argc, char *argv[])
 
     parser.process(a);
 
-    auto settings_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/settings.conf";
-    qApp->setProperty("SETTINGS_PATH", settings_path);
-    QSettings settings(settings_path, QSettings::IniFormat);
 
     QString arg_config_path = parser.value(config_file_option);
 

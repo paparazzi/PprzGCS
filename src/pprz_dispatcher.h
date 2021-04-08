@@ -6,21 +6,20 @@
 #include <pprzlink/IvyLink.h>
 #include <pprzlink/Message.h>
 #include <memory>
+#include "PprzToolbox.h"
+#include "PprzApplication.h"
 
-class PprzDispatcher : public QObject
+class PprzDispatcher : public PprzTool
 {
     Q_OBJECT
-
-    static PprzDispatcher* singleton;
-    explicit PprzDispatcher(QObject *parent = nullptr);
-
 public:
-    static PprzDispatcher* get(QObject *parent = nullptr) {
-        if(!singleton) {
-            singleton = new PprzDispatcher(parent);
-        }
-        return singleton;
+    explicit PprzDispatcher(PprzApplication* app, PprzToolbox* toolbox);
+
+    static PprzDispatcher* get() {
+        return pprzApp()->toolbox()->pprzDispatcher();
     }
+
+    virtual void setToolbox(PprzToolbox* toolbox) override;
 
     void start();
 

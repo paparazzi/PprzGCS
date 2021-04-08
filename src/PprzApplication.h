@@ -12,6 +12,7 @@ public:
     explicit PprzApplication(int &argc, char **argv, int = ApplicationFlags);
 
     static PprzApplication*  _app;
+    void init();
 
     PprzToolbox* toolbox() {return _toolbox;}
 

@@ -3,20 +3,23 @@
 #include "AircraftManager.h"
 #include "dispatcher_ui.h"
 #include <QDebug>
-#include <QApplication>
+#include <PprzApplication.h>
 #include <QDateTime>
 #include "pprzmain.h"
 #include <QSettings>
 
 using namespace std;
 
-PprzDispatcher* PprzDispatcher::singleton = nullptr;
-
 Q_DECLARE_METATYPE(pprzlink::Message)
 
-PprzDispatcher::PprzDispatcher(QObject *parent) : QObject (parent), first_msg(false), started(false), silent_mode(false)
+PprzDispatcher::PprzDispatcher(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox), first_msg(false), started(false), silent_mode(false)
 {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+
+}
+
+void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
+    PprzTool::setToolbox(toolbox);
+    QSettings settings(pprzApp()->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
 
     std::string ivy_name = settings.value("ivy/name").toString().toStdString();
     pprzlink_id = settings.value("pprzlink/id").toString().toStdString();
