@@ -14,6 +14,7 @@ class PprzDispatcher : public PprzTool
     Q_OBJECT
 public:
     explicit PprzDispatcher(PprzApplication* app, PprzToolbox* toolbox);
+    ~PprzDispatcher();
 
     static PprzDispatcher* get() {
         return pprzApp()->toolbox()->pprzDispatcher();
@@ -63,6 +64,8 @@ private:
 
     void requestConfig(std::string ac_id);
     void bindDeftoSignal(std::string const &name, sig_ptr_t sig);
+
+    QList<long> _bindIds;
 
     std::shared_ptr<pprzlink::MessageDictionary> dict;
     std::unique_ptr<pprzlink::IvyLink> link;

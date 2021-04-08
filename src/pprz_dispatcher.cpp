@@ -41,8 +41,17 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
     });
 }
 
+PprzDispatcher::~PprzDispatcher() {
+    const QList<long> &constList = _bindIds;
+    for(auto id: constList) {
+        (void)id;
+        link->UnbindMessage(id);
+    }
+    _bindIds.clear();
+}
+
 void PprzDispatcher::bindDeftoSignal(std::string const &name, sig_ptr_t sig) {
-    link->BindMessage(dict->getDefinition(name),
+    long bid = link->BindMessage(dict->getDefinition(name),
         [=](std::string sender, pprzlink::Message msg) {
             if(sender == "ground") {
                 time_msg_server = QDateTime::currentMSecsSinceEpoch();
@@ -61,6 +70,7 @@ void PprzDispatcher::bindDeftoSignal(std::string const &name, sig_ptr_t sig) {
             }
         }
     );
+    _bindIds.append(bid);
 }
 
 void PprzDispatcher::requestConfig(std::string ac_id) {
@@ -110,12 +120,13 @@ void PprzDispatcher::requestAircrafts() {
 
 long PprzDispatcher::bind(std::string msg_name, pprzlink::messageCallback_t cb) {
     long ret = link->BindMessage(dict->getDefinition(msg_name), cb);
+    _bindIds.append(ret);
     return ret;
 }
 
 void PprzDispatcher::start() {
 
-    link->BindMessage(dict->getDefinition("WAYPOINT_MOVED"),
+    long bid = link->BindMessage(dict->getDefinition("WAYPOINT_MOVED"),
         [=](std::string ac_id, pprzlink::Message msg) {
             (void)ac_id;
             std::string id;
@@ -126,8 +137,9 @@ void PprzDispatcher::start() {
                 emit(waypoint_moved(msg));
             }
     });
+    _bindIds.append(bid);
 
-    link->BindMessage(dict->getDefinition("AIRCRAFT_DIE"),
+    bid = link->BindMessage(dict->getDefinition("AIRCRAFT_DIE"),
         [=](std::string ac_id, pprzlink::Message msg) {
             (void)ac_id;
             std::string id;
@@ -149,6 +161,7 @@ void PprzDispatcher::start() {
             }
         }
     );
+    _bindIds.append(bid);
 
     bindDeftoSignal("AP_STATUS", &PprzDispatcher::ap_status);
     bindDeftoSignal("NAV_STATUS", &PprzDispatcher::nav_status);
@@ -182,7 +195,7 @@ void PprzDispatcher::start() {
     requestAircrafts();
 
 
-    link->BindMessage(dict->getDefinition("NEW_AIRCRAFT"),
+    bid = link->BindMessage(dict->getDefinition("NEW_AIRCRAFT"),
         [=](std::string ac_id, pprzlink::Message msg) {
             (void)ac_id;
             std::string id;
@@ -190,6 +203,7 @@ void PprzDispatcher::start() {
             requestConfig(id);
         }
     );
+    _bindIds.append(bid);
 
     server_check_timer.setInterval(1000);
     server_check_timer.start();
