@@ -5,12 +5,13 @@
 #include <math.h>
 #include <mutex>
 #include <QDebug>
+#include "PprzToolbox.h"
+#include "PprzApplication.h"
 
 namespace { std::recursive_mutex mtx; }
 
-CoordinatesTransform* CoordinatesTransform::singleton = nullptr;
-
-CoordinatesTransform::CoordinatesTransform() : pj_context(nullptr)
+CoordinatesTransform::CoordinatesTransform(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox),
+    pj_context(nullptr)
 {
     const std::lock_guard<std::recursive_mutex> lock(mtx);
     pj_context = proj_context_create();

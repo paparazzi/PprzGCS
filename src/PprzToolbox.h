@@ -8,6 +8,8 @@ class PprzApplication;
 class AircraftManager;
 class SRTMManager;
 class PprzDispatcher;
+class CoordinatesTransform;
+class Units;
 
 class PprzToolbox : public QObject
 {
@@ -15,15 +17,19 @@ class PprzToolbox : public QObject
 public:
     explicit PprzToolbox(PprzApplication* app);
 
-    AircraftManager* aircraftManager() {return _aircraftManager;}
-    SRTMManager    * srtmManager    () {return _srtmManager    ;}
-    PprzDispatcher * pprzDispatcher () {return _pprzDispatcher ;}
+    AircraftManager*      aircraftManager      () {return _aircraftManager     ;}
+    SRTMManager*          srtmManager          () {return _srtmManager         ;}
+    PprzDispatcher*       pprzDispatcher       () {return _pprzDispatcher      ;}
+    CoordinatesTransform* coordinatesTransform () {return _coordinatesTransform;}
+    Units*                units                () {return _units               ;}
 
 private:
     void setChildToolboxes(void);
-    AircraftManager* _aircraftManager = nullptr;
-    SRTMManager*     _srtmManager     = nullptr;
-    PprzDispatcher*  _pprzDispatcher  = nullptr;
+    AircraftManager*      _aircraftManager      = nullptr;
+    SRTMManager*          _srtmManager          = nullptr;
+    PprzDispatcher*       _pprzDispatcher       = nullptr;
+    CoordinatesTransform* _coordinatesTransform = nullptr;
+    Units*                _units                = nullptr;
 
     friend class PprzApplication;
 

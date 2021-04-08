@@ -11,19 +11,20 @@
 #include <QPointF>
 #include <QMap>
 #include <QString>
+#include "PprzToolbox.h"
+#include "PprzApplication.h"
 
-class CoordinatesTransform
+class CoordinatesTransform : public PprzTool
 {
 public:
+
+    CoordinatesTransform(PprzApplication* app, PprzToolbox* toolbox);
 
     static inline const QString TRANSFORM_WGS84_WEB_MERCATOR = "WGS84_WEB_MERCATOR";
     static inline const QString TRANSFORM_NONE = "NO_TRANSFORM";
 
     static CoordinatesTransform* get() {
-        if(singleton == nullptr) {
-            singleton = new CoordinatesTransform();
-        }
-        return singleton;
+        return pprzApp()->toolbox()->coordinatesTransform();
     }
 
 
@@ -43,9 +44,6 @@ public:
 
 
 private:
-    CoordinatesTransform();
-    static CoordinatesTransform* singleton;
-
     static QString utm_epsg(double lat, double lon);
     static QString utm_epsg(int zone, bool isNorth);
 

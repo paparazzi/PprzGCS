@@ -8,10 +8,13 @@
 using namespace std;
 using namespace tinyxml2;
 
-Units* Units::singleton = nullptr;
-
-Units::Units()
+Units::Units(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox)
 {
+
+}
+
+void Units::setToolbox(PprzToolbox* toolbox) {
+    PprzTool::setToolbox(toolbox);
     QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     auto filename = settings.value("PAPARAZZI_HOME").toString() + "/var/units.xml";
 

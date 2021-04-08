@@ -2,23 +2,23 @@
 #define UNITS_H
 #include <optional>
 #include <map>
+#include "PprzToolbox.h"
+#include "PprzApplication.h"
 
 using namespace std;
 
-class Units {
+class Units : public PprzTool {
 public:
+    explicit Units(PprzApplication* app, PprzToolbox* toolbox);
     static Units* get() {
-        if(singleton == nullptr) {
-            singleton = new Units();
-        }
-        return singleton;
+        return pprzApp()->toolbox()->units();
     }
+
+    virtual void setToolbox(PprzToolbox* toolbox) override;
 
     optional<float> getCoef(string inputUnit, string outputUnit);
 
 private:
-    static Units* singleton;
-    explicit Units();
     map<pair<string, string>, float> coefs;
 };
 #endif // UNITS_H
