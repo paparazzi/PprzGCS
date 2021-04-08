@@ -4,6 +4,7 @@
 #include <QApplication>
 
 class PprzToolbox;
+class PprzMain;
 
 class PprzApplication : public QApplication
 {
@@ -15,9 +16,11 @@ public:
     void init();
 
     PprzToolbox* toolbox() {return _toolbox;}
+    PprzMain* mainWindow() {return _mainWindow;}
 
 private:
     PprzToolbox* _toolbox = nullptr;
+    PprzMain* _mainWindow = nullptr;
 
 signals:
 

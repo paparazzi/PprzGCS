@@ -34,9 +34,9 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
     connect(&server_check_timer, &QTimer::timeout, this, [this]() {
         auto now = QDateTime::currentMSecsSinceEpoch();
         if(now - time_msg_server > 1000) {
-            PprzMain::get()->setServerStatus(false);
+            pprzApp()->mainWindow()->setServerStatus(false);
         } else {
-            PprzMain::get()->setServerStatus(true);
+            pprzApp()->mainWindow()->setServerStatus(true);
         }
     });
 }

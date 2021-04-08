@@ -24,7 +24,7 @@ DECLARE_LAYOUT_EXCEPT(file_error)
 DECLARE_LAYOUT_EXCEPT(invalid_node)
 DECLARE_LAYOUT_EXCEPT(unknown_widget)
 
-QMainWindow* build_layout(QString filename);
+PprzMain* build_layout(QString filename);
 QWidget* rec_build(QDomNode &node, QSplitter* parent, int* size);
 QLayout* layout_rec_build(QDomElement &ele, QWidget* parent);
 

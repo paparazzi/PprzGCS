@@ -127,7 +127,7 @@ QLayout* layout_rec_build(QDomElement &ele, QWidget* parent) {
     return layout;
 }
 
-QMainWindow* build_layout(QString filename) {
+PprzMain* build_layout(QString filename) {
     QDomDocument xmlLayout;
     QFile f(filename);
     if(!f.open(QIODevice::ReadOnly)) {
@@ -153,7 +153,7 @@ QMainWindow* build_layout(QString filename) {
     int s;
     QWidget* widget = rec_build(root_node, nullptr, &s);
 
-    auto window = PprzMain::get();
+    auto window = pprzApp()->mainWindow();
     window->setupUi(width, height, widget);
 
     return window;

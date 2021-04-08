@@ -28,7 +28,7 @@ void launch_main_app() {
 
     QString layout_path = settings.value("APP_LAYOUT_FILE").toString();
 
-    QMainWindow* w = build_layout(layout_path);
+    PprzMain* w = build_layout(layout_path);
 
     PprzDispatcher::get()->start();
 
