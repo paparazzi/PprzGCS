@@ -2,6 +2,8 @@
 set(SOURCE
     ${SOURCE}
     ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/PprzToolbox.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/PprzApplication.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/AircraftManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/srtm_manager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/aircraft.cpp

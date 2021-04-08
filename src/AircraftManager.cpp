@@ -10,9 +10,8 @@
 #include "airframe.h"
 #include <QSettings>
 
-AircraftManager* AircraftManager::singleton = nullptr;
-
-AircraftManager::AircraftManager() {
+AircraftManager::AircraftManager(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox)
+{
 
 }
 

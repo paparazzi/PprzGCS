@@ -11,14 +11,16 @@
 #include <map>
 #include <pprzlink/Message.h>
 #include <QMap>
+#include "PprzToolbox.h"
 
-class AircraftManager {
+#include "PprzApplication.h"
+
+
+class AircraftManager : public PprzTool{
 public:
+    explicit AircraftManager(PprzApplication* app, PprzToolbox* toolbox);
     static AircraftManager* get() {
-        if(singleton == nullptr) {
-            singleton = new AircraftManager();
-        }
-        return singleton;
+        return pprzApp()->toolbox()->aircraftManager();
     }
 
     Aircraft& getAircraft(QString id);
@@ -28,8 +30,6 @@ public:
     void removeAircraft(QString ac_id);
 
 private:
-    static AircraftManager* singleton;
-    explicit AircraftManager();
     static QColor parseColor(std::string str);
 
     QMap<QString, Aircraft> aircrafts;

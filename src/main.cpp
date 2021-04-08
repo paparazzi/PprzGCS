@@ -9,6 +9,7 @@
 #include "configure.h"
 #include "gcs_utils.h"
 #include <QSettings>
+#include "PprzApplication.h"
 
 #ifndef APP_DATA_PATH
 #error "you need to define APP_DATA_PATH!"
@@ -36,7 +37,7 @@ void launch_main_app() {
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+    PprzApplication a(argc, argv);
     QCoreApplication::setApplicationName("PprzGCS");
     QCoreApplication::setApplicationVersion("0.1");
 
