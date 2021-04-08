@@ -11,9 +11,12 @@ class PprzApplication : public QApplication
     Q_OBJECT
 public:
     explicit PprzApplication(int &argc, char **argv, int = ApplicationFlags);
+    ~PprzApplication();
 
     static PprzApplication*  _app;
     void init();
+
+    void _shutdown();
 
     PprzToolbox* toolbox() {return _toolbox;}
     PprzMain* mainWindow() {return _mainWindow;}

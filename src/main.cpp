@@ -37,48 +37,57 @@ void launch_main_app() {
 
 int main(int argc, char *argv[])
 {
-    PprzApplication a(argc, argv);
+    int return_code = 0;
+    do {
+        PprzApplication a(argc, argv);
 
-    auto settings_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/settings.conf";
-    pprzApp()->setProperty("SETTINGS_PATH", settings_path);
-    QSettings settings(settings_path, QSettings::IniFormat);
+        auto settings_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/settings.conf";
+        pprzApp()->setProperty("SETTINGS_PATH", settings_path);
+        QSettings settings(settings_path, QSettings::IniFormat);
 
-    a.init();
-    QCoreApplication::setApplicationName("PprzGCS");
-    QCoreApplication::setApplicationVersion("0.1");
+        a.init();
+        QCoreApplication::setApplicationName("PprzGCS");
+        QCoreApplication::setApplicationVersion("0.1");
 
-    QCommandLineParser parser;
-    parser.setApplicationDescription("Test helper");
-    parser.addHelpOption();
-    parser.addVersionOption();
+        QCommandLineParser parser;
+        parser.setApplicationDescription("Test helper");
+        parser.addHelpOption();
+        parser.addVersionOption();
 
-    QCommandLineOption config_file_option(QStringList() << "c" << "config",
-               "Start application with the given config file.",
-               "config_file");
-    parser.addOption(config_file_option);
+        QCommandLineOption configureOption("c", "Configure app settings");
+        parser.addOption(configureOption);
 
-    QCommandLineOption silentModeOption("s", "Silent mode");
-    parser.addOption(silentModeOption);
+        QCommandLineOption silentModeOption("s", "Silent mode");
+        parser.addOption(silentModeOption);
 
-    parser.process(a);
+        parser.process(a);
 
 
-    QString arg_config_path = parser.value(config_file_option);
 
-    QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QDir conf_dir(config_path);
-    if(!conf_dir.exists()) {
-        conf_dir.mkpath(conf_dir.path());
-    }
 
-    settings.setValue("USER_DATA_PATH", config_path);
-    settings.setValue("APP_DATA_PATH", APP_DATA_PATH);
+        QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+        QDir conf_dir(config_path);
+        if(!conf_dir.exists()) {
+            conf_dir.mkpath(conf_dir.path());
+        }
 
-    configure();
+        settings.setValue("USER_DATA_PATH", config_path);
+        settings.setValue("APP_DATA_PATH", APP_DATA_PATH);
 
-    PprzDispatcher::get()->setSilent(parser.isSet(silentModeOption));
+        configure();
 
-    launch_main_app();
-    return qApp->exec();
+        PprzDispatcher::get()->setSilent(parser.isSet(silentModeOption));
+
+        if(parser.isSet(configureOption)) {
+            auto setedit = new SettingsEditor();
+            setedit->show();
+            return qApp->exec();
+        }
+
+        launch_main_app();
+        return_code = qApp->exec();
+        a._shutdown();
+    } while(return_code == PprzMain::EXIT_CODE_REBOOT);
+    return return_code;
 }
 

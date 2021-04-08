@@ -26,7 +26,9 @@ void PprzToolbox::setChildToolboxes(void) {
 }
 
 
-PprzTool::PprzTool(PprzApplication* app, PprzToolbox* toolbox) : _app(app), _toolbox(nullptr)
+PprzTool::PprzTool(PprzApplication* app, PprzToolbox* toolbox) :
+    QObject(toolbox),
+    _app(app), _toolbox(nullptr)
 {
     (void)toolbox;
 }

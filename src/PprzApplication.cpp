@@ -21,3 +21,12 @@ PprzApplication* pprzApp(void)
 void PprzApplication::init() {
     _toolbox->setChildToolboxes();
 }
+
+void PprzApplication::_shutdown() {
+    delete _toolbox;
+    delete _mainWindow;
+}
+
+PprzApplication::~PprzApplication() {
+    _app = nullptr;
+}
