@@ -23,6 +23,7 @@ public:
     virtual void setToolbox(PprzToolbox* toolbox) override;
 
     void start();
+    void unbindAll();
 
     void sendMessage(pprzlink::Message);
     std::shared_ptr<pprzlink::MessageDictionary> getDict() {return dict;}

@@ -42,6 +42,10 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
 }
 
 PprzDispatcher::~PprzDispatcher() {
+    unbindAll();
+}
+
+void PprzDispatcher::unbindAll() {
     const QList<long> &constList = _bindIds;
     for(auto id: constList) {
         (void)id;
