@@ -12,6 +12,7 @@
 #include <QSettings>
 #include <QtWidgets>
 #include <QFileInfo>
+#include <pprzmain.h>
 
 void default_setting(QString key, QVariant value) {
     QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
@@ -65,9 +66,9 @@ void configure() {
 
 
 
-SettingsEditor::SettingsEditor(QWidget* parent): QDialog(parent)
+SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent)
 {
-    setWindowTitle("Settings Editor");
+    setWindowTitle("PprzGCS application settings");
     auto lay = new QVBoxLayout(this);
 
     auto tabWidget = new QTabWidget(this);
@@ -118,7 +119,7 @@ SettingsEditor::SettingsEditor(QWidget* parent): QDialog(parent)
     tabWidget->addTab(w_general, "General");
 
 
-    auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Apply, this);
+    auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     lay->addWidget(buttonBox);
 
     connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [=](){
@@ -126,16 +127,16 @@ SettingsEditor::SettingsEditor(QWidget* parent): QDialog(parent)
             cb();
         }
         accept();
-    });
-
-    connect(buttonBox->button(QDialogButtonBox::Apply), &QPushButton::clicked, this, [=](){
-        for(auto &cb:callbacks) {
-            cb();
-        }
+        qDebug() << "Restarting application...";
+        qApp->exit( PprzMain::EXIT_CODE_REBOOT );
     });
 
     connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=](){
         reject();
+        if(standalone) {
+            qDebug() << "Restarting application...";
+            qApp->exit( PprzMain::EXIT_CODE_REBOOT );
+        }
     });
 }
 

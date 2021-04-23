@@ -38,6 +38,7 @@ void launch_main_app() {
 int main(int argc, char *argv[])
 {
     int return_code = 0;
+    bool setting_restarted = false;
     do {
         PprzApplication a(argc, argv);
 
@@ -78,13 +79,15 @@ int main(int argc, char *argv[])
 
         PprzDispatcher::get()->setSilent(parser.isSet(silentModeOption));
 
-        if(parser.isSet(configureOption)) {
-            auto setedit = new SettingsEditor();
+        if(parser.isSet(configureOption) && !setting_restarted) {
+            auto setedit = new SettingsEditor(true);
             setedit->show();
-            return qApp->exec();
+            setting_restarted = true;
+        } else {
+            launch_main_app();
         }
 
-        launch_main_app();
+
         return_code = qApp->exec();
         a._shutdown();
     } while(return_code == PprzMain::EXIT_CODE_REBOOT);

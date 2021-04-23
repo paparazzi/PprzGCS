@@ -11,7 +11,7 @@ class SettingsEditor : public QDialog
 {
     Q_OBJECT
 public:
-    explicit SettingsEditor(QWidget *parent = nullptr);
+    explicit SettingsEditor(bool standalone = false, QWidget *parent = nullptr);
 
 
 
