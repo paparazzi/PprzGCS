@@ -1,13 +1,11 @@
 #include "units.h"
 #include <QApplication>
-#include "tinyxml2.h"
 #include <QSettings>
 #include <QDebug>
 #include "iostream"
 #include <QtXml>
 
 using namespace std;
-using namespace tinyxml2;
 
 Units::Units(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox)
 {
@@ -28,7 +26,7 @@ void Units::setToolbox(PprzToolbox* toolbox) {
     doc.setContent(&f);
     f.close();
 
-    auto units_root = doc.firstChildElement("units");;
+    auto units_root = doc.firstChildElement("units");
     for(auto unit=units_root.firstChildElement();
         !unit.isNull();
         unit=unit.nextSiblingElement()) {

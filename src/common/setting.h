@@ -1,13 +1,12 @@
 #ifndef SETTING_H
 #define SETTING_H
 
-#include <string>
+#include <QString>
 #include <vector>
 #include <memory>
 #include <optional>
-#include "tinyxml2.h"
+#include <QtXml>
 
-using namespace tinyxml2;
 using namespace std;
 
 class Setting
@@ -15,26 +14,26 @@ class Setting
 public:
 
     struct KeyPress {
-        string key;
+        QString key;
         float value;
         friend ostream& operator<<(ostream& os, const KeyPress& wp);
     };
 
     struct StripButton {
-        string name;
-        string group;
+        QString name;
+        QString group;
         float value;
-        string icon;
+        QString icon;
         uint8_t setting_no;
         friend ostream& operator<<(ostream& os, const StripButton& wp);
     };
 
-    Setting(XMLElement* setel, uint8_t& setting_no);
+    Setting(QDomElement setel, uint8_t& setting_no);
     vector<shared_ptr<KeyPress>> getKeyPresses() {return key_presses;}
     vector<shared_ptr<StripButton>> getStripButtons() {return strip_buttons;}
     uint8_t getNo() {return setting_no;}
-    string getName() { if(shortname != "") { return shortname;} else {return var;}}
-    vector<string>& getValues() {return values;}
+    QString getName() { if(shortname != "") { return shortname;} else {return var;}}
+    vector<QString>& getValues() {return values;}
     tuple<float, float, float> getBounds() {return make_tuple(min, max, step);}
     void setValue(float v) {
         last_set_values[1] = last_set_values[0];
@@ -55,20 +54,20 @@ public:
 private:
     uint8_t setting_no;
 
-    string var;
+    QString var;
     float min;
     float max;
     float step;
 
-    string shortname;
-    vector<string> values;
-    string module;
-    string handler;
-    string type;
-    string persistent;
-    string param;
-    string unit;
-    string alt_unit;
+    QString shortname;
+    vector<QString> values;
+    QString module;
+    QString handler;
+    QString type;
+    QString persistent;
+    QString param;
+    QString unit;
+    QString alt_unit;
     optional<float> alt_unit_coef;
 
     vector<shared_ptr<KeyPress>> key_presses;

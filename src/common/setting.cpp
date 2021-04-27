@@ -8,93 +8,71 @@
 
 #include "units.h"
 
-Setting::Setting(XMLElement* setel, uint8_t& setting_no) : setting_no(setting_no)
+Setting::Setting(QDomElement setel, uint8_t& setting_no) : setting_no(setting_no)
 {
     //var, min, max, step
-    var = setel->Attribute("var");
-    min = stof(setel->Attribute("min"));
-    max = stof(setel->Attribute("max"));
-    step = stof(setel->Attribute("step"));
+    var = setel.attribute("var");
+    min = setel.attribute("min").toDouble();
+    max = setel.attribute("max").toDouble();
+    step = setel.attribute("step").toDouble();
 
     last_set_values[0] = min;
     last_set_values[1] = min;
 
     //shortname
-    const char* shortname_p = setel->Attribute("shortname");
-    if(shortname_p != nullptr) {
-        shortname = shortname_p;
-    }
+    shortname= setel.attribute("shortname", var);
 
     //values
-    const char* values_p = setel->Attribute("values");
-    if(values_p != nullptr) {
-        std::stringstream ss(values_p);
-        std::string token;
-        while (std::getline(ss, token, '|')) {
-            values.push_back(token);
+   auto values_p = setel.attribute("values");
+    if(setel.hasAttribute("values")) {
+        for(auto val: setel.attribute("values").split("|")) {
+            values.push_back(val);
         }
     }
 
-    const char* _unit = setel->Attribute("unit");
-    if(_unit != nullptr) {
-        unit = _unit;
-    }
-    const char* _alt_unit = setel->Attribute("alt_unit");
-    if(_alt_unit != nullptr) {
-        alt_unit = _alt_unit;
-    }
+    unit = setel.attribute("unit", "");
+    alt_unit = setel.attribute("alt_unit", "");
 
-    const char* _alt_unit_coef = setel->Attribute("alt_unit_coef");
-    if(_alt_unit_coef != nullptr) {
-        alt_unit_coef = stof(_alt_unit_coef);
+    if(setel.hasAttribute("alt_unit_coef")) {
+        alt_unit_coef = setel.attribute("alt_unit_coef").toDouble();
     }
 
     //module, handler, type, persistent, param
     //TODO
 
 
-
-    XMLElement* sets = setel->FirstChildElement();
-
-    while(sets != nullptr) {
-        if(strcmp(sets->Name(), "key_press") == 0) {
+    for(auto sets = setel.firstChildElement(); !sets.isNull(); sets = sets.nextSiblingElement()) {
+        if(sets.tagName() == "key_press") {
             shared_ptr<KeyPress> kp = make_shared<KeyPress>();
-            const char* key = sets->Attribute("key");
-            const char* value = sets->Attribute("value");
-            assert(key != nullptr);
-            assert(value != nullptr);
+            auto key = sets.attribute("key");
+            auto value = sets.attribute("value");
             kp->key = key;
-            kp->value = stof(value);
+            kp->value = value.toFloat();
             key_presses.push_back(kp);
-        } else if (strcmp(sets->Name(), "strip_button") == 0) {
+        } else if (sets.tagName() == "strip_button") {
             shared_ptr<StripButton> sb = make_shared<StripButton>();
-            const char* name = sets->Attribute("name");
-            const char* value = sets->Attribute("value");
+            auto name = sets.attribute("name");
+            auto value = sets.attribute("value");
 
-            assert(name != nullptr);
-            assert(value != nullptr);
             sb->name = name;
-            sb->value = stof(value);
+            sb->value = value.toFloat();
 
-            const char* group = sets->Attribute("group");
-            if(group != nullptr) {
-                sb->group = group;
+            if(sets.hasAttribute("group")) {
+                sb->group = sets.attribute("group");
             }
 
-            const char* icon = sets->Attribute("icon");
-            if(icon != nullptr) {
-                sb->icon = icon;
+            if(sets.hasAttribute("icon")) {
+                sb->icon = sets.attribute("icon");
             }
 
             sb->setting_no = setting_no;
 
             strip_buttons.push_back(sb);
         } else {
-            string msg = string("Tag ") + sets->Name() + string(" unknown for dl_setting!");
-            runtime_error(msg.c_str());
+            auto msg = "Tag " + sets.tagName() + " unknown for dl_setting!";
+            runtime_error(msg.toStdString());
         }
 
-        sets = sets->NextSiblingElement();
     }
 
 }
@@ -104,7 +82,7 @@ float Setting::getAltUnitCoef() {
         return alt_unit_coef.value();
     }
     else if(unit.size() && alt_unit.size()) {
-        auto coef = Units::get()->getCoef(QString::fromStdString(unit), QString::fromStdString(alt_unit));
+        auto coef = Units::get()->getCoef(unit, alt_unit);
         if(coef.has_value()) {
             return coef.value();
         }
@@ -118,9 +96,9 @@ ostream& operator<<(ostream& os, const Setting& set) {
     os << "{";
 
     if(set.shortname != "") {
-        os << set.shortname;
+        os << set.shortname.toStdString();
     } else {
-        os << set.var;
+        os << set.var.toStdString();
     }
 
     os << " (" << to_string(set.setting_no) << ")";
@@ -128,7 +106,7 @@ ostream& operator<<(ostream& os, const Setting& set) {
     if(set.values.size() > 0) {
         os << " [";
         for (auto p = set.values.begin(); p != set.values.end(); ++p) {
-            os << *p;
+            os << p->toStdString();
             if (p != set.values.end() - 1) {
                 os << ", ";
             }
@@ -168,14 +146,14 @@ ostream& operator<<(ostream& os, const Setting& set) {
 
 
 ostream& operator<<(ostream& os, const Setting::KeyPress& kp) {
-    os << kp.key << ": " << kp.value;
+    os << kp.key.toStdString() << ": " << kp.value;
     return os;
 }
 
 ostream& operator<<(ostream& os, const Setting::StripButton& sb) {
-    os << sb.group << "." << sb.name << ": " << sb.value;
+    os << sb.group.toStdString() << "." << sb.name.toStdString() << ": " << sb.value;
     if(sb.icon != "") {
-        os << " " << sb.icon;
+        os << " " << sb.icon.toStdString();
     }
     return os;
 }

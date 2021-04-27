@@ -3,12 +3,10 @@
 
 #include <map>
 #include <vector>
-#include "tinyxml2.h"
 #include <QString>
 #include <QtXml>
 
 using namespace std;
-using namespace tinyxml2;
 
 struct Stage {
     QString instruction;

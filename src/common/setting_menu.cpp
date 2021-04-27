@@ -11,57 +11,55 @@ SettingMenu::SettingMenu()
 }
 
 
-SettingMenu::SettingMenu(std::string uri) {
+SettingMenu::SettingMenu(QString uri) {
     setlocale(LC_ALL, "C"); // needed for stod() to use '.' as decimal separator instead of ',' (at least in France)
-    XMLDocument doc;
 
-    if(uri.substr(0,4) == "file") {
-        string path = uri.substr(7, uri.length()-7);
+    QDomDocument doc;
+
+    if(uri.mid(0,4) == "file") {
+        QString path = uri.mid(7, uri.length()-7);
         if(path == "replay") {
             cout << "not parsing settings: replay!" << endl;
             return;
         }
-        doc.LoadFile(path.c_str());
+        QFile f(path);
+        if(!f.open(QIODevice::ReadOnly)) {
+            throw std::runtime_error("Error while loading setting file");
+        }
+        doc.setContent(&f);
+        f.close();
+
+        auto units_root = doc.firstChildElement("units");
     }
 
-    if(doc.Error()) {
-        cerr << "Error parsing " << uri << ": " << doc.ErrorStr();
-    }
-    else {
-        XMLElement* st_root = doc.FirstChildElement( "settings" );
-        XMLElement* sets = st_root->FirstChildElement("dl_settings");
-        uint8_t setting_no = 0;
-        init(sets, setting_no);
-    }
+    auto st_root = doc.firstChildElement( "settings" );
+    auto sets = st_root.firstChildElement("dl_settings");
+    uint8_t setting_no = 0;
+    init(sets, setting_no);
 
 }
 
-SettingMenu::SettingMenu(XMLElement* setel, uint8_t& setting_no) {
+SettingMenu::SettingMenu(QDomElement setel, uint8_t& setting_no) {
     init(setel, setting_no);
 }
 
-void SettingMenu::init(XMLElement* setel, uint8_t& setting_no) {
-    const char* name_p = setel->Attribute("name");
-    if(name_p != nullptr) {
-        name = name_p;
-    }
+void SettingMenu::init(QDomElement setel, uint8_t& setting_no) {
+    name = setel.attribute("name", "");
 
-    XMLElement* sets = setel->FirstChildElement();
+    for(auto sets = setel.firstChildElement(); !sets.isNull(); sets = sets.nextSiblingElement()) {
 
-    while(sets != nullptr) {
-        if(strcmp(sets->Name(), "dl_settings") == 0) {
+        if(sets.tagName() == "dl_settings") {
             shared_ptr<SettingMenu> menu = make_shared<SettingMenu>(sets, setting_no);
             setting_menus.push_back(menu);
-        } else if (strcmp(sets->Name(), "dl_setting") == 0) {
+        } else if (sets.tagName() ==  "dl_setting") {
             shared_ptr<Setting> setting = make_shared<Setting>(sets, setting_no);
             settings.push_back(setting);
             ++setting_no;
         } else {
-            string msg = string("Tag ") + sets->Name() + string(" unknown for dl_settings!");
-            runtime_error(msg.c_str());
+            auto msg = "Tag " + sets.tagName() + " unknown for dl_settings!";
+            runtime_error(msg.toStdString());
         }
 
-        sets = sets->NextSiblingElement();
     }
 
 }
@@ -89,7 +87,7 @@ vector<shared_ptr<SettingMenu::ButtonGroup>> SettingMenu::getButtonGroups() {
     }
 
 
-    std::map<std::string, shared_ptr<ButtonGroup>> groups_map;
+    std::map<QString, shared_ptr<ButtonGroup>> groups_map;
 
     for(auto &b: buttons) {
         if(groups_map.find(b->group) == groups_map.end()) {

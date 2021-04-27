@@ -106,8 +106,8 @@ void Commands::addSettingsButtons(QGridLayout* settings_buttons_layout) {
     for(auto &group: groups) {
         int row = 0;
         for(auto &sb: group->buttons) {
-            QString icon = sb->icon.c_str();
-            QString name = sb->name.c_str();
+            QString icon = sb->icon;
+            QString name = sb->name;
             QPushButton* b = nullptr;
 
             if(icon != "") {

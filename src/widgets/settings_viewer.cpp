@@ -123,7 +123,7 @@ void SettingsViewer::create_widgets(shared_ptr<SettingMenu> setting_menu, QList<
         for(auto setmm = std::next(new_stack.begin()); setmm != new_stack.end(); ++setmm) {
             auto setm = (*setmm);
             auto sep = new QLabel(">", path_widget);
-            auto button = new QPushButton(setm->getName().c_str(), path_widget);
+            auto button = new QPushButton(setm->getName(), path_widget);
             sep->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
             button->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
             current_path_layout->addWidget(sep);
@@ -149,7 +149,7 @@ void SettingsViewer::create_widgets(shared_ptr<SettingMenu> setting_menu, QList<
     path_indexes[setting_menu] = index_path;
 
     for(auto sets: setting_menu->getSettingMenus()) {
-        auto button = new QPushButton(sets->getName().c_str());
+        auto button = new QPushButton(sets->getName());
         menu_layout->addWidget(button);
 
         setting_menu_widgets[sets] = button;
@@ -191,7 +191,7 @@ void SettingsViewer::populate_search_results(QString searched) {
 
     // search in Menus
     for(auto sets: setting_menu_widgets.keys()) {
-        QString name = sets->getName().c_str();
+        QString name = sets->getName();
         if(name.toLower().contains(searched.toLower())) {
             auto w = setting_menu_widgets[sets];
             int index = w->parentWidget()->layout()->indexOf(w);
@@ -202,7 +202,7 @@ void SettingsViewer::populate_search_results(QString searched) {
 
     //search in settings
     for(auto set: setting_widgets.keys()) {
-        QString name = set->getName().c_str();
+        QString name = set->getName();
         if(name.toLower().contains(searched.toLower())) {
             auto w = setting_widgets[set];
             int index = w->parentWidget()->layout()->indexOf(w);
@@ -222,7 +222,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
     QHBoxLayout* hlay = new QHBoxLayout();
     vLay->addItem(hlay);
 
-    QWidget* label = new QLabel(setting->getName().c_str(), widget);
+    QWidget* label = new QLabel(setting->getName(), widget);
     label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     hlay->addWidget(label);
 
@@ -278,8 +278,8 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
     if(setting->getValues().size() > 2) {
         // named values -> combo box
         QComboBox* combo = new QComboBox(widget);
-        for(string &s:setting->getValues()) {
-            combo->addItem(s.c_str());
+        for(auto &s:setting->getValues()) {
+            combo->addItem(s);
         }
         vLay->addWidget(combo);
 
@@ -295,8 +295,8 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
         });
 
     } else if(setting->getValues().size() == 2 || abs(min+step-max) < 0.0001) {
-        QString s1 = setting->getValues().size() == 2 ? setting->getValues()[0].c_str() : QString::number(min);
-        QString s2 = setting->getValues().size() == 2 ? setting->getValues()[1].c_str() : QString::number(max);
+        QString s1 = setting->getValues().size() == 2 ? setting->getValues()[0] : QString::number(min);
+        QString s2 = setting->getValues().size() == 2 ? setting->getValues()[1] : QString::number(max);
         QHBoxLayout *hbox = new QHBoxLayout;
         Switch* sw = new Switch();
         QLabel* l1 = new QLabel(s1);

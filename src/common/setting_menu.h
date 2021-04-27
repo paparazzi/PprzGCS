@@ -3,37 +3,35 @@
 
 #include <memory>
 #include <vector>
-#include <string>
-#include "tinyxml2.h"
 #include "setting.h"
+#include <QtXml>
 
 using namespace std;
-using namespace tinyxml2;
 
 class SettingMenu
 {
 public:
 
     struct ButtonGroup {
-        string group_name;
+        QString group_name;
         vector<shared_ptr<Setting::StripButton>> buttons;
     };
 
     SettingMenu();
-    SettingMenu(string uri);
-    SettingMenu(XMLElement* setel, uint8_t& setting_no);
+    SettingMenu(QString uri);
+    SettingMenu(QDomElement setel, uint8_t& setting_no);
 
     vector<shared_ptr<SettingMenu>> getSettingMenus() {return setting_menus;}
     vector<shared_ptr<Setting>> getSettings() {return settings;}
     vector<shared_ptr<Setting>> getAllSettings();
     vector<shared_ptr<ButtonGroup>> getButtonGroups();
 
-    string getName() {return name;}
+    QString getName() {return name;}
 
 private:
-    void init(XMLElement* setel, uint8_t& setting_no);
+    void init(QDomElement setel, uint8_t& setting_no);
 
-    string name;
+    QString name;
     vector<shared_ptr<SettingMenu>> setting_menus;
     vector<shared_ptr<Setting>> settings;
 };
