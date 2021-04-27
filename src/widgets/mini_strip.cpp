@@ -210,7 +210,7 @@ void MiniStrip::updateEngineStatus() {
 void MiniStrip::updateApStatus() {
     auto msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("AP_STATUS");
     if(msg) {
-        string kill_mode, ap_mode, gps_mode, state_filter_mode; // lat_mode, horiz_mode, gaz_mode;
+        QString kill_mode, ap_mode, gps_mode, state_filter_mode; // lat_mode, horiz_mode, gaz_mode;
         uint32_t flight_time;
 
         msg->getField("flight_time", flight_time);
@@ -241,7 +241,7 @@ void MiniStrip::updateApStatus() {
         } else {
             ap_mode_label->setBrush(QColor(0x7ef17e));
         }
-        ap_mode_label->setText(ap_mode.c_str());
+        ap_mode_label->setText(ap_mode);
 
 
         if(gps_mode == "NOFIX" || gps_mode == "NA" || gps_mode == "2D") {
@@ -249,14 +249,14 @@ void MiniStrip::updateApStatus() {
         } else {
             gps_icon->setPixmap(gps_ok.pixmap(30,30));
         }
-        gps_icon->setToolTip("Gps " + QString(gps_mode.c_str()));
+        gps_icon->setToolTip("Gps " + QString(gps_mode));
 
         if(state_filter_mode == "OK") {
             imu_icon->setPixmap(imu_ok.pixmap(icons_size));
         } else {
             imu_icon->setPixmap(imu_lost.pixmap(icons_size));
         }
-        imu_icon->setToolTip("IMU " + QString(state_filter_mode.c_str()));
+        imu_icon->setToolTip("IMU " + QString(state_filter_mode));
         emit updated();
     }
 }
@@ -330,7 +330,7 @@ void MiniStrip::updateTelemetryStatus() {
 void MiniStrip::updateFBW() {
     auto msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("FLY_BY_WIRE");
     if(msg) {
-        std::string rc_status, rc_mode;
+        QString rc_status, rc_mode;
         msg->getField("rc_status", rc_status);
         msg->getField("rc_mode", rc_mode);
 
@@ -340,7 +340,7 @@ void MiniStrip::updateFBW() {
             rc_icon->setPixmap(rc_lost.pixmap(icons_size));
         }
 
-        rc_icon->setToolTip("RC " + QString(rc_status.c_str()));
+        rc_icon->setToolTip("RC " + rc_status);
         emit updated();
     }
 }

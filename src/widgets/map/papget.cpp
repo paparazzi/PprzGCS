@@ -20,8 +20,8 @@ Papget::Papget(struct DataDef datadef, QPoint pos_view, QObject *parent) : QObje
     params.color = ac.getColor();
     params.fontSize = settings.value("map/items_font").toInt();
 
-    bindRet = PprzDispatcher::get()->bind(datadef.msg_name.toStdString(),
-        [=](std::string sender, pprzlink::Message msg) {
+    bindRet = PprzDispatcher::get()->bind(datadef.msg_name,
+        [=](QString sender, pprzlink::Message msg) {
             QTimer* timer = new QTimer();
             timer->moveToThread(qApp->thread());
             timer->setSingleShot(true);
@@ -38,12 +38,12 @@ Papget::Papget(struct DataDef datadef, QPoint pos_view, QObject *parent) : QObje
 }
 
 
-void Papget::callback(std::string sender, pprzlink::Message msg) {
-    QString msg_name = msg.getDefinition().getName().c_str();
-    if(QString(sender.c_str()) == datadef.ac_id && msg_name == datadef.msg_name) {
+void Papget::callback(QString sender, pprzlink::Message msg) {
+    QString msg_name = msg.getDefinition().getName();
+    if(QString(sender) == datadef.ac_id && msg_name == datadef.msg_name) {
         //qDebug() << sender.c_str();
-        pprzlink::MessageDefinition msg_def = PprzDispatcher::get()->getDict()->getDefinition(datadef.msg_name.toStdString());
-        pprzlink::MessageField field = msg_def.getField(datadef.field.toStdString());
+        pprzlink::MessageDefinition msg_def = PprzDispatcher::get()->getDict()->getDefinition(datadef.msg_name);
+        pprzlink::MessageField field = msg_def.getField(datadef.field);
 
 // types can be:
 //        CHAR,
@@ -62,7 +62,7 @@ void Papget::callback(std::string sender, pprzlink::Message msg) {
         //int plop;
         //pprzlink::FieldValue fv;
         //std::any plop;
-        //std::variant<uint8_t, uint16_t, std::string> plop;
+        //std::variant<uint8_t, uint16_t, QString> plop;
         // TODO: get field value, and type ?
         //msg.getField(datadef.field.toStdString(), plop);
 
@@ -83,7 +83,7 @@ void Papget::callback(std::string sender, pprzlink::Message msg) {
         else if( try_this<float, double>(msg, val_float)) {
             type = Type::FLOAT;
         }
-        else if( try_this<std::string, std::string>(msg, val_str)) {
+        else if( try_this<QString, QString>(msg, val_str)) {
             type = Type::STR;
         }
         else if( try_this<char, char>(msg, val_char)) {
@@ -102,7 +102,7 @@ bool Papget::try_this(pprzlink::Message msg, U &dst) {
     static_assert(std::is_convertible<T, U>());
     try{
         T value;
-        msg.getField(datadef.field.toStdString(), value);
+        msg.getField(datadef.field, value);
         dst = value;
         return true;
     } catch (std::bad_any_cast &ex) {
@@ -184,7 +184,7 @@ void Papget::paint_text(QPainter *painter, const QStyleOptionGraphicsItem *optio
     } else if(type == FLOAT) {
         text = QString::number(val_float);
     } else if(type == STR) {
-        text = QString(val_str.c_str());
+        text = QString(val_str);
     } else if(type == CHAR) {
         text = QString(val_char);
     } else if (type == NONE) {

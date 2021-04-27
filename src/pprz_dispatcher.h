@@ -3,11 +3,11 @@
 
 #include <QObject>
 #include <QTimer>
-#include <pprzlink/IvyLink.h>
-#include <pprzlink/Message.h>
 #include <memory>
 #include "PprzToolbox.h"
 #include "PprzApplication.h"
+#include <pprzlinkQt/IvyQtLink.h>
+#include <pprzlinkQt/Message.h>
 
 class PprzDispatcher : public PprzTool
 {
@@ -26,7 +26,7 @@ public:
     void unbindAll();
 
     void sendMessage(pprzlink::Message);
-    std::shared_ptr<pprzlink::MessageDictionary> getDict() {return dict;}
+    pprzlink::MessageDictionary* getDict() {return dict;}
 
     /**
      * @brief bind message to callback. Use it only for messages not handled by default by the application
@@ -34,7 +34,7 @@ public:
      * @param cb
      * @return
      */
-    long bind(std::string msg_name, pprzlink::messageCallback_t cb);
+    long bind(QString msg_name, pprzlink::messageCallback_t cb);
 
     bool isSilent() {return silent_mode;}
     void setSilent(bool silent) {
@@ -63,15 +63,15 @@ private:
     void updateSettings(pprzlink::Message msg);
     using sig_ptr_t = decltype(&PprzDispatcher::flight_param);
 
-    void requestConfig(std::string ac_id);
-    void bindDeftoSignal(std::string const &name, sig_ptr_t sig);
+    void requestConfig(QString ac_id);
+    void bindDeftoSignal(QString const &name, sig_ptr_t sig);
 
     QList<long> _bindIds;
 
-    std::shared_ptr<pprzlink::MessageDictionary> dict;
-    std::unique_ptr<pprzlink::IvyLink> link;
+    pprzlink::MessageDictionary* dict;
+    pprzlink::IvyQtLink* link;
 
-    std::string pprzlink_id;
+    QString pprzlink_id;
 
     bool first_msg;
     bool started;

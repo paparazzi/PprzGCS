@@ -68,7 +68,7 @@ private:
     struct DataDef datadef;
     long bindRet;
 
-    void callback(std::string, pprzlink::Message);
+    void callback(QString, pprzlink::Message);
 
     template<typename T, typename U>
     bool try_this(pprzlink::Message, U &dst);
@@ -79,7 +79,7 @@ private:
 
     uint32_t val_u32;
     int32_t val_32;
-    std::string val_str;
+    QString val_str;
     double val_float;
     char val_char;
 

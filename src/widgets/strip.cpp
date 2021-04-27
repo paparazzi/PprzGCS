@@ -200,7 +200,7 @@ void Strip::updateEngineStatus() {
 void Strip::updateApStatus() {
     auto msg = AircraftManager::get()->getAircraft(_ac_id).getStatus()->getMessage("AP_STATUS");
     if(msg) {
-        string ap_mode, lat_mode, horiz_mode, gaz_mode, gps_mode, kill_mode;
+        QString ap_mode, lat_mode, horiz_mode, gaz_mode, gps_mode, kill_mode;
         uint32_t flight_time;
 
         msg->getField("flight_time", flight_time);
@@ -230,8 +230,8 @@ void Strip::updateApStatus() {
             full_ap_mode_label->setBrush(QColor(0x7ef17e));
             short_ap_mode_label->setBrush(QColor(0x7ef17e));
         }
-        full_ap_mode_label->setText(ap_mode.c_str());
-        short_ap_mode_label->setText(ap_mode.c_str());
+        full_ap_mode_label->setText(ap_mode);
+        short_ap_mode_label->setText(ap_mode);
 
 
         if(gps_mode == "NOFIX") {
@@ -244,14 +244,13 @@ void Strip::updateApStatus() {
             full_gps_mode_label->setBrush(QColor(0x7ef17e));
             short_gps_mode_label->setBrush(QColor(0x7ef17e));
         }
-        full_gps_mode_label->setText(gps_mode.c_str());
-        short_gps_mode_label->setText(gps_mode.c_str());
+        full_gps_mode_label->setText(gps_mode);
+        short_gps_mode_label->setText(gps_mode);
 
     }
 }
 
 void Strip::updateAltTargetDiff() {
-    std::string id;
     auto nav_status_msg = AircraftManager::get()->getAircraft(_ac_id).getStatus()->getMessage("NAV_STATUS");
     auto flight_param_msg = AircraftManager::get()->getAircraft(_ac_id).getStatus()->getMessage("FLIGHT_PARAM");
     if(nav_status_msg && flight_param_msg) {
@@ -328,7 +327,7 @@ void Strip::updateTelemetryStatus() {
 void Strip::updateFBW() {
     auto msg = AircraftManager::get()->getAircraft(_ac_id).getStatus()->getMessage("FLY_BY_WIRE");
     if(msg) {
-        std::string rc_status, rc_mode;
+        QString rc_status, rc_mode;
         msg->getField("rc_status", rc_status);
         msg->getField("rc_mode", rc_mode);
 
@@ -343,8 +342,8 @@ void Strip::updateFBW() {
             short_fbw_mode_label->setBrush(QColor(0xffa500));
         }
 
-        full_fbw_mode_label->setText(rc_status.c_str());
-        short_fbw_mode_label->setText(rc_status.c_str());
+        full_fbw_mode_label->setText(rc_status);
+        short_fbw_mode_label->setText(rc_status);
 
     }
 }

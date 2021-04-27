@@ -3,20 +3,12 @@
 #include "coordinatestransform.h"
 #include "AircraftManager.h"
 
-namespace { std::mutex mtx; }
-
-//#define DEBUG_THREADS
-
-#ifdef DEBUG_THREADS
-static std::set<std::thread::id> thread_ids;
-#endif
-
 AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent),
     ac_id(ac_id)
 {
     //listen for NAVIGATION_REF to update origin waypoint of fixedwings
-    PprzDispatcher::get()->bind("NAVIGATION_REF", [=](std::string sender, pprzlink::Message msg) {
-        if(QString::fromStdString(sender) == ac_id) {
+    PprzDispatcher::get()->bind("NAVIGATION_REF", [=](QString sender, pprzlink::Message msg) {
+        if(sender == ac_id) {
             int32_t utm_east, utm_north;
             uint8_t utm_zone;
             float ground_alt;
@@ -33,8 +25,8 @@ AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent)
     });
 
     //listen for NAVIGATION_REF to update origin waypoint of rotorcrafts
-    PprzDispatcher::get()->bind("INS_REF", [=](std::string sender, pprzlink::Message msg) {
-        if(QString::fromStdString(sender) == ac_id) {
+    PprzDispatcher::get()->bind("INS_REF", [=](QString sender, pprzlink::Message msg) {
+        if(sender == ac_id) {
 
             int32_t lat0, lon0, alt0;
             msg.getField("lat0", lat0);
@@ -51,16 +43,9 @@ AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent)
 }
 
 void AircraftStatus::updateMessage(pprzlink::Message msg) {
-    const std::lock_guard<std::mutex> lock(mtx);
-
-#ifdef DEBUG_THREADS
-    auto thread_id = std::this_thread::get_id();
-    thread_ids.insert(thread_id);
-#endif
-
-    std::string id;
+    QString id;
     msg.getField("ac_id", id);
-    if(id.c_str() == ac_id) {
+    if(id == ac_id) {
         auto name = msg.getDefinition().getName();
         last_messages[name] = msg;
 
@@ -100,15 +85,7 @@ void AircraftStatus::updateMessage(pprzlink::Message msg) {
     }
 }
 
-std::optional<pprzlink::Message> AircraftStatus::getMessage(std::string name) {
-    const std::lock_guard<std::mutex> lock(mtx);
-
-#ifdef DEBUG_THREADS
-    auto thread_id = std::this_thread::get_id();
-    thread_ids.insert(thread_id);
-    qDebug() << "nb threads: " << thread_ids.size();
-#endif
-
+std::optional<pprzlink::Message> AircraftStatus::getMessage(QString name) {
     if(last_messages.keys().contains(name)) {
         return last_messages[name];
     } else {

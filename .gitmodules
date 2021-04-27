@@ -1,9 +1,9 @@
-[submodule "ext/pprzlink"]
-	path = ext/pprzlink
-	url = https://github.com/paparazzi/pprzlink.git
 [submodule "ext/PROJ"]
 	path = ext/PROJ
 	url = https://github.com/OSGeo/PROJ.git
 [submodule "ext/tinyxml2"]
 	path = ext/tinyxml2
 	url = https://github.com/leethomason/tinyxml2.git
+[submodule "ext/pprzlinkQt"]
+	path = ext/pprzlinkQt
+	url = https://github.com/Fabien-B/pprzlinkQt.git

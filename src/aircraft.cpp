@@ -28,7 +28,7 @@ void Aircraft::setSetting(shared_ptr<Setting> setting, float value) {
     }
 
     pprzlink::Message dlSetting(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
-    dlSetting.addField("ac_id", ac_id.toStdString());
+    dlSetting.addField("ac_id", ac_id);
     dlSetting.addField("index", setting->getNo());
     dlSetting.addField("value", value);
     PprzDispatcher::get()->sendMessage(dlSetting);

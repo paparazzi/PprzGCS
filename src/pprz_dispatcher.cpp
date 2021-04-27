@@ -21,11 +21,16 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
     PprzTool::setToolbox(toolbox);
     QSettings settings(pprzApp()->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
 
-    std::string ivy_name = settings.value("ivy/name").toString().toStdString();
-    pprzlink_id = settings.value("pprzlink/id").toString().toStdString();
+    QString ivy_name = settings.value("ivy/name").toString();
+    pprzlink_id = settings.value("pprzlink/id").toString();
 
-    dict = std::make_shared<pprzlink::MessageDictionary>(settings.value("pprzlink/messages").toString().toStdString());
-    link = std::make_unique<pprzlink::IvyLink>(*dict, ivy_name, settings.value("ivy/bus").toString().toStdString(), true);
+    dict = new pprzlink::MessageDictionary(settings.value("pprzlink/messages").toString());
+    link = new pprzlink::IvyQtLink(*dict, ivy_name, settings.value("ivy/bus").toString(), this);
+
+    connect(link, &pprzlink::IvyQtLink::serverConnected, this, [=]() {
+        started = true;
+       requestAircrafts();
+    });
 
     qRegisterMetaType<pprzlink::Message>();
 
@@ -54,42 +59,41 @@ void PprzDispatcher::unbindAll() {
     _bindIds.clear();
 }
 
-void PprzDispatcher::bindDeftoSignal(std::string const &name, sig_ptr_t sig) {
-    long bid = link->BindMessage(dict->getDefinition(name),
-        [=](std::string sender, pprzlink::Message msg) {
+void PprzDispatcher::bindDeftoSignal(QString const &name, sig_ptr_t sig) {
+    long bid = link->BindMessage(dict->getDefinition(name), nullptr,
+        [=](QString sender, pprzlink::Message msg) {
             if(sender == "ground") {
                 time_msg_server = QDateTime::currentMSecsSinceEpoch();
             }
 
-            std::string id;
+            QString id;
             msg.getField("ac_id", id);
 
-            if(AircraftManager::get()->aircraftExists(id.c_str())) {
+            if(AircraftManager::get()->aircraftExists(id)) {
                 if(!first_msg) {
                     first_msg = true;
-                    emit(DispatcherUi::get()->ac_selected(QString(id.c_str())));
+                    emit(DispatcherUi::get()->ac_selected(QString(id)));
                 }
                 emit((this->*sig)(msg));
-                AircraftManager::get()->getAircraft(id.c_str()).getStatus()->updateMessage(msg);
+                AircraftManager::get()->getAircraft(id).getStatus()->updateMessage(msg);
             }
         }
     );
     _bindIds.append(bid);
 }
 
-void PprzDispatcher::requestConfig(std::string ac_id) {
-    assert(started);
+void PprzDispatcher::requestConfig(QString ac_id) {
     pprzlink::Message reqConfig(dict->getDefinition("CONFIG_REQ"));
     reqConfig.addField("ac_id", ac_id);
     reqConfig.setSenderId(pprzlink_id);
-    link->sendRequest(reqConfig, [=](std::string ai, pprzlink::Message msg) {
+    link->sendRequest(reqConfig, [=](QString ai, pprzlink::Message msg) {
         (void)ai;
-        std::string ac_id;
+        QString ac_id;
         msg.getField("ac_id", ac_id);
-        if(!AircraftManager::get()->aircraftExists(ac_id.c_str())) {
+        if(!AircraftManager::get()->aircraftExists(ac_id)) {
             AircraftManager::get()->addAircraft(msg);
-            qDebug() << "new AC:" << ac_id.c_str();
-            emit(DispatcherUi::get()->new_ac_config(ac_id.c_str()));
+            qDebug() << "new AC:" << ac_id;
+            emit(DispatcherUi::get()->new_ac_config(ac_id));
         }
     });
 }
@@ -103,65 +107,65 @@ void PprzDispatcher::sendMessage(pprzlink::Message msg) {
 }
 
 void PprzDispatcher::requestAircrafts() {
-    assert(started);
-    pprzlink::Message msg(dict->getDefinition("AIRCRAFTS_REQ"));
+    auto def_ar = dict->getDefinition("AIRCRAFTS_REQ");
+    pprzlink::Message msg(def_ar);
     msg.setSenderId(pprzlink_id);
-    link->sendRequest(msg, [=](std::string ac_id, pprzlink::Message msg) {
-        (void)ac_id;
-        std::string ac_list;
+
+    link->sendRequest(msg, [=](QString sender, pprzlink::Message msg) {
+        (void)sender;
+        QString ac_list;
         msg.getField("ac_list", ac_list);
-        std::string id;
-        std::stringstream ss(ac_list);
-        while (std::getline(ss, id, ',')) {
-            if(id != "" && !AircraftManager::get()->aircraftExists(id.c_str())) {
+        for(QString id: ac_list.split(",")) {
+            if(id == "") {continue;}
+            if(!AircraftManager::get()->aircraftExists(id)) {
                 requestConfig(id);
             } else {
-                qDebug() << id.c_str() << " already exists.";
+                qDebug() << id << " already exists.";
             }
         }
     });
 }
 
-long PprzDispatcher::bind(std::string msg_name, pprzlink::messageCallback_t cb) {
-    long ret = link->BindMessage(dict->getDefinition(msg_name), cb);
+long PprzDispatcher::bind(QString msg_name, pprzlink::messageCallback_t cb) {
+    long ret = link->BindMessage(dict->getDefinition(msg_name), nullptr, cb);
     _bindIds.append(ret);
     return ret;
 }
 
 void PprzDispatcher::start() {
 
-    long bid = link->BindMessage(dict->getDefinition("WAYPOINT_MOVED"),
-        [=](std::string ac_id, pprzlink::Message msg) {
+    long bid = link->BindMessage(dict->getDefinition("WAYPOINT_MOVED"), nullptr,
+        [=](QString ac_id, pprzlink::Message msg) {
             (void)ac_id;
-            std::string id;
+            QString id;
             uint8_t wp_id = 0;
             msg.getField("ac_id", id);
             msg.getField("wp_id", wp_id);
-            if(AircraftManager::get()->aircraftExists(id.c_str()) && wp_id != 0) {
+            if(AircraftManager::get()->aircraftExists(id) && wp_id != 0) {
                 emit(waypoint_moved(msg));
             }
     });
     _bindIds.append(bid);
 
-    bid = link->BindMessage(dict->getDefinition("AIRCRAFT_DIE"),
-        [=](std::string ac_id, pprzlink::Message msg) {
+    bid = link->BindMessage(dict->getDefinition("AIRCRAFT_DIE"), nullptr,
+        [=](QString ac_id, pprzlink::Message msg) {
             (void)ac_id;
-            std::string id;
+            QString id;
             msg.getField("ac_id", id);
 
-            if(AircraftManager::get()->aircraftExists(id.c_str())) {
+            if(AircraftManager::get()->aircraftExists(id)) {
                 // If the dying AC is the currently selected one, try to select an other.
-                if(DispatcherUi::get()->getSelectedAcId() == id.c_str()) {
+                if(DispatcherUi::get()->getSelectedAcId() == id) {
                     for(auto ac: AircraftManager::get()->getAircrafts()) {
-                        if(ac.getId() != id.c_str()) {
+                        if(ac.getId() != id) {
                             emit(DispatcherUi::get()->ac_selected(ac.getId()));
                             break;
                         }
                     }
                 }
 
-                emit(DispatcherUi::get()->ac_deleted(id.c_str()));
-                AircraftManager::get()->removeAircraft(id.c_str());
+                emit(DispatcherUi::get()->ac_deleted(id));
+                AircraftManager::get()->removeAircraft(id);
             }
         }
     );
@@ -183,7 +187,7 @@ void PprzDispatcher::start() {
         [=](shared_ptr<Waypoint> wp, QString ac_id) {
             pprzlink::Message msg(dict->getDefinition("MOVE_WAYPOINT"));
             msg.setSenderId(pprzlink_id);
-            msg.addField("ac_id", ac_id.toStdString());
+            msg.addField("ac_id", ac_id);
             msg.addField("wp_id", wp->getId());
             msg.addField("lat", wp->getLat());
             msg.addField("long", wp->getLon());
@@ -193,16 +197,10 @@ void PprzDispatcher::start() {
             }
         });
 
-    usleep(10000);
-    started = true;
-
-    requestAircrafts();
-
-
-    bid = link->BindMessage(dict->getDefinition("NEW_AIRCRAFT"),
-        [=](std::string ac_id, pprzlink::Message msg) {
+    bid = link->BindMessage(dict->getDefinition("NEW_AIRCRAFT"), nullptr,
+        [=](QString ac_id, pprzlink::Message msg) {
             (void)ac_id;
-            std::string id;
+            QString id;
             msg.getField("ac_id", id);
             requestConfig(id);
         }
@@ -215,11 +213,11 @@ void PprzDispatcher::start() {
 
 
 void PprzDispatcher::updateSettings(pprzlink::Message msg) {
-    std::string ac_id;
-    std::string values;
+    QString ac_id;
+    QString values;
     msg.getField("ac_id", ac_id);
     msg.getField("values", values);
-    QString id = QString(ac_id.c_str());
+    QString id = QString(ac_id);
 
     auto ac = AircraftManager::get()->getAircraft(id);
 
@@ -229,18 +227,13 @@ void PprzDispatcher::updateSettings(pprzlink::Message msg) {
                 return sl->getNo() < sr->getNo();
     });
 
-    std::stringstream ss(values);
-    std::string token;
     size_t i=0;
-    if(settings.size() == 0) {
-        return;
-    }
-    while (std::getline(ss, token, ',')) {
-        if(token != "?") {
-            double s = stod(token);
+    for(QString token: values.split(",")) {
+        if(token != "" && token != "?") {
+            double s = token.toDouble();
             assert(settings[i]->getNo() == static_cast<uint8_t>(i));
             float value = static_cast<float>(s);
-            emit(DispatcherUi::get()->settingUpdated(ac_id.c_str(), settings[i], value));
+            emit(DispatcherUi::get()->settingUpdated(ac_id, settings[i], value));
         }
         i++;
     }

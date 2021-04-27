@@ -6,7 +6,7 @@
 #include "map_item.h"
 #include "item_edit_state_machine.h"
 #include "aircraft_item.h"
-#include <pprzlink/Message.h>
+#include <pprzlinkQt/Message.h>
 #include "coordinatestransform.h"
 #include "QScrollArea"
 #include "layer_combo.h"

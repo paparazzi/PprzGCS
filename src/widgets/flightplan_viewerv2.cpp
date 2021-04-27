@@ -57,9 +57,8 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
         go_button->setText("go");
         connect(go_button, &QPushButton::clicked, this,
             [=]() {
-                auto ACId = ac_id.toStdString();
                 pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("JUMP_TO_BLOCK"));
-                msg.addField("ac_id", ACId);
+                msg.addField("ac_id", ac_id);
                 msg.addField("block_id", block->getNo());
                 PprzDispatcher::get()->sendMessage(msg);
             });

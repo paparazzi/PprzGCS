@@ -1,7 +1,6 @@
 #include "tileprovider.h"
 #include "math.h"
 #include <iostream>
-#include <string>
 #include <fstream>
 #include <QMap>
 #include <QStandardPaths>

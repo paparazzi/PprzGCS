@@ -216,14 +216,12 @@ void PprzMap::setEditorMode() {
 }
 
 void PprzMap::updateAircraftItem(pprzlink::Message msg) {
-    std::string id;
+    QString ac_id;
     float lat, lon, heading;
-    msg.getField("ac_id", id);
+    msg.getField("ac_id", ac_id);
     msg.getField("lat", lat);
     msg.getField("long", lon);
     msg.getField("heading", heading);
-
-    QString ac_id = QString(id.c_str());
 
     if(AircraftManager::get()->aircraftExists(ac_id)) {
         auto ai = ac_items_managers[ac_id]->getAircraftItem();
@@ -365,18 +363,18 @@ QString PprzMap::sexagesimalFormat(double lat, double lon) {
 }
 
 void PprzMap::moveWaypoint(pprzlink::Message msg) {
-    std::string id;
+    QString ac_id;
     uint8_t wp_id = 0;
     float lat, lon, alt, ground_alt;
-    msg.getField("ac_id", id);
+    msg.getField("ac_id", ac_id);
     msg.getField("wp_id", wp_id);
     msg.getField("lat", lat);
     msg.getField("long", lon);
     msg.getField("alt", alt);
     msg.getField("ground_alt", ground_alt);
-    auto ac_id = QString(id.c_str());
+
     if(AircraftManager::get()->aircraftExists(ac_id) && wp_id != 0) {
-        shared_ptr<Waypoint> wp = AircraftManager::get()->getAircraft(id.c_str()).getFlightPlan().getWaypoint(wp_id);
+        shared_ptr<Waypoint> wp = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoint(wp_id);
         wp->setLat(static_cast<double>(lat));
         wp->setLon(static_cast<double>(lon));
         wp->setAlt(static_cast<double>(alt));
@@ -391,12 +389,12 @@ void PprzMap::moveWaypoint(pprzlink::Message msg) {
 }
 
 void PprzMap::updateTarget(pprzlink::Message msg) {
-    std::string id;
+    QString ac_id;
     float target_lat, target_lon;
-    msg.getField("ac_id", id);
+    msg.getField("ac_id", ac_id);
     msg.getField("target_lat", target_lat);
     msg.getField("target_long", target_lon);
-    auto ac_id = QString(id.c_str());
+
     if(AircraftManager::get()->aircraftExists(ac_id)) {
         ac_items_managers[ac_id]->getTarget()->setPosition(Point2DLatLon(static_cast<double>(target_lat), static_cast<double>(target_lon)));
     }
@@ -405,9 +403,8 @@ void PprzMap::updateTarget(pprzlink::Message msg) {
 void PprzMap::updateNavShape(pprzlink::Message msg) {
     QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
 
-    std::string id;
-    msg.getField("ac_id", id);
-    QString ac_id(id.c_str());
+    QString ac_id;
+    msg.getField("ac_id", ac_id);
 
     MapItem* prev_item = ac_items_managers[ac_id]->getCurrentNavShape();
 
@@ -464,7 +461,7 @@ void PprzMap::updateNavShape(pprzlink::Message msg) {
         Point2DLatLon p1(static_cast<double>(segment1_lat), static_cast<double>(segment1_long));
         Point2DLatLon p2(static_cast<double>(segment2_lat), static_cast<double>(segment2_long));
         if(prev_item == nullptr) {
-            PathItem* pi = new PathItem(id.c_str());
+            PathItem* pi = new PathItem(ac_id);
             pi->setZValues(z, z);
 
             auto w1 = new WaypointItem(p1, ac_id);

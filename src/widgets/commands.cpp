@@ -87,7 +87,7 @@ void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
                   connect(b, &QPushButton::clicked, this,
                     [=]() {
                         pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("JUMP_TO_BLOCK"));
-                        msg.addField("ac_id", ac_id.toStdString());
+                        msg.addField("ac_id", ac_id);
                         msg.addField("block_id", block->getNo());
                         PprzDispatcher::get()->sendMessage(msg);
                 });
@@ -207,10 +207,10 @@ void Commands::addCommandButton(QGridLayout* glay,QString icon, int row, int col
 }
 
 void Commands::updateTargetAlt(pprzlink::Message msg) {
-    std::string id;
+    QString id;
     msg.getField("ac_id", id);
 
-    if(ac_id == id.c_str()) {
+    if(ac_id == id) {
         msg.getField("target_alt", target_alt);
     }
 }

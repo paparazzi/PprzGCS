@@ -1,7 +1,6 @@
 #include "map2d.h"
 #include <QPixmap>
 #include <QGraphicsPixmapItem>
-#include <string>
 #include <iostream>
 #include "point2dlatlon.h"
 #include "point2dtile.h"
