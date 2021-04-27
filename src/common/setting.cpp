@@ -104,7 +104,7 @@ float Setting::getAltUnitCoef() {
         return alt_unit_coef.value();
     }
     else if(unit.size() && alt_unit.size()) {
-        auto coef = Units::get()->getCoef(unit, alt_unit);
+        auto coef = Units::get()->getCoef(QString::fromStdString(unit), QString::fromStdString(alt_unit));
         if(coef.has_value()) {
             return coef.value();
         }

@@ -6,7 +6,6 @@
 #include "waypoint.h"
 #include <memory>
 
-using namespace tinyxml2;
 using namespace std;
 class Sector
 {
@@ -18,16 +17,16 @@ public:
     };
 
     Sector();
-    Sector(vector<shared_ptr<Waypoint>> corners, string name, Type type=STATIC, optional<string> color=nullopt);
+    Sector(vector<shared_ptr<Waypoint>> corners, QString name, Type type=STATIC, optional<QString> color=nullopt);
 
-    string getName() {return name;}
+    QString getName() {return name;}
     Type getType() {return type;}
     vector<shared_ptr<Waypoint>> getCorners() {return corners;}
 
 private:
-    string name;
+    QString name;
     Type type;
-    optional<string> color;   // override AC color
+    optional<QString> color;   // override AC color
     vector<shared_ptr<Waypoint>> corners;
 };
 

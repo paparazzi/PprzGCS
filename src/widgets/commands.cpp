@@ -66,8 +66,8 @@ void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
     for(auto &group: groups) {
         int row = 0;
         for(auto block: group->blocks) {
-            QString icon = block->getIcon().c_str();
-            QString txt = block->getText().c_str();
+            QString icon = block->getIcon();
+            QString txt = block->getText();
             QPushButton* b = nullptr;
 
             if(icon != "") {

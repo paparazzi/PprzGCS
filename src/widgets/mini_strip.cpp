@@ -352,7 +352,7 @@ void MiniStrip::updateNavStatus() {
         uint8_t cur_block;
         msg->getField("cur_block", cur_block);
         auto block = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getBlock(cur_block);
-        QString block_name = block->getName().c_str();
+        QString block_name = block->getName();
         block_label->setToolTip("Block " + block_name);
         if(block_name.size() > 15) {
             block_name.truncate(12);
@@ -361,7 +361,7 @@ void MiniStrip::updateNavStatus() {
         block_label->setText(block_name);
 
 
-        QString icon_name = block->getIcon().c_str();
+        QString icon_name = block->getIcon();
         if(icon_name != "") {
             QString icon_path = settings.value("path/gcs_icons").toString() + "/" + icon_name;
             block_icon->setPixmap(QIcon(icon_path).pixmap(icons_size));

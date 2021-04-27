@@ -46,7 +46,7 @@ void AircraftManager::addAircraft(pprzlink::Message msg) {
         return;
     }
 
-    FlightPlan fp(flight_plan.toStdString());
+    FlightPlan fp(flight_plan);
     shared_ptr<SettingMenu> sm = make_shared<SettingMenu>(settings.toStdString());
 
     Airframe air(airframe.toStdString());

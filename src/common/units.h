@@ -1,11 +1,9 @@
 #ifndef UNITS_H
 #define UNITS_H
 #include <optional>
-#include <map>
+#include <QtCore>
 #include "PprzToolbox.h"
 #include "PprzApplication.h"
-
-using namespace std;
 
 class Units : public PprzTool {
 public:
@@ -16,9 +14,9 @@ public:
 
     virtual void setToolbox(PprzToolbox* toolbox) override;
 
-    optional<float> getCoef(string inputUnit, string outputUnit);
+    std::optional<float> getCoef(QString inputUnit, QString outputUnit);
 
 private:
-    map<pair<string, string>, float> coefs;
+    QMap<QPair<QString, QString>, float> coefs;
 };
 #endif // UNITS_H

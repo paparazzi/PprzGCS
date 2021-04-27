@@ -23,7 +23,7 @@ Point2DLatLon::Point2DLatLon(Waypoint& wp) {
     lonp = wp.getLon();
 }
 
-Point2DLatLon::Point2DLatLon(shared_ptr<Waypoint> wp) {
+Point2DLatLon::Point2DLatLon(std::shared_ptr<Waypoint> wp) {
     latp = wp->getLat();
     lonp = wp->getLon();
 }

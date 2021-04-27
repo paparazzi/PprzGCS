@@ -10,7 +10,7 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     wi(wi), ac_id(ac_id)
 {
 
-    setWindowTitle(QString(wi->waypoint()->getName().c_str()));
+    setWindowTitle(QString(wi->waypoint()->getName()));
 
     auto lay = new QVBoxLayout(this);
     auto infoLay = new QVBoxLayout();
@@ -20,7 +20,7 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     combo->addItem("WGS84");
     combo->addItem("WGS84 sexa");
     for(auto &wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
-        combo->addItem(wp->getName().c_str());
+        combo->addItem(wp->getName());
     }
     infoLay->addWidget(combo);
 
@@ -92,7 +92,7 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
                 //TODO
             } else {
                 for(auto &wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
-                    if(combo->currentText() == QString::fromStdString(wp->getName())) {
+                    if(combo->currentText() == wp->getName()) {
                         double x0, y0;
                         Point2DLatLon geo(0, 0);
                         Waypoint::WpFrame frame = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getFrame();
@@ -168,7 +168,7 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
 
 
             for(auto &wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
-                if(text == QString::fromStdString(wp->getName())) {
+                if(text == wp->getName()) {
                     Waypoint::WpFrame frame = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getFrame();
                     double x0, y0, x, y;
                     if(frame == Waypoint::LTP) {

@@ -117,7 +117,7 @@ void PprzMap::changeCurrentAC(QString id) {
 
         for(auto &wp: waypoints) {
             if(wp->getName()[0] != '_') {
-                ui->reference_combobox->addItem(wp->getName().c_str());
+                ui->reference_combobox->addItem(wp->getName());
             }
         }
     }

@@ -47,9 +47,9 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
 
     for(auto block: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getBlocks()) {
         auto lay = new QHBoxLayout();
-        QString icon = block->getIcon().c_str();
-        QString txt = block->getText().c_str();
-        QString name = block->getName().c_str();
+        QString icon = block->getIcon();
+        QString txt = block->getText();
+        QString name = block->getName();
 
         auto lbl = new QLabel(txt != "" ? txt: name, widget);
 
@@ -117,7 +117,7 @@ QWidget* FlightPlanViewerV2::make_tree(shared_ptr<Block> block, std::function<vo
 
     auto ret_but = new QToolButton(widget);
     ret_but->setText("<");
-    auto lbl = new QPushButton(block->getName().c_str(), widget);
+    auto lbl = new QPushButton(block->getName(), widget);
     facade->button = lbl;
     hlay->addWidget(ret_but);
     hlay->addWidget(lbl);
@@ -138,7 +138,7 @@ QWidget* FlightPlanViewerV2::make_tree(shared_ptr<Block> block, std::function<vo
     tree->setHeaderLabels(QStringList() << "Instr" << "Attrib" << "Value");
     //tree->setHeaderHidden(true);
     for(auto &stage: block->getStages()) {
-        auto instruction = stage.instruction.c_str();
+        auto instruction = stage.instruction;
         auto item = new QTreeWidgetItem(tree);
 
         item->setText(0, instruction);
@@ -146,7 +146,7 @@ QWidget* FlightPlanViewerV2::make_tree(shared_ptr<Block> block, std::function<vo
         for(auto &[k, v]: stage.attributes) {
             auto attr_item = new QTreeWidgetItem(item);
 
-            QString val = v.c_str();
+            QString val = v;
             val.replace("@DEREF", QString::fromUtf8("\xE2\x86\x92"));
             val.replace("@GT", ">");
             val.replace("@GEQ", QString::fromUtf8("\xE2\x89\xA5"));
@@ -155,7 +155,7 @@ QWidget* FlightPlanViewerV2::make_tree(shared_ptr<Block> block, std::function<vo
             val.replace("@AND", "&&");
             val.replace("@OR", "||");
 
-            attr_item->setText(1, k.c_str());
+            attr_item->setText(1, k);
             attr_item->setText(2, val);
             item->addChild(attr_item);
         }
@@ -171,11 +171,11 @@ QWidget* FlightPlanViewerV2::make_waypoints_tab() {
     auto list = new QListWidget(this);
 
     for(auto waypoint: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
-        QString txt = waypoint->getName().c_str() + QString("\t");
+        QString txt = waypoint->getName() + QString("\t");
 
         for(auto &att: waypoint->getXmlAttributes()) {
             if(att.first != "name") {
-                txt += QString("\t") + att.first.c_str() + "=" + att.second.c_str();
+                txt += QString("\t") + att.first + "=" + att.second;
             }
         }
 
@@ -189,7 +189,7 @@ QWidget* FlightPlanViewerV2::make_waypoints_tab() {
 QWidget* FlightPlanViewerV2::make_exceptions_tab() {
     auto list = new QListWidget(this);
     for(auto &ex: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getExeptions()) {
-        QString txt = QString("cond: ") + ex->cond.c_str() + QString("\tderoute: ") + ex->deroute.c_str();
+        QString txt = QString("cond: ") + ex->cond + QString("\tderoute: ") + ex->deroute;
         list->addItem(txt);
     }
     return list;
@@ -206,7 +206,7 @@ QWidget* FlightPlanViewerV2::make_variables_tab() {
         }
 
         for(auto &att:var->attributes) {
-            txt += QString("  ") + att.first.c_str() + "=" + att.second.c_str();
+            txt += QString("  ") + att.first + "=" + att.second;
         }
 
         list->addItem(txt);
@@ -219,9 +219,9 @@ QWidget* FlightPlanViewerV2::make_sectors_tab() {
     for(auto sec: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getSectors()) {
         QString txt;
 
-        txt += QString("sector ") + sec->getName().c_str() + ":";
+        txt += QString("sector ") + sec->getName() + ":";
         for(auto &corner: sec->getCorners()) {
-            txt += QString(" ") + corner->getName().c_str();
+            txt += QString(" ") + corner->getName();
         }
 
         list->addItem(txt);
