@@ -3,7 +3,7 @@
 
 constexpr double EXTENT = 20037508.342789244;
 
-const std::string Point2DPseudoMercator::EPSG = "EPSG:3857";
+const QString Point2DPseudoMercator::EPSG = "EPSG:3857";
 //EPSG:900913
 
 Point2DPseudoMercator::Point2DPseudoMercator(double x, double y): _x(x), _y(y)

@@ -29,7 +29,7 @@ public:
     void removeAircraft(QString ac_id);
 
 private:
-    static QColor parseColor(std::string str);
+    static QColor parseColor(QString str);
 
     QMap<QString, Aircraft> aircrafts;
 

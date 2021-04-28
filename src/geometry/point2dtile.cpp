@@ -26,9 +26,8 @@ void Point2DTile::changeZoom(int zoom) {
 }
 
 QString Point2DTile::to_istring() {
-    std::string pStr;
-    pStr += "X" + std::to_string(xi()) + "Y" + std::to_string(yi()) + "Z" + std::to_string(zoomp);
-    return QString(pStr.c_str());
+    QString pStr = "X" + QString::number(xi()) + "Y" + QString::number(yi()) + "Z" + QString::number(zoomp);
+    return QString(pStr);
 }
 
 bool Point2DTile::isValid() {

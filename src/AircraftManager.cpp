@@ -39,7 +39,7 @@ void AircraftManager::addAircraft(pprzlink::Message msg) {
     msg.getField("radio", radio);
     msg.getField("settings", settings);
 
-    QColor color = parseColor(default_gui_color.toStdString());
+    QColor color = parseColor(default_gui_color);
 
     if(aircraftExists(id)) {
         qDebug() << "Aircraft " << id << " already exits!";
@@ -72,17 +72,17 @@ void AircraftManager::removeAircraft(QString ac_id) {
 }
 
 
-QColor AircraftManager::parseColor(std::string str) {
+QColor AircraftManager::parseColor(QString str) {
     QColor color = QColor();
     QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
 
     if(str[0] == '#' && str.size() == 13) {
-        int r = std::stoi(str.substr(1, 4), nullptr, 16) >> 8;
-        int g = std::stoi(str.substr(5, 4), nullptr, 16)  >> 8;
-        int b = std::stoi(str.substr(9, 4), nullptr, 16)  >> 8;
+        int r = str.mid(1, 4).toInt(nullptr, 16) >> 8;
+        int g = str.mid(5, 4).toInt(nullptr, 16) >> 8;
+        int b = str.mid(9, 4).toInt(nullptr, 16) >> 8;
         color = QColor(r, g, b);
     } else {
-        color = QColor(str.c_str());
+        color = QColor(str);
     }
 
     if(!color.isValid()) {

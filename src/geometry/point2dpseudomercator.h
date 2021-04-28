@@ -20,7 +20,7 @@ public:
 
     Point2DTile toTile(int zoom);
 
-    static const std::string EPSG;
+    static const QString EPSG;
 private:
     //unit: meters
     double _x;
