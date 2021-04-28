@@ -1,42 +1,41 @@
 #ifndef AIRFRAME_H
 #define AIRFRAME_H
 
-#include <string>
-#include "tinyxml2.h"
+#include <QString>
+#include <QtXml>
 #include <vector>
 
 using namespace std;
-using namespace tinyxml2;
 
 class Airframe
 {
 public:
 
     struct Define {
-        string name;
-        string value;
+        QString name;
+        QString value;
         //...
     };
 
     struct Section {
-      string name;
-      string prefix;
+      QString name;
+      QString prefix;
       vector<struct Define> defines;
       //...
     };
 
     Airframe();
-    Airframe(std::string uri);
+    Airframe(QString uri);
 
-    string getFirmware() {return firmware;}
-    string getIconName();
+    QString getFirmware() {return firmware;}
+    QString getIconName();
     float getAltShiftPlus();
     float getAltShiftPlusPlus();
     float getAltShiftMinus();
 
 private:
-    string name;
-    string firmware;
+    QString name;
+    QString firmware;
 
     vector<struct Section> sections;
 

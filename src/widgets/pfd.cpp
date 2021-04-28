@@ -280,7 +280,7 @@ QPixmap* Pfd::getIcon(Axis axis) {
         return &pix_no_ac;
     }
 
-    string firmware = AircraftManager::get()->getAircraft(current_ac).getAirframe().getFirmware();
+    auto firmware = AircraftManager::get()->getAircraft(current_ac).getAirframe().getFirmware();
     if(firmware == "fixedwing") {
         switch (axis) {
         case ROLL:
