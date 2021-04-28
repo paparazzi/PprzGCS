@@ -64,8 +64,6 @@ int main(int argc, char *argv[])
         parser.process(a);
 
 
-
-
         QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
         QDir conf_dir(config_path);
         if(!conf_dir.exists()) {

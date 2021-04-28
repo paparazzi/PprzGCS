@@ -24,11 +24,11 @@ Aircraft::~Aircraft()
 void Aircraft::setSetting(shared_ptr<Setting> setting, float value) {
     auto coef = setting->getAltUnitCoef();
     if(value < setting->getMin() / coef || value > setting->getMax() / coef) {
-        qDebug() << "Warning: send setting value " << value << ", out of bounds for setting " << setting->getName().c_str();
+        qDebug() << "Warning: send setting value " << value << ", out of bounds for setting " << setting->getName();
     }
 
     pprzlink::Message dlSetting(PprzDispatcher::get()->getDict()->getDefinition("DL_SETTING"));
-    dlSetting.addField("ac_id", ac_id.toStdString());
+    dlSetting.addField("ac_id", ac_id);
     dlSetting.addField("index", setting->getNo());
     dlSetting.addField("value", value);
     PprzDispatcher::get()->sendMessage(dlSetting);

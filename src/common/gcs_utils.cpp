@@ -13,13 +13,12 @@ QString user_or_app_path(QString data_path) {
     }
 }
 
-double parse_coordinate(const char* str) {
+double parse_coordinate(QString str) {
     (void)str;
     QRegExp decimal_rx("[+-]?([0-9]*[.])?[0-9]+");
     QRegExp sexa_rx("([+-]?[0-9]+) ([0-9]+) ((?:[0-9]*[.])?[0-9]+)");
     if(decimal_rx.exactMatch(str)) {
-        qDebug() << str;
-        return std::stod(str);
+        return str.toDouble();
     }
     else if(sexa_rx.exactMatch(str)) {
         sexa_rx.indexIn(str);
@@ -32,7 +31,5 @@ double parse_coordinate(const char* str) {
             return coor;
         }
     }
-
-    auto msg = std::string(str) + " is not a coordinate";
-    throw std::runtime_error(msg);
+    throw std::runtime_error(str.toStdString() + " is not a coordinate");
 }

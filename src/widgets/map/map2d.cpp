@@ -1,7 +1,6 @@
 #include "map2d.h"
 #include <QPixmap>
 #include <QGraphicsPixmapItem>
-#include <string>
 #include <iostream>
 #include "point2dlatlon.h"
 #include "point2dtile.h"
@@ -177,7 +176,7 @@ void Map2D::setZoom(double z) {
 
 void Map2D::zoomCentered(double z, QPoint eventPos) {
     int curZoom = zoomLevel(_zoom);
-    _zoom = clamp(z, minZoom, maxZoom);
+    _zoom = std::clamp(z, minZoom, maxZoom);
 
     // save initial numericZoom
     double  numZoomIni = numericZoom;

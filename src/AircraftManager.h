@@ -9,7 +9,7 @@
 #include "aircraft.h"
 #include <optional>
 #include <map>
-#include <pprzlink/Message.h>
+#include <pprzlinkQt/Message.h>
 #include <QMap>
 #include "PprzToolbox.h"
 #include "PprzApplication.h"

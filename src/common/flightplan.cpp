@@ -6,7 +6,6 @@
 #include "coordinatestransform.h"
 
 using namespace std;
-using namespace tinyxml2;
 
 FlightPlan::FlightPlan(): origin()
 {
@@ -14,77 +13,78 @@ FlightPlan::FlightPlan(): origin()
 }
 
 
-FlightPlan::FlightPlan(string uri) : origin()
+FlightPlan::FlightPlan(QString uri) : origin()
 {
-    setlocale(LC_ALL, "C"); // needed for stod() to use '.' as decimal separator instead of ',' (at least in France)
-    XMLDocument doc;
+    QDomDocument doc;
 
-    if(uri.substr(0,4) == "file") {
-        string path = uri.substr(7, uri.length()-7);
-        doc.LoadFile(path.c_str());
+    if(uri.mid(0,4) == "file") {
+        QString path = uri.mid(7, uri.length()-7);
+        QFile f(path);
+        if(!f.open(QIODevice::ReadOnly)) {
+            throw std::runtime_error("Error while loading flightplan file");
+        }
+        doc.setContent(&f);
+        f.close();
+    } else {
+        throw std::runtime_error("Unimplemented ! " + uri.toStdString());
     }
 
-    if(doc.Error()) {
-        cerr << "Error parsing " << uri << ": " << doc.ErrorStr();
+
+
+    QDomElement fp_root = doc.firstChildElement( "dump" ).firstChildElement( "flight_plan" );
+    name = fp_root.attribute("name");
+    auto lat0 = fp_root.attribute("lat0");
+    auto lon0 = fp_root.attribute("lon0");
+    auto defalt = fp_root.attribute("alt");
+    auto max_dist_home = fp_root.attribute("max_dist_from_home");
+    auto gnd_alt = fp_root.attribute("ground_alt");
+    auto sec_h = fp_root.attribute("security_height");
+
+    defaultAlt = defalt.toDouble();
+    max_dist_from_home = max_dist_home.toDouble();
+    ground_alt = gnd_alt.toDouble();
+    security_height = sec_h.toDouble();
+
+    double _lat0 = parse_coordinate(lat0);
+    double _lon0 = parse_coordinate(lon0);
+
+    frame_type = Waypoint::WpFrame::UTM;
+    if(fp_root.hasAttribute("wp_frame")) {
+        auto f = fp_root.attribute("wp_frame");
+        if(f.toUpper()  == "LTP") {
+            frame_type = Waypoint::WpFrame::LTP;
+        }
     }
-    else {
-        XMLElement* fp_root = doc.FirstChildElement( "dump" )->FirstChildElement( "flight_plan" );
-        name = fp_root->Attribute("name");
-        const char* lat0 = fp_root->Attribute("lat0");
-        const char* lon0 = fp_root->Attribute("lon0");
-        const char* defalt = fp_root->Attribute("alt");
-        const char* max_dist_home = fp_root->Attribute("max_dist_from_home");
-        const char* gnd_alt = fp_root->Attribute("ground_alt");
-        const char* sec_h = fp_root->Attribute("security_height");
 
-        defaultAlt = stod(defalt);
-        max_dist_from_home = stod(max_dist_home);
-        ground_alt = stod(gnd_alt);
-        security_height = stod(sec_h);
+    origin = make_shared<Waypoint>("__ORIGIN", 0, _lat0, _lon0, defaultAlt);
 
-        double _lat0 = parse_coordinate(lat0);
-        double _lon0 = parse_coordinate(lon0);
+    auto wps = fp_root.firstChildElement("waypoints");
+    parse_waypoints(wps);
+    auto blks = fp_root.firstChildElement("blocks");
+    parse_blocks(blks);
 
-        auto frame = fp_root->Attribute("wp_frame");
+    auto exs = fp_root.firstChildElement("exceptions");
+    if(!exs.isNull()) {
+        parse_exceptions(exs);
+    }
 
-        frame_type = Waypoint::WpFrame::UTM;
-        if(frame) {
-            string f = frame;
-            std::transform(f.begin(), f.end(),f.begin(), ::toupper);
-            if(f == "LTP") {
-                frame_type = Waypoint::WpFrame::LTP;
-            }
-        }
+    auto vars = fp_root.firstChildElement("variables");
+    if(!vars.isNull()) {
+        parse_variables(vars);
+    }
 
-        origin = make_shared<Waypoint>("__ORIGIN", 0, _lat0, _lon0, defaultAlt);
-
-        XMLElement* wps = fp_root->FirstChildElement("waypoints");
-        parse_waypoints(wps);
-        XMLElement* blks = fp_root->FirstChildElement("blocks");
-        parse_blocks(blks);
-
-        XMLElement* exs = fp_root->FirstChildElement("exceptions");
-        if(exs) {
-            parse_exceptions(exs);
-        }
-
-        XMLElement* vars = fp_root->FirstChildElement("variables");
-        if(vars) {
-            parse_variables(vars);
-        }
-
-        XMLElement* secs = fp_root->FirstChildElement("sectors");
-        if(secs) {
-            parse_sectors(secs);
-        }
-
+    auto secs = fp_root.firstChildElement("sectors");
+    if(!secs.isNull()) {
+        parse_sectors(secs);
     }
 }
 
-void FlightPlan::parse_exceptions(XMLElement* exs) {
-    for(auto ex=exs->FirstChildElement(); ex!=nullptr; ex=ex->NextSiblingElement()) {
-        const char* cond = ex->Attribute("cond");
-        const char* deroute = ex->Attribute("deroute");
+void FlightPlan::parse_exceptions(QDomElement exs) {
+    for(auto ex=exs.firstChildElement();
+        !ex.isNull();
+        ex=ex.nextSiblingElement()) {
+        auto cond = ex.attribute("cond");
+        auto deroute = ex.attribute("deroute");
 
         auto e = make_shared<Exception>();
         e->cond = cond;
@@ -94,49 +94,53 @@ void FlightPlan::parse_exceptions(XMLElement* exs) {
     }
 }
 
-void FlightPlan::parse_variables(XMLElement* vars) {
-    for(auto ele=vars->FirstChildElement(); ele!=nullptr; ele=ele->NextSiblingElement()) {
+void FlightPlan::parse_variables(QDomElement vars) {
+    for(auto ele=vars.firstChildElement(); !ele.isNull(); ele=ele.nextSiblingElement()) {
         shared_ptr<Variable> var;
-        if(strcmp(ele->Name(), "variable") == 0) {
-            var = make_shared<Variable>(Variable::VARIABLE, ele->Attribute("var"));
-        } else if (strcmp(ele->Name(), "abi_binding") == 0) {
-            var = make_shared<Variable>(Variable::ABI_BINDING, ele->Attribute("name"));
+        if(ele.tagName() == "variable") {
+            var = make_shared<Variable>(Variable::VARIABLE, ele.attribute("var"));
+        } else if (ele.tagName() == "abi_binding") {
+            var = make_shared<Variable>(Variable::ABI_BINDING, ele.attribute("name"));
         } else {
             throw std::runtime_error("");
         }
-        for(auto att=ele->FirstAttribute(); att!=nullptr; att=att->Next()) {
-            var->attributes[att->Name()] = att->Value();
+
+        auto attr = ele.attributes();
+        for(int i=0; i < attr.count(); i++) {
+            auto att = attr.item(i).toAttr();
+            var->attributes[att.name()] = att.value();
         }
+
         variables.push_back(var);
     }
 }
 
-void FlightPlan::parse_sectors(tinyxml2::XMLElement* secs) {
+void FlightPlan::parse_sectors(QDomElement secs) {
 
-    for(auto ele=secs->FirstChildElement(); ele!=nullptr; ele=ele->NextSiblingElement()) {
-        if(strcmp(ele->Name(), "sector") == 0) {
+    for(auto ele=secs.firstChildElement(); !ele.isNull(); ele=ele.nextSiblingElement()) {
+        if(ele.tagName() == "sector") {
             // It's a sector!
 
-            auto sec_name = ele->Attribute("name");
-            auto color = ele->Attribute("color");
-            optional<string> sec_color = nullopt;
+            auto sec_name = ele.attribute("name");
+            auto color = ele.attribute("color");
+            optional<QString> sec_color = nullopt;
             if(color != nullptr) {
                 sec_color = color;
             }
 
-            auto type = ele->Attribute("type");
+            auto type = ele.attribute("type", "");
             Sector::Type t = Sector::DYNAMIC;
-            if(type != nullptr && strcmp(type, "static") == 0) {
+            if(type == "static") {
                 t = Sector::STATIC;
             }
             vector<shared_ptr<Waypoint>> corners;
-            for(auto corner=ele->FirstChildElement(); corner!= nullptr; corner=corner->NextSiblingElement()) {
-                auto wp = getWaypoint(corner->Attribute("name"));
+            for(auto corner=ele.firstChildElement(); !corner.isNull(); corner=corner.nextSiblingElement()) {
+                auto wp = getWaypoint(corner.attribute("name"));
                 corners.push_back(wp);
             }
             auto sec = make_shared<Sector>(corners, sec_name, t, sec_color);
             sectors.push_back(sec);
-        } else if (strcmp(ele->Name(), "kml") == 0) {
+        } else if (ele.tagName() == "kml") {
             //It's a KML!
             throw std::runtime_error("Sector from KML not implemented!");
         } else {
@@ -145,18 +149,18 @@ void FlightPlan::parse_sectors(tinyxml2::XMLElement* secs) {
     }
 }
 
-void FlightPlan::parse_waypoints(XMLElement* wps) {
+void FlightPlan::parse_waypoints(QDomElement wps) {
     uint8_t wp_id = 1;
-    for(auto wp=wps->FirstChildElement(); wp!=nullptr; wp=wp->NextSiblingElement()) {
+    for(auto wp=wps.firstChildElement(); !wp.isNull(); wp=wp.nextSiblingElement()) {
         auto waypoint = make_shared<Waypoint>(wp, wp_id, origin, defaultAlt, frame_type);
         waypoints.push_back(waypoint);
         ++wp_id;
     }
 }
 
-void FlightPlan::parse_blocks(tinyxml2::XMLElement* blks) {
+void FlightPlan::parse_blocks(QDomElement blks) {
 
-    for(auto blk=blks->FirstChildElement(); blk!=nullptr; blk=blk->NextSiblingElement()) {
+    for(auto blk=blks.firstChildElement(); !blk.isNull(); blk=blk.nextSiblingElement()) {
         auto block = make_shared<Block>(blk);
         blocks.push_back(block);
     }
@@ -176,13 +180,13 @@ shared_ptr<Waypoint> FlightPlan::getWaypoint(uint8_t id) {
     throw runtime_error("No waypoint with id " + to_string(id));
 }
 
-shared_ptr<Waypoint> FlightPlan::getWaypoint(string name) {
+shared_ptr<Waypoint> FlightPlan::getWaypoint(QString name) {
     for(auto& wp: waypoints) {
         if(wp->getName() == name) {
             return wp;
         }
     }
-    throw runtime_error("No waypoint with name " + name);
+    throw runtime_error("No waypoint with name " + name.toStdString());
 }
 
 shared_ptr<Block> FlightPlan::getBlock(uint8_t no) {
@@ -197,7 +201,7 @@ shared_ptr<Block> FlightPlan::getBlock(uint8_t no) {
 vector<shared_ptr<BlockGroup>> FlightPlan::getGroups()
 {
 
-    std::map<std::string, shared_ptr<BlockGroup>> groups_map;
+    std::map<QString, shared_ptr<BlockGroup>> groups_map;
 
     for(auto b: blocks) {
         if(groups_map.find(b->getGroup()) == groups_map.end()) {

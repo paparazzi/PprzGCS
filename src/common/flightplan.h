@@ -1,23 +1,23 @@
 #ifndef FLIGHTPLAN_H
 #define FLIGHTPLAN_H
 
-#include <string>
+#include <QString>
 #include <vector>
 #include "waypoint.h"
 #include "sector.h"
 #include "block.h"
 #include <memory>
-#include "tinyxml2.h"
+#include <QtXml>
 #include "point2dlatlon.h"
 
 struct BlockGroup {
-    string group_name;
+    QString group_name;
     vector<shared_ptr<Block>> blocks;
 };
 
 struct Exception {
-    string cond;
-    string deroute;
+    QString cond;
+    QString deroute;
 };
 
 struct Variable {
@@ -26,14 +26,14 @@ struct Variable {
         ABI_BINDING,
     };
 
-    Variable(Type t, string var_name) {
+    Variable(Type t, QString var_name) {
         _var_name = var_name;
         type = t;
     }
 
     Type type;
-    string _var_name;
-    map<string, string> attributes;
+    QString _var_name;
+    map<QString, QString> attributes;
 };
 
 
@@ -42,11 +42,11 @@ class FlightPlan
 public:
 
     FlightPlan();
-    FlightPlan(std::string uri);
+    FlightPlan(QString uri);
 
     vector<shared_ptr<Waypoint>>& getWaypoints() {return  waypoints;}
     shared_ptr<Waypoint> getWaypoint(uint8_t id);
-    shared_ptr<Waypoint> getWaypoint(string name);
+    shared_ptr<Waypoint> getWaypoint(QString name);
     vector<shared_ptr<Block>>& getBlocks() {return  blocks;}
     vector<shared_ptr<BlockGroup>> getGroups();
     vector<shared_ptr<Exception>> getExeptions() {return  exceptions;}
@@ -73,12 +73,12 @@ public:
     std::tuple<Point2DLatLon, Point2DLatLon> boundingBoxWith(Point2DLatLon pt);
 
 private:
-    void parse_exceptions(tinyxml2::XMLElement* exs);
-    void parse_variables(tinyxml2::XMLElement* vars);
-    void parse_sectors(tinyxml2::XMLElement* secs);
-    void parse_waypoints(tinyxml2::XMLElement* wps);
-    void parse_blocks(tinyxml2::XMLElement* blks);
-    void parse_block_stages(tinyxml2::XMLElement* blk, shared_ptr<Block> block);
+    void parse_exceptions(QDomElement exs);
+    void parse_variables(QDomElement vars);
+    void parse_sectors(QDomElement secs);
+    void parse_waypoints(QDomElement wps);
+    void parse_blocks(QDomElement blks);
+    void parse_block_stages(QDomElement blk, shared_ptr<Block> block);
 
     std::vector<shared_ptr<Waypoint>> waypoints;
     std::vector<shared_ptr<Exception>> exceptions;
@@ -88,7 +88,7 @@ private:
     shared_ptr<Waypoint> origin;
 
     double defaultAlt;
-    string name;
+    QString name;
     double max_dist_from_home;
     double ground_alt;
     double security_height;

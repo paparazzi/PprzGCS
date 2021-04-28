@@ -1,7 +1,6 @@
 #include "tileprovider.h"
 #include "math.h"
 #include <iostream>
-#include <string>
 #include <fstream>
 #include <QMap>
 #include <QStandardPaths>
@@ -274,7 +273,7 @@ TileItem* TileProvider::getTile(Point2DTile p) {
 }
 
 TileItem* TileProvider::getValidTile(Point2DTile p) {
-    int zoom = clamp(p.zoom(), config.zoomMin, config.zoomMax);
+    int zoom = std::clamp(p.zoom(), config.zoomMin, config.zoomMax);
     p.changeZoom(zoom);
     return getTile(p);
 }

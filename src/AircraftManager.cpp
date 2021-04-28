@@ -30,8 +30,8 @@ QList<Aircraft> AircraftManager::getAircrafts() {
 void AircraftManager::addAircraft(pprzlink::Message msg) {
     QSettings app_settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
 
-    std::string ac_id, ac_name, default_gui_color, flight_plan, airframe, radio, settings;
-    msg.getField("ac_id", ac_id);
+    QString id, ac_name, default_gui_color, flight_plan, airframe, radio, settings;
+    msg.getField("ac_id", id);
     msg.getField("ac_name", ac_name);
     msg.getField("default_gui_color", default_gui_color);
     msg.getField("flight_plan", flight_plan);
@@ -39,24 +39,21 @@ void AircraftManager::addAircraft(pprzlink::Message msg) {
     msg.getField("radio", radio);
     msg.getField("settings", settings);
 
-    QColor color = parseColor(default_gui_color);
-
-    QString id = QString::fromStdString(ac_id);
+    QColor color = parseColor(default_gui_color.toStdString());
 
     if(aircraftExists(id)) {
         qDebug() << "Aircraft " << id << " already exits!";
         return;
     }
 
-    FlightPlan fp(flight_plan.c_str());
-    shared_ptr<SettingMenu> sm = make_shared<SettingMenu>(settings.c_str());
+    FlightPlan fp(flight_plan);
+    shared_ptr<SettingMenu> sm = make_shared<SettingMenu>(settings);
 
-    Airframe air(airframe.c_str());
+    Airframe air(airframe);
 
-    QString icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(air.getIconName().c_str()) + ".svg";
-    qDebug() << "icon: " << icon;
+    QString icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(air.getIconName()) + ".svg";
 
-    aircrafts[id] = Aircraft(id, color, icon, QString::fromStdString(ac_name), fp, sm, air);
+    aircrafts[id] = Aircraft(id, color, icon, ac_name, fp, sm, air);
 }
 
 bool AircraftManager::aircraftExists(QString id) {

@@ -63,7 +63,7 @@ QWidget* rec_build(QDomNode &node, QSplitter* parent, int* size) {
                 if(layout_ele.tagName() == "configure") {
                     Configurable* c = dynamic_cast<Configurable*>(widget);
                     if(c == nullptr) {
-                        throw runtime_error("Class does not inherit from Configurable!!!");
+                        throw std::runtime_error("Class does not inherit from Configurable!!!");
                     }
 
                     c->configure(layout_ele);
@@ -100,7 +100,7 @@ QLayout* layout_rec_build(QDomElement &ele, QWidget* parent) {
         layout = new QVBoxLayout();
     }
     else {
-        throw runtime_error("layout must be either verticalLayout or horizontalLayout");
+        throw std::runtime_error("layout must be either verticalLayout or horizontalLayout");
     }
 
     for(int i=0; i<ele.childNodes().length(); i++) {

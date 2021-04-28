@@ -129,7 +129,7 @@ std::tuple<uint16_t, QList<struct GPSClassicViewer::SvInfo>> GPSClassicViewer::g
     }
 
     uint16_t pacc;
-    std::string _svids, _flags, _qis, _cnos, _elevs, _azims, _msg_ages;
+    QString _svids, _flags, _qis, _cnos, _elevs, _azims, _msg_ages;
 
     msg->getField("pacc", pacc);
     msg->getField("svid", _svids);
@@ -150,7 +150,7 @@ std::tuple<uint16_t, QList<struct GPSClassicViewer::SvInfo>> GPSClassicViewer::g
 
     QList< struct SvInfo> infos;
 
-    for(auto &id: QString(_svids.c_str()).split(',')) {
+    for(auto &id: _svids.split(',')) {
         svids.append(id.toInt());
     }
 
@@ -158,13 +158,13 @@ std::tuple<uint16_t, QList<struct GPSClassicViewer::SvInfo>> GPSClassicViewer::g
 //        svids.append(sv.toInt());
 //    }
 
-    for(auto &fls: QString(_flags.c_str()).split(',')) {
+    for(auto &fls: _flags.split(',')) {
         flags.append(fls.toInt());
     }
 
     // qis
 
-    for(auto &cn: QString(_cnos.c_str()).split(',')) {
+    for(auto &cn: _cnos.split(',')) {
         cno.append(cn.toInt());
     }
 
@@ -172,7 +172,7 @@ std::tuple<uint16_t, QList<struct GPSClassicViewer::SvInfo>> GPSClassicViewer::g
 
     // azims
 
-    for(auto &age: QString(_msg_ages.c_str()).split(',')) {
+    for(auto &age: _msg_ages.split(',')) {
         msg_age.append(age.toInt());
     }
 

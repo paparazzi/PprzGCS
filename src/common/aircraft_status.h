@@ -12,7 +12,7 @@ public:
     explicit AircraftStatus(QString ac_id, QObject *parent = nullptr);
 
     void updateMessage(pprzlink::Message msg);
-    std::optional<pprzlink::Message> getMessage(std::string name);
+    std::optional<pprzlink::Message> getMessage(QString name);
 
 signals:
     void flight_param();
@@ -32,7 +32,7 @@ public slots:
 private:
     QString ac_id;
 
-    QMap<std::string, pprzlink::Message> last_messages;
+    QMap<QString, pprzlink::Message> last_messages;
 };
 
 #endif // AIRCRAFTSTATUS_H

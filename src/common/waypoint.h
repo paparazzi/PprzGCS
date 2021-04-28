@@ -4,9 +4,8 @@
 #include <memory>
 #include <iostream>
 #include <map>
-#include "tinyxml2.h"
-
-using namespace std;
+#include <QtXml>
+#include <memory>
 
 class Waypoint
 {
@@ -23,9 +22,9 @@ public:
         HEIGHT
     };
 
-    Waypoint(string name, uint8_t id);
-    Waypoint(string name, uint8_t id, double lat, double lon, double alt);
-    Waypoint(tinyxml2::XMLElement* wp, uint8_t wp_id, shared_ptr<Waypoint> orig, double defaultAlt, WpFrame frame_type);
+    Waypoint(QString name, uint8_t id);
+    Waypoint(QString name, uint8_t id, double lat, double lon, double alt);
+    Waypoint(QDomElement wp, uint8_t wp_id, std::shared_ptr<Waypoint> orig, double defaultAlt, WpFrame frame_type);
 
     uint8_t getId() const {return id;}
     double getLat() const;
@@ -35,11 +34,11 @@ public:
     void setAlt(double alt) {this->alt = alt;}
     double getAlt() const {return alt;}
     WpFrame getType() const {return type;}
-    string getName() const {return name;}
-    shared_ptr<Waypoint> getOrigin() {return origin;}
-    std::map<string, string> getXmlAttributes() { return xml_attibutes;}
+    QString getName() const {return name;}
+    std::shared_ptr<Waypoint> getOrigin() {return origin;}
+    std::map<QString, QString> getXmlAttributes() { return xml_attibutes;}
 
-    friend ostream& operator<<(ostream& os, const Waypoint& wp);
+    friend std::ostream& operator<<(std::ostream& os, const Waypoint& wp);
 
 private:
     WpFrame type;
@@ -49,14 +48,14 @@ private:
     double lat;
     double lon;
 
-    shared_ptr<Waypoint> origin;
+    std::shared_ptr<Waypoint> origin;
 
     double alt;
     WpAltType alt_type;
 
-    string name;
+    QString name;
 
-    std::map<string, string> xml_attibutes;
+    std::map<QString, QString> xml_attibutes;
 };
 
 

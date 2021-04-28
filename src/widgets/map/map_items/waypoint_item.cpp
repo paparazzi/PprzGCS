@@ -32,7 +32,7 @@ void WaypointItem::init() {
     _waypoint = make_shared<Waypoint>(*original_waypoint);
     Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
     int size = settings.value("map/waypoint/size").toInt();
-    name = original_waypoint->getName().c_str();
+    name = original_waypoint->getName();
     point = new GraphicsPoint(size, aircraft.getColor(), this);
     QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
     point->setColors(color_variants[0], color_variants[1], color_variants[2]);

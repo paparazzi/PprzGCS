@@ -37,7 +37,7 @@ find_package(Boost COMPONENTS system)
 
 find_package(Qt5 5.12 COMPONENTS Widgets Xml Network Svg REQUIRED)
 
-find_package(pprzlink++ REQUIRED)
+find_package(pprzlinkQt REQUIRED)
 
 set(SOURCE
     ${SOURCE}
@@ -56,7 +56,6 @@ link_directories(${CMAKE_PREFIX_PATH}/lib)
 add_executable(${PROJECT_NAME} ${SOURCE})
 
 target_link_libraries(${PROJECT_NAME}
-    pprzlink++
     Qt5::Widgets
     Qt5::Xml
     Qt5::Network
@@ -64,6 +63,7 @@ target_link_libraries(${PROJECT_NAME}
     ${PROJ4_LIBRARIES}
     ${Boost_LIBRARIES}
     zip
+    pprzlinkQt
 )
 
 

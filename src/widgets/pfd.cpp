@@ -227,14 +227,14 @@ void Pfd::changeCurrentAC(QString id) {
 }
 
 void Pfd::updateEulers(pprzlink::Message msg) {
-    std::string ac_id;
+    QString ac_id;
     float roll, pitch, heading;
     msg.getField("ac_id", ac_id);
-    if(AircraftManager::get()->aircraftExists(ac_id.c_str())) {
+    if(AircraftManager::get()->aircraftExists(ac_id)) {
         msg.getField("roll", roll);
         msg.getField("pitch", pitch);
         msg.getField("heading", heading);
-        eulers[ac_id.c_str()] = Eulers {roll, pitch, heading};
+        eulers[ac_id] = Eulers {roll, pitch, heading};
         update();
     }
 }
@@ -280,7 +280,7 @@ QPixmap* Pfd::getIcon(Axis axis) {
         return &pix_no_ac;
     }
 
-    string firmware = AircraftManager::get()->getAircraft(current_ac).getAirframe().getFirmware();
+    auto firmware = AircraftManager::get()->getAircraft(current_ac).getAirframe().getFirmware();
     if(firmware == "fixedwing") {
         switch (axis) {
         case ROLL:
