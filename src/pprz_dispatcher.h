@@ -23,6 +23,7 @@ public:
     virtual void setToolbox(PprzToolbox* toolbox) override;
 
     void start();
+    void stop();
     void unbindAll();
 
     void sendMessage(pprzlink::Message);

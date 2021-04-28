@@ -25,7 +25,7 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
     pprzlink_id = settings.value("pprzlink/id").toString();
 
     dict = new pprzlink::MessageDictionary(settings.value("pprzlink/messages").toString());
-    link = new pprzlink::IvyQtLink(*dict, ivy_name, settings.value("ivy/bus").toString(), this);
+    link = new pprzlink::IvyQtLink(*dict, ivy_name, this);
 
     connect(link, &pprzlink::IvyQtLink::serverConnected, this, [=]() {
         started = true;
@@ -44,6 +44,84 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
             pprzApp()->mainWindow()->setServerStatus(true);
         }
     });
+
+
+    long bid = link->BindMessage(dict->getDefinition("WAYPOINT_MOVED"), nullptr,
+        [=](QString ac_id, pprzlink::Message msg) {
+            (void)ac_id;
+            QString id;
+            uint8_t wp_id = 0;
+            msg.getField("ac_id", id);
+            msg.getField("wp_id", wp_id);
+            if(AircraftManager::get()->aircraftExists(id) && wp_id != 0) {
+                emit(waypoint_moved(msg));
+            }
+    });
+    _bindIds.append(bid);
+
+    bid = link->BindMessage(dict->getDefinition("AIRCRAFT_DIE"), nullptr,
+        [=](QString ac_id, pprzlink::Message msg) {
+            (void)ac_id;
+            QString id;
+            msg.getField("ac_id", id);
+
+            if(AircraftManager::get()->aircraftExists(id)) {
+                // If the dying AC is the currently selected one, try to select an other.
+                if(DispatcherUi::get()->getSelectedAcId() == id) {
+                    for(auto ac: AircraftManager::get()->getAircrafts()) {
+                        if(ac.getId() != id) {
+                            emit(DispatcherUi::get()->ac_selected(ac.getId()));
+                            break;
+                        }
+                    }
+                }
+
+                emit(DispatcherUi::get()->ac_deleted(id));
+                AircraftManager::get()->removeAircraft(id);
+            }
+        }
+    );
+    _bindIds.append(bid);
+
+    bindDeftoSignal("AP_STATUS", &PprzDispatcher::ap_status);
+    bindDeftoSignal("NAV_STATUS", &PprzDispatcher::nav_status);
+    bindDeftoSignal("CIRCLE_STATUS", &PprzDispatcher::circle_status);
+    bindDeftoSignal("SEGMENT_STATUS", &PprzDispatcher::segment_status);
+    bindDeftoSignal("ENGINE_STATUS", &PprzDispatcher::engine_status);
+    bindDeftoSignal("DL_VALUES", &PprzDispatcher::dl_values);
+    bindDeftoSignal("TELEMETRY_STATUS", &PprzDispatcher::telemetry_status);
+    bindDeftoSignal("FLY_BY_WIRE", &PprzDispatcher::fly_by_wire);
+    bindDeftoSignal("FLIGHT_PARAM", &PprzDispatcher::flight_param);
+    bindDeftoSignal("SVSINFO", &PprzDispatcher::svsinfo);
+
+
+    connect(DispatcherUi::get(), &DispatcherUi::move_waypoint, this,
+        [=](shared_ptr<Waypoint> wp, QString ac_id) {
+            pprzlink::Message msg(dict->getDefinition("MOVE_WAYPOINT"));
+            msg.setSenderId(pprzlink_id);
+            msg.addField("ac_id", ac_id);
+            msg.addField("wp_id", wp->getId());
+            msg.addField("lat", wp->getLat());
+            msg.addField("long", wp->getLon());
+            msg.addField("alt", wp->getAlt());
+            if(started) {
+                this->sendMessage(msg);
+            }
+        });
+
+    bid = link->BindMessage(dict->getDefinition("NEW_AIRCRAFT"), nullptr,
+        [=](QString ac_id, pprzlink::Message msg) {
+            (void)ac_id;
+            QString id;
+            msg.getField("ac_id", id);
+            requestConfig(id);
+        }
+    );
+    _bindIds.append(bid);
+
+    server_check_timer.setInterval(1000);
+    server_check_timer.start();
+
 }
 
 PprzDispatcher::~PprzDispatcher() {
@@ -132,83 +210,13 @@ long PprzDispatcher::bind(QString msg_name, pprzlink::messageCallback_t cb) {
     return ret;
 }
 
+void PprzDispatcher::stop() {
+    link->stop();
+}
+
 void PprzDispatcher::start() {
-
-    long bid = link->BindMessage(dict->getDefinition("WAYPOINT_MOVED"), nullptr,
-        [=](QString ac_id, pprzlink::Message msg) {
-            (void)ac_id;
-            QString id;
-            uint8_t wp_id = 0;
-            msg.getField("ac_id", id);
-            msg.getField("wp_id", wp_id);
-            if(AircraftManager::get()->aircraftExists(id) && wp_id != 0) {
-                emit(waypoint_moved(msg));
-            }
-    });
-    _bindIds.append(bid);
-
-    bid = link->BindMessage(dict->getDefinition("AIRCRAFT_DIE"), nullptr,
-        [=](QString ac_id, pprzlink::Message msg) {
-            (void)ac_id;
-            QString id;
-            msg.getField("ac_id", id);
-
-            if(AircraftManager::get()->aircraftExists(id)) {
-                // If the dying AC is the currently selected one, try to select an other.
-                if(DispatcherUi::get()->getSelectedAcId() == id) {
-                    for(auto ac: AircraftManager::get()->getAircrafts()) {
-                        if(ac.getId() != id) {
-                            emit(DispatcherUi::get()->ac_selected(ac.getId()));
-                            break;
-                        }
-                    }
-                }
-
-                emit(DispatcherUi::get()->ac_deleted(id));
-                AircraftManager::get()->removeAircraft(id);
-            }
-        }
-    );
-    _bindIds.append(bid);
-
-    bindDeftoSignal("AP_STATUS", &PprzDispatcher::ap_status);
-    bindDeftoSignal("NAV_STATUS", &PprzDispatcher::nav_status);
-    bindDeftoSignal("CIRCLE_STATUS", &PprzDispatcher::circle_status);
-    bindDeftoSignal("SEGMENT_STATUS", &PprzDispatcher::segment_status);
-    bindDeftoSignal("ENGINE_STATUS", &PprzDispatcher::engine_status);
-    bindDeftoSignal("DL_VALUES", &PprzDispatcher::dl_values);
-    bindDeftoSignal("TELEMETRY_STATUS", &PprzDispatcher::telemetry_status);
-    bindDeftoSignal("FLY_BY_WIRE", &PprzDispatcher::fly_by_wire);
-    bindDeftoSignal("FLIGHT_PARAM", &PprzDispatcher::flight_param);
-    bindDeftoSignal("SVSINFO", &PprzDispatcher::svsinfo);
-
-
-    connect(DispatcherUi::get(), &DispatcherUi::move_waypoint, this,
-        [=](shared_ptr<Waypoint> wp, QString ac_id) {
-            pprzlink::Message msg(dict->getDefinition("MOVE_WAYPOINT"));
-            msg.setSenderId(pprzlink_id);
-            msg.addField("ac_id", ac_id);
-            msg.addField("wp_id", wp->getId());
-            msg.addField("lat", wp->getLat());
-            msg.addField("long", wp->getLon());
-            msg.addField("alt", wp->getAlt());
-            if(started) {
-                this->sendMessage(msg);
-            }
-        });
-
-    bid = link->BindMessage(dict->getDefinition("NEW_AIRCRAFT"), nullptr,
-        [=](QString ac_id, pprzlink::Message msg) {
-            (void)ac_id;
-            QString id;
-            msg.getField("ac_id", id);
-            requestConfig(id);
-        }
-    );
-    _bindIds.append(bid);
-
-    server_check_timer.setInterval(1000);
-    server_check_timer.start();
+    QSettings settings(pprzApp()->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    link->start(settings.value("ivy/bus").toString());
 }
 
 
