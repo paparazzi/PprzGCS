@@ -31,4 +31,12 @@ private:
 
 };
 
+class SettingsRestart : public QDialog
+{
+    Q_OBJECT
+public:
+    explicit SettingsRestart(QWidget *parent = nullptr);
+
+};
+
 #endif // CONFIGURE_H
