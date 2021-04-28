@@ -37,8 +37,6 @@ find_package(Boost COMPONENTS system)
 
 find_package(Qt5 5.12 COMPONENTS Widgets Xml Network Svg REQUIRED)
 
-find_package(tinyxml2 REQUIRED)
-
 find_package(pprzlinkQt REQUIRED)
 
 set(SOURCE
@@ -66,7 +64,6 @@ target_link_libraries(${PROJECT_NAME}
     ${Boost_LIBRARIES}
     zip
     pprzlinkQt
-    tinyxml2
 )
 
 
