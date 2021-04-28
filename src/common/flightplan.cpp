@@ -15,7 +15,6 @@ FlightPlan::FlightPlan(): origin()
 
 FlightPlan::FlightPlan(QString uri) : origin()
 {
-    setlocale(LC_ALL, "C"); // needed for stod() to use '.' as decimal separator instead of ',' (at least in France)
     QDomDocument doc;
 
     if(uri.mid(0,4) == "file") {
@@ -26,53 +25,58 @@ FlightPlan::FlightPlan(QString uri) : origin()
         }
         doc.setContent(&f);
         f.close();
+    } else {
+        throw std::runtime_error("Unimplemented ! " + uri.toStdString());
     }
-        QDomElement fp_root = doc.firstChildElement( "dump" ).firstChildElement( "flight_plan" );
-        name = fp_root.attribute("name");
-        auto lat0 = fp_root.attribute("lat0");
-        auto lon0 = fp_root.attribute("lon0");
-        auto defalt = fp_root.attribute("alt");
-        auto max_dist_home = fp_root.attribute("max_dist_from_home");
-        auto gnd_alt = fp_root.attribute("ground_alt");
-        auto sec_h = fp_root.attribute("security_height");
 
-        defaultAlt = defalt.toDouble();
-        max_dist_from_home = max_dist_home.toDouble();
-        ground_alt = gnd_alt.toDouble();
-        security_height = sec_h.toDouble();
 
-        double _lat0 = parse_coordinate(lat0);
-        double _lon0 = parse_coordinate(lon0);
 
-        frame_type = Waypoint::WpFrame::UTM;
-        if(fp_root.hasAttribute("wp_frame")) {
-            auto f = fp_root.attribute("wp_frame");
-            if(f.toUpper()  == "LTP") {
-                frame_type = Waypoint::WpFrame::LTP;
-            }
+    QDomElement fp_root = doc.firstChildElement( "dump" ).firstChildElement( "flight_plan" );
+    name = fp_root.attribute("name");
+    auto lat0 = fp_root.attribute("lat0");
+    auto lon0 = fp_root.attribute("lon0");
+    auto defalt = fp_root.attribute("alt");
+    auto max_dist_home = fp_root.attribute("max_dist_from_home");
+    auto gnd_alt = fp_root.attribute("ground_alt");
+    auto sec_h = fp_root.attribute("security_height");
+
+    defaultAlt = defalt.toDouble();
+    max_dist_from_home = max_dist_home.toDouble();
+    ground_alt = gnd_alt.toDouble();
+    security_height = sec_h.toDouble();
+
+    double _lat0 = parse_coordinate(lat0);
+    double _lon0 = parse_coordinate(lon0);
+
+    frame_type = Waypoint::WpFrame::UTM;
+    if(fp_root.hasAttribute("wp_frame")) {
+        auto f = fp_root.attribute("wp_frame");
+        if(f.toUpper()  == "LTP") {
+            frame_type = Waypoint::WpFrame::LTP;
         }
+    }
 
-        origin = make_shared<Waypoint>("__ORIGIN", 0, _lat0, _lon0, defaultAlt);
+    origin = make_shared<Waypoint>("__ORIGIN", 0, _lat0, _lon0, defaultAlt);
 
-        auto wps = fp_root.firstChildElement("waypoints");
-        parse_waypoints(wps);
-        auto blks = fp_root.firstChildElement("blocks");
-        parse_blocks(blks);
+    auto wps = fp_root.firstChildElement("waypoints");
+    parse_waypoints(wps);
+    auto blks = fp_root.firstChildElement("blocks");
+    parse_blocks(blks);
 
-        auto exs = fp_root.firstChildElement("exceptions");
-        if(!exs.isNull()) {
-            parse_exceptions(exs);
-        }
+    auto exs = fp_root.firstChildElement("exceptions");
+    if(!exs.isNull()) {
+        parse_exceptions(exs);
+    }
 
-        auto vars = fp_root.firstChildElement("variables");
-        if(!vars.isNull()) {
-            parse_variables(vars);
-        }
+    auto vars = fp_root.firstChildElement("variables");
+    if(!vars.isNull()) {
+        parse_variables(vars);
+    }
 
-        auto secs = fp_root.firstChildElement("sectors");
-        if(!secs.isNull()) {
-            parse_sectors(secs);
-        }
+    auto secs = fp_root.firstChildElement("sectors");
+    if(!secs.isNull()) {
+        parse_sectors(secs);
+    }
 }
 
 void FlightPlan::parse_exceptions(QDomElement exs) {

@@ -25,7 +25,7 @@ Airframe::Airframe(QString uri) {
         QString path = uri.mid(7, uri.length()-7);
         QFile f(path);
         if(!f.open(QIODevice::ReadOnly)) {
-            throw std::runtime_error("Error while loading unit file");
+            throw std::runtime_error("Error while loading airframe file");
         }
         doc.setContent(&f);
         f.close();

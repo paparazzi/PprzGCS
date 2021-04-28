@@ -52,7 +52,6 @@ void AircraftManager::addAircraft(pprzlink::Message msg) {
     Airframe air(airframe);
 
     QString icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(air.getIconName()) + ".svg";
-    qDebug() << "icon: " << icon;
 
     aircrafts[id] = Aircraft(id, color, icon, ac_name, fp, sm, air);
 }

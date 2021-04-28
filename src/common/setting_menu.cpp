@@ -12,8 +12,6 @@ SettingMenu::SettingMenu()
 
 
 SettingMenu::SettingMenu(QString uri) {
-    setlocale(LC_ALL, "C"); // needed for stod() to use '.' as decimal separator instead of ',' (at least in France)
-
     QDomDocument doc;
 
     if(uri.mid(0,4) == "file") {
@@ -30,6 +28,8 @@ SettingMenu::SettingMenu(QString uri) {
         f.close();
 
         auto units_root = doc.firstChildElement("units");
+    } else {
+        throw std::runtime_error("Not implemented ! " + uri.toStdString());
     }
 
     auto st_root = doc.firstChildElement( "settings" );
