@@ -4,7 +4,8 @@ project(PprzGCS)
 
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -fno-sized-deallocation")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -fno-sized-deallocation")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Werror")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
