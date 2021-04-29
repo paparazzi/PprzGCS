@@ -2,6 +2,7 @@
 #include "AircraftManager.h"
 #include "gcs_utils.h"
 #include "dispatcher_ui.h"
+#include "mini_strip.h"
 #include <QDebug>
 #include <QSettings>
 
@@ -58,7 +59,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
                 alt_button->setIcon(msl_icon);
                 alt_label->setToolTip("Altitude MSL");
             }
-            updateFlightParams();
+            updateData();
         });
 
     /////////// flight time ///////////
@@ -96,7 +97,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
                 speed_button->setIcon(air_speed_icon);
                 speed_label->setToolTip("Air speed");
             }
-            updateFlightParams();
+            updateData();
         });
 
 
@@ -177,199 +178,232 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
 
     gl->addLayout(misc_lay, 2, 2);
 
+    auto ac_status = AircraftManager::get()->getAircraft(ac_id).getStatus();
 
-    connect(AircraftManager::get()->getAircraft(ac_id).getStatus(),
-            &AircraftStatus::engine_status, this, &MiniStrip::updateEngineStatus);
-    connect(AircraftManager::get()->getAircraft(ac_id).getStatus(),
-            &AircraftStatus::flight_param, this, &MiniStrip::updateFlightParams);
-    connect(AircraftManager::get()->getAircraft(ac_id).getStatus(),
-            &AircraftStatus::telemetry_status, this, &MiniStrip::updateTelemetryStatus);
-    connect(AircraftManager::get()->getAircraft(ac_id).getStatus(),
-            &AircraftStatus::fly_by_wire, this, &MiniStrip::updateFBW);
-    connect(AircraftManager::get()->getAircraft(ac_id).getStatus(),
-            &AircraftStatus::ap_status, this, &MiniStrip::updateApStatus);
-    connect(AircraftManager::get()->getAircraft(ac_id).getStatus(),
-            &AircraftStatus::nav_status, this, &MiniStrip::updateNavStatus);
-
-    emit updated();
+    connect(ac_status, &AircraftStatus::engine_status, this, &MiniStrip::updateData);
+    connect(ac_status, &AircraftStatus::flight_param, this, &MiniStrip::updateData);
+    connect(ac_status, &AircraftStatus::telemetry_status, this, &MiniStrip::updateData);
+    connect(ac_status, &AircraftStatus::fly_by_wire, this, &MiniStrip::updateData);
+    connect(ac_status, &AircraftStatus::ap_status, this, &MiniStrip::updateData);
+    connect(ac_status, &AircraftStatus::nav_status, this, &MiniStrip::updateData);
 }
 
-void MiniStrip::updateEngineStatus() {
-    auto msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("ENGINE_STATUS");
-    if(msg) {
-        float bat, throttle;
-        msg->getField("throttle", throttle);
-        msg->getField("bat", bat);
-        bat_label->setText(QString::number(bat) + " V");
-        /// TODO: change bat icon : full/half/low
-        throttle_label->setText(QString::number(throttle) + " %");
-        emit updated();
+void MiniStrip::updateFlightTime(uint32_t flight_time) {
+    int hours = static_cast<int>(static_cast<int64_t>(flight_time)/3600);
+    int minutes = static_cast<int>(static_cast<int64_t>(flight_time)/60 - hours*60);
+    int seconds = static_cast<int>(static_cast<int64_t>(flight_time) - minutes*60 -hours*3600);
+
+    QString f_time = QString("%1").arg(hours, 2, 10, QChar('0')) + ":" +
+                     QString("%1").arg(minutes, 2, 10, QChar('0')) + ":" +
+                     QString("%1").arg(seconds, 2, 10, QChar('0'));
+    flight_time_label->setText(f_time);
+}
+
+void MiniStrip::updateAp(QString ap_mode) {
+    if(ap_mode == "HOME" || ap_mode == "FAILSAFE") {
+        ap_mode_label->setBrush(Qt::red);
+    } else if (ap_mode == "MANUAL") {
+        ap_mode_label->setBrush(QColor(0xffa500));
+    } else {
+        ap_mode_label->setBrush(QColor(0x7ef17e));
     }
+    ap_mode_label->setText(ap_mode);
 }
 
-void MiniStrip::updateApStatus() {
-    auto msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("AP_STATUS");
-    if(msg) {
-        QString kill_mode, ap_mode, gps_mode, state_filter_mode; // lat_mode, horiz_mode, gaz_mode;
-        uint32_t flight_time;
-
-        msg->getField("flight_time", flight_time);
-        msg->getField("kill_mode", kill_mode);
-        msg->getField("ap_mode", ap_mode);
-        msg->getField("gps_mode", gps_mode);
-        msg->getField("state_filter_mode", state_filter_mode);
-
-        int hours = static_cast<int>(static_cast<int64_t>(flight_time)/3600);
-        int minutes = static_cast<int>(static_cast<int64_t>(flight_time)/60 - hours*60);
-        int seconds = static_cast<int>(static_cast<int64_t>(flight_time) - minutes*60 -hours*3600);
-
-        QString f_time = QString("%1").arg(hours, 2, 10, QChar('0')) + ":" +
-                         QString("%1").arg(minutes, 2, 10, QChar('0')) + ":" +
-                         QString("%1").arg(seconds, 2, 10, QChar('0'));
-        flight_time_label->setText(f_time);
-
-        if(kill_mode == "OFF") {
-            throttle_icon->setPixmap(throttle_on.pixmap(icons_size));
-        } else {
-            throttle_icon->setPixmap(throttle_killed.pixmap(icons_size));
-        }
-
-        if(ap_mode == "HOME" || ap_mode == "FAILSAFE") {
-            ap_mode_label->setBrush(Qt::red);
-        } else if (ap_mode == "MANUAL") {
-            ap_mode_label->setBrush(QColor(0xffa500));
-        } else {
-            ap_mode_label->setBrush(QColor(0x7ef17e));
-        }
-        ap_mode_label->setText(ap_mode);
-
-
-        if(gps_mode == "NOFIX" || gps_mode == "NA" || gps_mode == "2D") {
-            gps_icon->setPixmap(gps_lost.pixmap(30,30));
-        } else {
-            gps_icon->setPixmap(gps_ok.pixmap(30,30));
-        }
-        gps_icon->setToolTip("Gps " + QString(gps_mode));
-
-        if(state_filter_mode == "OK") {
-            imu_icon->setPixmap(imu_ok.pixmap(icons_size));
-        } else {
-            imu_icon->setPixmap(imu_lost.pixmap(icons_size));
-        }
-        imu_icon->setToolTip("IMU " + QString(state_filter_mode));
-        emit updated();
+void MiniStrip::updateGps(QString gps_mode) {
+    if(gps_mode == "NOFIX" || gps_mode == "NA" || gps_mode == "2D") {
+        gps_icon->setPixmap(gps_lost.pixmap(30,30));
+    } else {
+        gps_icon->setPixmap(gps_ok.pixmap(30,30));
     }
+    gps_icon->setToolTip("Gps " + QString(gps_mode));
 }
 
-void MiniStrip::updateFlightParams() {
-    auto msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("FLIGHT_PARAM");
-    if(msg) {
-        float speed, alt, climb, agl, airspeed;
-        msg->getField("speed", speed);
-        msg->getField("alt", alt);
-        msg->getField("climb", climb);
-        msg->getField("agl", agl);
-        msg->getField("airspeed", airspeed);
-
-        if(alt_mode) {
-            alt_label->setText(QString::number(agl, 'f', 0) + " m");
-        } else {
-            alt_label->setText(QString::number(alt, 'f', 0) + " m");
-        }
-
-        if(speed_mode) {
-            speed_label->setText(QString::number(speed, 'f', 1) + " m/s");
-        } else {
-            speed_label->setText(QString::number(airspeed, 'f', 1) + " m/s");
-        }
-
-        emit updated();
-
-//        QString txt = QString::number(climb, 'f', 1);
-//        if(climb > 0) {
-//            txt = "+" + txt;
-//        }
-//        full_alt_graph->setSecondayText(txt);
-//        short_vspeed_label->setText(txt);
-//        if(abs(speed) > 0.1) {
-//            full_alt_graph->setIndicatorAngle((climb/speed)*1.2);
-//        } else if(abs(climb) > 0.01){
-//            full_alt_graph->setIndicatorAngle(climb/abs(climb)*0.3);
-//        } else {
-//            full_alt_graph->setIndicatorAngle(0);
-//        }
-
-//        if(climb > 0.5) {
-//            short_vspeed_indicator->setText(QString::fromUtf8("\xE2\x86\x97"));
-//        } else if(climb < -0.5) {
-//            short_vspeed_indicator->setText(QString::fromUtf8("\xE2\x86\x98"));
-//        } else {
-//            short_vspeed_indicator->setText(QString::fromUtf8("\xE2\x86\x92"));
-//        }
-
+void MiniStrip::updateImu(QString state_filter_mode) {
+    if(state_filter_mode == "OK") {
+        imu_icon->setPixmap(imu_ok.pixmap(icons_size));
+    } else {
+        imu_icon->setPixmap(imu_lost.pixmap(icons_size));
     }
+    imu_icon->setToolTip("IMU " + QString(state_filter_mode));
 }
 
-
-void MiniStrip::updateTelemetryStatus() {
-    auto msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("TELEMETRY_STATUS");
-    if(msg) {
-        float time_since_last_msg;
-        msg->getField("time_since_last_msg", time_since_last_msg);
-        if(time_since_last_msg > 5) {
-            link_icon->setPixmap(link_lost.pixmap(icons_size));
-            link_icon->setToolTip("Link lost since " + QString::number(static_cast<int>(time_since_last_msg)) + " s");
-        } else {
-            link_icon->setPixmap(link_ok.pixmap(icons_size));
-            link_icon->setToolTip("Link");
-        }
-        emit updated();
+void MiniStrip::updateCurrentBlock(uint8_t cur_block) {
+    auto block = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getBlock(cur_block);
+    QString block_name = block->getName();
+    block_label->setToolTip("Block " + block_name);
+    if(block_name.size() > 15) {
+        block_name.truncate(12);
+        block_name += "...";
     }
-}
+    block_label->setText(block_name);
 
-void MiniStrip::updateFBW() {
-    auto msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("FLY_BY_WIRE");
-    if(msg) {
-        QString rc_status, rc_mode;
-        msg->getField("rc_status", rc_status);
-        msg->getField("rc_mode", rc_mode);
-
-        if(rc_status == "OK") {
-            rc_icon->setPixmap(rc_ok.pixmap(icons_size));
-        } else {
-            rc_icon->setPixmap(rc_lost.pixmap(icons_size));
-        }
-
-        rc_icon->setToolTip("RC " + rc_status);
-        emit updated();
-    }
-}
-
-void MiniStrip::updateNavStatus() {
     QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
-    auto msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("NAV_STATUS");
-    if(msg) {
-        uint8_t cur_block;
-        msg->getField("cur_block", cur_block);
-        auto block = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getBlock(cur_block);
-        QString block_name = block->getName();
-        block_label->setToolTip("Block " + block_name);
-        if(block_name.size() > 15) {
-            block_name.truncate(12);
-            block_name += "...";
-        }
-        block_label->setText(block_name);
 
-
-        QString icon_name = block->getIcon();
-        if(icon_name != "") {
-            QString icon_path = settings.value("path/gcs_icons").toString() + "/" + icon_name;
-            block_icon->setPixmap(QIcon(icon_path).pixmap(icons_size));
-        } else {
-            block_icon->setText(QString::fromUtf8("\xE2\x88\x85"));
-        }
+    QString icon_name = block->getIcon();
+    if(icon_name != "") {
+        QString icon_path = settings.value("path/gcs_icons").toString() + "/" + icon_name;
+        block_icon->setPixmap(QIcon(icon_path).pixmap(icons_size));
+    } else {
+        block_icon->setText(QString::fromUtf8("\xE2\x88\x85"));
     }
+}
+
+void MiniStrip::updateData() {
+
+    // ENGINE_STATUS
+    float bat = 0;
+    float throttle = 0;
+
+    // AP_STATUS
+    QString kill_mode, ap_mode, gps_mode, state_filter_mode; // lat_mode, horiz_mode, gaz_mode;
+    uint32_t flight_time = 0;
+
+    // FLIGHT_PARAM
+    float speed = 0;
+    float alt = 0;
+    float climb = 0;
+    float agl = 0;
+    float airspeed = 0;
+
+    // TELEMETRY_STATUS
+    float time_since_last_msg = 99999;
+
+    // FLY_BY_WIRE
+    QString rc_status, rc_mode;
+
+    // NAV_STATUS
+    uint8_t cur_block = 0;
+
+    auto engine_status_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("ENGINE_STATUS");
+    if(engine_status_msg) {
+        engine_status_msg->getField("throttle", throttle);
+        engine_status_msg->getField("bat", bat);
+    }
+
+    auto ap_status_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("AP_STATUS");
+    if(ap_status_msg) {
+        ap_status_msg->getField("flight_time", flight_time);
+        ap_status_msg->getField("kill_mode", kill_mode);
+        ap_status_msg->getField("ap_mode", ap_mode);
+        ap_status_msg->getField("gps_mode", gps_mode);
+        ap_status_msg->getField("state_filter_mode", state_filter_mode);
+    }
+
+    auto flight_param_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("FLIGHT_PARAM");
+    if(flight_param_msg) {
+
+        flight_param_msg->getField("speed", speed);
+        flight_param_msg->getField("alt", alt);
+        flight_param_msg->getField("climb", climb);
+        flight_param_msg->getField("agl", agl);
+        flight_param_msg->getField("airspeed", airspeed);
+    }
+
+    auto telemetry_status_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("TELEMETRY_STATUS");
+    if(telemetry_status_msg) {
+        telemetry_status_msg->getField("time_since_last_msg", time_since_last_msg);
+    }
+
+    auto fly_by_wire_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("FLY_BY_WIRE");
+    if(fly_by_wire_msg) {
+        fly_by_wire_msg->getField("rc_status", rc_status);
+        fly_by_wire_msg->getField("rc_mode", rc_mode);
+    }
+
+    auto nav_status_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("NAV_STATUS");
+    if(nav_status_msg) {
+        nav_status_msg->getField("cur_block", cur_block);
+    }
+
+
+    // batterie
+    bat_label->setText(QString::number(bat) + " V");
+
+    // throttle
+    /// TODO: change bat icon : full/half/low
+    throttle_label->setText(QString::number(throttle) + " %");
+
+    // kill
+    if(kill_mode == "OFF") {
+        throttle_icon->setPixmap(throttle_on.pixmap(icons_size));
+    } else {
+        throttle_icon->setPixmap(throttle_killed.pixmap(icons_size));
+    }
+
+    // flight time
+    updateFlightTime(flight_time);
+
+
+    // mode
+    updateAp(ap_mode);
+
+    // GPS
+    updateGps(gps_mode);
+
+    // IMU
+    updateImu(state_filter_mode);
+
+    // link
+    if(time_since_last_msg > 5) {
+        link_icon->setPixmap(link_lost.pixmap(icons_size));
+        link_icon->setToolTip("Link lost since " + QString::number(static_cast<int>(time_since_last_msg)) + " s");
+    } else {
+        link_icon->setPixmap(link_ok.pixmap(icons_size));
+        link_icon->setToolTip("Link");
+    }
+
+    // RC
+    if(rc_status == "OK") {
+        rc_icon->setPixmap(rc_ok.pixmap(icons_size));
+    } else {
+        rc_icon->setPixmap(rc_lost.pixmap(icons_size));
+    }
+    rc_icon->setToolTip("RC " + rc_status);
+
+    // alt
+    if(alt_mode) {
+        alt_label->setText(QString::number(agl, 'f', 0) + " m");
+    } else {
+        alt_label->setText(QString::number(alt, 'f', 0) + " m");
+    }
+
+    // speed
+    if(speed_mode) {
+        speed_label->setText(QString::number(speed, 'f', 1) + " m/s");
+    } else {
+        speed_label->setText(QString::number(airspeed, 'f', 1) + " m/s");
+    }
+
+    // current block
+    updateCurrentBlock(cur_block);
+
+
+//    QString txt = QString::number(climb, 'f', 1);
+//    if(climb > 0) {
+//        txt = "+" + txt;
+//    }
+//    full_alt_graph->setSecondayText(txt);
+//    short_vspeed_label->setText(txt);
+//    if(abs(speed) > 0.1) {
+//        full_alt_graph->setIndicatorAngle((climb/speed)*1.2);
+//    } else if(abs(climb) > 0.01){
+//        full_alt_graph->setIndicatorAngle(climb/abs(climb)*0.3);
+//    } else {
+//        full_alt_graph->setIndicatorAngle(0);
+//    }
+
+//    if(climb > 0.5) {
+//        short_vspeed_indicator->setText(QString::fromUtf8("\xE2\x86\x97"));
+//    } else if(climb < -0.5) {
+//        short_vspeed_indicator->setText(QString::fromUtf8("\xE2\x86\x98"));
+//    } else {
+//        short_vspeed_indicator->setText(QString::fromUtf8("\xE2\x86\x92"));
+//    }
+
+
     emit updated();
+
 }
 
 bool MiniStrip::eventFilter(QObject *object, QEvent *event)

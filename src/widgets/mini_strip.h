@@ -23,12 +23,13 @@ signals:
     void updated();
 private:
 
-    void updateFBW();
-    void updateTelemetryStatus();
-    void updateFlightParams();
-    void updateApStatus();
-    void updateEngineStatus();
-    void updateNavStatus();
+    void updateData();
+
+    void updateFlightTime(uint32_t flight_time);
+    void updateAp(QString ap_mode);
+    void updateGps(QString gps_mode);
+    void updateImu(QString state_filter_mode);
+    void updateCurrentBlock(uint8_t cur_block);
 
     QString ac_id;
     QSize icons_size;
