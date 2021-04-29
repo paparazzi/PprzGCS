@@ -173,9 +173,10 @@ QWidget* FlightPlanViewerV2::make_waypoints_tab() {
     for(auto waypoint: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
         QString txt = waypoint->getName() + QString("\t");
 
-        for(auto &att: waypoint->getXmlAttributes()) {
-            if(att.first != "name") {
-                txt += QString("\t") + att.first + "=" + att.second;
+        auto atts = waypoint->getXmlAttributes();
+        for(auto att=atts.begin(); att!=atts.end(); ++att) {
+            if(att.key() != "name") {
+                txt += QString("\t") + att.key() + "=" +  att.value();
             }
         }
 

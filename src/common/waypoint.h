@@ -36,7 +36,7 @@ public:
     WpFrame getType() const {return type;}
     QString getName() const {return name;}
     std::shared_ptr<Waypoint> getOrigin() {return origin;}
-    std::map<QString, QString> getXmlAttributes() { return xml_attibutes;}
+    QMap<QString, QString>& getXmlAttributes() { return xml_attibutes;}
 
     friend std::ostream& operator<<(std::ostream& os, const Waypoint& wp);
 
@@ -55,7 +55,7 @@ private:
 
     QString name;
 
-    std::map<QString, QString> xml_attibutes;
+    QMap<QString, QString> xml_attibutes;
 };
 
 
