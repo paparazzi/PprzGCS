@@ -73,11 +73,7 @@ void AircraftManager::addAircraft(ConfigData* config) {
 }
 
 bool AircraftManager::aircraftExists(QString id) {
-    if(aircrafts.find(id) != aircrafts.end()) {
-        return true;
-    } else {
-        return false;
-    }
+    return aircrafts.find(id) != aircrafts.end();
 }
 
 void AircraftManager::removeAircraft(QString ac_id) {
@@ -115,42 +111,46 @@ ConfigData::ConfigData(QString ac_id, QString ac_name, QColor color, QObject* pa
 {
 }
 
-void ConfigData::setFlightPlan(QString uri) {
-    flight_plan = getXml(uri);
-    if(isComplete()) {
-        emit configReady(this);
-    }
-}
+void ConfigData::setData(QDomDocument* doc, QString uri) {
+    QString separator = "://";
+    int sepi = uri.indexOf(separator);
 
-void ConfigData::setAirframe(QString uri) {
-    airframe = getXml(uri);
-    if(isComplete()) {
-        emit configReady(this);
-    }
-}
-
-void ConfigData::setSettings(QString uri) {
-    settings = getXml(uri);
-    if(isComplete()) {
-        emit configReady(this);
-    }
-}
-
-
-QDomDocument ConfigData::getXml(QString uri) {
-    QDomDocument doc;
-
-    if(uri.mid(0,4) == "file") {
-        QString path = uri.mid(7, uri.length()-7);
+    if(uri.left(sepi) == "file") {
+        QString path = uri.mid(sepi + separator.size());
         QFile f(path);
         if(!f.open(QIODevice::ReadOnly)) {
             throw std::runtime_error("Error while loading flightplan file");
         }
-        doc.setContent(&f);
+        doc->setContent(&f);
         f.close();
+        if(isComplete()) {
+            emit configReady(this);
+        }
+    } else if(uri.left(sepi) == "http") {
+        auto netacc = new QNetworkAccessManager(this);
+        connect(netacc, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply) {
+            auto data = reply->readAll();
+            doc->setContent(data);
+            if(isComplete()) {
+                emit configReady(this);
+            }
+            reply->deleteLater();
+        });
+        QNetworkRequest request(uri);
+        netacc->get(request);
     } else {
-        throw std::runtime_error("Unimplemented ! " + uri.toStdString());
+        throw std::runtime_error("unknown protocol " + uri.left(sepi).toStdString());
     }
+}
 
-    return doc;
+void ConfigData::setFlightPlan(QString uri) {
+    setData(&flight_plan, uri);
+}
+
+void ConfigData::setAirframe(QString uri) {
+    setData(&airframe, uri);
+}
+
+void ConfigData::setSettings(QString uri) {
+    setData(&settings, uri);
 }

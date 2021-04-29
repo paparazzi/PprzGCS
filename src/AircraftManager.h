@@ -14,6 +14,7 @@
 #include "PprzToolbox.h"
 #include "PprzApplication.h"
 #include <QtXml>
+#include <QtNetwork>
 
 class ConfigData: public QObject
 {
@@ -21,8 +22,6 @@ class ConfigData: public QObject
 public:
 
     ConfigData(QString ac_id, QString ac_name, QColor color, QObject* parent = nullptr);
-
-    QDomDocument getXml(QString uri);
 
     void setFlightPlan(QString uri);
     void setAirframe(QString uri);
@@ -46,6 +45,9 @@ signals:
     void configReady(ConfigData*);
 
 private:
+
+    void setData(QDomDocument* doc, QString uri);
+
     QString ac_id;
     QString ac_name;
     QColor color;
