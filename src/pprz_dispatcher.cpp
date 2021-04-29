@@ -118,10 +118,6 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
         }
     );
     _bindIds.append(bid);
-
-    server_check_timer.setInterval(1000);
-    server_check_timer.start();
-
 }
 
 PprzDispatcher::~PprzDispatcher() {
@@ -211,6 +207,9 @@ void PprzDispatcher::stop() {
 void PprzDispatcher::start() {
     QSettings settings(pprzApp()->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     link->start(settings.value("ivy/bus").toString());
+
+    server_check_timer.setInterval(1000);
+    server_check_timer.start();
 }
 
 
