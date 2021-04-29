@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
         pprzApp()->setProperty("SETTINGS_PATH", settings_path);
         QSettings settings(settings_path, QSettings::IniFormat);
 
-        a.init();
+
         QCoreApplication::setApplicationName("PprzGCS");
         QCoreApplication::setApplicationVersion("0.1");
 
@@ -74,6 +74,8 @@ int main(int argc, char *argv[])
         settings.setValue("APP_DATA_PATH", APP_DATA_PATH);
 
         configure();
+
+        a.init();
 
         PprzDispatcher::get()->setSilent(parser.isSet(silentModeOption));
 
