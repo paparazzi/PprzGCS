@@ -72,6 +72,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     flight_time_label = new QLabel("0 s", this);
     flight_time_label->setToolTip("Flight time");
     ft_lay->addWidget(flight_time_label);
+    ft_lay->addStretch();
     gl->addLayout(ft_lay, 0, 1);
 
 
@@ -274,6 +275,7 @@ void MiniStrip::updateData() {
 
     // NAV_STATUS
     uint8_t cur_block = 0;
+    float target_alt = 0;
 
     auto engine_status_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("ENGINE_STATUS");
     if(engine_status_msg) {
@@ -314,6 +316,7 @@ void MiniStrip::updateData() {
     auto nav_status_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("NAV_STATUS");
     if(nav_status_msg) {
         nav_status_msg->getField("cur_block", cur_block);
+        nav_status_msg->getField("target_alt", target_alt);
     }
 
 
@@ -362,11 +365,13 @@ void MiniStrip::updateData() {
     rc_icon->setToolTip("RC " + rc_status);
 
     // alt
-    if(alt_mode) {
-        alt_label->setText(QString::number(agl, 'f', 0) + " m");
-    } else {
-        alt_label->setText(QString::number(alt, 'f', 0) + " m");
-    }
+    double alt_display = alt_mode ? agl: alt;
+    double diff_alt = alt - target_alt;
+    QString alt_str = QString("%1m | %2%3 m")
+            .arg(alt_display, 0, 'f', 0)
+            .arg(diff_alt > 0 ? "+": "")
+            .arg(diff_alt, 0, 'f', abs(diff_alt) > 10 ? 0: 1);
+    alt_label->setText(alt_str);
 
     // speed
     if(speed_mode) {
