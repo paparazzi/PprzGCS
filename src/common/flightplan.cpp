@@ -13,24 +13,8 @@ FlightPlan::FlightPlan(): origin()
 }
 
 
-FlightPlan::FlightPlan(QString uri) : origin()
+FlightPlan::FlightPlan(QDomDocument doc) : origin()
 {
-    QDomDocument doc;
-
-    if(uri.mid(0,4) == "file") {
-        QString path = uri.mid(7, uri.length()-7);
-        QFile f(path);
-        if(!f.open(QIODevice::ReadOnly)) {
-            throw std::runtime_error("Error while loading flightplan file");
-        }
-        doc.setContent(&f);
-        f.close();
-    } else {
-        throw std::runtime_error("Unimplemented ! " + uri.toStdString());
-    }
-
-
-
     QDomElement fp_root = doc.firstChildElement( "dump" ).firstChildElement( "flight_plan" );
     name = fp_root.attribute("name");
     auto lat0 = fp_root.attribute("lat0");

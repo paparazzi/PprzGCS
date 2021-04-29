@@ -42,7 +42,7 @@ class FlightPlan
 public:
 
     FlightPlan();
-    FlightPlan(QString uri);
+    FlightPlan(QDomDocument doc);
 
     vector<shared_ptr<Waypoint>>& getWaypoints() {return  waypoints;}
     shared_ptr<Waypoint> getWaypoint(uint8_t id);

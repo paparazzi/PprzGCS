@@ -25,7 +25,7 @@ public:
     };
 
     Airframe();
-    Airframe(QString uri);
+    Airframe(QDomDocument doc);
 
     QString getFirmware() {return firmware;}
     QString getIconName();

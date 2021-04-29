@@ -17,22 +17,7 @@ Airframe::Airframe()
 }
 
 
-Airframe::Airframe(QString uri) {
-
-    QDomDocument doc;
-
-    if(uri.mid(0,4) == "file") {
-        QString path = uri.mid(7, uri.length()-7);
-        QFile f(path);
-        if(!f.open(QIODevice::ReadOnly)) {
-            throw std::runtime_error("Error while loading airframe file");
-        }
-        doc.setContent(&f);
-        f.close();
-    } else {
-        throw std::runtime_error("Not implemented ! " + uri.toStdString());
-    }
-
+Airframe::Airframe(QDomDocument doc) {
     auto air_root = doc.firstChildElement( "airframe" );
     name = getAttribute(air_root, "name");
 

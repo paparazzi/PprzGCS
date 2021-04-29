@@ -18,7 +18,7 @@ public:
     };
 
     SettingMenu();
-    SettingMenu(QString uri);
+    SettingMenu(QDomDocument doc);
     SettingMenu(QDomElement setel, uint8_t& setting_no);
 
     vector<shared_ptr<SettingMenu>> getSettingMenus() {return setting_menus;}

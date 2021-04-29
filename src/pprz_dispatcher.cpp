@@ -166,13 +166,7 @@ void PprzDispatcher::requestConfig(QString ac_id) {
     reqConfig.setSenderId(pprzlink_id);
     link->sendRequest(reqConfig, [=](QString ai, pprzlink::Message msg) {
         (void)ai;
-        QString ac_id;
-        msg.getField("ac_id", ac_id);
-        if(!AircraftManager::get()->aircraftExists(ac_id)) {
-            AircraftManager::get()->addAircraft(msg);
-            qDebug() << "new AC:" << ac_id;
-            emit(DispatcherUi::get()->new_ac_config(ac_id));
-        }
+        AircraftManager::get()->newAircraftConfig(msg);
     });
 }
 

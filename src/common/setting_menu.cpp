@@ -11,32 +11,11 @@ SettingMenu::SettingMenu()
 }
 
 
-SettingMenu::SettingMenu(QString uri) {
-    QDomDocument doc;
-
-    if(uri.mid(0,4) == "file") {
-        QString path = uri.mid(7, uri.length()-7);
-        if(path == "replay") {
-            cout << "not parsing settings: replay!" << endl;
-            return;
-        }
-        QFile f(path);
-        if(!f.open(QIODevice::ReadOnly)) {
-            throw std::runtime_error("Error while loading setting file");
-        }
-        doc.setContent(&f);
-        f.close();
-
-        auto units_root = doc.firstChildElement("units");
-    } else {
-        throw std::runtime_error("Not implemented ! " + uri.toStdString());
-    }
-
+SettingMenu::SettingMenu(QDomDocument doc) {
     auto st_root = doc.firstChildElement( "settings" );
     auto sets = st_root.firstChildElement("dl_settings");
     uint8_t setting_no = 0;
     init(sets, setting_no);
-
 }
 
 SettingMenu::SettingMenu(QDomElement setel, uint8_t& setting_no) {
