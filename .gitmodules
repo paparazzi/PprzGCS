@@ -4,3 +4,6 @@
 [submodule "ext/pprzlinkQt"]
 	path = ext/pprzlinkQt
 	url = https://github.com/Fabien-B/pprzlinkQt.git
+[submodule "ext/IvyQt"]
+	path = ext/IvyQt
+	url = https://gitlab.com/ivybus/IvyQt.git

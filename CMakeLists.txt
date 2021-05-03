@@ -34,8 +34,6 @@ endif()
 
 add_definitions(-DAPP_DATA_PATH="${APP_DATA_PATH}")
 
-find_package(Boost COMPONENTS system)
-
 find_package(Qt5 5.12 COMPONENTS Widgets Xml Network Svg REQUIRED)
 
 find_package(pprzlinkQt REQUIRED)
@@ -62,7 +60,6 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Network
     Qt5::Svg
     ${PROJ4_LIBRARIES}
-    ${Boost_LIBRARIES}
     zip
     pprzlinkQt
 )

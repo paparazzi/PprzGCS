@@ -12,13 +12,21 @@ BUILD_TARGET="${BUILD_TARGET:-INVALID}"
 
 local_install=$WD/build/local_install
 
-
+# exit on error
+set -e
 
 if [ $build_libs = "libs" ]
 then
 
-    pprzlinkqt_src=$WD/ext/pprzlinkQt/pprzlinkQt
+    ivyqt_src=$WD/ext/IvyQt
+    ivyqt_build=$WD/build/ext/IvyQt
+    
+    pprzlinkqt_src=$WD/ext/pprzlinkQt/
     pprzlinkqt_build=$WD/build/ext/pprzlinkQt
+    
+    cmake -S $ivyqt_src -B $ivyqt_build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$local_install
+    cmake --build $ivyqt_build
+    cmake --install $ivyqt_build
 
     cmake -S $pprzlinkqt_src -B $pprzlinkqt_build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$local_install
     cmake --build $pprzlinkqt_build
