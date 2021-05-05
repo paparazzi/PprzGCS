@@ -31,14 +31,26 @@ jobs:
       - name: Install dependencies
         run: sudo apt install ivy-c-dev libboost-system-dev libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libproj-dev mesa-common-dev libglu1-mesa-dev patchelf
       
-      - name: setup env
-        run: export WD=$GITHUB_WORKSPACE
+      - name: setEnv
+        run: export MAKEFLAGS=-j$(nproc)
       
-      - name: build libs
-        run: $GITHUB_WORKSPACE/build.sh libs
+      - name: build IvyQt
+        run: |
+          cmake -S ext/IvyQt -B build/IvyQt
+          cmake --build build/IvyQt
+          sudo cmake --install build/IvyQt
+          
+      - name: build pprzlinkQt
+        run: |
+          cmake -S ext/pprzlinkQt -B build/pprzlinkQt
+          cmake --build build/pprzlinkQt
+          sudo cmake --install build/pprzlinkQt
       
-      - name: build app
-        run: BUILD_TARGET=BUILD_DEB_20_04 $GITHUB_WORKSPACE/build.sh app
+      - name: build PprzGCS
+        run: |
+          cmake -S . -B build/PprzGCS -DCMAKE_INSTALL_PREFIX=misc/debian/pprzgcs/usr
+          cmake --build build/PprzGCS
+          cmake --install build/PprzGCS
       
       - name: make deb
         run: $GITHUB_WORKSPACE/make_release.sh

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 project(PprzGCS)
 
+include(GNUInstallDirs)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -fno-sized-deallocation")
@@ -11,31 +12,18 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-
-if(BUILD_TARGET STREQUAL "DEV_18_04")
+# find library proj (from 20.04 packages) or PROJ4 (from source)
+find_library(PROJ proj)
+if(${PROJ} STREQUAL "PROJ-NOTFOUND")
     find_package(PROJ4 REQUIRED)
-    get_filename_component(APP_DATA_PATH "./data/" ABSOLUTE)
-elseif(BUILD_TARGET STREQUAL "BUILD_DEB_18_04")
-    find_package(PROJ4 REQUIRED)
-    set(APP_DATA_PATH /usr/share/pprzgcs)
-elseif(BUILD_TARGET STREQUAL "DEV_20_04")
-    get_filename_component(APP_DATA_PATH "./data/" ABSOLUTE)
-    set(PROJ4_LIBRARIES proj)
-elseif(BUILD_TARGET STREQUAL "BUILD_DEB_20_04")
-    set(APP_DATA_PATH /usr/share/pprzgcs)
-    set(PROJ4_LIBRARIES proj)
-elseif(BUILD_TARGET STREQUAL "BUILD_MAC")
-    message(FATAL_ERROR "Building for MAC not yet supported!")
 else()
-    message(FATAL_ERROR "You must define BUILD_TARGET to one of: DEV_18_04, DEV_20_04, BUILD_DEB_20_04, BUILD_DEB_18_04, BUILD_MAC")
+    set(PROJ4_LIBRARIES proj)
 endif()
 
-
-
-add_definitions(-DAPP_DATA_PATH="${APP_DATA_PATH}")
+add_definitions(-DDEFAULT_APP_DATA_PATH="/usr/${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}")
 
 find_package(Qt5 5.12 COMPONENTS Widgets Xml Network Svg REQUIRED)
-
+find_package(IvyQt REQUIRED)
 find_package(pprzlinkQt REQUIRED)
 
 set(SOURCE
@@ -49,8 +37,8 @@ include_directories(
     ${INC_DIRS}
 )
 
-include_directories(${CMAKE_PREFIX_PATH}/include)
-link_directories(${CMAKE_PREFIX_PATH}/lib)
+#include_directories(${CMAKE_PREFIX_PATH}/include)
+#link_directories(${CMAKE_PREFIX_PATH}/lib)
 
 add_executable(${PROJECT_NAME} ${SOURCE})
 
@@ -62,6 +50,10 @@ target_link_libraries(${PROJECT_NAME}
     ${PROJ4_LIBRARIES}
     zip
     pprzlinkQt
+    IvyQt
 )
+
+install(TARGETS ${PROJECT_NAME})
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/data/ DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}")
 
 
