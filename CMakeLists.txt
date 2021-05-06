@@ -20,7 +20,7 @@ else()
     set(PROJ4_LIBRARIES proj)
 endif()
 
-add_definitions(-DDEFAULT_APP_DATA_PATH="/usr/${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}")
+add_definitions(-DDEFAULT_APP_DATA_PATH="/usr/local/${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}")
 
 find_package(Qt5 5.12 COMPONENTS Widgets Xml Network Svg REQUIRED)
 find_package(IvyQt REQUIRED)
@@ -36,9 +36,6 @@ add_subdirectory(src)
 include_directories(
     ${INC_DIRS}
 )
-
-#include_directories(${CMAKE_PREFIX_PATH}/include)
-#link_directories(${CMAKE_PREFIX_PATH}/lib)
 
 add_executable(${PROJECT_NAME} ${SOURCE})
 

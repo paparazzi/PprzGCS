@@ -23,37 +23,15 @@ jobs:
         with:
           submodules: recursive
 
-      # Add Paparazzi PPA for ivy-c-dev
-      - name: Add pprz PPA
-        run: sudo add-apt-repository -y ppa:paparazzi-uav/ppa
-
     # Install dependencies
       - name: Install dependencies
-        run: sudo apt install ivy-c-dev libboost-system-dev libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libproj-dev mesa-common-dev libglu1-mesa-dev patchelf
+        run: sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libproj-dev mesa-common-dev libglu1-mesa-dev patchelf
       
       - name: setEnv
         run: export MAKEFLAGS=-j$(nproc)
       
-      - name: build IvyQt
-        run: |
-          cmake -S ext/IvyQt -B build/IvyQt
-          cmake --build build/IvyQt
-          sudo cmake --install build/IvyQt
-          
-      - name: build pprzlinkQt
-        run: |
-          cmake -S ext/pprzlinkQt -B build/pprzlinkQt
-          cmake --build build/pprzlinkQt
-          sudo cmake --install build/pprzlinkQt
-      
-      - name: build PprzGCS
-        run: |
-          cmake -S . -B build/PprzGCS -DCMAKE_INSTALL_PREFIX=misc/debian/pprzgcs/usr
-          cmake --build build/PprzGCS
-          cmake --install build/PprzGCS
-      
       - name: make deb
-        run: $GITHUB_WORKSPACE/make_release.sh
+        run: $GITHUB_WORKSPACE/build_deb.sh
       
       - name: Create Release
         id: create_release
@@ -74,7 +52,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-          asset_path: pprzgcs.deb
+          asset_path: ${{ github.workspace }}/misc/debian/pprzgcs.deb
           asset_name: pprzgcs_${{ runner.os }}.deb
           asset_content_type: application/vnd.debian.binary-package
         

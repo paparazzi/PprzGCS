@@ -1,10 +1,10 @@
 Package: pprzgcs
 Version: 1.0
-Depends: libzip5, libproj15, ivy-c, libqt5xml5, libqt5network5, libqt5svg5, libqt5widgets5, libqt5gui5, libqt5core5a
+Depends: libzip5, libproj15, libqt5xml5, libqt5network5, libqt5svg5, libqt5widgets5, libqt5gui5, libqt5core5a
 Section: misc
 Priority: optional
 Architecture: amd64
-Installed-Size: 1152
+Installed-Size: 3996
 Maintainer: Fabien Bonneval <fabien.bonneval@gmail.com>
 Description: A GCS for PaparazziUAV
 
