@@ -37,3 +37,19 @@ double parse_coordinate(QString str) {
 QSettings getAppSettings() {
     return QSettings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
 }
+
+bool verbose() {
+    return qApp->property("VERBOSE").toBool();
+}
+
+void setVerbose(bool v) {
+    qApp->setProperty("VERBOSE", v);
+}
+
+void logDebug(QString log_class, QString msg, LogLevel level) {
+    (void)level;
+    if(qApp->property("VERBOSE").toBool()) {
+        auto str = QString("[%1] %2").arg(log_class, msg);
+        qDebug() << str;
+    }
+}

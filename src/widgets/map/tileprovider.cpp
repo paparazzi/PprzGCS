@@ -11,6 +11,7 @@
 #include <QNetworkProxy>
 #include <QGraphicsScene>
 #include <QDebug>
+#include "gcs_utils.h"
 
 TileProvider::TileProvider(TileProviderConfig config, int z, int displaySize, QString tiles_path, QObject *parent) : QObject (parent),
     config(config), z_value(z), alpha(1), visibility(true), tileDisplaySize(displaySize), tiles_path(tiles_path)
@@ -115,9 +116,9 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
         if(config.addr != "") {
             downloadTile(tile, tileObj);
         } else {
-            QString error_msg = QString("[TileProvider %1] request tile %2 do not exists and no address is set.")
+            QString error_msg = QString("%1: requested tile %2 does not exists and no address is set.")
                     .arg(config.name, tile->coordinates().to_istring());
-            qDebug() << error_msg;
+            logDebug("TileProvider", error_msg, LOG_LOW);
             tile->setRequestStatus(TILE_DO_NOT_EXISTS);
         }
     }

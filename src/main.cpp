@@ -10,6 +10,7 @@
 #include "gcs_utils.h"
 #include <QSettings>
 #include "PprzApplication.h"
+#include "gcs_utils.h"
 
 #ifndef DEFAULT_APP_DATA_PATH
 #error "you need to define DEFAULT_APP_DATA_PATH!"
@@ -61,7 +62,12 @@ int main(int argc, char *argv[])
         QCommandLineOption silentModeOption("s", "Silent mode");
         parser.addOption(silentModeOption);
 
+        QCommandLineOption verboseOption("v", "Verbose");
+        parser.addOption(verboseOption);
+
         parser.process(a);
+
+        setVerbose(parser.isSet(verboseOption));
 
 
         QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
