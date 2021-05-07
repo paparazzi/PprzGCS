@@ -4,9 +4,11 @@ project(PprzGCS)
 
 include(GNUInstallDirs)
 
+set(CXX_EXTRA_FLAGS "-Wall -Wextra -fno-sized-deallocation")
+
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra -fno-sized-deallocation")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -Werror")
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${CXX_EXTRA_FLAGS}")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${CXX_EXTRA_FLAGS} -Werror")
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
