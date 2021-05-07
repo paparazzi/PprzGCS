@@ -6,7 +6,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QTimer>
-#include <QSettings>
+#include "gcs_utils.h"
 
 GraphicsPoint::GraphicsPoint(int size, QColor color, QObject *parent) :
     GraphicsObject(parent),
@@ -38,7 +38,7 @@ QRectF GraphicsPoint::boundingRect() const {
 void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     (void)option;
     (void)widget;
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     QPainterPath path;
 
     if(style == DEFAULT) {
@@ -108,7 +108,7 @@ void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         event->ignore();
         return;
     }
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     if(move_state == PMS_PRESSED) {
         QPointF dp = event->pos() - pressPos;
         double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());

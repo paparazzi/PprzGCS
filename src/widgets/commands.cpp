@@ -4,6 +4,7 @@
 #include "pprz_dispatcher.h"
 #include "aircraft.h"
 #include <QSettings>
+#include "gcs_utils.h"
 
 Commands::Commands(QString ac_id, QWidget *parent) : QWidget(parent),
     ac_id(ac_id)
@@ -60,7 +61,7 @@ void Commands::paintEvent(QPaintEvent* e) {
 
 
 void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     auto groups = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getGroups();
     int col = 0;
     for(auto &group: groups) {
@@ -99,7 +100,7 @@ void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
 }
 
 void Commands::addSettingsButtons(QGridLayout* settings_buttons_layout) {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     vector<shared_ptr<SettingMenu::ButtonGroup>> groups = AircraftManager::get()->getAircraft(ac_id).getSettingMenu()->getButtonGroups();
 
     int col = 0;
@@ -198,7 +199,7 @@ void Commands::addSpecialCommands(QGridLayout* glay) {
 }
 
 void Commands::addCommandButton(QGridLayout* glay,QString icon, int row, int col, std::function<void()> callback) {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     auto button = new QToolButton(this);
     QString icon_path = settings.value("path/gcs_icons").toString() + "/" + icon;
     button->setIcon(QIcon(icon_path));

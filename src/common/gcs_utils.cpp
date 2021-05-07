@@ -4,7 +4,7 @@
 #include <QSettings>
 
 QString user_or_app_path(QString data_path) {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     auto path = settings.value("USER_DATA_PATH").toString() + "/" + data_path;
     if(QFile::exists(path)) {
         return path;
@@ -32,4 +32,8 @@ double parse_coordinate(QString str) {
         }
     }
     throw std::runtime_error(str.toStdString() + " is not a coordinate");
+}
+
+QSettings getAppSettings() {
+    return QSettings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
 }

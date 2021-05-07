@@ -4,6 +4,7 @@
 #include <QDebug>
 #include "iostream"
 #include <QtXml>
+#include "gcs_utils.h"
 
 using namespace std;
 
@@ -14,7 +15,7 @@ Units::Units(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox
 
 void Units::setToolbox(PprzToolbox* toolbox) {
     PprzTool::setToolbox(toolbox);
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     auto filename = settings.value("PAPARAZZI_HOME").toString() + "/var/units.xml";
 
 

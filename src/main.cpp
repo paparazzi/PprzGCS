@@ -16,7 +16,7 @@
 #endif
 
 void launch_main_app() {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     QFile file(settings.value("APP_STYLE_FILE").toString());
     if(!file.open(QFile::ReadOnly | QFile::Text)) {
         qDebug() << "could not open " << settings.value("APP_STYLE_FILE").toString();

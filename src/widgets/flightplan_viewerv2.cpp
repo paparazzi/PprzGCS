@@ -4,6 +4,7 @@
 #include "AircraftManager.h"
 #include <QDebug>
 #include <QSettings>
+#include "gcs_utils.h"
 
 FlightPlanViewerV2::FlightPlanViewerV2(QString ac_id, QWidget *parent) : QTabWidget(parent),
     ac_id(ac_id), current_block(0), current_stage(0), labels_stylesheet("")
@@ -31,7 +32,7 @@ FlightPlanViewerV2::FlightPlanViewerV2(QString ac_id, QWidget *parent) : QTabWid
 
 
 QWidget* FlightPlanViewerV2::make_blocks_tab() {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     auto stack = new QStackedWidget(this);
 
 

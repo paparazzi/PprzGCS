@@ -6,7 +6,7 @@
 #include "mapwidget.h"
 #include "AircraftManager.h"
 #include "coordinatestransform.h"
-#include <QSettings>
+#include "gcs_utils.h"
 
 // create WaypointItem from position -> create corresponding Waypoint.
 WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom, QObject *parent) :
@@ -24,7 +24,7 @@ WaypointItem::WaypointItem(shared_ptr<Waypoint> wp, QString ac_id, double neutra
 }
 
 void WaypointItem::init() {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     z_value_highlighted = settings.value("map/z_values/highlighted").toDouble();
     z_value_unhighlighted = settings.value("map/z_values/unhighlighted").toDouble();
     z_value = z_value_unhighlighted;

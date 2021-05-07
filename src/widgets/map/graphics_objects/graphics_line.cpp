@@ -3,6 +3,7 @@
 #include <QPainter>
 #include <QApplication>
 #include <QSettings>
+#include "gcs_utils.h"
 
 GraphicsLine::GraphicsLine(QPointF a, QPointF b, QColor color, int stroke, QObject *parent) :
     GraphicsObject(parent),
@@ -54,7 +55,7 @@ QPainterPath GraphicsLine::shape() const {
 }
 
 void GraphicsLine::changeFocus() {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     if(!isHighlighted()) {
         current_color = &color_unfocused;
         stroke = static_cast<int>(base_stroke / settings.value("map/size_highlight_factor").toDouble());

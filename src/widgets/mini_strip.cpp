@@ -239,7 +239,7 @@ void MiniStrip::updateCurrentBlock(uint8_t cur_block) {
     }
     block_label->setText(block_name);
 
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
 
     QString icon_name = block->getIcon();
     if(icon_name != "") {

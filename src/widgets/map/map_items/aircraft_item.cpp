@@ -4,13 +4,13 @@
 #include <QApplication>
 #include <QDebug>
 #include "aircraft.h"
-#include <QSettings>
+#include "gcs_utils.h"
 
 AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, neutral_scale_zoom, parent),
     latlon(pt), heading(0.), last_chunk_index(0)
 {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
 
     z_value_highlighted = settings.value("map/z_values/aircraft").toDouble();
     z_value_unhighlighted = settings.value("map/z_values/aircraft").toDouble();
@@ -68,7 +68,7 @@ void AircraftItem::updateGraphics(MapWidget* map) {
 
 void AircraftItem::setPosition(Point2DLatLon pt) {
     latlon = pt;
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     track_chuncks[last_chunk_index].append(pt);
 
     if(track_chuncks[last_chunk_index].size() >= settings.value("map/aircraft/track_chunk_size").toInt()) {
@@ -117,7 +117,7 @@ void AircraftItem::setHighlighted(bool h) {
 }
 
 void AircraftItem::updateZValue() {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     graphics_aircraft->setZValue(z_value);
     graphics_text->setZValue(z_value);
     double z_tracks = settings.value("map/z_values/aircraft").toDouble();

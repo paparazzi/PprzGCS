@@ -20,7 +20,7 @@
 #include "srtm_manager.h"
 #include "point2dpseudomercator.h"
 #include <QSet>
-#include <QSettings>
+#include "gcs_utils.h"
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
@@ -234,7 +234,7 @@ void PprzMap::updateAircraftItem(pprzlink::Message msg) {
 }
 
 void PprzMap::handleNewAC(QString ac_id) {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     // create aircraft item at dummy position
     auto aircraft_item = new AircraftItem(Point2DLatLon(0, 0), ac_id, 16);
     ui->map->addItem(aircraft_item);
@@ -401,7 +401,7 @@ void PprzMap::updateTarget(pprzlink::Message msg) {
 }
 
 void PprzMap::updateNavShape(pprzlink::Message msg) {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
 
     QString ac_id;
     msg.getField("ac_id", ac_id);

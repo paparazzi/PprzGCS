@@ -10,6 +10,7 @@
 #include "airframe.h"
 #include <QSettings>
 #include "dispatcher_ui.h"
+#include "gcs_utils.h"
 
 AircraftManager::AircraftManager(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox)
 {
@@ -86,7 +87,7 @@ void AircraftManager::removeAircraft(QString ac_id) {
 
 QColor AircraftManager::parseColor(QString str) {
     QColor color = QColor();
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
 
     if(str[0] == '#' && str.size() == 13) {
         int r = str.midRef(1, 4).toInt(nullptr, 16) >> 8;

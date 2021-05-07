@@ -7,14 +7,14 @@
 #include <type_traits>
 #include "AircraftManager.h"
 #include "papgetconfig.h"
-#include <QSettings>
+#include "gcs_utils.h"
 
 //TODO must unbind message in destructor, somehow
 
 Papget::Papget(struct DataDef datadef, QPoint pos_view, QObject *parent) : QObject(parent), QGraphicsItem(),
     datadef(datadef), type(Type::NONE), pos_view(pos_view), move_state(MoveState::IDLE)
 {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     params.style = Style::TEXT;
     auto ac = AircraftManager::get()->getAircraft(datadef.ac_id);
     params.color = ac.getColor();
@@ -127,7 +127,7 @@ void Papget::mousePressEvent(QGraphicsSceneMouseEvent *event){
 }
 
 void Papget::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     if(move_state == PRESSED) {
         QPointF dp = event->pos() - pressPos;
         double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());

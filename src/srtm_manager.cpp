@@ -134,7 +134,7 @@ int SRTMManager::load_tile(QString name, bool dl) {
     if(tiles.find(name) != tiles.end()) {
         return true;
     }
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
 
     auto path = settings.value("USER_DATA_PATH").toString() + "/srtm/" + name + ".SRTMGL1.hgt.zip";
 
@@ -182,7 +182,7 @@ int SRTMManager::load_tile(QString name, bool dl) {
 }
 
 void SRTMManager::handleReply(QNetworkReply *reply) {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
 
     auto name = reply->request().attribute(QNetworkRequest::User).toString();
     if(reply->error() == QNetworkReply::NetworkError::NoError) {

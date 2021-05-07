@@ -7,7 +7,7 @@
 #include <QColor>
 #include <QPainter>
 #include <QPainterPath>
-#include <QSettings>
+#include "gcs_utils.h"
 
 GraphicsCircle::GraphicsCircle(double radius, QColor color, int stroke, QObject *parent) :
         GraphicsObject(parent),
@@ -49,7 +49,7 @@ void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
     (void)option;
     (void)widget;
     path_draw = QPainterPath();
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     if(style == DEFAULT) {
         double out_draw = radius + stroke*scale_factor;
         double in_draw = radius - stroke*scale_factor;
@@ -130,7 +130,7 @@ void GraphicsCircle::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         event->ignore();
         return;
     }
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     QPointF mousePos = event->pos();
     double r = sqrt(mousePos.x()*mousePos.x() + mousePos.y()*mousePos.y()) - dr;
 
@@ -172,7 +172,7 @@ void GraphicsCircle::setRadius(double r) {
 }
 
 void GraphicsCircle::changeFocus() {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     if(!isHighlighted()) {
         current_color = &color_unfocused;
         stroke = static_cast<int>(base_stroke / settings.value("map/size_highlight_factor").toDouble());

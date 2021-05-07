@@ -8,13 +8,13 @@
 #include "mapwidget.h"
 #include "map_item.h"
 #include "AircraftManager.h"
-#include <QSettings>
+#include "gcs_utils.h"
 
 CircleItem::CircleItem(WaypointItem* center, double radius, QString ac_id, double neutral_scale_zoom):
   MapItem(ac_id, neutral_scale_zoom),
   center(center), _radius(radius), own_center(false)
 {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     stroke = settings.value("map/circle/stroke").toInt();
     z_value_highlighted = settings.value("map/z_values/highlighted").toDouble();
     z_value_unhighlighted = settings.value("map/z_values/unhighlighted").toDouble();

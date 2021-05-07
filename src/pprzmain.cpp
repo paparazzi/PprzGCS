@@ -6,6 +6,7 @@
 #include "pprz_dispatcher.h"
 #include <QSettings>
 #include "configure.h"
+#include "gcs_utils.h"
 
 PprzMain::PprzMain(QWidget *parent) :
     QMainWindow(parent)
@@ -56,14 +57,14 @@ void PprzMain::populate_menu() {
 
     auto user_dir = file_menu->addAction("Open user directory");
     connect(user_dir, &QAction::triggered, [=](){
-        QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+        auto settings = getAppSettings();
         QString path = QDir::toNativeSeparators(settings.value("USER_DATA_PATH").toString());
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
 
     auto app_dir = file_menu->addAction("Open app directory");
     connect(app_dir, &QAction::triggered, [=](){
-        QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+        auto settings = getAppSettings();
         QString path = QDir::toNativeSeparators(settings.value("APP_DATA_PATH").toString());
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });

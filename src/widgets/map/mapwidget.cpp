@@ -24,7 +24,7 @@
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton)
 {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
 
     horizontalLayout = new QHBoxLayout(this);   // main layout
     buttonsLeftLayout = new QVBoxLayout();
@@ -59,7 +59,7 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
 }
 
 void MapWidget::addLayersWidget() {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
 
     auto layer_combo = new LayerCombo(this);
     //layer_combo->setStyleSheet("QWidget{background-color: #31363b;} QLabel{color:white;}");
@@ -163,7 +163,7 @@ void MapWidget::configure(QDomElement ele) {
 
 MapLayerControl* MapWidget::makeLayerControl(QString name, bool initialState, int z) {
     QString path = user_or_app_path("pictures/map_thumbnails/" + name + ".png");
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     QPixmap thumbnail = QPixmap(path);
     if(thumbnail.isNull()) {
         path = user_or_app_path("pictures/map_thumbnails/default.png");
@@ -274,7 +274,7 @@ void MapWidget::mousePressEvent(QMouseEvent *event) {
 
 void MapWidget::mouseMoveEvent(QMouseEvent *event) {
     Map2D::mouseMoveEvent(event);
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     if(event->buttons() & pan_mouse_mask) {
         if(pan_state == PAN_PRESSED) {
             QPoint dp = event->pos()-lastPos;

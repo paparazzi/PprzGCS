@@ -13,9 +13,10 @@
 #include <QtWidgets>
 #include <QFileInfo>
 #include <pprzmain.h>
+#include "gcs_utils.h"
 
 void default_setting(QString key, QVariant value) {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
 
     if(!settings.contains(key)) {
         settings.setValue(key, value);
@@ -23,7 +24,7 @@ void default_setting(QString key, QVariant value) {
 }
 
 void configure() {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
 
     default_setting("ivy/name", "PprzGCS");
     default_setting("pprzlink/id", "pprzcontrol");
@@ -74,7 +75,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     auto tabWidget = new QTabWidget(this);
     lay->addWidget(tabWidget);
 
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
 
     // Tab Ivy
     auto w_ivy = new QWidget(tabWidget);
@@ -129,7 +130,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
             cb();
         }
 
-        QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+        auto settings = getAppSettings();
         auto restart = settings.value("restart", "notset").toString();
 
 
@@ -162,7 +163,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
 
 
 std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWidget* w, QGridLayout* gl, int &row, Type type) {
-    QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    auto settings = getAppSettings();
     auto label = new QLabel(name, w);
 
     int r = row;
@@ -176,7 +177,7 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
         gl->addWidget(edit, r, 1);
 
         auto cb = [=]() {
-          QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+          auto settings = getAppSettings();
           settings.setValue(key, edit->text());
         };
 
@@ -186,7 +187,7 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
         gl->addWidget(edit, r, 1);
 
         auto cb = [=]() {
-          QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+          auto settings = getAppSettings();
           settings.setValue(key, edit->text().toInt());
         };
 
@@ -196,7 +197,7 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
         gl->addWidget(edit, r, 1);
 
         auto cb = [=]() {
-          QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+          auto settings = getAppSettings();
           settings.setValue(key, edit->text().toDouble());
         };
 
@@ -217,7 +218,7 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
         });
 
         auto cb = [=]() {
-          QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+          auto settings = getAppSettings();
           settings.setValue(key, edit->text());
         };
 
@@ -239,7 +240,7 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
         });
 
         auto cb = [=]() {
-          QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+          auto settings = getAppSettings();
           settings.setValue(key, edit->text());
         };
 
@@ -273,7 +274,7 @@ SettingsRestart::SettingsRestart(QWidget* parent): QDialog(parent)
 
     connect(buttonBox->button(QDialogButtonBox::Yes), &QPushButton::clicked, this, [=](){
         if(chk->isChecked()) {
-            QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+            auto settings = getAppSettings();
             settings.setValue("restart", "yes");
         }
         accept();
@@ -281,7 +282,7 @@ SettingsRestart::SettingsRestart(QWidget* parent): QDialog(parent)
 
     connect(buttonBox->button(QDialogButtonBox::No), &QPushButton::clicked, this, [=](){
         if(chk->isChecked()) {
-            QSettings settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+            auto settings = getAppSettings();
             settings.setValue("restart", "no");
         }
         reject();
