@@ -112,8 +112,14 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
         }
 
         // then download the tile
-        downloadTile(tile, tileObj);
-
+        if(config.addr != "") {
+            downloadTile(tile, tileObj);
+        } else {
+            QString error_msg = QString("[TileProvider %1] request tile %2 do not exists and no address is set.")
+                    .arg(config.name, tile->coordinates().to_istring());
+            qDebug() << error_msg;
+            tile->setRequestStatus(TILE_DO_NOT_EXISTS);
+        }
     }
     else if(tile->requestStatus() == TILE_REQUESTED) {
         if(tileObj->hasData()) {
