@@ -15,7 +15,7 @@ Aircraft::Aircraft(ConfigData* config, QObject* parent): QObject(parent),
     status = new AircraftStatus(ac_id, this);
 }
 
-void Aircraft::setSetting(shared_ptr<Setting> setting, float value) {
+void Aircraft::setSetting(Setting* setting, float value) {
     auto coef = setting->getAltUnitCoef();
     if(value < setting->getMin() / coef || value > setting->getMax() / coef) {
         qDebug() << "Warning: send setting value " << value << ", out of bounds for setting " << setting->getName();

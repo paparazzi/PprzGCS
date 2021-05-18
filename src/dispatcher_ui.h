@@ -26,7 +26,7 @@ signals:
     void ac_deleted(QString);
     void new_ac_config(QString);
     void move_waypoint(Waypoint*, QString ac_id);
-    void settingUpdated(QString ac_id, std::shared_ptr<Setting>, float value);
+    void settingUpdated(QString ac_id, Setting*, float value);
     void showHiddenWaypoints(bool show);
     //void create_waypoint(Waypoint*);
 

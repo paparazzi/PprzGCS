@@ -230,7 +230,7 @@ void PprzDispatcher::updateSettings(pprzlink::Message msg) {
 
     auto settings = ac->getSettingMenu()->getAllSettings();
     sort(settings.begin(), settings.end(),
-        [](shared_ptr<Setting> sl, shared_ptr<Setting> sr) {
+        [](Setting* sl, Setting* sr) {
                 return sl->getNo() < sr->getNo();
     });
 

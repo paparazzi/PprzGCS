@@ -31,7 +31,7 @@ public:
     Point2DLatLon getPosition() {return position;}
     void setPosition(Point2DLatLon pos) {position = pos;}
 
-    void setSetting(shared_ptr<Setting>, float value);
+    void setSetting(Setting*, float value);
     void setSetting(uint8_t setting_no, float value);
 
 private:

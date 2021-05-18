@@ -6,11 +6,13 @@
 #include <memory>
 #include <optional>
 #include <QtXml>
+#include <QObject>
 
 using namespace std;
 
-class Setting
+class Setting: public QObject
 {
+    Q_OBJECT
 public:
 
     struct KeyPress {
@@ -28,7 +30,7 @@ public:
         friend ostream& operator<<(ostream& os, const StripButton& wp);
     };
 
-    Setting(QDomElement setel, uint8_t& setting_no);
+    Setting(QDomElement setel, uint8_t& setting_no, QObject* parent);
     vector<shared_ptr<KeyPress>> getKeyPresses() {return key_presses;}
     vector<shared_ptr<StripButton>> getStripButtons() {return strip_buttons;}
     uint8_t getNo() {return setting_no;}

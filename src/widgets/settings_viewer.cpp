@@ -216,7 +216,7 @@ void SettingsViewer::populate_search_results(QString searched) {
 
 
 
-QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget* parent) {
+QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     QWidget* widget = new QWidget(parent);
     QVBoxLayout* vLay = new QVBoxLayout(widget);
     QHBoxLayout* hlay = new QHBoxLayout();
@@ -418,7 +418,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
     return widget;
 }
 
-void SettingsViewer::updateSettings(QString id, shared_ptr<Setting> setting, float value) {
+void SettingsViewer::updateSettings(QString id, Setting* setting, float value) {
     if(ac_id == id) {
         auto val = setting->getAltUnitCoef() * value;
         label_setters[setting](val);

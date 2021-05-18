@@ -11,6 +11,7 @@ using namespace std;
 
 class SettingMenu: public QObject
 {
+    Q_OBJECT
 public:
 
     struct ButtonGroup {
@@ -18,12 +19,12 @@ public:
         QList<shared_ptr<Setting::StripButton>> buttons;
     };
 
-    SettingMenu(QDomDocument doc, QObject* parent=nullptr);
-    SettingMenu(QDomElement setel, uint8_t& setting_no, QObject* parent=nullptr);
+    SettingMenu(QDomDocument doc, QObject* parent);
+    SettingMenu(QDomElement setel, uint8_t& setting_no, QObject* parent);
 
     QList<SettingMenu*> getSettingMenus() {return setting_menus;}
-    QList<shared_ptr<Setting>> getSettings() {return settings;}
-    QList<shared_ptr<Setting>> getAllSettings();
+    QList<Setting*> getSettings() {return settings;}
+    QList<Setting*> getAllSettings();
     QList<shared_ptr<ButtonGroup>> getButtonGroups();
 
     QString getName() {return name;}
@@ -33,7 +34,7 @@ private:
 
     QString name;
     QList<SettingMenu*> setting_menus;
-    QList<shared_ptr<Setting>> settings;
+    QList<Setting*> settings;
 };
 
 #endif // SETTINGS_H

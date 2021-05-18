@@ -25,7 +25,7 @@ void SettingMenu::init(QDomElement setel, uint8_t& setting_no) {
             auto menu = new SettingMenu(sets, setting_no, this);
             setting_menus.push_back(menu);
         } else if (sets.tagName() ==  "dl_setting") {
-            shared_ptr<Setting> setting = make_shared<Setting>(sets, setting_no);
+            auto setting = new Setting(sets, setting_no, this);
             settings.push_back(setting);
             ++setting_no;
         } else {
@@ -38,8 +38,8 @@ void SettingMenu::init(QDomElement setel, uint8_t& setting_no) {
 }
 
 
-QList<shared_ptr<Setting>> SettingMenu::getAllSettings() {
-    QList<shared_ptr<Setting>> v;
+QList<Setting*> SettingMenu::getAllSettings() {
+    QList<Setting*> v;
     v.append(settings);
 
     for(auto menu: setting_menus) {

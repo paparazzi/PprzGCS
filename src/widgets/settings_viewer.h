@@ -28,8 +28,8 @@ private:
     void create_widgets(SettingMenu* setting_menu, QList<SettingMenu*> stack);
     void populate_search_results(QString searched);
     void restore_searched_items();
-    QWidget* makeSettingWidget(shared_ptr<Setting> setting, QWidget* parent);
-    void updateSettings(QString id, shared_ptr<Setting>, float);
+    QWidget* makeSettingWidget(Setting* setting, QWidget* parent);
+    void updateSettings(QString id, Setting*, float);
 
     QString ac_id;
     QVBoxLayout* main_layout;
@@ -52,7 +52,7 @@ private:
     int last_widget_index;
     int last_path_index;
 
-    QMap<shared_ptr<Setting>, QWidget*> setting_widgets;
+    QMap<Setting*, QWidget*> setting_widgets;
     QMap<SettingMenu*, QWidget*> setting_menu_widgets;
 
     int search_result_index;
@@ -67,9 +67,9 @@ private:
     QList<PositionHistory> pos_hist;
 
 
-    std::map<shared_ptr<Setting>, std::function<void(double)>> label_setters;
-    std::map<shared_ptr<Setting>, std::function<void(double)>> setters;
-    std::map<shared_ptr<Setting>, bool> initialized;
+    std::map<Setting*, std::function<void(double)>> label_setters;
+    std::map<Setting*, std::function<void(double)>> setters;
+    std::map<Setting*, bool> initialized;
 
 };
 
