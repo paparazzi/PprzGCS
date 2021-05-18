@@ -101,7 +101,7 @@ void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
 
 void Commands::addSettingsButtons(QGridLayout* settings_buttons_layout) {
     auto settings = getAppSettings();
-    vector<shared_ptr<SettingMenu::ButtonGroup>> groups = AircraftManager::get()->getAircraft(ac_id)->getSettingMenu()->getButtonGroups();
+    auto groups = AircraftManager::get()->getAircraft(ac_id)->getSettingMenu()->getButtonGroups();
 
     int col = 0;
     for(auto &group: groups) {

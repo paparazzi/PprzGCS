@@ -5,20 +5,14 @@
 #include <algorithm>
 #include <map>
 
-SettingMenu::SettingMenu()
-{
-
-}
-
-
-SettingMenu::SettingMenu(QDomDocument doc) {
+SettingMenu::SettingMenu(QDomDocument doc, QObject* parent): QObject(parent) {
     auto st_root = doc.firstChildElement( "settings" );
     auto sets = st_root.firstChildElement("dl_settings");
     uint8_t setting_no = 0;
     init(sets, setting_no);
 }
 
-SettingMenu::SettingMenu(QDomElement setel, uint8_t& setting_no) {
+SettingMenu::SettingMenu(QDomElement setel, uint8_t& setting_no, QObject* parent): QObject(parent) {
     init(setel, setting_no);
 }
 
@@ -28,10 +22,10 @@ void SettingMenu::init(QDomElement setel, uint8_t& setting_no) {
     for(auto sets = setel.firstChildElement(); !sets.isNull(); sets = sets.nextSiblingElement()) {
 
         if(sets.tagName() == "dl_settings") {
-            shared_ptr<SettingMenu> menu = make_shared<SettingMenu>(sets, setting_no);
+            auto menu = new SettingMenu(sets, setting_no, this);
             setting_menus.push_back(menu);
         } else if (sets.tagName() ==  "dl_setting") {
-            shared_ptr<Setting> setting = make_shared<Setting>(sets, setting_no);
+            auto setting = new Setting(sets, setting_no, this);
             settings.push_back(setting);
             ++setting_no;
         } else {
@@ -44,21 +38,21 @@ void SettingMenu::init(QDomElement setel, uint8_t& setting_no) {
 }
 
 
-vector<shared_ptr<Setting>> SettingMenu::getAllSettings() {
-    vector<shared_ptr<Setting>> v;
-    v.insert(v.end(), settings.begin(), settings.end());
+QList<Setting*> SettingMenu::getAllSettings() {
+    QList<Setting*> v;
+    v.append(settings);
 
     for(auto menu: setting_menus) {
-        vector<shared_ptr<Setting>> sets = menu->getAllSettings();
-        v.insert(v.end(), sets.begin(), sets.end());
+        auto sets = menu->getAllSettings();
+        v.append(sets);
     }
 
     return v;
 }
 
-vector<shared_ptr<SettingMenu::ButtonGroup>> SettingMenu::getButtonGroups() {
+QList<shared_ptr<SettingMenu::ButtonGroup>> SettingMenu::getButtonGroups() {
 
-    vector<shared_ptr<Setting::StripButton>> buttons;
+    QList<shared_ptr<Setting::StripButton>> buttons;
     for(auto setting: getAllSettings()) {
         for(auto &sb: setting->getStripButtons()) {
             buttons.push_back(sb);
@@ -77,7 +71,7 @@ vector<shared_ptr<SettingMenu::ButtonGroup>> SettingMenu::getButtonGroups() {
     }
 
 
-    vector<shared_ptr<ButtonGroup>> groups;
+    QList<shared_ptr<ButtonGroup>> groups;
 
     for( auto it = groups_map.begin(); it != groups_map.end(); ++it ) {
         groups.push_back( it->second );

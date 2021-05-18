@@ -2,7 +2,6 @@
 #define FLIGHTPLAN_H
 
 #include <QString>
-#include <vector>
 #include "waypoint.h"
 #include "sector.h"
 #include "block.h"
@@ -13,7 +12,7 @@
 
 struct BlockGroup {
     QString group_name;
-    vector<shared_ptr<Block>> blocks;
+    QList<shared_ptr<Block>> blocks;
 };
 
 struct Exception {

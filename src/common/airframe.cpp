@@ -41,11 +41,11 @@ Airframe::Airframe(QDomDocument doc) {
 
             def.name = getAttribute(define, "name");
             def.value = getAttribute(define, "value");
-            section.defines.push_back(move(def));
+            section.defines.push_back(std::move(def));
 
         }
 
-        sections.push_back(move(section));
+        sections.push_back(std::move(section));
 
     }
 

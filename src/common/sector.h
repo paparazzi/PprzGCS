@@ -2,7 +2,6 @@
 #define SECTOR_H
 
 #include <string>
-#include <vector>
 #include "waypoint.h"
 #include <memory>
 

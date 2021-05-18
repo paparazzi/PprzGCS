@@ -8,7 +8,8 @@
 
 #include "units.h"
 
-Setting::Setting(QDomElement setel, uint8_t& setting_no) : setting_no(setting_no)
+Setting::Setting(QDomElement setel, uint8_t& setting_no, QObject* parent) : QObject(parent),
+    setting_no(setting_no)
 {
     //var, min, max, step
     var = setel.attribute("var");
