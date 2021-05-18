@@ -10,12 +10,13 @@
 #include "pprz_dispatcher.h"
 #include "aircraft_status.h"
 
+class ConfigData;
+
 class Aircraft: public QObject
 {
     Q_OBJECT
 public:
-    Aircraft(QString id, QColor color, QString icon, QString name, FlightPlan* fp, shared_ptr<SettingMenu> setting_menu, Airframe air, QObject* parent=nullptr);
-    ~Aircraft();
+    Aircraft(ConfigData* config, QObject* parent=nullptr);
 
     QColor getColor(){return color;}
     QString getId(){return ac_id;}

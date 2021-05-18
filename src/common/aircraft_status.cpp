@@ -7,7 +7,7 @@ AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent)
     ac_id(ac_id)
 {
     //listen for NAVIGATION_REF to update origin waypoint of fixedwings
-    PprzDispatcher::get()->bind("NAVIGATION_REF", [=](QString sender, pprzlink::Message msg) {
+    PprzDispatcher::get()->bind("NAVIGATION_REF", this, [=](QString sender, pprzlink::Message msg) {
         if(sender == ac_id) {
             int32_t utm_east, utm_north;
             uint8_t utm_zone;
@@ -25,7 +25,7 @@ AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent)
     });
 
     //listen for NAVIGATION_REF to update origin waypoint of rotorcrafts
-    PprzDispatcher::get()->bind("INS_REF", [=](QString sender, pprzlink::Message msg) {
+    PprzDispatcher::get()->bind("INS_REF", this, [=](QString sender, pprzlink::Message msg) {
         if(sender == ac_id) {
 
             int32_t lat0, lon0, alt0;

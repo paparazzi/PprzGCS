@@ -57,19 +57,8 @@ void AircraftManager::newAircraftConfig(pprzlink::Message msg) {
 }
 
 void AircraftManager::addAircraft(ConfigData* config) {
-    QSettings app_settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
-
-    auto fp = new FlightPlan(config->getFlightPlan());
-    shared_ptr<SettingMenu> sm = make_shared<SettingMenu>(config->getSettings());
-
-    Airframe air(config->getAirframe());
-
-    QString icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(air.getIconName()) + ".svg";
-
-    aircrafts[config->getId()] = new Aircraft(config->getId(), config->getColor(), icon, config->getName(), fp, sm, air);
-
+    aircrafts[config->getId()] = new Aircraft(config);
     emit DispatcherUi::get()->new_ac_config(config->getId());
-
     config->deleteLater();
 }
 
@@ -78,8 +67,8 @@ bool AircraftManager::aircraftExists(QString id) {
 }
 
 void AircraftManager::removeAircraft(QString ac_id) {
-    (void)ac_id;
     if(aircraftExists(ac_id)) {
+        aircrafts[ac_id]->deleteLater();
         aircrafts.remove(ac_id);
     }
 }

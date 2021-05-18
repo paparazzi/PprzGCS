@@ -200,6 +200,12 @@ long PprzDispatcher::bind(QString msg_name, pprzlink::messageCallback_t cb) {
     return ret;
 }
 
+long PprzDispatcher::bind(QString msg_name, QObject* context, pprzlink::messageCallback_t cb) {
+    long ret = link->BindMessage(dict->getDefinition(msg_name), context, cb);
+    _bindIds.append(ret);
+    return ret;
+}
+
 void PprzDispatcher::stop() {
     link->stop();
 }

@@ -37,6 +37,8 @@ public:
      */
     long bind(QString msg_name, pprzlink::messageCallback_t cb);
 
+    long bind(QString msg_name, QObject* context, pprzlink::messageCallback_t cb);
+
     bool isSilent() {return silent_mode;}
     void setSilent(bool silent) {
         silent_mode = silent;
