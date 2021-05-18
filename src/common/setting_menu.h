@@ -2,7 +2,6 @@
 #define SETTINGS_H
 
 #include <memory>
-#include <vector>
 #include "setting.h"
 #include <QtXml>
 #include <QObject>

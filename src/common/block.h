@@ -2,7 +2,6 @@
 #define BLOCK_H
 
 #include <map>
-#include <vector>
 #include <QString>
 #include <QtXml>
 
@@ -31,7 +30,7 @@ public:
     QString getText() {return strip_button_txt ;}
     QString getKey() {return key;}
     QString getGroup() {return group;}
-    vector<Stage>& getStages() {return stages;}
+    QList<Stage>& getStages() {return stages;}
 
     friend ostream& operator<<(ostream& os, const Block& wp);
 
@@ -48,7 +47,7 @@ private:
 
     map<QString, QString> attributes;
 
-    vector<Stage> stages;
+    QList<Stage> stages;
 };
 
 #endif // BLOCK_H

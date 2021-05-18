@@ -2,7 +2,6 @@
 #define SETTING_H
 
 #include <QString>
-#include <vector>
 #include <memory>
 #include <optional>
 #include <QtXml>
@@ -31,11 +30,11 @@ public:
     };
 
     Setting(QDomElement setel, uint8_t& setting_no, QObject* parent);
-    vector<shared_ptr<KeyPress>> getKeyPresses() {return key_presses;}
-    vector<shared_ptr<StripButton>> getStripButtons() {return strip_buttons;}
+    QList<shared_ptr<KeyPress>> getKeyPresses() {return key_presses;}
+    QList<shared_ptr<StripButton>> getStripButtons() {return strip_buttons;}
     uint8_t getNo() {return setting_no;}
     QString getName() { if(shortname != "") { return shortname;} else {return var;}}
-    vector<QString>& getValues() {return values;}
+    QList<QString>& getValues() {return values;}
     tuple<float, float, float> getBounds() {return make_tuple(min, max, step);}
     void setValue(float v) {
         last_set_values[1] = last_set_values[0];
@@ -62,7 +61,7 @@ private:
     float step;
 
     QString shortname;
-    vector<QString> values;
+    QList<QString> values;
     QString module;
     QString handler;
     QString type;
@@ -72,8 +71,8 @@ private:
     QString alt_unit;
     optional<float> alt_unit_coef;
 
-    vector<shared_ptr<KeyPress>> key_presses;
-    vector<shared_ptr<StripButton>> strip_buttons;
+    QList<shared_ptr<KeyPress>> key_presses;
+    QList<shared_ptr<StripButton>> strip_buttons;
 
     float last_set_values[2];   // last values set by the user from this app.
     optional<float> initial_value;

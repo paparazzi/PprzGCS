@@ -3,9 +3,6 @@
 
 #include <QString>
 #include <QtXml>
-#include <vector>
-
-using namespace std;
 
 class Airframe
 {
@@ -20,7 +17,7 @@ public:
     struct Section {
       QString name;
       QString prefix;
-      vector<struct Define> defines;
+      QList<struct Define> defines;
       //...
     };
 
@@ -37,7 +34,7 @@ private:
     QString name;
     QString firmware;
 
-    vector<struct Section> sections;
+    QList<struct Section> sections;
 
     static constexpr float ALT_PLUS_FW = 10;
     static constexpr float ALT_MINUS_FW = -10;
