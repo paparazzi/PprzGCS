@@ -16,18 +16,18 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
     z_value_unhighlighted = settings.value("map/z_values/aircraft").toDouble();
     z_value = z_value_unhighlighted;
 
-    Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
+    auto aircraft = AircraftManager::get()->getAircraft(ac_id);
     int size = settings.value("map/aircraft/size").toInt();
 
-    color_idle = aircraft.getColor();
-    color_unfocused = labelUnfocusedColor(aircraft.getColor());
+    color_idle = aircraft->getColor();
+    color_unfocused = labelUnfocusedColor(aircraft->getColor());
 
-    graphics_aircraft = new GraphicsAircraft(aircraft.getColor(), aircraft.getIcon(), size);
-    graphics_text = new GraphicsText(aircraft.name());
-    graphics_text->setDefaultTextColor(aircraft.getColor());
+    graphics_aircraft = new GraphicsAircraft(aircraft->getColor(), aircraft->getIcon(), size);
+    graphics_text = new GraphicsText(aircraft->name());
+    graphics_text->setDefaultTextColor(aircraft->getColor());
 
     for(int i=0; i<settings.value("map/aircraft/track_max_chunk").toInt(); i++) {
-        auto gt = new GraphicsTrack(aircraft.getColor(), trackUnfocusedColor(aircraft.getColor()));
+        auto gt = new GraphicsTrack(aircraft->getColor(), trackUnfocusedColor(aircraft->getColor()));
         graphics_tracks.append(gt);
         QList<Point2DLatLon> l;
         track_chuncks.append(l);

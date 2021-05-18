@@ -17,17 +17,17 @@ public:
     };
 
     Sector();
-    Sector(vector<shared_ptr<Waypoint>> corners, QString name, Type type=STATIC, optional<QString> color=nullopt);
+    Sector(QList<Waypoint*> corners, QString name, Type type=STATIC, optional<QString> color=nullopt);
 
     QString getName() {return name;}
     Type getType() {return type;}
-    vector<shared_ptr<Waypoint>> getCorners() {return corners;}
+    QList<Waypoint*> getCorners() {return corners;}
 
 private:
     QString name;
     Type type;
     optional<QString> color;   // override AC color
-    vector<shared_ptr<Waypoint>> corners;
+    QList<Waypoint*> corners;
 };
 
 #endif // SECTOR_H

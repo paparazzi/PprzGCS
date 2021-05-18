@@ -64,7 +64,7 @@ std::function<void()> PapgetConfig::config_text(QWidget* w) {
     connect(combo_color, &QComboBox::currentTextChanged, this, [=](QString text) {
         if(text == "AC color" || text == ""){
             auto ac = AircraftManager::get()->getAircraft(datadef.ac_id);
-            params.color = ac.getColor();
+            params.color = ac->getColor();
         } else {
             params.color = text;
         }

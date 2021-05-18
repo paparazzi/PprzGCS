@@ -25,7 +25,7 @@ Strips::Strips(QWidget *parent) : QWidget(parent)
 }
 
 void Strips::handleNewAC(QString ac_id) {
-    auto ac = AircraftManager::get()->getAircraft(ac_id);
+    //auto ac = AircraftManager::get()->getAircraft(ac_id);
 
     MiniStrip* pageWidget = new MiniStrip(ac_id, this);
     strips[ac_id] = pageWidget;

@@ -69,8 +69,8 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
                 // If the dying AC is the currently selected one, try to select an other.
                 if(DispatcherUi::get()->getSelectedAcId() == id) {
                     for(auto ac: AircraftManager::get()->getAircrafts()) {
-                        if(ac.getId() != id) {
-                            emit(DispatcherUi::get()->ac_selected(ac.getId()));
+                        if(ac->getId() != id) {
+                            emit(DispatcherUi::get()->ac_selected(ac->getId()));
                             break;
                         }
                     }
@@ -96,7 +96,7 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
 
 
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint, this,
-        [=](shared_ptr<Waypoint> wp, QString ac_id) {
+        [=](Waypoint* wp, QString ac_id) {
             pprzlink::Message msg(dict->getDefinition("MOVE_WAYPOINT"));
             msg.setSenderId(pprzlink_id);
             msg.addField("ac_id", ac_id);
@@ -149,7 +149,7 @@ void PprzDispatcher::bindDeftoSignal(QString const &name, sig_ptr_t sig) {
                     emit(DispatcherUi::get()->ac_selected(QString(id)));
                 }
                 emit((this->*sig)(msg));
-                AircraftManager::get()->getAircraft(id).getStatus()->updateMessage(msg);
+                AircraftManager::get()->getAircraft(id)->getStatus()->updateMessage(msg);
             }
         }
     );
@@ -222,7 +222,7 @@ void PprzDispatcher::updateSettings(pprzlink::Message msg) {
 
     auto ac = AircraftManager::get()->getAircraft(id);
 
-    auto settings = ac.getSettingMenu()->getAllSettings();
+    auto settings = ac->getSettingMenu()->getAllSettings();
     sort(settings.begin(), settings.end(),
         [](shared_ptr<Setting> sl, shared_ptr<Setting> sr) {
                 return sl->getNo() < sr->getNo();

@@ -133,7 +133,7 @@ void PprzMain::populate_menu() {
 
 
 void PprzMain::newAC(QString ac_id) {
-    QString acName = AircraftManager::get()->getAircraft(ac_id).name();
+    QString acName = AircraftManager::get()->getAircraft(ac_id)->name();
     auto menu = new QMenu("&" + acName);
     auto action = aircraftsTopMenu->addMenu(menu);
 

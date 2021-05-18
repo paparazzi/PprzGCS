@@ -5,7 +5,7 @@
 GPSClassicViewer::GPSClassicViewer(QString ac_id, QWidget *parent) : QWidget(parent),
     ac_id(ac_id), reduced(true)
 {
-    connect(AircraftManager::get()->getAircraft(ac_id).getStatus(),
+    connect(AircraftManager::get()->getAircraft(ac_id)->getStatus(),
             &AircraftStatus::engine_status, this, [=]() {
         this->update();
     });
@@ -123,7 +123,7 @@ QSize GPSClassicViewer::minimumSizeHint() const
 
 
 std::tuple<uint16_t, QList<struct GPSClassicViewer::SvInfo>> GPSClassicViewer::getData() {
-    auto msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("SVSINFO");
+    auto msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("SVSINFO");
     if(!msg) {
         return make_tuple(65535, QList<struct SvInfo>());
     }

@@ -57,7 +57,7 @@ void Pfd::paintEvent(QPaintEvent *event) {
     //QRect rect = QRect(-side/4,-side/4, side/2, side/2);
 
     if(eulers.find(current_ac) != eulers.end()) {
-        auto ac_color = AircraftManager::get()->getAircraft(current_ac).getColor();
+        auto ac_color = AircraftManager::get()->getAircraft(current_ac)->getColor();
         for(int i=0; i<3; i++) {
             QRect rect = placeRect(i);
             QPointF center = placeCenter(i);
@@ -280,7 +280,7 @@ QPixmap* Pfd::getIcon(Axis axis) {
         return &pix_no_ac;
     }
 
-    auto firmware = AircraftManager::get()->getAircraft(current_ac).getAirframe().getFirmware();
+    auto firmware = AircraftManager::get()->getAircraft(current_ac)->getAirframe().getFirmware();
     if(firmware == "fixedwing") {
         switch (axis) {
         case ROLL:

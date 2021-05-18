@@ -63,13 +63,13 @@ void ACSelector::paintEvent(QPaintEvent* e) {
         QRect rect = QRect(left, top, width, height);
         auto ac = AircraftManager::get()->getAircraft(ac_id);
         painter.setPen(Qt::NoPen);
-        painter.setBrush(ac.getColor());
+        painter.setBrush(ac->getColor());
         painter.drawRoundedRect(rect, 10, 10);
 
         auto dark = QColor(0x101010);
         auto light = QColor(0xf0f0f0);
 
-        auto L1 = 0.2126 * (ac.getColor().red()/255.) + 0.7152 * (ac.getColor().green()/255.) + 0.0722 * (ac.getColor().blue()/255.);
+        auto L1 = 0.2126 * (ac->getColor().red()/255.) + 0.7152 * (ac->getColor().green()/255.) + 0.0722 * (ac->getColor().blue()/255.);
         auto Ldark = 0.2126 * (dark.red()/255.) + 0.7152 * (dark.green()/255.) + 0.0722 * (dark.blue()/255.);
         auto Llight = 0.2126 * (light.red()/255.) + 0.7152 * (light.green()/255.) + 0.0722 * (light.blue()/255.);
 
@@ -79,7 +79,7 @@ void ACSelector::paintEvent(QPaintEvent* e) {
         auto txtColor = crDark > crLight ? dark : light;
 
         painter.setPen(txtColor);
-        painter.drawText(rect.marginsRemoved(QMargins(5, 0, 5, 0)), Qt::AlignVCenter, ac.name(), &rect);
+        painter.drawText(rect.marginsRemoved(QMargins(5, 0, 5, 0)), Qt::AlignVCenter, ac->name(), &rect);
 
     }
 }

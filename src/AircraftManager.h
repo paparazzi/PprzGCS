@@ -68,8 +68,8 @@ public:
         return pprzApp()->toolbox()->aircraftManager();
     }
 
-    Aircraft& getAircraft(QString id);
-    QList<Aircraft> getAircrafts();
+    Aircraft* getAircraft(QString id);
+    QList<Aircraft*> getAircrafts();
     void newAircraftConfig(pprzlink::Message msg);
     bool aircraftExists(QString id);
     void removeAircraft(QString ac_id);
@@ -78,7 +78,7 @@ private:
     static QColor parseColor(QString str);
     QDomDocument getXml(QString uri);
 
-    QMap<QString, Aircraft> aircrafts;
+    QMap<QString, Aircraft*> aircrafts;
 
 private slots:
     void addAircraft(ConfigData* config);

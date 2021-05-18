@@ -18,7 +18,7 @@ AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent)
             msg.getField("ground_alt", ground_alt);
 
             auto latlon = CoordinatesTransform::get()->utm_to_wgs84(utm_east, utm_north, utm_zone, true);
-            auto orig = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getOrigin();
+            auto orig = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getOrigin();
             orig->setLat(latlon.lat());
             orig->setLon(latlon.lon());
         }
@@ -33,7 +33,7 @@ AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent)
             msg.getField("lon0", lon0);
             msg.getField("alt0", alt0);
 
-            auto orig = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getOrigin();
+            auto orig = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getOrigin();
             orig->setLat(lat0/1e7);
             orig->setLon(lon0/1e7);
             orig->setAlt(alt0/1e3);

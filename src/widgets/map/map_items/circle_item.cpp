@@ -23,13 +23,13 @@ CircleItem::CircleItem(WaypointItem* center, double radius, QString ac_id, doubl
 }
 
 void CircleItem::init(WaypointItem* center) {
-    Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
+    auto aircraft = AircraftManager::get()->getAircraft(ac_id);
 
-    circle = new GraphicsCircle(0, aircraft.getColor(), stroke, this);
+    circle = new GraphicsCircle(0, aircraft->getColor(), stroke, this);
     circle->setPos(center->scenePos());
     circle->setZValue(center->zValue() + 0.5);
 
-    QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
+    QList<QColor> color_variants = makeColorVariants(aircraft->getColor());
     circle->setColors(color_variants[0], color_variants[1], color_variants[2]);
 
 

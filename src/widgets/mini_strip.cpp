@@ -14,7 +14,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     hl->setSizeConstraint(QLayout::SetFixedSize);
 
     auto ac = AircraftManager::get()->getAircraft(ac_id);
-    QColor color = ac.getColor();
+    QColor color = ac->getColor();
     int hue = color.hue();
     int sat = color.saturation();
     color.setHsv(hue, static_cast<int>(sat*0.2), 255);
@@ -22,14 +22,14 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
 
     auto color_rect = new QWidget(this);
     color_rect->setMinimumSize(QSize(20, 20));
-    color_rect->setStyleSheet("background: " + ac.getColor().name());
+    color_rect->setStyleSheet("background: " + ac->getColor().name());
 
     color_rect->installEventFilter(this);
 
     hl->addWidget(color_rect);
     hl->addLayout(gl);
 
-    auto ac_name = new QLabel(ac.name());
+    auto ac_name = new QLabel(ac->name());
     ac_name->setStyleSheet("font-weight: bold");
 //    auto ac_name = new ColorLabel(15, this);
 //    ac_name->setText(ac.name());
@@ -179,7 +179,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
 
     gl->addLayout(misc_lay, 2, 2);
 
-    auto ac_status = AircraftManager::get()->getAircraft(ac_id).getStatus();
+    auto ac_status = AircraftManager::get()->getAircraft(ac_id)->getStatus();
 
     connect(ac_status, &AircraftStatus::engine_status, this, &MiniStrip::updateData);
     connect(ac_status, &AircraftStatus::flight_param, this, &MiniStrip::updateData);
@@ -230,7 +230,7 @@ void MiniStrip::updateImu(QString state_filter_mode) {
 }
 
 void MiniStrip::updateCurrentBlock(uint8_t cur_block) {
-    auto block = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getBlock(cur_block);
+    auto block = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getBlock(cur_block);
     QString block_name = block->getName();
     block_label->setToolTip("Block " + block_name);
     if(block_name.size() > 15) {
@@ -277,13 +277,13 @@ void MiniStrip::updateData() {
     uint8_t cur_block = 0;
     float target_alt = 0;
 
-    auto engine_status_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("ENGINE_STATUS");
+    auto engine_status_msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("ENGINE_STATUS");
     if(engine_status_msg) {
         engine_status_msg->getField("throttle", throttle);
         engine_status_msg->getField("bat", bat);
     }
 
-    auto ap_status_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("AP_STATUS");
+    auto ap_status_msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("AP_STATUS");
     if(ap_status_msg) {
         ap_status_msg->getField("flight_time", flight_time);
         ap_status_msg->getField("kill_mode", kill_mode);
@@ -292,7 +292,7 @@ void MiniStrip::updateData() {
         ap_status_msg->getField("state_filter_mode", state_filter_mode);
     }
 
-    auto flight_param_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("FLIGHT_PARAM");
+    auto flight_param_msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("FLIGHT_PARAM");
     if(flight_param_msg) {
 
         flight_param_msg->getField("speed", speed);
@@ -302,18 +302,18 @@ void MiniStrip::updateData() {
         flight_param_msg->getField("airspeed", airspeed);
     }
 
-    auto telemetry_status_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("TELEMETRY_STATUS");
+    auto telemetry_status_msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("TELEMETRY_STATUS");
     if(telemetry_status_msg) {
         telemetry_status_msg->getField("time_since_last_msg", time_since_last_msg);
     }
 
-    auto fly_by_wire_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("FLY_BY_WIRE");
+    auto fly_by_wire_msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("FLY_BY_WIRE");
     if(fly_by_wire_msg) {
         fly_by_wire_msg->getField("rc_status", rc_status);
         fly_by_wire_msg->getField("rc_mode", rc_mode);
     }
 
-    auto nav_status_msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("NAV_STATUS");
+    auto nav_status_msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("NAV_STATUS");
     if(nav_status_msg) {
         nav_status_msg->getField("cur_block", cur_block);
         nav_status_msg->getField("target_alt", target_alt);

@@ -10,18 +10,18 @@
 #include "pprz_dispatcher.h"
 #include "aircraft_status.h"
 
-class Aircraft
+class Aircraft: public QObject
 {
+    Q_OBJECT
 public:
-    Aircraft();
-    Aircraft(QString id, QColor color, QString icon, QString name, FlightPlan fp, shared_ptr<SettingMenu> setting_menu, Airframe air);
+    Aircraft(QString id, QColor color, QString icon, QString name, FlightPlan* fp, shared_ptr<SettingMenu> setting_menu, Airframe air, QObject* parent=nullptr);
     ~Aircraft();
 
     QColor getColor(){return color;}
     QString getId(){return ac_id;}
     QString getIcon(){return icon;}
     QString name() {return _name;}
-    FlightPlan& getFlightPlan() {return flight_plan;}
+    FlightPlan* getFlightPlan() {return flight_plan;}
     //SettingMenu& getSettingMenu() {return setting_menu;}
     shared_ptr<SettingMenu> getSettingMenu() {return setting_menu;}
     Airframe& getAirframe() {return airframe;}
@@ -38,7 +38,7 @@ private:
     QColor color;
     QString icon;
     QString _name;
-    FlightPlan flight_plan;
+    FlightPlan* flight_plan;
     shared_ptr<SettingMenu> setting_menu;
     Airframe airframe;
 

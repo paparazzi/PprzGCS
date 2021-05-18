@@ -11,8 +11,7 @@ class Point2DLatLon
 public:
     Point2DLatLon(double lat, double lon);
     //Point2DLatLon(Point2DTile pt);
-    Point2DLatLon(Waypoint& wp);
-    Point2DLatLon(std::shared_ptr<Waypoint> wp);
+    Point2DLatLon(Waypoint* wp);
 
     double lat() {return latp;}
     double lon() {return lonp;}

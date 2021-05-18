@@ -378,8 +378,8 @@ void MapWidget::dropEvent(QDropEvent *event) {
 
 void MapWidget::handleNewAC(QString ac_id) {
     (void)ac_id;
-    auto fp = AircraftManager::get()->getAircraft(ac_id).getFlightPlan();
-    auto wp_orig = fp.getOrigin();
+    auto fp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan();
+    auto wp_orig = fp->getOrigin();
     auto pt = Point2DLatLon(wp_orig->getLat(), wp_orig->getLon());
     //TODO adapt zoom to Flightplan boundinx box
     setZoom(17);

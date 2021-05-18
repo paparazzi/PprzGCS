@@ -7,13 +7,16 @@
 
 using namespace std;
 
-FlightPlan::FlightPlan(): origin()
+FlightPlan::FlightPlan(QObject* parent):
+    QObject(parent), origin()
 {
 
 }
 
 
-FlightPlan::FlightPlan(QDomDocument doc) : origin()
+FlightPlan::FlightPlan(QDomDocument doc, QObject* parent) :
+    QObject(parent),
+    origin()
 {
     QDomElement fp_root = doc.firstChildElement( "dump" ).firstChildElement( "flight_plan" );
     name = fp_root.attribute("name");
@@ -40,7 +43,7 @@ FlightPlan::FlightPlan(QDomDocument doc) : origin()
         }
     }
 
-    origin = make_shared<Waypoint>("__ORIGIN", 0, _lat0, _lon0, defaultAlt);
+    origin = new Waypoint("__ORIGIN", 0, _lat0, _lon0, defaultAlt, this);
 
     auto wps = fp_root.firstChildElement("waypoints");
     parse_waypoints(wps);
@@ -117,7 +120,7 @@ void FlightPlan::parse_sectors(QDomElement secs) {
             if(type == "static") {
                 t = Sector::STATIC;
             }
-            vector<shared_ptr<Waypoint>> corners;
+            QList<Waypoint*> corners;
             for(auto corner=ele.firstChildElement(); !corner.isNull(); corner=corner.nextSiblingElement()) {
                 auto wp = getWaypoint(corner.attribute("name"));
                 corners.push_back(wp);
@@ -136,7 +139,7 @@ void FlightPlan::parse_sectors(QDomElement secs) {
 void FlightPlan::parse_waypoints(QDomElement wps) {
     uint8_t wp_id = 1;
     for(auto wp=wps.firstChildElement(); !wp.isNull(); wp=wp.nextSiblingElement()) {
-        auto waypoint = make_shared<Waypoint>(wp, wp_id, origin, defaultAlt, frame_type);
+        auto waypoint = new Waypoint(wp, wp_id, origin, defaultAlt, frame_type, this);
         waypoints.push_back(waypoint);
         ++wp_id;
     }
@@ -155,7 +158,7 @@ void FlightPlan::parse_blocks(QDomElement blks) {
     });
 }
 
-shared_ptr<Waypoint> FlightPlan::getWaypoint(uint8_t id) {
+Waypoint* FlightPlan::getWaypoint(uint8_t id) {
     for(auto& wp: waypoints) {
         if(wp->getId() == id) {
             return wp;
@@ -164,7 +167,7 @@ shared_ptr<Waypoint> FlightPlan::getWaypoint(uint8_t id) {
     throw runtime_error("No waypoint with id " + to_string(id));
 }
 
-shared_ptr<Waypoint> FlightPlan::getWaypoint(QString name) {
+Waypoint* FlightPlan::getWaypoint(QString name) {
     for(auto& wp: waypoints) {
         if(wp->getName() == name) {
             return wp;
@@ -182,12 +185,12 @@ shared_ptr<Block> FlightPlan::getBlock(uint8_t no) {
     throw runtime_error("No block with no " + to_string(no));
 }
 
-vector<shared_ptr<BlockGroup>> FlightPlan::getGroups()
+QList<shared_ptr<BlockGroup>> FlightPlan::getGroups()
 {
 
     std::map<QString, shared_ptr<BlockGroup>> groups_map;
 
-    for(auto b: blocks) {
+    for(auto b: qAsConst(blocks)) {
         if(groups_map.find(b->getGroup()) == groups_map.end()) {
             groups_map[b->getGroup()] = make_shared<BlockGroup>();
             groups_map[b->getGroup()]->group_name = b->getGroup();
@@ -196,7 +199,7 @@ vector<shared_ptr<BlockGroup>> FlightPlan::getGroups()
     }
 
 
-    vector<shared_ptr<BlockGroup>> groups;
+    QList<shared_ptr<BlockGroup>> groups;
 
     for( auto it = groups_map.begin(); it != groups_map.end(); ++it ) {
         groups.push_back( it->second );

@@ -17,7 +17,7 @@ Papget::Papget(struct DataDef datadef, QPoint pos_view, QObject *parent) : QObje
     auto settings = getAppSettings();
     params.style = Style::TEXT;
     auto ac = AircraftManager::get()->getAircraft(datadef.ac_id);
-    params.color = ac.getColor();
+    params.color = ac->getColor();
     params.fontSize = settings.value("map/items_font").toInt();
 
     bindRet = PprzDispatcher::get()->bind(datadef.msg_name,

@@ -22,11 +22,11 @@ void PathItem::addPoint(WaypointItem* wp, bool own) {
     owned[wp] = own;
 
     if(waypoints.size() > 1){
-        Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
-        GraphicsLine* line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), aircraft.getColor(), line_width, this);
+        auto aircraft = AircraftManager::get()->getAircraft(ac_id);
+        GraphicsLine* line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), aircraft->getColor(), line_width, this);
         line->setIgnoreEvent(true);
 
-        QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
+        QList<QColor> color_variants = makeColorVariants(aircraft->getColor());
         line->setColors(color_variants[2]);
 
         lines.append(line);
@@ -47,9 +47,9 @@ void PathItem::setClosedPath(bool closed) {
         if(!closing_line) {
             // add closing line
             qDebug() << "add closing line";
-            Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
-            QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
-            closing_line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), aircraft.getColor(), line_width, this);
+            auto aircraft = AircraftManager::get()->getAircraft(ac_id);
+            QList<QColor> color_variants = makeColorVariants(aircraft->getColor());
+            closing_line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), aircraft->getColor(), line_width, this);
             closing_line->setIgnoreEvent(true);
             closing_line->setColors(color_variants[2]);
             to_be_added.append(closing_line);

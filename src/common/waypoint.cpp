@@ -5,14 +5,33 @@
 #include "gcs_utils.h"
 #include <QDebug>
 
-Waypoint::Waypoint(QString name, uint8_t id) :
+Waypoint::Waypoint(Waypoint* original, QObject* parent):
+    QObject(parent)
+{
+    type = original->type;
+    id = original->id;
+    lat = original->lat;
+    lon = original->lat;
+    origin = original;
+    alt = original->alt;
+    alt_type = original->alt_type;
+    name = original->name;
+    xml_attibutes = original->xml_attibutes;
+}
+
+Waypoint::Waypoint(QString name, uint8_t id, QObject* parent) :
+    QObject(parent),
     type(WGS84), id(id), lat(0), lon(0), origin(nullptr), alt(0), name(name)
 {
 
 }
 
-Waypoint::Waypoint(QString name, uint8_t id, double lat, double lon, double alt):
-    Waypoint(name, id)
+Waypoint::Waypoint(QString name, uint8_t id, Point2DLatLon pos, double alt, QObject* parent):
+    Waypoint(name, id, pos.lat(), pos.lon(), alt, parent)
+{}
+
+Waypoint::Waypoint(QString name, uint8_t id, double lat, double lon, double alt, QObject* parent):
+    Waypoint(name, id, parent)
 {
     type = WGS84;
     this->lat = lat;
@@ -23,7 +42,9 @@ Waypoint::Waypoint(QString name, uint8_t id, double lat, double lon, double alt)
 
 
 
-Waypoint::Waypoint(QDomElement wp, uint8_t wp_id, std::shared_ptr<Waypoint> orig, double defaultAlt, WpFrame frame_type) {
+Waypoint::Waypoint(QDomElement wp, uint8_t wp_id, Waypoint* orig, double defaultAlt, WpFrame frame_type, QObject* parent):
+    QObject(parent)
+{
     auto name_p = wp.attribute("name");
     auto lat_p = wp.attribute("lat");
     auto lon_p = wp.attribute("lon");

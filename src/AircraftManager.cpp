@@ -17,7 +17,7 @@ AircraftManager::AircraftManager(PprzApplication* app, PprzToolbox* toolbox) : P
 
 }
 
-Aircraft& AircraftManager::getAircraft(QString id) {
+Aircraft* AircraftManager::getAircraft(QString id) {
     if(aircrafts.find(id) != aircrafts.end()) {
         return aircrafts[id];
     } else {
@@ -25,7 +25,7 @@ Aircraft& AircraftManager::getAircraft(QString id) {
     }
 }
 
-QList<Aircraft> AircraftManager::getAircrafts() {
+QList<Aircraft*> AircraftManager::getAircrafts() {
     return aircrafts.values();
 }
 
@@ -59,14 +59,14 @@ void AircraftManager::newAircraftConfig(pprzlink::Message msg) {
 void AircraftManager::addAircraft(ConfigData* config) {
     QSettings app_settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
 
-    FlightPlan fp(config->getFlightPlan());
+    auto fp = new FlightPlan(config->getFlightPlan());
     shared_ptr<SettingMenu> sm = make_shared<SettingMenu>(config->getSettings());
 
     Airframe air(config->getAirframe());
 
     QString icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(air.getIconName()) + ".svg";
 
-    aircrafts[config->getId()] = Aircraft(config->getId(), config->getColor(), icon, config->getName(), fp, sm, air);
+    aircrafts[config->getId()] = new Aircraft(config->getId(), config->getColor(), icon, config->getName(), fp, sm, air);
 
     emit DispatcherUi::get()->new_ac_config(config->getId());
 

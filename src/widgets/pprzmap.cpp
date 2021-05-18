@@ -60,8 +60,8 @@ PprzMap::PprzMap(QWidget *parent) :
         QSet<QString> tiles;
 
         // Download SRTM tile(s) for each flightplan footprint
-        for(auto &ac: AircraftManager::get()->getAircrafts()) {
-            auto [nw, se] = ac.getFlightPlan().boundingBox();
+        for(auto ac: AircraftManager::get()->getAircrafts()) {
+            auto [nw, se] = ac->getFlightPlan()->boundingBox();
             auto tile_names = SRTMManager::get()->get_tile_names(se.lat(), nw.lat(), nw.lon(), se.lon());
             tiles.unite(tile_names.toSet());
         }
@@ -108,7 +108,7 @@ void PprzMap::changeCurrentAC(QString id) {
     if(AircraftManager::get()->aircraftExists(id)) {
         current_ac = id;
         ui->map->updateHighlights(id);
-        auto waypoints = AircraftManager::get()->getAircraft(id).getFlightPlan().getWaypoints();
+        auto waypoints = AircraftManager::get()->getAircraft(id)->getFlightPlan()->getWaypoints();
 
         // remove previous waypoints (the fist 2 items are WGS84 reference)
         while(ui->reference_combobox->count() > 2) {
@@ -187,8 +187,8 @@ void PprzMap::keyReleaseEvent(QKeyEvent *event) {
 
 
 
-            Point2DLatLon pos = AircraftManager::get()->getAircraft(current_ac).getPosition();
-            auto [nw, se] = AircraftManager::get()->getAircraft(current_ac).getFlightPlan().boundingBoxWith(pos);
+            Point2DLatLon pos = AircraftManager::get()->getAircraft(current_ac)->getPosition();
+            auto [nw, se] = AircraftManager::get()->getAircraft(current_ac)->getFlightPlan()->boundingBoxWith(pos);
             double zoo = ui->map->zoomBox(nw, se);
             ui->map->setZoom(zoo);
             Point2DLatLon center((nw.lat()+se.lat()) / 2.0, (nw.lon()+se.lon()) / 2.0);
@@ -228,7 +228,7 @@ void PprzMap::updateAircraftItem(pprzlink::Message msg) {
         Point2DLatLon pos(static_cast<double>(lat), static_cast<double>(lon));
         ai->setPosition(pos);
         ai->setHeading(static_cast<double>(heading));
-        AircraftManager::get()->getAircraft(ac_id).setPosition(pos);
+        AircraftManager::get()->getAircraft(ac_id)->setPosition(pos);
     }
 
 }
@@ -251,7 +251,7 @@ void PprzMap::handleNewAC(QString ac_id) {
     auto item_manager = make_shared<ACItemManager>(ac_id, target, aircraft_item);
     ac_items_managers[ac_id] = item_manager;
 
-    for(auto &wp: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
+    for(auto wp: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoints()) {
         WaypointItem* wpi = new WaypointItem(wp, ac_id);
         ui->map->addItem(wpi);
         item_manager->addWaypointItem(wpi);
@@ -284,7 +284,7 @@ void PprzMap::handleNewAC(QString ac_id) {
         }
     }
 
-    for(auto sector: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getSectors()) {
+    for(auto sector: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getSectors()) {
         // static sector are not supported
         if(sector->getType() == Sector::DYNAMIC) {
             PathItem* pi = new PathItem(ac_id);
@@ -322,16 +322,17 @@ void PprzMap::handleMouseMove(QPointF scenePos) {
         QString txt = sexagesimalFormat(pt.lat(), pt.lon());
         ui->pos_label->setText(txt);
     } else {
-        size_t wp_index = static_cast<size_t>(ui->reference_combobox->currentIndex() - 2);
-        auto ref_wp = AircraftManager::get()->getAircraft(current_ac).getFlightPlan().getWaypoints()[wp_index];
-        Point2DLatLon pt_wp(ref_wp);
-
-        double distance, azimut;
-        CoordinatesTransform::get()->distance_azimut(pt_wp, pt, distance, azimut);
-        //ct_wgs84_utm.distance_azimut(pt_wp, pt, distance, azimut);
-
-        ui->pos_label->setText(QString("%1").arg(static_cast<int>(azimut), 3, 10, QChar(' ')) + "° " +
-                               QString("%1").arg(static_cast<int>(distance), 4, 10, QChar(' ')) + "m");
+        auto wps = AircraftManager::get()->getAircraft(current_ac)->getFlightPlan()->getWaypoints();
+        for(auto ref_wp: qAsConst(wps)) {
+            if(ref_wp->getName() == ui->reference_combobox->currentText()) {
+                Point2DLatLon pt_wp(ref_wp);
+                double distance, azimut;
+                CoordinatesTransform::get()->distance_azimut(pt_wp, pt, distance, azimut);
+                ui->pos_label->setText(QString("%1").arg(static_cast<int>(azimut), 3, 10, QChar(' ')) + "° " +
+                                       QString("%1").arg(static_cast<int>(distance), 4, 10, QChar(' ')) + "m");
+                break;
+            }
+        }
     }
 
     auto ele = SRTMManager::get()->get_elevation(pt.lat(), pt.lon());
@@ -374,7 +375,7 @@ void PprzMap::moveWaypoint(pprzlink::Message msg) {
     msg.getField("ground_alt", ground_alt);
 
     if(AircraftManager::get()->aircraftExists(ac_id) && wp_id != 0) {
-        shared_ptr<Waypoint> wp = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoint(wp_id);
+        Waypoint* wp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoint(wp_id);
         wp->setLat(static_cast<double>(lat));
         wp->setLon(static_cast<double>(lon));
         wp->setAlt(static_cast<double>(alt));

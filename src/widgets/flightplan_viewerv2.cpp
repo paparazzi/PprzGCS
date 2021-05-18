@@ -12,21 +12,21 @@ FlightPlanViewerV2::FlightPlanViewerV2(QString ac_id, QWidget *parent) : QTabWid
     addTab(make_blocks_tab(), "Blocks");
     addTab(make_waypoints_tab(), "Waypoints");
 
-    if(AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getExeptions().size() > 0) {
+    if(AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getExeptions().size() > 0) {
         addTab(make_exceptions_tab(), "Exceptions");
     }
 
-    if(AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getVariables().size() > 0) {
+    if(AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getVariables().size() > 0) {
         addTab(make_variables_tab(), "Variables");
     }
 
-    if(AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getSectors().size() > 0) {
+    if(AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getSectors().size() > 0) {
         addTab(make_sectors_tab(), "Sectors");
     }
 
     addTab(new QWidget(), "Header");
 
-    connect(AircraftManager::get()->getAircraft(ac_id).getStatus(),
+    connect(AircraftManager::get()->getAircraft(ac_id)->getStatus(),
             &AircraftStatus::engine_status, this, &FlightPlanViewerV2::handleNavStatus);
 }
 
@@ -46,7 +46,7 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
 
     auto return_home = [=](){stack->setCurrentIndex(index_main);};
 
-    for(auto block: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getBlocks()) {
+    for(auto block: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getBlocks()) {
         auto lay = new QHBoxLayout();
         QString icon = block->getIcon();
         QString txt = block->getText();
@@ -171,7 +171,7 @@ QWidget* FlightPlanViewerV2::make_tree(shared_ptr<Block> block, std::function<vo
 QWidget* FlightPlanViewerV2::make_waypoints_tab() {
     auto list = new QListWidget(this);
 
-    for(auto waypoint: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getWaypoints()) {
+    for(auto waypoint: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoints()) {
         QString txt = waypoint->getName() + QString("\t");
 
         auto atts = waypoint->getXmlAttributes();
@@ -190,7 +190,7 @@ QWidget* FlightPlanViewerV2::make_waypoints_tab() {
 
 QWidget* FlightPlanViewerV2::make_exceptions_tab() {
     auto list = new QListWidget(this);
-    for(auto &ex: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getExeptions()) {
+    for(auto &ex: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getExeptions()) {
         QString txt = QString("cond: ") + ex->cond + QString("\tderoute: ") + ex->deroute;
         list->addItem(txt);
     }
@@ -199,7 +199,7 @@ QWidget* FlightPlanViewerV2::make_exceptions_tab() {
 
 QWidget* FlightPlanViewerV2::make_variables_tab() {
     auto list = new QListWidget(this);
-    for(auto &var: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getVariables()) {
+    for(auto &var: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getVariables()) {
         QString txt;
         if(var->type == Variable::VARIABLE) {
             txt += QString("var: ");
@@ -218,7 +218,7 @@ QWidget* FlightPlanViewerV2::make_variables_tab() {
 
 QWidget* FlightPlanViewerV2::make_sectors_tab() {
     auto list = new QListWidget(this);
-    for(auto sec: AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getSectors()) {
+    for(auto sec: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getSectors()) {
         QString txt;
 
         txt += QString("sector ") + sec->getName() + ":";
@@ -232,7 +232,7 @@ QWidget* FlightPlanViewerV2::make_sectors_tab() {
 }
 
 void FlightPlanViewerV2::handleNavStatus() {
-    auto msg = AircraftManager::get()->getAircraft(ac_id).getStatus()->getMessage("NAV_STATUS");
+    auto msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("NAV_STATUS");
     if(msg) {
         uint8_t cur_block, cur_stage;
         //uint32_t block_time, stage_time;

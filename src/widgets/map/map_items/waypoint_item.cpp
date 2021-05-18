@@ -12,12 +12,12 @@
 WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, neutral_scale_zoom, parent), moving(false)
 {
-    original_waypoint = make_shared<Waypoint>("", 0, pt.lat(), pt.lon(), 0);
+    original_waypoint = new Waypoint("", 0, pt, 0, this);
     init();
 }
 
 // create WaypointItem based on existing Waypoint
-WaypointItem::WaypointItem(shared_ptr<Waypoint> wp, QString ac_id, double neutral_scale_zoom, QObject *parent) :
+WaypointItem::WaypointItem(Waypoint* wp, QString ac_id, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, neutral_scale_zoom, parent), original_waypoint(wp), moving(false)
 {
     init();
@@ -29,12 +29,12 @@ void WaypointItem::init() {
     z_value_unhighlighted = settings.value("map/z_values/unhighlighted").toDouble();
     z_value = z_value_unhighlighted;
 
-    _waypoint = make_shared<Waypoint>(*original_waypoint);
-    Aircraft aircraft = AircraftManager::get()->getAircraft(ac_id);
+    _waypoint = new Waypoint(original_waypoint, this);
+    auto aircraft = AircraftManager::get()->getAircraft(ac_id);
     int size = settings.value("map/waypoint/size").toInt();
     name = original_waypoint->getName();
-    point = new GraphicsPoint(size, aircraft.getColor(), this);
-    QList<QColor> color_variants = makeColorVariants(aircraft.getColor());
+    point = new GraphicsPoint(size, aircraft->getColor(), this);
+    QList<QColor> color_variants = makeColorVariants(aircraft->getColor());
     point->setColors(color_variants[0], color_variants[1], color_variants[2]);
     point->setZValue(z_value);
 

@@ -6,9 +6,13 @@
 #include <map>
 #include <QtXml>
 #include <memory>
+#include <QObject>
 
-class Waypoint
+class Point2DLatLon;
+
+class Waypoint: public QObject
 {
+    Q_OBJECT
 public:
 
     enum WpFrame {
@@ -22,9 +26,11 @@ public:
         HEIGHT
     };
 
-    Waypoint(QString name, uint8_t id);
-    Waypoint(QString name, uint8_t id, double lat, double lon, double alt);
-    Waypoint(QDomElement wp, uint8_t wp_id, std::shared_ptr<Waypoint> orig, double defaultAlt, WpFrame frame_type);
+    Waypoint(Waypoint* original, QObject* parent=nullptr);
+    Waypoint(QString name, uint8_t id, QObject* parent=nullptr);
+    Waypoint(QString name, uint8_t id, Point2DLatLon pos, double alt, QObject* parent=nullptr);
+    Waypoint(QString name, uint8_t id, double lat, double lon, double alt, QObject* parent=nullptr);
+    Waypoint(QDomElement wp, uint8_t wp_id, Waypoint* orig, double defaultAlt, WpFrame frame_type, QObject* parent=nullptr);
 
     uint8_t getId() const {return id;}
     double getLat() const;
@@ -35,7 +41,7 @@ public:
     double getAlt() const {return alt;}
     WpFrame getType() const {return type;}
     QString getName() const {return name;}
-    std::shared_ptr<Waypoint> getOrigin() {return origin;}
+    Waypoint* getOrigin() {return origin;}
     QMap<QString, QString>& getXmlAttributes() { return xml_attibutes;}
 
     friend std::ostream& operator<<(std::ostream& os, const Waypoint& wp);
@@ -48,7 +54,7 @@ private:
     double lat;
     double lon;
 
-    std::shared_ptr<Waypoint> origin;
+    Waypoint* origin;
 
     double alt;
     WpAltType alt_type;

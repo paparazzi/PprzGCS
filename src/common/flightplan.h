@@ -9,6 +9,7 @@
 #include <memory>
 #include <QtXml>
 #include "point2dlatlon.h"
+#include <QObject>
 
 struct BlockGroup {
     QString group_name;
@@ -37,26 +38,27 @@ struct Variable {
 };
 
 
-class FlightPlan
+class FlightPlan: public QObject
 {
+    Q_OBJECT
 public:
 
-    FlightPlan();
-    FlightPlan(QDomDocument doc);
+    FlightPlan(QObject* parent=nullptr);
+    FlightPlan(QDomDocument doc, QObject* parent=nullptr);
 
-    vector<shared_ptr<Waypoint>>& getWaypoints() {return  waypoints;}
-    shared_ptr<Waypoint> getWaypoint(uint8_t id);
-    shared_ptr<Waypoint> getWaypoint(QString name);
-    vector<shared_ptr<Block>>& getBlocks() {return  blocks;}
-    vector<shared_ptr<BlockGroup>> getGroups();
-    vector<shared_ptr<Exception>> getExeptions() {return  exceptions;}
-    vector<shared_ptr<Variable>> getVariables() {return  variables;}
-    vector<shared_ptr<Sector>> getSectors() {return  sectors;}
+    QList<Waypoint*>& getWaypoints() {return  waypoints;}
+    Waypoint* getWaypoint(uint8_t id);
+    Waypoint* getWaypoint(QString name);
+    QList<shared_ptr<Block>>& getBlocks() {return  blocks;}
+    QList<shared_ptr<BlockGroup>> getGroups();
+    QList<shared_ptr<Exception>> getExeptions() {return  exceptions;}
+    QList<shared_ptr<Variable>> getVariables() {return  variables;}
+    QList<shared_ptr<Sector>> getSectors() {return  sectors;}
     shared_ptr<Block> getBlock(uint8_t id);
     double getDefaultAltitude() {return defaultAlt;}
     double getGroundAlt() {return ground_alt;}
     void setGroundAlt(double ga) {ground_alt = ga;}
-    shared_ptr<Waypoint> getOrigin() {return origin;}
+    Waypoint* getOrigin() {return origin;}
     Waypoint::WpFrame getFrame() {return frame_type;}
 
     /**
@@ -80,12 +82,12 @@ private:
     void parse_blocks(QDomElement blks);
     void parse_block_stages(QDomElement blk, shared_ptr<Block> block);
 
-    std::vector<shared_ptr<Waypoint>> waypoints;
-    std::vector<shared_ptr<Exception>> exceptions;
-    std::vector<shared_ptr<Block>> blocks;
-    std::vector<shared_ptr<Variable>> variables;
-    std::vector<shared_ptr<Sector>> sectors;
-    shared_ptr<Waypoint> origin;
+    QList<Waypoint*> waypoints;
+    QList<shared_ptr<Exception>> exceptions;
+    QList<shared_ptr<Block>> blocks;
+    QList<shared_ptr<Variable>> variables;
+    QList<shared_ptr<Sector>> sectors;
+    Waypoint* origin;
 
     double defaultAlt;
     QString name;

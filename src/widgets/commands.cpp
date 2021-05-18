@@ -12,7 +12,7 @@ Commands::Commands(QString ac_id, QWidget *parent) : QWidget(parent),
     auto lay = new QVBoxLayout(this);
     lay->setSizeConstraint(QLayout::SetFixedSize);
 
-    auto name = AircraftManager::get()->getAircraft(ac_id).name();
+    auto name = AircraftManager::get()->getAircraft(ac_id)->name();
     auto name_label = new QLabel(name, this);
     name_label->setStyleSheet("font-weight: bold");
     lay->addWidget(name_label);
@@ -37,7 +37,7 @@ Commands::Commands(QString ac_id, QWidget *parent) : QWidget(parent),
     addSettingsButtons(set_lay);
     lay->addLayout(set_lay);
 
-    target_alt = static_cast<float>(AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getDefaultAltitude());
+    target_alt = static_cast<float>(AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getDefaultAltitude());
     connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &Commands::updateTargetAlt);
 }
 
@@ -48,7 +48,7 @@ void Commands::paintEvent(QPaintEvent* e) {
     path.addRect(rect());
     p.setPen(Qt::NoPen);
 
-    QColor color = AircraftManager::get()->getAircraft(ac_id).getColor();
+    QColor color = AircraftManager::get()->getAircraft(ac_id)->getColor();
     int hue = color.hue();
     int sat = color.saturation();
     color.setHsv(hue, static_cast<int>(sat*0.2), 255);
@@ -62,7 +62,7 @@ void Commands::paintEvent(QPaintEvent* e) {
 
 void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
     auto settings = getAppSettings();
-    auto groups = AircraftManager::get()->getAircraft(ac_id).getFlightPlan().getGroups();
+    auto groups = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getGroups();
     int col = 0;
     for(auto &group: groups) {
         int row = 0;
@@ -101,7 +101,7 @@ void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
 
 void Commands::addSettingsButtons(QGridLayout* settings_buttons_layout) {
     auto settings = getAppSettings();
-    vector<shared_ptr<SettingMenu::ButtonGroup>> groups = AircraftManager::get()->getAircraft(ac_id).getSettingMenu()->getButtonGroups();
+    vector<shared_ptr<SettingMenu::ButtonGroup>> groups = AircraftManager::get()->getAircraft(ac_id)->getSettingMenu()->getButtonGroups();
 
     int col = 0;
     for(auto &group: groups) {
@@ -127,7 +127,7 @@ void Commands::addSettingsButtons(QGridLayout* settings_buttons_layout) {
                 settings_buttons_layout->addWidget(b, row, col);
                   connect(b, &QPushButton::clicked, this,
                     [=]() {
-                        AircraftManager::get()->getAircraft(ac_id).setSetting(sb->setting_no, sb->value);
+                        AircraftManager::get()->getAircraft(ac_id)->setSetting(sb->setting_no, sb->value);
                 });
             }
             ++row;
@@ -142,56 +142,56 @@ void Commands::addSpecialCommands(QGridLayout* glay) {
     glay->addItem(new QSpacerItem(0, 0, QSizePolicy::Expanding, QSizePolicy::Minimum), 0, 4);
 
     auto ac = AircraftManager::get()->getAircraft(ac_id);
-    auto settings = ac.getSettingMenu()->getAllSettings();
+    auto settings = ac->getSettingMenu()->getAllSettings();
 
     for(auto set:settings) {
         if(set->getName() == "autopilot.launch") {
             addCommandButton(glay, "launch.png", 0, 1, [=]() mutable {
-                ac.setSetting(set, 1);
+                ac->setSetting(set, 1);
             });
         }
 
         if(set->getName() == "autopilot.kill_throttle") {
             addCommandButton(glay, "kill.png", 0, 2, [=]() mutable {
-                ac.setSetting(set, 1);
+                ac->setSetting(set, 1);
             });
 
             addCommandButton(glay, "resurrect.png", 0, 3, [=]() mutable {
-                ac.setSetting(set, 0);
+                ac->setSetting(set, 0);
             });
         }
 
         if(set->getName() == "altitude") {
             addCommandButton(glay, "up.png", 1, 1, [=]() mutable {
                 qDebug() << target_alt;
-                ac.setSetting(set, target_alt + ac.getAirframe().getAltShiftPlus());
+                ac->setSetting(set, target_alt + ac->getAirframe().getAltShiftPlus());
             });
 
             addCommandButton(glay, "down.png", 1, 2, [=]() mutable {
                 qDebug() << target_alt;
-                ac.setSetting(set, target_alt + ac.getAirframe().getAltShiftMinus());
+                ac->setSetting(set, target_alt + ac->getAirframe().getAltShiftMinus());
             });
 
             addCommandButton(glay, "upup.png", 1, 3, [=]() mutable {
                 qDebug() << target_alt;
-                ac.setSetting(set, target_alt + ac.getAirframe().getAltShiftPlusPlus());
+                ac->setSetting(set, target_alt + ac->getAirframe().getAltShiftPlusPlus());
             });
         }
 
         if(set->getName() == "inc. shift") {
             addCommandButton(glay, "left.png", 2, 1, [=]() mutable {
                 qDebug() << "current value: " << set->getValue() << "  (-5)";
-                ac.setSetting(set, -5);
+                ac->setSetting(set, -5);
             });
 
             addCommandButton(glay, "recenter.png", 2, 2, [=]() mutable {
                 qDebug() << "current value: " << set->getValue() << "  recenter";
-                ac.setSetting(set, 0);
+                ac->setSetting(set, 0);
             });
 
             addCommandButton(glay, "right.png", 2, 3, [=]() mutable {
                 qDebug() << "current value: " << set->getValue() << "  (+5)";
-                ac.setSetting(set, 5);
+                ac->setSetting(set, 5);
             });
         }
     }
