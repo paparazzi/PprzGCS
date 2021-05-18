@@ -24,7 +24,7 @@ public:
     QString name() {return _name;}
     FlightPlan* getFlightPlan() {return flight_plan;}
     //SettingMenu& getSettingMenu() {return setting_menu;}
-    shared_ptr<SettingMenu> getSettingMenu() {return setting_menu;}
+    SettingMenu* getSettingMenu() {return setting_menu;}
     Airframe& getAirframe() {return airframe;}
     AircraftStatus* getStatus() {return status;}
 
@@ -40,7 +40,7 @@ private:
     QString icon;
     QString _name;
     FlightPlan* flight_plan;
-    shared_ptr<SettingMenu> setting_menu;
+    SettingMenu* setting_menu;
     Airframe airframe;
 
     Point2DLatLon position;

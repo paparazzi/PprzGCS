@@ -83,7 +83,7 @@ bool SettingsViewer::eventFilter(QObject *object, QEvent *event)
 void SettingsViewer::init(QString ac_id) {
     this->ac_id = ac_id;
     auto settings = AircraftManager::get()->getAircraft(ac_id)->getSettingMenu();
-    create_widgets(settings, QList<shared_ptr<SettingMenu>>());
+    create_widgets(settings, QList<SettingMenu*>());
     last_widget_index = widgets_indexes[settings];
     last_path_index = path_indexes[settings];
 
@@ -110,13 +110,13 @@ void SettingsViewer::init(QString ac_id) {
 
 }
 
-void SettingsViewer::create_widgets(shared_ptr<SettingMenu> setting_menu, QList<shared_ptr<SettingMenu>> stack) {
+void SettingsViewer::create_widgets(SettingMenu* setting_menu, QList<SettingMenu*> stack) {
     auto widget = new QWidget(scroll_content);
     auto path_widget = new QWidget(this);
     auto menu_layout = new QVBoxLayout(widget);
     auto current_path_layout = new QHBoxLayout(path_widget);
 
-    auto new_stack = QList<shared_ptr<SettingMenu>>(stack);
+    auto new_stack = QList<SettingMenu*>(stack);
     new_stack.append(setting_menu);
 
     if(new_stack.size()>0) {
@@ -251,7 +251,7 @@ QWidget* SettingsViewer::makeSettingWidget(shared_ptr<Setting> setting, QWidget*
         qDebug() << "setting " << setting->getNo() << " of AC " << ac_id << " clicked !";
         value_btn->setText("?");
         pprzlink::Message getSetting(PprzDispatcher::get()->getDict()->getDefinition("GET_DL_SETTING"));
-        getSetting.addField("ac_id", ac_id.toStdString());
+        getSetting.addField("ac_id", ac_id);
         getSetting.addField("index", setting->getNo());
         PprzDispatcher::get()->sendMessage(getSetting);
     });
