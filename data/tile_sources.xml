@@ -1,7 +1,7 @@
 <sources>
 	<source
 	    name="Google" dir="GOOGLE"
-            addr="http://khms3.google.com/kh/v=863?x={x}&amp;y={y}&amp;z={z}"
+            addr="https://mt1.google.com/vt/lyrs=s&amp;x={x}&amp;y={y}&amp;z={z}"
 	    zoomMin="0" zoomMax="19"
 	    tileSize="256"
 	    format=".jpeg"
