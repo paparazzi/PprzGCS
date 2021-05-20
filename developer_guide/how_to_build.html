@@ -94,6 +94,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">How to build from sources</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#ubuntu-20-04-and-above">Ubuntu 20.04 and above</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#ubuntu-18-04">Ubuntu 18.04</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#running-pprzgcs">Running PprzGCS</a></li>
 </ul>
 </li>
 </ul>
@@ -174,14 +175,10 @@
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git submodule update --init --recursive
 </pre></div>
 </div>
-<p>Add the Paparazzi PPA to ivy-c:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo add-apt-repository -y ppa:paparazzi-uav/ppa
-</pre></div>
-</div>
 <div class="section" id="ubuntu-20-04-and-above">
 <h2>Ubuntu 20.04 and above<a class="headerlink" href="#ubuntu-20-04-and-above" title="Permalink to this headline">¶</a></h2>
 <p>Install the dependencies:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install ivy-c-dev libboost-system-dev libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libproj-dev mesa-common-dev libglu1-mesa-dev
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libproj-dev mesa-common-dev libglu1-mesa-dev
 </pre></div>
 </div>
 <p>cd to the PprzGCS root, and build the needed libraries:</p>
@@ -189,23 +186,19 @@
 </pre></div>
 </div>
 <p>Now you should be able to build the app with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">BUILD_TARGET</span><span class="o">=</span>DEV_20_04 ./build.sh app
-</pre></div>
-</div>
-<p>Then just run it:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./build/PprzGCS
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./build.sh app
 </pre></div>
 </div>
 </div>
 <div class="section" id="ubuntu-18-04">
 <h2>Ubuntu 18.04<a class="headerlink" href="#ubuntu-18-04" title="Permalink to this headline">¶</a></h2>
 <p>First, you need to <a class="reference external" href="https://www.qt.io/download-open-source">install Qt5.12.0 or above.</a></p>
-<p>Setup in your <cite>.bashr</cite> the environnement variable <cite>Qt5_DIR</cite> for cmake to find Qt5:</p>
+<p>Setup in your <cite>.bashrc</cite> the environnement variable <cite>Qt5_DIR</cite> for cmake to find Qt5:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">Qt5_DIR</span><span class="o">=</span><span class="s2">&quot;/path/to/Qt/5.12.0/gcc_64/lib/cmake/Qt5&quot;</span>
 </pre></div>
 </div>
 <p>Install the dependencies:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install ivy-c-dev libboost-system-dev libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev
 </pre></div>
 </div>
 <p>cd to the PprzGCS root, and build the needed libraries:</p>
@@ -213,13 +206,18 @@
 </pre></div>
 </div>
 <p>Now you should be able to build the app with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">BUILD_TARGET</span><span class="o">=</span>DEV_18_04 ./build.sh app
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./build.sh app
 </pre></div>
 </div>
-<p>Then just run it:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./build/PprzGCS
-</pre></div>
 </div>
+<div class="section" id="running-pprzgcs">
+<h2>Running PprzGCS<a class="headerlink" href="#running-pprzgcs" title="Permalink to this headline">¶</a></h2>
+<p>Before running it, you must set the environment variable <code class="docutils literal notranslate"><span class="pre">PPRZGCS_DATA_PATH</span></code> to the absolute path of the <cite>data</cite> directory.</p>
+<div class="admonition-example admonition">
+<p class="admonition-title">Example</p>
+<p>If you are in the PprzGCS root, you can run: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">PPRZGCS_DATA_PATH=$(pwd)/data</span></code></p>
+</div>
+<p>Then just run <code class="docutils literal notranslate"><span class="pre">./build/PprzGCS/PprzGCS</span></code></p>
 </div>
 </div>
 
