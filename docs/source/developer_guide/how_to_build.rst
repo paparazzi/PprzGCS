@@ -9,12 +9,6 @@ First, get all submodules:
 
     git submodule update --init --recursive
 
-Add the Paparazzi PPA to ivy-c:
-
-.. code-block:: bash
-
-    sudo add-apt-repository -y ppa:paparazzi-uav/ppa
-
 Ubuntu 20.04 and above
 ______________________
  
@@ -22,7 +16,7 @@ Install the dependencies:
 
 .. code-block:: bash
 
-    sudo apt install ivy-c-dev libboost-system-dev libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libproj-dev mesa-common-dev libglu1-mesa-dev
+    sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libproj-dev mesa-common-dev libglu1-mesa-dev
 
 cd to the PprzGCS root, and build the needed libraries:
 
@@ -34,13 +28,7 @@ Now you should be able to build the app with:
 
 .. code-block:: bash
 
-    BUILD_TARGET=DEV_20_04 ./build.sh app
-    
-Then just run it:
-
-.. code-block:: bash
-    
-    ./build/PprzGCS
+    ./build.sh app
 
 
 Ubuntu 18.04
@@ -48,7 +36,7 @@ ____________
 
 First, you need to `install Qt5.12.0 or above. <https://www.qt.io/download-open-source>`_
 
-Setup in your `.bashr` the environnement variable `Qt5_DIR` for cmake to find Qt5:
+Setup in your `.bashrc` the environnement variable `Qt5_DIR` for cmake to find Qt5:
 
 .. code-block:: bash
 
@@ -58,7 +46,7 @@ Install the dependencies:
 
 .. code-block:: bash
 
-    sudo apt install ivy-c-dev libboost-system-dev libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev
+    sudo apt install libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev
 
 cd to the PprzGCS root, and build the needed libraries:
 
@@ -70,14 +58,17 @@ Now you should be able to build the app with:
 
 .. code-block:: bash
 
-    BUILD_TARGET=DEV_18_04 ./build.sh app
+    ./build.sh app
     
-Then just run it:
+Running PprzGCS
+_______________
 
-.. code-block:: bash
-    
-    ./build/PprzGCS
+Before running it, you must set the environment variable ``PPRZGCS_DATA_PATH`` to the absolute path of the `data` directory.
 
+.. admonition:: Example
 
+	If you are in the PprzGCS root, you can run: ``export PPRZGCS_DATA_PATH=$(pwd)/data``
+
+Then just run ``./build/PprzGCS/PprzGCS``
 
 
