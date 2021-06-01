@@ -10,8 +10,8 @@ Aircraft::Aircraft(ConfigData* config, QObject* parent): QObject(parent),
     QSettings app_settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     flight_plan = new FlightPlan(config->getFlightPlan(), this);
     setting_menu = new SettingMenu(config->getSettings(), this);
-    airframe = Airframe(config->getAirframe());
-    icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(airframe.getIconName()) + ".svg";
+    airframe = new Airframe(config->getAirframe(), this);
+    icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(airframe->getIconName()) + ".svg";
     status = new AircraftStatus(ac_id, this);
 }
 

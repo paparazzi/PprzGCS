@@ -11,13 +11,8 @@ QString getAttribute(QDomElement ele, QString name) {
     return result;
 }
 
-Airframe::Airframe()
+Airframe::Airframe(QDomDocument doc, QObject* parent):  QObject(parent), doc(doc)
 {
-
-}
-
-
-Airframe::Airframe(QDomDocument doc) {
     auto air_root = doc.firstChildElement( "airframe" );
     name = getAttribute(air_root, "name");
 

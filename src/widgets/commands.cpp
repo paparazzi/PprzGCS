@@ -164,17 +164,17 @@ void Commands::addSpecialCommands(QGridLayout* glay) {
         if(set->getName() == "altitude") {
             addCommandButton(glay, "up.png", 1, 1, [=]() mutable {
                 qDebug() << target_alt;
-                ac->setSetting(set, target_alt + ac->getAirframe().getAltShiftPlus());
+                ac->setSetting(set, target_alt + ac->getAirframe()->getAltShiftPlus());
             });
 
             addCommandButton(glay, "down.png", 1, 2, [=]() mutable {
                 qDebug() << target_alt;
-                ac->setSetting(set, target_alt + ac->getAirframe().getAltShiftMinus());
+                ac->setSetting(set, target_alt + ac->getAirframe()->getAltShiftMinus());
             });
 
             addCommandButton(glay, "upup.png", 1, 3, [=]() mutable {
                 qDebug() << target_alt;
-                ac->setSetting(set, target_alt + ac->getAirframe().getAltShiftPlusPlus());
+                ac->setSetting(set, target_alt + ac->getAirframe()->getAltShiftPlusPlus());
             });
         }
 

@@ -25,7 +25,7 @@ public:
     FlightPlan* getFlightPlan() {return flight_plan;}
     //SettingMenu& getSettingMenu() {return setting_menu;}
     SettingMenu* getSettingMenu() {return setting_menu;}
-    Airframe& getAirframe() {return airframe;}
+    Airframe* getAirframe() {return airframe;}
     AircraftStatus* getStatus() {return status;}
 
     Point2DLatLon getPosition() {return position;}
@@ -41,7 +41,7 @@ private:
     QString _name;
     FlightPlan* flight_plan;
     SettingMenu* setting_menu;
-    Airframe airframe;
+    Airframe* airframe;
 
     Point2DLatLon position;
 

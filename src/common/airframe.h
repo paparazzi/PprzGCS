@@ -4,8 +4,9 @@
 #include <QString>
 #include <QtXml>
 
-class Airframe
+class Airframe: public QObject
 {
+    Q_OBJECT
 public:
 
     struct Define {
@@ -21,8 +22,7 @@ public:
       //...
     };
 
-    Airframe();
-    Airframe(QDomDocument doc);
+    Airframe(QDomDocument doc, QObject* parent=nullptr);
 
     QString getFirmware() {return firmware;}
     QString getIconName();
@@ -33,6 +33,8 @@ public:
 private:
     QString name;
     QString firmware;
+
+    QDomDocument doc;
 
     QList<struct Section> sections;
 
