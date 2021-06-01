@@ -51,17 +51,6 @@ public:
 
     void configure(QDomElement) override;
 
-    /////////////////
-
-    void setEditorMode();
-    void registerWaypoint(WaypointItem* waypoint);
-    //TODO make it private ASAP
-    QMap<QString, ACItemManager*> ac_items_managers;
-    InteractionState interaction_state;
-    int drawState;
-    ItemEditStateMachine* fp_edit_sm;
-    QString current_ac;
-
 signals:
     void mouseMoved(QPointF scenePos);
     void itemAdded(MapItem* map_item);
@@ -95,6 +84,14 @@ private:
     void removeAC(QString ac_id);
     LayerCombo* makeLayerCombo();
     void addWidget(QWidget* w, LockButton* button, WidgetContainer side);
+    void setEditorMode();
+    void registerWaypoint(WaypointItem* waypoint);
+
+    QMap<QString, ACItemManager*> ac_items_managers;
+    InteractionState interaction_state;
+    int drawState;
+    ItemEditStateMachine* fp_edit_sm;
+    QString current_ac;
 
     QList<MapItem*> _items;
     QList<Papget*> papgets;
