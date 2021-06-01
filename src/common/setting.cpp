@@ -24,9 +24,8 @@ Setting::Setting(QDomElement setel, uint8_t& setting_no, QObject* parent) : QObj
     shortname= setel.attribute("shortname", var);
 
     //values
-   auto values_p = setel.attribute("values");
     if(setel.hasAttribute("values")) {
-        for(auto val: setel.attribute("values").split("|")) {
+        for(auto &val: setel.attribute("values").split("|")) {
             values.push_back(val);
         }
     }
@@ -37,6 +36,8 @@ Setting::Setting(QDomElement setel, uint8_t& setting_no, QObject* parent) : QObj
     if(setel.hasAttribute("alt_unit_coef")) {
         alt_unit_coef = setel.attribute("alt_unit_coef").toDouble();
     }
+
+    param = setel.attribute("param", "");
 
     //module, handler, type, persistent, param
     //TODO
@@ -78,18 +79,25 @@ Setting::Setting(QDomElement setel, uint8_t& setting_no, QObject* parent) : QObj
 
 }
 
-float Setting::getAltUnitCoef() {
-    if(alt_unit_coef.has_value()) {
-        return alt_unit_coef.value();
-    }
-    else if(unit.size() && alt_unit.size()) {
-        auto coef = Units::get()->getCoef(unit, alt_unit);
+float Setting::getAltUnitCoef(QString altUnit) {
+    auto coef_alt = [=](QString alt){
+        auto coef = Units::get()->getCoef(unit, alt);
         if(coef.has_value()) {
             return coef.value();
+        } else {
+            return 1.f;
         }
+    };
+
+    if(altUnit != "") {
+        return coef_alt(altUnit);
     }
-    //no coef found, just use 1
-    return 1.f;
+    else if(alt_unit_coef.has_value()) {
+        return alt_unit_coef.value();
+    }
+    else{
+        return coef_alt(alt_unit);
+    }
 }
 
 

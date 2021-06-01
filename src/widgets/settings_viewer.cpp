@@ -259,14 +259,14 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     connect(undo_btn, &QToolButton::clicked, this, [=]() {
         auto prev = setting->getPreviousValue();
         AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, prev);
-        setting->setValue(prev);
+        setting->setUserValue(prev);
     });
 
     connect(reset_btn, &QToolButton::clicked, this, [=]() {
         auto initial_value = setting->getInitialValue();
         if(initial_value.has_value()) {
             AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, initial_value.value());
-            setting->setValue(initial_value.value());
+            setting->setUserValue(initial_value.value());
         }
 
     });
@@ -291,7 +291,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         connect(ok_btn, &QToolButton::clicked, this, [=]() {
             float value = static_cast<float>(combo->currentIndex());
             AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
-            setting->setValue(value);
+            setting->setUserValue(value);
         });
 
     } else if(setting->getValues().size() == 2 || abs(min+step-max) < 0.0001) {
@@ -324,7 +324,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         connect(ok_btn, &QToolButton::clicked, this, [=, min=min, max=max]() {
             float value = sw->isChecked() ? max : min;
             AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
-            setting->setValue(value);
+            setting->setUserValue(value);
         });
 
     } else if(abs(max-min) < 0.00001) {
@@ -337,7 +337,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
 
         connect(ok_btn, &QToolButton::clicked, this, [=]() {
             AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
-            setting->setValue(value);
+            setting->setUserValue(value);
         });
 
     } else {
@@ -406,7 +406,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
             auto coef = setting->getAltUnitCoef();
             float value = static_cast<float>(slider->doubleValue()) / coef;
             AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
-            setting->setValue(value);
+            setting->setUserValue(value);
         });
     }
 
@@ -422,6 +422,7 @@ void SettingsViewer::updateSettings(QString id, Setting* setting, float value) {
     if(ac_id == id) {
         auto val = setting->getAltUnitCoef() * value;
         label_setters[setting](val);
+        setting->setValue(value);
         if(!initialized[setting]) {
             setters[setting](val);
             setting->setInitialValue(value);

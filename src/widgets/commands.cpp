@@ -180,17 +180,17 @@ void Commands::addSpecialCommands(QGridLayout* glay) {
 
         if(set->getName() == "inc. shift") {
             addCommandButton(glay, "left.png", 2, 1, [=]() mutable {
-                qDebug() << "current value: " << set->getValue() << "  (-5)";
+                qDebug() << "current value: " << set->getUserValue() << "  (-5)";
                 ac->setSetting(set, -5);
             });
 
             addCommandButton(glay, "recenter.png", 2, 2, [=]() mutable {
-                qDebug() << "current value: " << set->getValue() << "  recenter";
+                qDebug() << "current value: " << set->getUserValue() << "  recenter";
                 ac->setSetting(set, 0);
             });
 
             addCommandButton(glay, "right.png", 2, 3, [=]() mutable {
-                qDebug() << "current value: " << set->getValue() << "  (+5)";
+                qDebug() << "current value: " << set->getUserValue() << "  (+5)";
                 ac->setSetting(set, 5);
             });
         }
