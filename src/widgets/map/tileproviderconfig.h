@@ -34,6 +34,8 @@ public:
     double yMax;
     int tileSize;
     QString format;
+
+    int initial_rank;   // kind of the oposite of zValue...
 };
 
 #endif // TILEPROVIDERCONFIG_H

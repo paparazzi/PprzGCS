@@ -130,6 +130,7 @@ void Map2D::loadConfig(QString filename) {
         if(root.childNodes().item(i).isElement()) {
             QDomElement ele = root.childNodes().item(i).toElement();
             auto tpc = new TileProviderConfig(ele);
+            tpc->initial_rank = i;
             sourceConfigs[tpc->name] = tpc;
         }
     }
@@ -280,8 +281,15 @@ void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {
 
 QList<QString> Map2D::tileProvidersNames() {
     QList<QString> names;
-    for(auto tp=sourceConfigs.begin(); tp!=sourceConfigs.end(); ++tp) {
-        names.append(tp.key());
+
+    auto vals = sourceConfigs.values();
+    std::sort(vals.begin(), vals.end(),
+        [](TileProviderConfig* ltpc, TileProviderConfig* rtpc) {
+            return ltpc->initial_rank < rtpc->initial_rank;
+    });
+
+    for(auto tp : qAsConst(vals)) {
+        names.append(tp->name);
     }
     return names;
 }
