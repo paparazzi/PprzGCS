@@ -5,8 +5,9 @@
 #include "AircraftManager.h"
 
 Aircraft::Aircraft(ConfigData* config, QObject* parent): QObject(parent),
-    ac_id(config->getId()), color(config->getColor()), _name(config->getName()), position(Point2DLatLon(0,0))
+    ac_id(config->getId()), color(config->getColor()), _name(config->getName()), config(config), position(Point2DLatLon(0,0))
 {
+    config->setParent(this);
     QSettings app_settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
     flight_plan = new FlightPlan(config->getFlightPlan(), this);
     setting_menu = new SettingMenu(config->getSettings(), this);

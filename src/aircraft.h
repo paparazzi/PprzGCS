@@ -27,6 +27,7 @@ public:
     SettingMenu* getSettingMenu() {return setting_menu;}
     Airframe* getAirframe() {return airframe;}
     AircraftStatus* getStatus() {return status;}
+    ConfigData* getConfig() {return config;}
 
     Point2DLatLon getPosition() {return position;}
     void setPosition(Point2DLatLon pos) {position = pos;}
@@ -42,6 +43,7 @@ private:
     FlightPlan* flight_plan;
     SettingMenu* setting_menu;
     Airframe* airframe;
+    ConfigData* config;
 
     Point2DLatLon position;
 
