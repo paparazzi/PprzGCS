@@ -15,7 +15,15 @@
 #include "lock_button.h"
 #include "papget.h"
 
+class ACItemManager;
+class ItemEditStateMachine;
 class MapItem;
+
+enum InteractionState {
+    PMIS_FLIGHT_PLAN_EDIT,
+    PMIS_FROZEN,
+    PMIS_OTHER,
+};
 
 enum PanState {
     PAN_IDLE,
@@ -43,6 +51,17 @@ public:
 
     void configure(QDomElement) override;
 
+    /////////////////
+
+    void setEditorMode();
+    void registerWaypoint(WaypointItem* waypoint);
+    //TODO make it private ASAP
+    QMap<QString, ACItemManager*> ac_items_managers;
+    InteractionState interaction_state;
+    int drawState;
+    ItemEditStateMachine* fp_edit_sm;
+    QString current_ac;
+
 signals:
     void mouseMoved(QPointF scenePos);
     void itemAdded(MapItem* map_item);
@@ -56,6 +75,14 @@ protected:
     virtual void dragEnterEvent(QDragEnterEvent *event) override;
     virtual void dropEvent(QDropEvent *event) override;
     virtual void dragMoveEvent(QDragMoveEvent *event) override;
+    virtual void keyReleaseEvent(QKeyEvent *event) override;
+
+private slots:
+    void changeCurrentAC(QString id);
+    void updateAircraftItem(pprzlink::Message msg);
+    void moveWaypoint(pprzlink::Message msg);
+    void updateTarget(pprzlink::Message msg);
+    void updateNavShape(pprzlink::Message msg);
 
 private:
 
@@ -65,6 +92,7 @@ private:
     };
 
     void handleNewAC(QString ac_id);
+    void removeAC(QString ac_id);
     void addLayersWidget();
     void addWidget(QWidget* w, LockButton* button, WidgetContainer side);
 

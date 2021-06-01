@@ -69,12 +69,7 @@ QWidget* rec_build(QDomNode &node, QSplitter* parent, int* size) {
                     c->configure(layout_ele);
                 } else if (layout_ele.tagName() == "horizontalLayout" || layout_ele.tagName() == "verticalLayout") {
                     QLayout* layout = layout_rec_build(layout_ele, widget);
-                    PprzMap* map = dynamic_cast<PprzMap*>(widget);
-                    if(map) {
-                        map->setMapLayout(layout);
-                    } else {
-                        widget->setLayout(layout);
-                    }
+                    widget->setLayout(layout);
                 }
             }
 
