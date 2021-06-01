@@ -31,6 +31,9 @@ public:
     QDomDocument getAirframe() {return airframe;}
     QDomDocument getSettings() {return settings;}
 
+    QString getFlightPlanUri() {return uri_flight_plan;}
+    QString getAirframeUri() { return uri_airframe;}
+
     QString getId() {return ac_id;}
     QString getName() {return ac_name;}
     QColor getColor() {return color;}
@@ -56,6 +59,9 @@ private:
     QDomDocument airframe;
     // QDomDocument radio;
     QDomDocument settings;
+
+    QString uri_flight_plan;
+    QString uri_airframe;
 };
 
 

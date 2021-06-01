@@ -4,8 +4,15 @@
 #include <QString>
 #include <QtXml>
 
-class Airframe
+struct Param {
+    QString name;
+    QString unit;
+    QString value;
+};
+
+class Airframe: public QObject
 {
+    Q_OBJECT
 public:
 
     struct Define {
@@ -21,8 +28,7 @@ public:
       //...
     };
 
-    Airframe();
-    Airframe(QDomDocument doc);
+    Airframe(QDomDocument doc, QObject* parent=nullptr);
 
     QString getFirmware() {return firmware;}
     QString getIconName();
@@ -30,9 +36,15 @@ public:
     float getAltShiftPlusPlus();
     float getAltShiftMinus();
 
+    void saveSettings(QString filename);
+    void setParams(QMap<QString, QString> changed_params);
+    QList<Param> getParams();
+
 private:
     QString name;
     QString firmware;
+
+    QDomDocument doc;
 
     QList<struct Section> sections;
 

@@ -36,19 +36,25 @@ public:
     QString getName() { if(shortname != "") { return shortname;} else {return var;}}
     QList<QString>& getValues() {return values;}
     tuple<float, float, float> getBounds() {return make_tuple(min, max, step);}
-    void setValue(float v) {
+    void setUserValue(float v) {
         last_set_values[1] = last_set_values[0];
         last_set_values[0] = v;
     }
 
-    float getValue() {return last_set_values[0];}
+    void setValue(float v) {
+        value = v;
+    }
+
+    optional<float> getValue() {return value;}
+    float getUserValue() {return last_set_values[0];}
     float getPreviousValue() {return last_set_values[1];}
     float getMin() {return  min;}
     float getMax() {return  max;}
     optional<float> getInitialValue(){return initial_value;}
     void setInitialValue(float val) {initial_value = val;}
 
-    float getAltUnitCoef();
+    float getAltUnitCoef(QString altUnit="");
+    QString getParam() {return param;}
 
     friend ostream& operator<<(ostream& os, const Setting& wp);
 
@@ -75,6 +81,7 @@ private:
     QList<shared_ptr<StripButton>> strip_buttons;
 
     float last_set_values[2];   // last values set by the user from this app.
+    optional<float> value;                // last known value (not necessarily set from the app)
     optional<float> initial_value;
 };
 

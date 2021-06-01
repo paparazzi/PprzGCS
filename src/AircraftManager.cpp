@@ -59,7 +59,6 @@ void AircraftManager::newAircraftConfig(pprzlink::Message msg) {
 void AircraftManager::addAircraft(ConfigData* config) {
     aircrafts[config->getId()] = new Aircraft(config);
     emit DispatcherUi::get()->new_ac_config(config->getId());
-    config->deleteLater();
 }
 
 bool AircraftManager::aircraftExists(QString id) {
@@ -134,10 +133,12 @@ void ConfigData::setData(QDomDocument* doc, QString uri) {
 }
 
 void ConfigData::setFlightPlan(QString uri) {
+    uri_flight_plan = uri;
     setData(&flight_plan, uri);
 }
 
 void ConfigData::setAirframe(QString uri) {
+    uri_airframe = uri;
     setData(&airframe, uri);
 }
 
