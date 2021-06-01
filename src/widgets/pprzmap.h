@@ -59,7 +59,6 @@ private:
     void handleNewAC(QString ac_id);
     void removeAC(QString ac_id);
     void setEditorMode();
-    QString sexagesimalFormat(double lat, double lon);
     Ui::PprzMap *ui;
     int drawState;
     InteractionState interaction_state;

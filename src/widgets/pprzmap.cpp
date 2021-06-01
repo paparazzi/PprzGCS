@@ -315,11 +315,10 @@ void PprzMap::handleMouseMove(QPointF scenePos) {
     auto pt = CoordinatesTransform::get()->pseudoMercator_to_WGS84(ppm);
 
     if(ui->reference_combobox->currentIndex() == 0) {
-        // Why 6 digits ? Its smaller than a person, and bigger than a waldo: https://xkcd.com/2170/
-        QString txt = QString("%1").arg(pt.lat(), 10, 'f', 6, QChar(' ')) + "," + QString("%1").arg(pt.lon(), 11, 'f', 6, QChar(' '));
+        auto txt = pt.toString();
         ui->pos_label->setText(txt);
     } else if (ui->reference_combobox->currentIndex() == 1) {
-        QString txt = sexagesimalFormat(pt.lat(), pt.lon());
+        auto txt = pt.toString(true);
         ui->pos_label->setText(txt);
     } else {
         auto wps = AircraftManager::get()->getAircraft(current_ac)->getFlightPlan()->getWaypoints();
@@ -342,25 +341,6 @@ void PprzMap::handleMouseMove(QPointF scenePos) {
     } else {
         ui->srtm_label->setText("No SRTM");
     }
-}
-
-QString PprzMap::sexagesimalFormat(double lat, double lon) {
-    auto sexformat = [](double nb) {
-        int deg = static_cast<int>(nb);
-        int min = static_cast<int>((nb - deg) * 60);
-        int sec = static_cast<int>((((nb - deg) * 60) - min)*60);
-        QString txt = QString("%1").arg(deg, 3, 10, QChar(' ')) + "° " + QString("%1").arg(min, 2, 10, QChar('0')) + "' " + QString("%1").arg(sec, 2, 10, QChar('0')) + "\"";
-        return txt;
-    };
-
-    QString txtLat = sexformat(abs(lat));
-    QString txtLon = sexformat(abs(lon));
-
-    QString latGeo = lat > 0 ? "N" : "S";
-    QString lonGeo = lon > 0 ? "E" : "W";
-
-    QString txt = txtLat + latGeo + " " + txtLon + lonGeo;
-    return txt;
 }
 
 void PprzMap::moveWaypoint(pprzlink::Message msg) {

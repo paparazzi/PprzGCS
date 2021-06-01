@@ -18,6 +18,8 @@ public:
     void setLat(double lat) {latp = std::clamp(lat, -90., 90.);}
     void setLon(double lon) {lonp = std::clamp(lon, -180., 180.);}
 
+    QString toString(bool sexagesimal=false);
+
 private:
     double latp;
     double lonp;
