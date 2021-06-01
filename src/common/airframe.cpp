@@ -43,9 +43,55 @@ Airframe::Airframe(QDomDocument doc, QObject* parent):  QObject(parent), doc(doc
         sections.push_back(std::move(section));
 
     }
-
 }
 
+QList<Param> Airframe::getParams() {
+    QList<Param> params;
+
+    for(auto section=doc.firstChildElement().firstChildElement("section");
+        !section.isNull();
+        section=section.nextSiblingElement("section")) {
+        for(auto define=section.firstChildElement("define");
+            !define.isNull();
+            define=define.nextSiblingElement("define")) {
+            auto full_name = section.attribute("prefix", "") + define.attribute("name");
+            auto value = define.attribute("value");
+            auto unit = define.attribute("unit", "");
+            params.append({full_name, unit, value});
+        }
+    }
+    return params;
+}
+
+void Airframe::setParams(QMap<QString, QString> changed_params) {
+    for(auto section=doc.firstChildElement().firstChildElement("section");
+        !section.isNull();
+        section=section.nextSiblingElement("section")) {
+        for(auto define=section.firstChildElement("define");
+            !define.isNull();
+            define=define.nextSiblingElement("define")) {
+            auto full_name = section.attribute("prefix", "") + define.attribute("name");
+
+            for(auto it = changed_params.begin(); it!=changed_params.end(); ++it) {
+                if(full_name == it.key()) {
+                    define.setAttribute("value", it.value());
+                }
+            }
+        }
+    }
+}
+
+void Airframe::saveSettings(QString filename) {
+    QFile file(filename);
+    if( !file.open( QIODevice::WriteOnly | QIODevice::Text ) )
+    {
+        qDebug( "Failed to open file for writing." );
+        return;
+    }
+    QTextStream stream( &file );
+    stream << doc.toString();
+    file.close();
+}
 
 QString Airframe::getIconName() {
     for(auto &s: sections) {

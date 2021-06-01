@@ -4,6 +4,12 @@
 #include <QString>
 #include <QtXml>
 
+struct Param {
+    QString name;
+    QString unit;
+    QString value;
+};
+
 class Airframe: public QObject
 {
     Q_OBJECT
@@ -29,6 +35,10 @@ public:
     float getAltShiftPlus();
     float getAltShiftPlusPlus();
     float getAltShiftMinus();
+
+    void saveSettings(QString filename);
+    void setParams(QMap<QString, QString> changed_params);
+    QList<Param> getParams();
 
 private:
     QString name;

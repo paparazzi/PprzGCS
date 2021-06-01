@@ -34,6 +34,7 @@ private:
     QString ac_id;
     QVBoxLayout* main_layout;
     QHBoxLayout* search_layout;
+    QHBoxLayout* path_save_layout;
     QHBoxLayout* path_layout;
     QStackedWidget* path;
     QScrollArea* scroll;
@@ -41,6 +42,7 @@ private:
     QVBoxLayout* content_layout;
 
     QToolButton* button_home;
+    QToolButton* button_save;
 
     QLineEdit* search_bar;
 
@@ -70,6 +72,21 @@ private:
     std::map<Setting*, std::function<void(double)>> label_setters;
     std::map<Setting*, std::function<void(double)>> setters;
     std::map<Setting*, bool> initialized;
+
+};
+
+class SettingSaver: public QDialog
+{
+    Q_OBJECT
+public:
+    explicit SettingSaver(QString ac_id, QWidget *parent = nullptr);
+
+signals:
+
+public slots:
+
+private:
+    QString ac_id;
 
 };
 

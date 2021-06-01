@@ -4,12 +4,14 @@
 #include "AircraftManager.h"
 #include "double_slider.h"
 #include "switch.h"
+#include "gcs_utils.h"
 #include <QDebug>
 
 SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac_id)
 {
     main_layout = new QVBoxLayout(this);
     search_layout = new QHBoxLayout();
+    path_save_layout = new QHBoxLayout();
     path_layout = new QHBoxLayout();
     main_layout->addItem(search_layout);
 
@@ -17,11 +19,17 @@ SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent)
     button_home = new QToolButton(this);
     button_home->setText(QString::fromUtf8("\xE2\x8C\x82"));
 
+    button_save = new QToolButton(this);
+    button_save->setIcon(style()->standardIcon(QStyle::SP_DialogSaveButton));
+
     path_layout->addWidget(button_home);
     path = new QStackedWidget(this);
     path_layout->addWidget(path);
 
-    main_layout->addItem(path_layout);
+    main_layout->addItem(path_save_layout);
+    path_save_layout->addItem(path_layout);
+    path_save_layout->addStretch();
+    path_save_layout->addWidget(button_save);
 
     scroll = new QScrollArea();
     scroll_content = new QStackedWidget();
@@ -103,6 +111,14 @@ void SettingsViewer::init(QString ac_id) {
             scroll_content->setCurrentIndex(widgets_indexes[settings]);
             path->setCurrentIndex(path_indexes[settings]);
             scroll->verticalScrollBar()->setValue(0);
+        }
+    );
+
+    connect(
+        button_save, &QToolButton::clicked, this,
+        [=]() {
+            auto saver_dialog = new SettingSaver(ac_id, this);
+            saver_dialog->open();
         }
     );
 
@@ -429,4 +445,122 @@ void SettingsViewer::updateSettings(QString id, Setting* setting, float value) {
             initialized[setting] = true;
         }
     }
+}
+
+
+
+SettingSaver::SettingSaver(QString ac_id, QWidget *parent) : QDialog(parent),
+    ac_id(ac_id)
+{
+
+    setWindowTitle("Save Settings");
+
+    auto settings = AircraftManager::get()->getAircraft(ac_id)->getSettingMenu()->getAllSettings();
+    auto airframe = AircraftManager::get()->getAircraft(ac_id)->getAirframe();
+    auto params = airframe->getParams();
+
+    QStringList unsavable;
+
+    auto tree = new QTreeWidget(this);
+    tree->setColumnCount(3);
+    tree->setHeaderLabels(QStringList() << "Parameter" << "Airframe Value" << "Setting Value");
+    tree->header()->setSectionResizeMode(QHeaderView::ResizeMode::ResizeToContents);
+
+    for(auto setting: settings) {
+        auto param_name = setting->getParam();
+        if(param_name != "" && setting->getValue().has_value()) {
+            bool found = false;
+            for(auto &p: params) {
+                if(p.name == param_name) {
+                    auto item = new QTreeWidgetItem(tree);
+                    item->setText(0, param_name);
+                    item->setText(1, p.value);
+                    auto val = setting->getValue().value() * setting->getAltUnitCoef(p.unit);
+                    auto valtxt = QString::number(val);
+                    item->setText(2, valtxt);
+                    if(abs(val - p.value.toFloat()) > 0.0001) {
+                        item->setCheckState(0, Qt::Checked);
+                    } else {
+                        item->setCheckState(0, Qt::Unchecked);
+                    }
+
+                    found = true;
+                }
+            }
+            if(!found) {
+                unsavable.append(param_name);
+            }
+        }
+    }
+
+    QString unsavables_text = "Some parameters not writable in the airframe file:\n\n" + unsavable.join("\n");
+    QMessageBox::warning(this, tr("Save Settings"), unsavables_text, QMessageBox::Ok);
+
+    auto lay = new QVBoxLayout(this);
+
+    auto all_check = new QCheckBox("select/unselect all", this);
+
+    lay->addWidget(all_check);
+
+
+    connect(all_check, &QCheckBox::toggled, this, [=](bool state) {
+        for(int i=0; i < tree->topLevelItemCount(); i++) {
+            auto item = tree->topLevelItem(i);
+            item->setCheckState(0, state ? Qt::Checked : Qt::Unchecked);
+        }
+    });
+
+
+    lay->addWidget(tree);
+
+
+
+    auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel, this);
+    lay->addWidget(buttonBox);
+
+    connect(buttonBox->button(QDialogButtonBox::Save), &QPushButton::clicked, this, [=](){
+        QMap<QString, QString> changed_params;
+
+        for(int i=0; i < tree->topLevelItemCount(); i++) {
+            auto item = tree->topLevelItem(i);
+            if(item->checkState(0)) {
+                auto param_name = item->text(0);
+                auto value = item->text(2);
+                changed_params[param_name] = value;
+            }
+        }
+
+        auto uri = AircraftManager::get()->getAircraft(ac_id)->getConfig()->getAirframeUri();
+        QString separator = "://";
+        int sepi = uri.indexOf(separator);
+        (void)sepi;
+        QString path;
+        if(uri.left(sepi) == "file") {
+            path = uri.mid(sepi + separator.size());
+        } else {
+            auto settings = getAppSettings();
+            path = settings.value("PAPARAZZI_HOME").toString() + "/conf/airframes";
+        }
+
+        auto savePath = QFileDialog::getSaveFileName(this, "Save File", path, "XML files (*.xml)", 0, QFileDialog::DontUseNativeDialog);
+        //auto savePath = QFileDialog::getSaveFileName(this, "Save File", path, "XML files (*.xml)", 0);
+
+        if(savePath != "") {
+            if(savePath == path) {
+                // copy original file before overwriting it
+                auto suffix = QDateTime::currentDateTime().toString("_yy_MM_dd__hh_mm_ss") + ".xml";
+                auto newpath = path.left(path.length() - 4) + suffix;
+                QFile::copy(path, newpath);
+            }
+            airframe->setParams(changed_params);
+            airframe->saveSettings(savePath);
+        }
+
+        accept();
+
+    });
+
+    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=](){
+        reject();
+    });
 }
