@@ -3,6 +3,7 @@
     <widget name="map2d" size="800">
       <configure>
         <columnLeft>
+            <widget name="layers" icon="map_layers_normal.svg"/>
             <widget name="commands" icon="nav.svg"/>
             <widget name="gps_classic_viewer" icon="gps.svg"/>
         </columnLeft>

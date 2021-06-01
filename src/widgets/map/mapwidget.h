@@ -18,6 +18,7 @@
 class ACItemManager;
 class ItemEditStateMachine;
 class MapItem;
+class LayerCombo;
 
 enum InteractionState {
     PMIS_FLIGHT_PLAN_EDIT,
@@ -39,7 +40,6 @@ public:
 
     void addItem(MapItem* map_item);
     void removeItem(MapItem* item);
-    MapLayerControl* makeLayerControl(QString name, bool initialState, int z);
     virtual void setCursor(const QCursor &);
     void setPanMask(int mask) {pan_mouse_mask = mask; setMouseLoadTileMask(mask);}
     void itemsForbidHighlight(bool fh);
@@ -93,7 +93,7 @@ private:
 
     void handleNewAC(QString ac_id);
     void removeAC(QString ac_id);
-    void addLayersWidget();
+    LayerCombo* makeLayerCombo();
     void addWidget(QWidget* w, LockButton* button, WidgetContainer side);
 
     QList<MapItem*> _items;

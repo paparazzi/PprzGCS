@@ -57,7 +57,13 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     centerLatLon(Point2DLatLon(43.462344,1.273044));
     setTilesPath(settings.value("map/tiles_path").toString());
 
-    addLayersWidget();
+    int i = tileProvidersNames().length();
+    for(auto &tp: tileProvidersNames() ) {
+        if(tp == settings.value("map/default_tiles").toString()) {
+            toggleTileProvider(tp, true, i, 1);
+        }
+        i--;
+    }
 
     connect(scene(), &MapScene::eventScene, this,
         [=](SmEditEvent eventType, QGraphicsSceneMouseEvent *mouseEvent) {
@@ -127,7 +133,7 @@ void MapWidget::registerWaypoint(WaypointItem* waypoint) {
         });
 }
 
-void MapWidget::addLayersWidget() {
+LayerCombo* MapWidget::makeLayerCombo() {
     auto settings = getAppSettings();
 
     auto layer_combo = new LayerCombo(this);
@@ -136,18 +142,37 @@ void MapWidget::addLayersWidget() {
     int i = tileProvidersNames().length();
     for(auto &tp: tileProvidersNames() ) {
         bool shown = false;
-        if(tp == settings.value("map/default_tiles").toString()) {
-            toggleTileProvider(tp, true, i, 1);
-            shown = true;
-        }
-        auto lc = makeLayerControl(tp, shown, i);
-        layer_combo->addLayerControl(lc);
+        layer_combo->makeLayerControl(tp, shown, i);
         i--;
     }
 
-    auto button = new LockButton(QIcon(settings.value("APP_DATA_PATH").toString() + "/pictures/" + "map_layers_normal.svg"), this);
+    connect(
+        layer_combo, &LayerCombo::showLayer, this,
+        [=](QString name, bool state, int zValue, qreal opacity) {
+            toggleTileProvider(name, state, zValue, opacity);
+            updateTiles();
+        }
+    );
 
-    addWidget(layer_combo, button, WIDGETS_LEFT);
+    connect(
+        layer_combo, &LayerCombo::layerOpacityChanged, this,
+        [=](QString name, qreal opacity) {
+            setLayerOpacity(name, opacity);
+        }
+    );
+
+    connect(
+        layer_combo, &LayerCombo::zValueChanged, this,
+        [=](QString name, int z) {
+            setLayerZ(name, z);
+        }
+    );
+
+    return layer_combo;
+
+    //auto button = new LockButton(QIcon(settings.value("APP_DATA_PATH").toString() + "/pictures/" + "map_layers_normal.svg"), this);
+
+    //addWidget(layer_combo, button, WIDGETS_LEFT);
 }
 
 void MapWidget::addWidget(QWidget* widget, LockButton* button, WidgetContainer side) {
@@ -203,7 +228,13 @@ void MapWidget::configure(QDomElement ele) {
             assert(w_ele.tagName() == "widget");
             auto name = w_ele.attribute("name");
 
-            QWidget* widget = makeWidget(name, this);
+            QWidget* widget = nullptr;
+            if(name == "layers") {
+                widget = makeLayerCombo();
+            } else {
+                widget = makeWidget(name, this);
+            }
+
 
             WidgetContainer side;
             if(child_ele.tagName() == "columnLeft") {
@@ -229,43 +260,6 @@ void MapWidget::configure(QDomElement ele) {
         }
     }
 }
-
-MapLayerControl* MapWidget::makeLayerControl(QString name, bool initialState, int z) {
-    QString path = user_or_app_path("pictures/map_thumbnails/" + name + ".png");
-    auto settings = getAppSettings();
-    QPixmap thumbnail = QPixmap(path);
-    if(thumbnail.isNull()) {
-        path = user_or_app_path("pictures/map_thumbnails/default.png");
-        thumbnail = QPixmap(path);
-    }
-
-    MapLayerControl* layer_control = new MapLayerControl(name, thumbnail, initialState, z);
-
-    connect(
-        layer_control, &MapLayerControl::showLayer, this,
-        [=](bool state) {
-            toggleTileProvider(name, state, layer_control->zValue(), layer_control->opacity());
-            updateTiles();
-        }
-    );
-
-    connect(
-        layer_control, &MapLayerControl::layerOpacityChanged, this,
-        [=](qreal opacity) {
-            setLayerOpacity(name, opacity);
-        }
-    );
-
-    connect(
-        layer_control, &MapLayerControl::zValueChanged, this,
-        [=](int z) {
-            setLayerZ(name, z);
-        }
-    );
-
-    return layer_control;
-}
-
 
 void MapWidget::setCursor(const QCursor &cur) {
     QGraphicsView::setCursor(cur);

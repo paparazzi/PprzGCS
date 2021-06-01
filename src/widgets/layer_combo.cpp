@@ -1,4 +1,5 @@
 #include "layer_combo.h"
+#include "gcs_utils.h"
 
 LayerCombo::LayerCombo(QWidget *parent) : QWidget(parent), moved_layer_control(nullptr)
 {
@@ -129,4 +130,41 @@ void LayerCombo::mouseReleaseEvent(QMouseEvent* e) {
 
     }
     moved_layer_control = nullptr;
+}
+
+
+
+void LayerCombo::makeLayerControl(QString name, bool initialState, int z) {
+    QString path = user_or_app_path("pictures/map_thumbnails/" + name + ".png");
+    auto settings = getAppSettings();
+    QPixmap thumbnail = QPixmap(path);
+    if(thumbnail.isNull()) {
+        path = user_or_app_path("pictures/map_thumbnails/default.png");
+        thumbnail = QPixmap(path);
+    }
+
+    MapLayerControl* layer_control = new MapLayerControl(name, thumbnail, initialState, z);
+
+    connect(
+        layer_control, &MapLayerControl::showLayer, this,
+        [=](bool state) {
+            emit showLayer(name, state, layer_control->zValue(), layer_control->opacity());
+        }
+    );
+
+    connect(
+        layer_control, &MapLayerControl::layerOpacityChanged, this,
+        [=](qreal opacity) {
+            emit layerOpacityChanged(name, opacity);
+        }
+    );
+
+    connect(
+        layer_control, &MapLayerControl::zValueChanged, this,
+        [=](int z) {
+            emit zValueChanged(name, z);
+        }
+    );
+
+    addLayerControl(layer_control);
 }
