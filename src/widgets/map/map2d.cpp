@@ -70,14 +70,14 @@ void Map2D::setLayerZ(QString providerName, int z) {
 void Map2D::setTilesPath(QString path) {
     tiles_path = path;
     for(auto &tp: tile_providers) {
-        tp.second->setTilesPath(tiles_path);
+        tp->setTilesPath(tiles_path);
     }
 }
 
 bool Map2D::setTilesPath(QString path, QString providerName) {
     auto tp = tile_providers.find(providerName);
     if(tp != tile_providers.end()) {
-        tp->second->setTilesPath(path);
+        tp.value()->setTilesPath(path);
         return true;
     }
     return false;
@@ -201,8 +201,8 @@ void Map2D::zoomCentered(double z, QPoint eventPos) {
     QPointF delta = newPos - poi_scene;
     translate(delta.x(), delta.y());
 
-    for(auto &elt: tile_providers) {
-        elt.second->setZoomLevel(nextZoomLevel);
+    for(auto elt: qAsConst(tile_providers)) {
+        elt->setZoomLevel(nextZoomLevel);
     }
 
     updateTiles();
@@ -223,8 +223,8 @@ void Map2D::updateTiles() {
     int yCenter = static_cast<int>(center.y()/tile_size);
     int N = ceil(std::max(width(), height()) / (2.0 * tile_size)) + 1;
 
-    for(auto &elt: tile_providers) {
-        TileProvider* tileProvider = elt.second;
+    for(auto elt=tile_providers.begin(); elt!=tile_providers.end(); ++elt) {
+        TileProvider* tileProvider = elt.value();
         if(tileProvider->isVisible()) {
 
             Point2DTile coor = Point2DTile(xCenter, yCenter, zoomLevel(_zoom));
@@ -280,8 +280,8 @@ void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {
 
 QList<QString> Map2D::tileProvidersNames() {
     QList<QString> names;
-    for(auto &tp: sourceConfigs) {
-        names.append(tp.first);
+    for(auto tp=sourceConfigs.begin(); tp!=sourceConfigs.end(); ++tp) {
+        names.append(tp.key());
     }
     return names;
 }

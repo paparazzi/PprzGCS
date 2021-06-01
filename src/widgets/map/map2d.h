@@ -21,7 +21,7 @@ public:
     virtual void centerLatLon(Point2DLatLon latLon);
     double zoomBox(Point2DLatLon nw, Point2DLatLon se);
     void toggleTileProvider(QString providerName, bool enable, int zValue = 0, qreal opacity = 1);
-    std::map<QString, TileProviderConfig*>* tileProviders() {return &sourceConfigs;}
+    QMap<QString, TileProviderConfig*>* tileProviders() {return &sourceConfigs;}
     QList<QString> tileProvidersNames();
     void updateTiles();
     void getViewPoints(Point2DLatLon& nw, Point2DLatLon& sw);
@@ -88,8 +88,8 @@ private:
 
     int wheelAccumulator;
 
-    std::map<QString, TileProviderConfig*> sourceConfigs;
-    std::map<QString, TileProvider*> tile_providers;
+    QMap<QString, TileProviderConfig*> sourceConfigs;
+    QMap<QString, TileProvider*> tile_providers;
 
 };
 
