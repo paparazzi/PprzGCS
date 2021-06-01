@@ -248,7 +248,7 @@ void PprzMap::handleNewAC(QString ac_id) {
     target->setZValues(z_carrot, z_carrot);
 
     //create the ACItemManager for this aircraft
-    auto item_manager = make_shared<ACItemManager>(ac_id, target, aircraft_item);
+    auto item_manager = new ACItemManager(ac_id, target, aircraft_item, this);
     ac_items_managers[ac_id] = item_manager;
 
     for(auto wp: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoints()) {
@@ -306,6 +306,7 @@ void PprzMap::handleNewAC(QString ac_id) {
 
 void PprzMap::removeAC(QString ac_id) {
     ac_items_managers[ac_id]->removeItems(ui->map);
+    ac_items_managers[ac_id]->deleteLater();
     ac_items_managers.remove(ac_id);
 }
 

@@ -64,7 +64,7 @@ private:
     InteractionState interaction_state;
     ItemEditStateMachine* fp_edit_sm;
 
-    QMap<QString, std::shared_ptr<ACItemManager>> ac_items_managers;
+    QMap<QString, ACItemManager*> ac_items_managers;
 
     QString current_ac;
 

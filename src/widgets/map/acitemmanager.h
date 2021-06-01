@@ -7,10 +7,11 @@
 #include "path_item.h"
 #include "mapwidget.h"
 
-class ACItemManager
+class ACItemManager: public QObject
 {
+    Q_OBJECT
 public:
-    ACItemManager(QString ac_id, WaypointItem* target, AircraftItem* aircraft_item);
+    ACItemManager(QString ac_id, WaypointItem* target, AircraftItem* aircraft_item, QObject* parent=nullptr);
 
     void addWaypointItem(WaypointItem*);
     void addPathItem(PathItem*);

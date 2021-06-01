@@ -1,6 +1,7 @@
 #include "acitemmanager.h"
 
-ACItemManager::ACItemManager(QString ac_id, WaypointItem* target, AircraftItem* aircraft_item):
+ACItemManager::ACItemManager(QString ac_id, WaypointItem* target, AircraftItem* aircraft_item, QObject* parent):
+    QObject(parent),
     ac_id(ac_id), target(target), aircraft_item(aircraft_item), current_nav_shape(nullptr)
 {
 
