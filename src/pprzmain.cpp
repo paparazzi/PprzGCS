@@ -141,14 +141,13 @@ void PprzMain::newAC(QString ac_id) {
     acActions[ac_id] = action;
 
     menu->addAction("Remove", this, [ac_id](){
-        emit(DispatcherUi::get()->ac_deleted(ac_id));
+        emit DispatcherUi::get()->ac_deleted(ac_id);
         AircraftManager::get()->removeAircraft(ac_id);
     });
 
 }
 
 void PprzMain::removeAC(QString ac_id) {
-    (void)ac_id;
     auto action = acActions[ac_id];
     auto menu = acMenus[ac_id];
 
