@@ -75,8 +75,6 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
                         }
                     }
                 }
-
-                emit DispatcherUi::get()->ac_deleted(id);
                 AircraftManager::get()->removeAircraft(id);
             }
         }

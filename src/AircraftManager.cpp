@@ -67,6 +67,7 @@ bool AircraftManager::aircraftExists(QString id) {
 
 void AircraftManager::removeAircraft(QString ac_id) {
     if(aircraftExists(ac_id)) {
+        emit DispatcherUi::get()->ac_deleted(ac_id);
         aircrafts[ac_id]->deleteLater();
         aircrafts.remove(ac_id);
     }
