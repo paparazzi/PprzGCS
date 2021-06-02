@@ -13,12 +13,9 @@
 #include <QDebug>
 #include "gcs_utils.h"
 
-TileProvider::TileProvider(TileProviderConfig config, int z, int displaySize, QString tiles_path, QObject *parent) : QObject (parent),
-    config(config), z_value(z), alpha(1), visibility(true), tileDisplaySize(displaySize), tiles_path(tiles_path)
+TileProvider::TileProvider(TileProviderConfig* config, int z, int displaySize, QString tiles_path, QObject *parent) : QObject (parent),
+    _config(config), z_value(z), alpha(1), visibility(true), tileDisplaySize(displaySize), tiles_path(tiles_path)
 {
-    if(tileDisplaySize == 0) {
-        tileDisplaySize = config.tileSize;
-    }
     motherTile = new TileItem(nullptr, tileDisplaySize, Point2DTile(0, 0, 0));
     manager = new QNetworkAccessManager(this);
     diskCache = new QNetworkDiskCache(this);
@@ -28,19 +25,23 @@ TileProvider::TileProvider(TileProviderConfig config, int z, int displaySize, QS
     connect(manager, &QNetworkAccessManager::finished, this, &TileProvider::handleReply);
 }
 
+TileProvider::~TileProvider() {
+    delete _config;
+}
+
 QString TileProvider::tilePath(Point2DTile coor) {
     if(tiles_path == QString()) {
         throw std::runtime_error("Tiles path not set!");
     }
-    QString path = tiles_path + "/" + config.dir + "/" +
+    QString path = tiles_path + "/" + _config->dir + "/" +
             QString::number(coor.zoom()) + "/" +
             QString::number(coor.xi()) + "/" +
-            QString::number(coor.yi()) + config.format;
+            QString::number(coor.yi()) + _config->format;
     return path;
 }
 
 QUrl TileProvider::tileUrl(Point2DTile coor) {
-    QString url = config.addr;
+    QString url = _config->addr;
     url.replace("{x}", QString::number(coor.xi()));
     url.replace("{y}", QString::number(coor.yi()));
     url.replace("{z}", QString::number(coor.zoom()));
@@ -55,7 +56,7 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
     TileItem* tile = getValidTile(t);
     TileItem* tileObj = getTile(tObj);
 
-    if(t.zoom() < config.zoomMin - 1) {  // no bigger tile
+    if(t.zoom() < _config->zoomMin - 1) {  // no bigger tile
         tile->setRequestStatus(TILE_DO_NOT_EXISTS);
         return;
     }
@@ -113,11 +114,11 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
         }
 
         // then download the tile
-        if(config.addr != "") {
+        if(_config->addr != "") {
             downloadTile(tile, tileObj);
         } else {
             QString error_msg = QString("%1: requested tile %2 does not exists and no address is set.")
-                    .arg(config.name, tile->coordinates().to_istring());
+                    .arg(_config->name, tile->coordinates().to_istring());
             logDebug("TileProvider", error_msg, LOG_LOW);
             tile->setRequestStatus(TILE_DO_NOT_EXISTS);
         }
@@ -151,7 +152,7 @@ void TileProvider::downloadTile(TileItem* tile, TileItem* tileObj) {
         throw "Tile coordinates invalid, but it should have been checked before!";
     }
 
-    if(!config.isValid(tile->coordinates())) {
+    if(!_config->isValid(tile->coordinates())) {
         tile->setRequestStatus(TILE_DO_NOT_EXISTS);
         return;
     }
@@ -280,7 +281,7 @@ TileItem* TileProvider::getTile(Point2DTile p) {
 }
 
 TileItem* TileProvider::getValidTile(Point2DTile p) {
-    int zoom = std::clamp(p.zoom(), config.zoomMin, config.zoomMax);
+    int zoom = std::clamp(p.zoom(), _config->zoomMin, _config->zoomMax);
     p.changeZoom(zoom);
     return getTile(p);
 }

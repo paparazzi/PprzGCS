@@ -20,9 +20,8 @@ public:
     explicit Map2D(QWidget *parent = nullptr);
     virtual void centerLatLon(Point2DLatLon latLon);
     double zoomBox(Point2DLatLon nw, Point2DLatLon se);
-    void toggleTileProvider(QString providerName, bool enable, int zValue = 0, qreal opacity = 1);
-    QMap<QString, TileProviderConfig*>* tileProviders() {return &sourceConfigs;}
-    QList<QString> tileProvidersNames();
+    void toggleTileProvider(QString providerName, bool enable);
+    QList<TileProvider*> tileProviders();
     void updateTiles();
     void getViewPoints(Point2DLatLon& nw, Point2DLatLon& sw);
     double zoom() {return _zoom;}
@@ -35,22 +34,6 @@ public:
     void setLayerZ(QString providerName, int z);
     double scaleFactor() {return pow(2, _zoom - zoomLevel(_zoom));}
     void setMouseLoadTileMask(int mask) {mouse_load_tiles_mask = mask;}
-
-    //Point2DLatLon latlonPoint(QPointF scenePos, int zoom);
-
-    ///
-    /// \brief setTilesPath set directory under which tiles are stored for all tiles providers
-    /// \param path
-    ///
-    void setTilesPath(QString path);
-
-    ///
-    /// \brief setTilesPath set directory under which tiles are stored for a specific tiles providers
-    /// \param path
-    /// \param providerName
-    /// \return
-    ///
-    bool setTilesPath(QString path, QString providerName);
 
 signals:
 
@@ -76,7 +59,7 @@ private slots:
 
 
 private:
-    void loadConfig(QString filename);
+    static QList<TileProviderConfig*> loadConfig(QString filename);
 
     int mouse_load_tiles_mask;
     double numericZoom;
@@ -84,11 +67,9 @@ private:
     int tile_size;
     double minZoom;
     double maxZoom;
-    QString tiles_path;
 
     int wheelAccumulator;
 
-    QMap<QString, TileProviderConfig*> sourceConfigs;
     QMap<QString, TileProvider*> tile_providers;
 
 };

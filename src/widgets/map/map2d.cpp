@@ -15,10 +15,25 @@
 Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     numericZoom(0.0), _zoom(5.0), tile_size(256), minZoom(0.0), maxZoom(25.0), wheelAccumulator(0)
 {
+    auto settings = getAppSettings();
     QString configFile = user_or_app_path("tile_sources.xml");
-    loadConfig(configFile);
-    qreal maxxy = pow(2, maxZoom);
+    auto configs = loadConfig(configFile);
+    for(auto c:configs) {
+        auto providerName = c->name;
+        if(tile_providers.size() == 0) {
+            // the tile size choosen will be the one of the first tile provider.
+            tile_size = c->tileSize;
+        }
+        QString tiles_path = settings.value("map/tiles_path").toString();
+        int z =configs.count() - c->initial_rank;
+        auto tp = new TileProvider(c, z, tile_size, tiles_path, this);
+        tp->setOpacity(1);
+        tp->setVisible(false);
+        connect(tp, &TileProvider::displayTile, this, &Map2D::handleTile);
+        tile_providers[providerName] = tp;
+    }
 
+    qreal maxxy = pow(2, maxZoom);
     _scene = new MapScene(-500, -500, tile_size*maxxy, tile_size*maxxy, parent);
     setScene(_scene);
 
@@ -32,55 +47,22 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     Point2DLatLon initLatLon(43.462344,1.273044);
 }
 
-void Map2D::toggleTileProvider(QString providerName, bool enable, int zValue, qreal opacity) {
-    if(enable) {
-        if(tile_providers.find(providerName) != tile_providers.end()) {
-            tile_providers[providerName]->setVisible(true);
-        } else {
-            // create it
-            if(tile_providers.size() == 0) {
-                tile_size = sourceConfigs[providerName]->tileSize;
-            }
-            tile_providers[providerName] = new TileProvider(*sourceConfigs[providerName], zValue, tile_size, tiles_path, this);
-            tile_providers[providerName]->setOpacity(opacity);
-            connect(tile_providers[providerName], SIGNAL(displayTile(TileItem*, TileItem*)), this, SLOT(handleTile(TileItem*, TileItem*)));
-        }
-    }
-    else {
-        if(tile_providers.find(providerName) != tile_providers.end()) {
-            tile_providers[providerName]->setVisible(false);
-        } else {
-            throw std::runtime_error("Can't desactivate something that don't exists!");
-        }
+void Map2D::toggleTileProvider(QString providerName, bool enable) {
+    if(tile_providers.contains(providerName)) {
+        tile_providers[providerName]->setVisible(enable);
     }
 }
 
 void Map2D::setLayerOpacity(QString providerName, qreal opacity) {
-    if(tile_providers.find(providerName) != tile_providers.end()) {
+    if(tile_providers.contains(providerName)) {
         tile_providers[providerName]->setOpacity(opacity);
     }
 }
 
 void Map2D::setLayerZ(QString providerName, int z) {
-    if(tile_providers.find(providerName) != tile_providers.end()) {
+    if(tile_providers.contains(providerName)) {
         tile_providers[providerName]->setZValue(z);
     }
-}
-
-void Map2D::setTilesPath(QString path) {
-    tiles_path = path;
-    for(auto &tp: tile_providers) {
-        tp->setTilesPath(tiles_path);
-    }
-}
-
-bool Map2D::setTilesPath(QString path, QString providerName) {
-    auto tp = tile_providers.find(providerName);
-    if(tp != tile_providers.end()) {
-        tp.value()->setTilesPath(path);
-        return true;
-    }
-    return false;
 }
 
 void Map2D::centerLatLon(Point2DLatLon latLon) {
@@ -111,7 +93,9 @@ double Map2D::zoomBox(Point2DLatLon nw, Point2DLatLon se) {
     return targetZoom;
 }
 
-void Map2D::loadConfig(QString filename) {
+QList<TileProviderConfig*> Map2D::loadConfig(QString filename) {
+    QList<TileProviderConfig*> configs;
+
     QDomDocument xmlLayout;
     QFile f(filename);
     if(!f.open(QIODevice::ReadOnly)) {
@@ -131,9 +115,10 @@ void Map2D::loadConfig(QString filename) {
             QDomElement ele = root.childNodes().item(i).toElement();
             auto tpc = new TileProviderConfig(ele);
             tpc->initial_rank = i;
-            sourceConfigs[tpc->name] = tpc;
+            configs.append(tpc);
         }
     }
+    return configs;
 }
 
 void Map2D::resizeEvent(QResizeEvent *event){
@@ -279,19 +264,13 @@ void Map2D::handleTile(TileItem* tileReady, TileItem* tileObj) {
     }
 }
 
-QList<QString> Map2D::tileProvidersNames() {
-    QList<QString> names;
-
-    auto vals = sourceConfigs.values();
-    std::sort(vals.begin(), vals.end(),
-        [](TileProviderConfig* ltpc, TileProviderConfig* rtpc) {
-            return ltpc->initial_rank < rtpc->initial_rank;
+QList<TileProvider*> Map2D::tileProviders() {
+    auto tps = tile_providers.values();
+    std::sort(tps.begin(), tps.end(),
+        [](TileProvider* ltp, TileProvider* rtp) {
+            return ltp->config()->initial_rank < rtp->config()->initial_rank;
     });
-
-    for(auto tp : qAsConst(vals)) {
-        names.append(tp->name);
-    }
-    return names;
+    return tps;
 }
 
 Point2DLatLon Map2D::latlonFromView(QPoint viewPos, int zoom) {

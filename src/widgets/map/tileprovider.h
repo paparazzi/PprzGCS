@@ -30,7 +30,8 @@ class TileProvider : public QObject
 {
     Q_OBJECT
 public:
-    explicit TileProvider(TileProviderConfig config, int z, int tileDisplaySize, QString tiles_path, QObject *parent = nullptr);
+    explicit TileProvider(TileProviderConfig* config, int z, int tileDisplaySize, QString tiles_path, QObject *parent = nullptr);
+    ~TileProvider();
     void fetch_tile(Point2DTile t, Point2DTile tObj);
 
     ///
@@ -56,7 +57,7 @@ public:
     void setTilesPath(QString path) {tiles_path = path;}
 
 
-    TileProviderConfig getConfig() {return config;}
+    TileProviderConfig* config() {return _config;}
 
 signals:
     // tileReady is the tile loaded in memory, tileObj is the one to actually display
@@ -72,7 +73,7 @@ private:
     QUrl tileUrl(Point2DTile);
     bool load_tile_from_disk(TileItem*);
 
-    TileProviderConfig config;
+    TileProviderConfig* _config;
     int z_value;
     qreal alpha;
     bool visibility;

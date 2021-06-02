@@ -55,14 +55,12 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
 
     setZoom(2);
     centerLatLon(Point2DLatLon(43.462344,1.273044));
-    setTilesPath(settings.value("map/tiles_path").toString());
 
-    int i = tileProvidersNames().length();
-    for(auto &tp: tileProvidersNames() ) {
-        if(tp == settings.value("map/default_tiles").toString()) {
-            toggleTileProvider(tp, true, i, 1);
+    for(auto &tp: tileProviders() ) {
+        auto config = tp->config();
+        if(config->name == settings.value("map/default_tiles").toString()) {
+            toggleTileProvider(config->name, true);
         }
-        i--;
     }
 
     connect(scene(), &MapScene::eventScene, this,
@@ -139,17 +137,17 @@ LayerCombo* MapWidget::makeLayerCombo() {
     auto layer_combo = new LayerCombo(this);
     //layer_combo->setStyleSheet("QWidget{background-color: #31363b;} QLabel{color:white;}");
 
-    int i = tileProvidersNames().length();
-    for(auto &tp: tileProvidersNames() ) {
-        bool shown = false;
-        layer_combo->makeLayerControl(tp, shown, i);
-        i--;
+    auto tps = tileProviders();
+    for(auto &tp: tps ) {
+        int z = tps.count() - tp->config()->initial_rank;
+        bool visible = tp->isVisible();
+        layer_combo->makeLayerControl(tp->config()->name, visible, z);
     }
 
     connect(
         layer_combo, &LayerCombo::showLayer, this,
-        [=](QString name, bool state, int zValue, qreal opacity) {
-            toggleTileProvider(name, state, zValue, opacity);
+        [=](QString name, bool state) {
+            toggleTileProvider(name, state);
             updateTiles();
         }
     );
