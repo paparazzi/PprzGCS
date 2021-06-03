@@ -12,10 +12,9 @@ Block::Block(QString name, uint8_t no) :
 Block::Block(QDomElement blk) {
 
     assert(blk.hasAttribute("name"));
-    assert(blk.hasAttribute("no"));
 
     name = blk.attribute("name");
-    no = blk.attribute("no").toUInt();
+    no = blk.attribute("no", "0").toUInt();
 
     setIcon(blk.attribute("strip_icon", ""));
     setText(blk.attribute("strip_button", ""));

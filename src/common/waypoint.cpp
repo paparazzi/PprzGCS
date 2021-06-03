@@ -11,7 +11,7 @@ Waypoint::Waypoint(Waypoint* original, QObject* parent):
     type = original->type;
     id = original->id;
     lat = original->lat;
-    lon = original->lat;
+    lon = original->lon;
     origin = original;
     alt = original->alt;
     alt_type = original->alt_type;
@@ -45,11 +45,7 @@ Waypoint::Waypoint(QString name, uint8_t id, double lat, double lon, double alt,
 Waypoint::Waypoint(QDomElement wp, uint8_t wp_id, Waypoint* orig, double defaultAlt, WpFrame frame_type, QObject* parent):
     QObject(parent)
 {
-    auto name_p = wp.attribute("name");
-    auto lat_p = wp.attribute("lat");
-    auto lon_p = wp.attribute("lon");
-    auto x_p = wp.attribute("x");
-    auto y_p = wp.attribute("y");
+
 
     Waypoint::WpAltType altType = Waypoint::WpAltType::ALT;
     double alt;
@@ -62,14 +58,14 @@ Waypoint::Waypoint(QDomElement wp, uint8_t wp_id, Waypoint* orig, double default
         alt = defaultAlt;
     }
 
-    name = name_p;
+    name = wp.attribute("name");
     id = wp_id;
 
-    if(lat_p != nullptr && lon_p != nullptr) {
+    if(wp.hasAttribute("lat") && wp.hasAttribute("lon")) {
 
         type = WGS84;
-        this->lat = parse_coordinate(lat_p);
-        this->lon = parse_coordinate(lon_p);
+        this->lat = parse_coordinate(wp.attribute("lat"));
+        this->lon = parse_coordinate(wp.attribute("lon"));
         this->alt = alt;
         alt_type = ALT;
 
@@ -77,13 +73,15 @@ Waypoint::Waypoint(QDomElement wp, uint8_t wp_id, Waypoint* orig, double default
             throw std::runtime_error("Unimplemented! Can't (yet) create absolute waypoint with relative height!");
         }
     }
-    else if(x_p !=nullptr && y_p != nullptr) {
+    else if(wp.hasAttribute("x") && wp.hasAttribute("y")) {
+        auto x = wp.attribute("x").toDouble();
+        auto y = wp.attribute("y").toDouble();
         if(frame_type == WpFrame::UTM) {
-            auto latlon = CoordinatesTransform::get()->relative_utm_to_wgs84(orig, x_p.toDouble(), y_p.toDouble());
+            auto latlon = CoordinatesTransform::get()->relative_utm_to_wgs84(orig,  x, y);
             this->lat = latlon.lat();
             this->lon = latlon.lon();
         } else if(frame_type == WpFrame::LTP) {
-            auto latlon = CoordinatesTransform::get()->ltp_to_wgs84(orig, x_p.toDouble(), y_p.toDouble());
+            auto latlon = CoordinatesTransform::get()->ltp_to_wgs84(orig, x, y);
             this->lat = latlon.lat();
             this->lon = latlon.lon();
         }

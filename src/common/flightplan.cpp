@@ -18,7 +18,14 @@ FlightPlan::FlightPlan(QDomDocument doc, QObject* parent) :
     QObject(parent),
     origin()
 {
-    QDomElement fp_root = doc.firstChildElement( "dump" ).firstChildElement( "flight_plan" );
+    QDomElement fp_root = doc.firstChildElement( "dump" );
+
+    if(!fp_root.isNull()) {
+        fp_root = fp_root.firstChildElement( "flight_plan" );
+    } else {
+        fp_root = doc.firstChildElement( "flight_plan" );
+    }
+
     name = fp_root.attribute("name");
     auto lat0 = fp_root.attribute("lat0");
     auto lon0 = fp_root.attribute("lon0");
