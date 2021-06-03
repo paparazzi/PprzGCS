@@ -14,19 +14,24 @@ QString user_or_app_path(QString data_path) {
 }
 
 double parse_coordinate(QString str) {
-    (void)str;
+    str = str.toUpper();
     QRegExp decimal_rx("[+-]?([0-9]*[.])?[0-9]+");
-    QRegExp sexa_rx("([+-]?[0-9]+) ([0-9]+) ((?:[0-9]*[.])?[0-9]+)");
+    QRegExp sexa_rx("([+-]?[0-9]+) ([0-9]+) ((?:[0-9]*[.])?[0-9]+) ?([NSEW]?)");
     if(decimal_rx.exactMatch(str)) {
         return str.toDouble();
     }
     else if(sexa_rx.exactMatch(str)) {
-        sexa_rx.indexIn(str);
         auto caps = sexa_rx.capturedTexts();
-        if(caps.length() == 4) {
-            auto deg = std::stoi(caps[1].toStdString());
-            auto min = std::stoi(caps[2].toStdString());
-            auto sec = std::stoi(caps[3].toStdString());
+        if(caps.length() == 5) {
+            auto deg = caps[1].toInt();
+            auto min = caps[2].toInt();
+            auto sec = caps[3].toDouble();
+            auto dir = caps[4];
+            if(dir == "S" || dir == "W") {
+                deg = -deg;
+                min = -min;
+                sec = -sec;
+            }
             double coor = deg + min/60.0 + sec/3600.0;
             return coor;
         }
