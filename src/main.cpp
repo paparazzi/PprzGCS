@@ -56,18 +56,13 @@ int main(int argc, char *argv[])
         parser.addHelpOption();
         parser.addVersionOption();
 
-        QCommandLineOption configureOption("c", "Configure app settings");
-        parser.addOption(configureOption);
-
-        QCommandLineOption silentModeOption("s", "Silent mode");
-        parser.addOption(silentModeOption);
-
-        QCommandLineOption verboseOption("v", "Verbose");
-        parser.addOption(verboseOption);
+        parser.addOption({{"c", "configure"}, "Configure app settings."});
+        parser.addOption({{"s", "silent"}, "Silent mode."});
+        parser.addOption({{"v", "verbose"}, "Verbose"});
 
         parser.process(a);
 
-        setVerbose(parser.isSet(verboseOption));
+        setVerbose(parser.isSet("v"));
 
 
         QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -89,9 +84,9 @@ int main(int argc, char *argv[])
 
         a.init();
 
-        PprzDispatcher::get()->setSilent(parser.isSet(silentModeOption));
+        PprzDispatcher::get()->setSilent(parser.isSet("silent"));
 
-        if(parser.isSet(configureOption) && !setting_restarted) {
+        if(parser.isSet("configure") && !setting_restarted) {
             auto setedit = new SettingsEditor(true);
             setedit->show();
             setting_restarted = true;
