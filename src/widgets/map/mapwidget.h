@@ -86,6 +86,7 @@ private:
     void addWidget(QWidget* w, LockButton* button, WidgetContainer side);
     void setEditorMode();
     void registerWaypoint(WaypointItem* waypoint);
+    void updateGraphics();
 
     QMap<QString, ACItemManager*> ac_items_managers;
     InteractionState interaction_state;

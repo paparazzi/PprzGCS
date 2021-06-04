@@ -318,16 +318,12 @@ void MapWidget::updateHighlights(QString ac_id) {
 
 void MapWidget::centerLatLon(Point2DLatLon latLon) {
     Map2D::centerLatLon(latLon);
-    for(auto papget: papgets) {
-        papget->updateGraphics(this);
-    }
+    updateGraphics();
 }
 
 void MapWidget::setZoom(double z) {
     Map2D::setZoom(z);
-    for(auto papget: papgets) {
-        papget->updateGraphics(this);
-    }
+    updateGraphics();
 }
 
 void MapWidget::mousePressEvent(QMouseEvent *event) {
@@ -412,14 +408,18 @@ void MapWidget::keyReleaseEvent(QKeyEvent *event) {
     }
 }
 
-void MapWidget::wheelEvent(QWheelEvent* event) {
-    Map2D::wheelEvent(event);
+void MapWidget::updateGraphics() {
     for(auto item: _items) {
         item->updateGraphics(this);
     }
     for(auto papget: papgets) {
         papget->updateGraphics(this);
     }
+}
+
+void MapWidget::wheelEvent(QWheelEvent* event) {
+    Map2D::wheelEvent(event);
+    updateGraphics();
 }
 
 void MapWidget::dragEnterEvent(QDragEnterEvent *event) {
