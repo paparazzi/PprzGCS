@@ -12,7 +12,7 @@ Waypoint::Waypoint(Waypoint* original, QObject* parent):
     id = original->id;
     lat = original->lat;
     lon = original->lon;
-    origin = original;
+    origin = original->getOrigin();
     alt = original->alt;
     alt_type = original->alt_type;
     name = original->name;
@@ -43,10 +43,8 @@ Waypoint::Waypoint(QString name, uint8_t id, double lat, double lon, double alt,
 
 
 Waypoint::Waypoint(QDomElement wp, uint8_t wp_id, Waypoint* orig, double defaultAlt, WpFrame frame_type, QObject* parent):
-    QObject(parent)
+    QObject(parent), type(frame_type), origin(orig)
 {
-
-
     Waypoint::WpAltType altType = Waypoint::WpAltType::ALT;
     double alt;
     if(wp.hasAttribute("height")) {
@@ -62,7 +60,6 @@ Waypoint::Waypoint(QDomElement wp, uint8_t wp_id, Waypoint* orig, double default
     id = wp_id;
 
     if(wp.hasAttribute("lat") && wp.hasAttribute("lon")) {
-
         type = WGS84;
         this->lat = parse_coordinate(wp.attribute("lat"));
         this->lon = parse_coordinate(wp.attribute("lon"));
@@ -85,10 +82,7 @@ Waypoint::Waypoint(QDomElement wp, uint8_t wp_id, Waypoint* orig, double default
             this->lat = latlon.lat();
             this->lon = latlon.lon();
         }
-
-        type = frame_type;
         this->alt = alt;
-        this->origin = orig;
         this->alt_type = altType;
     } else {
         throw std::runtime_error("You must specify either x/y or lat/lon!");
@@ -118,6 +112,32 @@ void Waypoint::setLat(double lat) {
 
 void Waypoint::setLon(double lon) {
     this->lon = lon;
+}
+
+/**
+ * @brief Waypoint::setRelative
+ * @param frame_orig: The origin of the coordinate system (really matters is frame is LTP)
+ * @param wp: from where dx and dy are expressed.
+ * @param frame: LTP/UTM(/WGS84)
+ * @param dx: dx from wp, in frame whose origin is frame_orig
+ * @param dy: dy from wp, in frame whose origin is frame_orig
+ */
+void Waypoint::setRelative(Waypoint* frame_orig, Waypoint* wp, WpFrame frame, double dx, double dy) {
+    double x0, y0;
+    Point2DLatLon geo(0, 0);
+    if(frame == Waypoint::LTP) {
+        CoordinatesTransform::get()->wgs84_to_ltp(frame_orig, wp, x0, y0);
+        double x = x0 + dx;
+        double y = y0 + dy;
+        geo = CoordinatesTransform::get()->ltp_to_wgs84(frame_orig, x, y);
+    } else {
+        CoordinatesTransform::get()->wgs84_to_relative_utm(frame_orig, wp, x0, y0);
+        double x = x0 + dx;
+        double y = y0 + dy;
+        geo = CoordinatesTransform::get()->relative_utm_to_wgs84(frame_orig, x, y);
+    }
+    setLat(geo.lat());
+    setLon(geo.lon());
 }
 
 

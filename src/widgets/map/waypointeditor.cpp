@@ -4,6 +4,9 @@
 #include <QDebug>
 #include "coordinatestransform.h"
 
+static const QString REF0 = "Flightplan ref0";
+static const QString WGS84 = "WGS84";
+static const QString WGS84_SEXA = "WGS84 sexagesimal";
 
 
 WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent) : QDialog(parent),
@@ -17,8 +20,9 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     lay->addLayout(infoLay);
 
     auto combo = new QComboBox(this);
-    combo->addItem("WGS84");
-    combo->addItem("WGS84 sexa");
+    combo->addItem(WGS84);
+    combo->addItem(WGS84_SEXA);
+    combo->addItem(REF0);
     for(auto wp: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoints()) {
         combo->addItem(wp->getName());
     }
@@ -83,36 +87,25 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
         double a = latEdit->text().toDouble(&ok_a);
         double b = lonEdit->text().toDouble(&ok_b);
         if(ok_a && ok_b) {
-            if(combo->currentText() == "WGS84") {
+            if(combo->currentText() == WGS84) {
                 wi->waypoint()->setLat(a);
                 wi->waypoint()->setLon(b);
                 wi->setPosition(Point2DLatLon(a, b));
             }
-            else if(combo->currentText() == "WGS84 sexa") {
+            else if(combo->currentText() == WGS84_SEXA) {
                 //TODO
             } else {
-                for(auto wp: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoints()) {
-                    if(combo->currentText() == wp->getName()) {
-                        double x0, y0;
-                        Point2DLatLon geo(0, 0);
-                        Waypoint::WpFrame frame = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getFrame();
-                        if(frame == Waypoint::LTP) {
-                            CoordinatesTransform::get()->wgs84_to_ltp(wi->waypoint()->getOrigin(), wp, x0, y0);
-                            double x = x0 + a;
-                            double y = y0 + b;
-                            geo = CoordinatesTransform::get()->ltp_to_wgs84(wi->waypoint()->getOrigin(), x, y);
-                        } else {
-                            CoordinatesTransform::get()->wgs84_to_relative_utm(wi->waypoint()->getOrigin(), wp, x0, y0);
-                            double x = x0 + a;
-                            double y = y0 + b;
-                            geo = CoordinatesTransform::get()->relative_utm_to_wgs84(wi->waypoint()->getOrigin(), x, y);
-                        }
-                        wi->waypoint()->setLat(geo.lat());
-                        wi->waypoint()->setLon(geo.lon());
-                        wi->setPosition(geo);
-                        break;
-                    }
+                Waypoint* wp;
+                if(combo->currentText() == REF0) {
+                    //wp = wi->waypoint()->getOrigin();
+                    wp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getOrigin();
+                } else {
+                    wp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoint(combo->currentText());
                 }
+                Waypoint::WpFrame frame = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getFrame();
+                wi->waypoint()->setRelative(wi->waypoint()->getOrigin(), wp, frame, a, b);
+                Point2DLatLon geo(wi->waypoint());
+                wi->setPosition(geo);
             }
 
 
@@ -152,13 +145,13 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
 
 
     connect(combo, &QComboBox::currentTextChanged, this, [=](const QString &text) {
-        if(text == "WGS84") {
+        if(text == WGS84) {
             axis1_label->setText("lat");
             axis2_label->setText("lon");
             latEdit->setText(QString::number(wi->waypoint()->getLat()));
             lonEdit->setText(QString::number(wi->waypoint()->getLon()));
         }
-        else if(text == "WGS84 sexa") {
+        else if(text == WGS84_SEXA) {
             axis1_label->setText("lat");
             axis2_label->setText("lon");
             qDebug() << "TODO sexa";
@@ -166,26 +159,25 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
             axis1_label->setText("x");
             axis2_label->setText("y");
 
-
-            for(auto wp: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoints()) {
-                if(text == wp->getName()) {
-                    Waypoint::WpFrame frame = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getFrame();
-                    double x0, y0, x, y;
-                    if(frame == Waypoint::LTP) {
-                        CoordinatesTransform::get()->wgs84_to_ltp(wi->waypoint()->getOrigin(), wp, x0, y0);
-                        CoordinatesTransform::get()->wgs84_to_ltp(wi->waypoint()->getOrigin(), wi->waypoint(), x, y);
-                    } else {
-                        CoordinatesTransform::get()->wgs84_to_relative_utm(wi->waypoint()->getOrigin(), wp, x0, y0);
-                        CoordinatesTransform::get()->wgs84_to_relative_utm(wi->waypoint()->getOrigin(), wi->waypoint(), x, y);
-                    }
-                    latEdit->setText(QString::number(x-x0));
-                    lonEdit->setText(QString::number(y-y0));
-
-                    break;
-                }
+            Waypoint* wp;
+            if(text == REF0) {
+                //wp = wi->waypoint()->getOrigin();
+                wp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getOrigin();
+            } else {
+                wp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoint(text);
             }
 
-
+            Waypoint::WpFrame frame = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getFrame();
+            double x0, y0, x, y;
+            if(frame == Waypoint::LTP) {
+                CoordinatesTransform::get()->wgs84_to_ltp(wi->waypoint()->getOrigin(), wp, x0, y0);
+                CoordinatesTransform::get()->wgs84_to_ltp(wi->waypoint()->getOrigin(), wi->waypoint(), x, y);
+            } else {
+                CoordinatesTransform::get()->wgs84_to_relative_utm(wi->waypoint()->getOrigin(), wp, x0, y0);
+                CoordinatesTransform::get()->wgs84_to_relative_utm(wi->waypoint()->getOrigin(), wi->waypoint(), x, y);
+            }
+            latEdit->setText(QString::number(x-x0));
+            lonEdit->setText(QString::number(y-y0));
 
         }
     });

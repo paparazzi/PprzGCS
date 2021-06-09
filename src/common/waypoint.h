@@ -37,6 +37,7 @@ public:
     double getLon() const;
     void setLat (double lat);
     void setLon(double lon);
+    void setRelative(Waypoint* frame_orig, Waypoint* wp, WpFrame frame, double dx, double dy);
     void setAlt(double alt) {this->alt = alt;}
     double getAlt() const {return alt;}
     WpFrame getType() const {return type;}
