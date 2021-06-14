@@ -1,7 +1,7 @@
 #include "widget_stack.h"
 #include "dispatcher_ui.h"
 #include "AircraftManager.h"
-
+#include <QLabel>
 
 WidgetStack::WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent, bool headers) : QWidget(parent),
     constructor(constructor)
@@ -35,7 +35,18 @@ WidgetStack::WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor,
 }
 
 void WidgetStack::handleNewAC(QString ac_id) {
-    auto sv = constructor(ac_id, this);
+    QWidget* sv;
+    try {
+        sv = constructor(ac_id, this);
+    }  catch (std::runtime_error &e) {
+        auto msg = QString(e.what());
+        sv = new QWidget(this);
+        auto lay = new QVBoxLayout(sv);
+        auto label = new QLabel(msg, sv);
+        label->setWordWrap(true);
+        lay->addWidget(label);
+        lay->addStretch();
+    }
     stackLayout->addWidget(sv);
     viewers_widgets[ac_id] = sv;
     sv->hide();
