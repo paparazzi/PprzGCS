@@ -19,8 +19,8 @@ Aircraft::Aircraft(ConfigData* config, QObject* parent): QObject(parent),
 Aircraft::Aircraft(QString ac_id, QString flightplan, QObject* parent): QObject(parent),
     ac_id(ac_id), _name(ac_id), config(nullptr), position(Point2DLatLon(0,0)), real(false)
 {
-    color = QColor(Qt::red);
-
+    static int last_color = (int) Qt::red;
+    color = QColor((Qt::GlobalColor)last_color++);
     QFile f(flightplan);
     if(!f.open(QIODevice::ReadOnly)) {
         throw std::runtime_error("Error while loading flightplan file");

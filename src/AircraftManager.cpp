@@ -88,7 +88,7 @@ void AircraftManager::addAircraft(ConfigData* config) {
 void AircraftManager::addFPAircraft(QString ac_id, QString flightplan) {
     auto ac = new Aircraft(ac_id, flightplan);
     aircrafts[ac_id] = ac;
-    auto config = new ConfigData(ac_id, Qt::red, flightplan ,ac);
+    auto config = new ConfigData(ac_id, ac->getColor(), flightplan ,ac);
     ac->setConfig(config);
     emit DispatcherUi::get()->new_ac_config(ac_id);
     emit DispatcherUi::get()->ac_selected(ac_id);
