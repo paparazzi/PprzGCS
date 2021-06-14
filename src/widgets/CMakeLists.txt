@@ -15,6 +15,8 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/pprzmap.ui
     ${CMAKE_CURRENT_SOURCE_DIR}/commands.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gps_classic_viewer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/flightplaneditor.ui
+    ${CMAKE_CURRENT_SOURCE_DIR}/flightplaneditor.cpp
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})

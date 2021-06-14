@@ -11,6 +11,7 @@
 #include <QSettings>
 #include "PprzApplication.h"
 #include "gcs_utils.h"
+#include "AircraftManager.h"
 
 #ifndef DEFAULT_APP_DATA_PATH
 #error "you need to define DEFAULT_APP_DATA_PATH!"
@@ -59,6 +60,7 @@ int main(int argc, char *argv[])
         parser.addOption({{"c", "configure"}, "Configure app settings."});
         parser.addOption({{"s", "silent"}, "Silent mode."});
         parser.addOption({{"v", "verbose"}, "Verbose"});
+        parser.addOption({{"f", "fpedit"}, "edit flight plan", "file"});
 
         parser.process(a);
 
@@ -80,6 +82,12 @@ int main(int argc, char *argv[])
         }
         settings.setValue("APP_DATA_PATH", data_path);
 
+        if(parser.isSet("fpedit")) {
+            //pprzApp()->setProperty("FLIGHTPLAN_EDIT", true);
+            auto settings = getAppSettings();
+            settings.setValue("APP_LAYOUT_FILE", settings.value("APP_DATA_PATH").toString() + "/fp_editor_layout.xml");
+        }
+
         configure();
 
         a.init();
@@ -94,6 +102,14 @@ int main(int argc, char *argv[])
             launch_main_app();
         }
 
+        if(parser.isSet("fpedit")) {
+            auto fp_files = parser.values("fpedit");
+            for(auto &fp_file: fp_files) {
+                qDebug() << "edit flightplan " << fp_file;
+                auto name = fp_file.split("/").last();
+                AircraftManager::get()->addFPAircraft(name, fp_file);
+            }
+        }
 
         return_code = qApp->exec();
         a._shutdown();

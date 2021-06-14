@@ -9,6 +9,7 @@
 #include "flightplan_viewerv2.h"
 #include "commands.h"
 #include "gps_classic_viewer.h"
+#include "flightplaneditor.h"
 
 QWidget* makeWidget(QString name, QWidget* parent) {
     QWidget* widget = nullptr;
@@ -55,6 +56,13 @@ QWidget* makeWidget(QString name, QWidget* parent) {
         widget = new WidgetStack(
                 [](QString ac_id, QWidget* container) {
                     return new GPSClassicViewer(ac_id, container);
+                },
+                parent);
+    }
+    else if (name == "flight_plan_editor") {
+        widget = new WidgetStack(
+                [](QString ac_id, QWidget* container) {
+                    return new FlightPlanEditor(ac_id, container);
                 },
                 parent);
     }
