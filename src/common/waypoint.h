@@ -9,6 +9,7 @@
 #include <QObject>
 
 class Point2DLatLon;
+class FlightPlan;
 
 class Waypoint: public QObject
 {
@@ -37,16 +38,27 @@ public:
     double getLon() const;
     void setLat (double lat);
     void setLon(double lon);
+    void setRelative(WpFrame frame, double dx, double dy, Waypoint* wp=nullptr);
+    void getRelative(WpFrame frame, double &dx, double &dy, Waypoint* wp=nullptr);
+
     void setAlt(double alt) {this->alt = alt;}
     double getAlt() const {return alt;}
     WpFrame getType() const {return type;}
     QString getName() const {return name;}
+    void setName(QString new_name);
     Waypoint* getOrigin() {return origin;}
+    void setOrigin(Waypoint* wp) {origin = wp;}
     QMap<QString, QString>& getXmlAttributes() { return xml_attibutes;}
+    FlightPlan* getFlightPlan() {return flight_plan;}
 
     friend std::ostream& operator<<(std::ostream& os, const Waypoint& wp);
 
 private:
+
+    void affectFlightPlan();
+
+    FlightPlan* flight_plan;
+
     WpFrame type;
 
     uint8_t id;

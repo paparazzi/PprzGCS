@@ -22,6 +22,7 @@ class ConfigData: public QObject
 public:
 
     ConfigData(QString ac_id, QString ac_name, QColor color, QObject* parent = nullptr);
+    ConfigData(QString ac_id, QColor color, QString flight_plan_path,QObject* parent = nullptr);
 
     void setFlightPlan(QString uri);
     void setAirframe(QString uri);
@@ -70,6 +71,7 @@ class AircraftManager : public PprzTool{
     Q_OBJECT
 public:
     explicit AircraftManager(PprzApplication* app, PprzToolbox* toolbox);
+    virtual void setToolbox(PprzToolbox* toolbox) override;
     static AircraftManager* get() {
         return pprzApp()->toolbox()->aircraftManager();
     }
@@ -80,6 +82,12 @@ public:
     bool aircraftExists(QString id);
     void removeAircraft(QString ac_id);
 
+    void addFPAircraft(QString ac_id, QString flightplan);
+
+signals:
+    void waypoint_changed(Waypoint*, QString ac_id);    //wp moved from backend
+    void waypoint_added(Waypoint*, QString ac_id);      //new waypoint (for flightplan edition)
+
 private:
     static QColor parseColor(QString str);
     QDomDocument getXml(QString uri);
@@ -88,6 +96,7 @@ private:
 
 private slots:
     void addAircraft(ConfigData* config);
+    void moveWaypoint(pprzlink::Message msg);
 
 };
 

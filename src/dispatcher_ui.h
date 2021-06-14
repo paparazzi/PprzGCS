@@ -25,7 +25,7 @@ signals:
     void ac_selected(QString);
     void ac_deleted(QString);
     void new_ac_config(QString);
-    void move_waypoint(Waypoint*, QString ac_id);
+    void move_waypoint_ui(Waypoint*, QString ac_id);   //wp moved from UI
     void settingUpdated(QString ac_id, Setting*, float value);
     void showHiddenWaypoints(bool show);
     //void create_waypoint(Waypoint*);

@@ -4,19 +4,20 @@
 
 #include <clocale>
 #include "coordinatestransform.h"
+#include "AircraftManager.h"
 
 using namespace std;
 
-FlightPlan::FlightPlan(QObject* parent):
-    QObject(parent), origin()
+FlightPlan::FlightPlan(QString ac_id, QObject* parent):
+    QObject(parent), origin(nullptr), ac_id(ac_id)
 {
 
 }
 
 
-FlightPlan::FlightPlan(QDomDocument doc, QObject* parent) :
+FlightPlan::FlightPlan(QString ac_id, QDomDocument doc, QObject* parent) :
     QObject(parent),
-    origin()
+    origin(nullptr), ac_id(ac_id)
 {
     QDomElement fp_root = doc.firstChildElement( "dump" );
 
@@ -51,6 +52,7 @@ FlightPlan::FlightPlan(QDomDocument doc, QObject* parent) :
     }
 
     origin = new Waypoint("__ORIGIN", 0, _lat0, _lon0, defaultAlt, this);
+    origin->setOrigin(origin);
 
     auto wps = fp_root.firstChildElement("waypoints");
     parse_waypoints(wps);
@@ -181,6 +183,38 @@ Waypoint* FlightPlan::getWaypoint(QString name) {
         }
     }
     throw runtime_error("No waypoint with name " + name.toStdString());
+}
+
+Waypoint* FlightPlan::addWaypoint(QString name, double x, double y) {
+    //uint8_t wp_id = waypoints.size() + 1;
+    auto waypoint = new Waypoint(origin, this);
+    name = requestNewName(name);
+    waypoint->setName(name);
+    waypoint->setRelative(frame_type, x, y);
+    waypoints.push_back(waypoint);
+    return waypoint;
+}
+
+Waypoint* FlightPlan::addWaypoint(QString requested_name, Point2DLatLon latlon) {
+    auto waypoint = new Waypoint(origin, this);
+    QString name = requestNewName(requested_name);
+    waypoint->setName(name);
+    waypoint->setLat(latlon.lat());
+    waypoint->setLon(latlon.lon());
+    waypoints.push_back(waypoint);
+    return waypoint;
+}
+
+QString FlightPlan::requestNewName(QString requested_name) {
+    QString name = requested_name;
+    for(int i=2;
+        std::find_if(std::begin(waypoints), std::end(waypoints), [=](Waypoint* &wp) {
+            return wp->getName() == name;
+        }) != std::end(waypoints);
+        i++) {
+        name = requested_name + "_" + QString::number(i);
+    }
+    return name;
 }
 
 shared_ptr<Block> FlightPlan::getBlock(uint8_t no) {

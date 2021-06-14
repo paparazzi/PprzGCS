@@ -22,6 +22,8 @@ else()
     set(PROJ4_LIBRARIES proj)
 endif()
 
+find_package(LibXml2 REQUIRED)
+
 add_definitions(-DDEFAULT_APP_DATA_PATH="/usr/local/${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}")
 
 find_package(Qt5 5.12 COMPONENTS Widgets Xml Network Svg REQUIRED)
@@ -37,6 +39,7 @@ add_subdirectory(src)
 
 include_directories(
     ${INC_DIRS}
+    ${LIBXML2_INCLUDE_DIR}
 )
 
 add_executable(${PROJECT_NAME} ${SOURCE})
@@ -47,6 +50,7 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Network
     Qt5::Svg
     ${PROJ4_LIBRARIES}
+    ${LIBXML2_LIBRARIES}
     zip
     pprzlinkQt
     IvyQt
