@@ -32,14 +32,13 @@ void WaypointItem::init() {
     _waypoint = new Waypoint(original_waypoint, this);
     auto aircraft = AircraftManager::get()->getAircraft(ac_id);
     int size = settings.value("map/waypoint/size").toInt();
-    name = original_waypoint->getName();
     point = new GraphicsPoint(size, aircraft->getColor(), this);
     QList<QColor> color_variants = makeColorVariants(aircraft->getColor());
     point->setColors(color_variants[0], color_variants[1], color_variants[2]);
     point->setZValue(z_value);
 
 
-    graphics_text = new GraphicsText(name, this);
+    graphics_text = new GraphicsText(original_waypoint->getName(), this);
     //graphics_text->setDefaultTextColor(aircraft.getColor());
     graphics_text->setDefaultTextColor(Qt::white);
     graphics_text->setZValue(z_value);
@@ -123,6 +122,7 @@ void WaypointItem::updateGraphics(MapWidget* map) {
     point->setPos(scene_pos);
     point->setScale(s);
 
+    graphics_text->setPlainText(_waypoint->getName());
     graphics_text->setPos(scene_pos + QPointF(5*s, -30*s));
     graphics_text->setScale(s);
 }
@@ -141,10 +141,18 @@ void WaypointItem::setPosition(Point2DLatLon ll) {
     emit waypointMoved(ll);
 }
 
-void WaypointItem::updatePosition() {
+void WaypointItem::update() {
     _waypoint->setLat(original_waypoint->getLat());
     _waypoint->setLon(original_waypoint->getLon());
     _waypoint->setAlt(original_waypoint->getAlt());
+    _waypoint->setName(original_waypoint->getName());
+    emit itemChanged();
+}
+
+void WaypointItem::commitPosition() {
+    original_waypoint->setLat(_waypoint->getLat());
+    original_waypoint->setLon(_waypoint->getLon());
+    original_waypoint->setAlt(_waypoint->getAlt());
     emit itemChanged();
 }
 

@@ -5,15 +5,33 @@
 #include "AircraftManager.h"
 
 Aircraft::Aircraft(ConfigData* config, QObject* parent): QObject(parent),
-    ac_id(config->getId()), color(config->getColor()), _name(config->getName()), config(config), position(Point2DLatLon(0,0))
+    ac_id(config->getId()), color(config->getColor()), _name(config->getName()), config(config), position(Point2DLatLon(0,0)), real(true)
 {
     config->setParent(this);
     QSettings app_settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
-    flight_plan = new FlightPlan(config->getFlightPlan(), this);
+    flight_plan = new FlightPlan(ac_id, config->getFlightPlan(), this);
     setting_menu = new SettingMenu(config->getSettings(), this);
     airframe = new Airframe(config->getAirframe(), this);
     icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(airframe->getIconName()) + ".svg";
     status = new AircraftStatus(ac_id, this);
+}
+
+Aircraft::Aircraft(QString ac_id, QString flightplan, QObject* parent): QObject(parent),
+    ac_id(ac_id), _name(ac_id), config(nullptr), position(Point2DLatLon(0,0)), real(false)
+{
+    color = QColor(Qt::red);
+
+    QFile f(flightplan);
+    if(!f.open(QIODevice::ReadOnly)) {
+        throw std::runtime_error("Error while loading flightplan file");
+    }
+    QDomDocument fp;
+    fp.setContent(&f);
+    f.close();
+    flight_plan = new FlightPlan(ac_id, fp, this);
+    setting_menu = nullptr;
+    airframe = nullptr;
+    status = nullptr;
 }
 
 void Aircraft::setSetting(Setting* setting, float value) {

@@ -86,11 +86,14 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
         }
     });
 
+    connect(AircraftManager::get(), &AircraftManager::waypoint_changed, this, &MapWidget::onWaypointChanged);
+    connect(AircraftManager::get(), &AircraftManager::waypoint_added, this, &MapWidget::onWaypointAdded);
+    connect(DispatcherUi::get(), &DispatcherUi::move_waypoint_ui, this, &MapWidget::onMoveWaypointUi);
+
     connect(  DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &MapWidget::handleNewAC);
     connect(  DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &MapWidget::removeAC);
     connect(  DispatcherUi::get(), &DispatcherUi::ac_selected, this, &MapWidget::changeCurrentAC);
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &MapWidget::updateAircraftItem);
-    connect(PprzDispatcher::get(), &PprzDispatcher::waypoint_moved, this, &MapWidget::moveWaypoint);
     connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &MapWidget::updateTarget);
     connect(PprzDispatcher::get(), &PprzDispatcher::circle_status, this, &MapWidget::updateNavShape);
     connect(PprzDispatcher::get(), &PprzDispatcher::segment_status, this, &MapWidget::updateNavShape);
@@ -359,6 +362,17 @@ void MapWidget::mouseMoveEvent(QMouseEvent *event) {
 
 void MapWidget::mouseReleaseEvent(QMouseEvent *event) {
     Map2D::mouseReleaseEvent(event);
+    auto ac = AircraftManager::get()->getAircraft(current_ac);
+    if(pan_state != PAN_MOVE && !ac->isReal()) {
+        auto modifiers = qApp->keyboardModifiers();
+        if(modifiers.testFlag(Qt::KeyboardModifier::ControlModifier)) {
+            auto fp = AircraftManager::get()->getAircraft(current_ac)->getFlightPlan();
+            QPointF scenePos = mapToScene(event->pos());
+            auto pos = CoordinatesTransform::get()->wgs84_from_scene(scenePos, zoomLevel(zoom()), tileSize());
+            auto wp = fp->addWaypoint("???", pos);
+            emit AircraftManager::get()->waypoint_added(wp, current_ac);
+        }
+    }
     pan_state = PAN_IDLE;
 }
 
@@ -490,57 +504,37 @@ void MapWidget::dropEvent(QDropEvent *event) {
 
 void MapWidget::handleNewAC(QString ac_id) {
 
+    auto ac = AircraftManager::get()->getAircraft(ac_id);
 
     auto settings = getAppSettings();
-    // create aircraft item at dummy position
-    auto aircraft_item = new AircraftItem(Point2DLatLon(0, 0), ac_id, 16);
-    addItem(aircraft_item);
 
-    //create carrot at dummy position
-    WaypointItem* target = new WaypointItem(Point2DLatLon(0, 0), ac_id);
-    addItem(target);
-    target->setStyle(GraphicsObject::Style::CARROT);
-    target->setEditable(false);
-    double z_carrot = settings.value("map/z_values/carrot").toDouble();
-    target->setZValues(z_carrot, z_carrot);
+    ACItemManager* item_manager;
+    if(ac->isReal()) {
+        // create aircraft item at dummy position
+        auto aircraft_item = new AircraftItem(Point2DLatLon(0, 0), ac_id, 16);
+        addItem(aircraft_item);
 
-    //create the ACItemManager for this aircraft
-    auto item_manager = new ACItemManager(ac_id, target, aircraft_item, this);
+        //create carrot at dummy position
+        WaypointItem* target = new WaypointItem(Point2DLatLon(0, 0), ac_id);
+        addItem(target);
+        target->setStyle(GraphicsObject::Style::CARROT);
+        target->setEditable(false);
+        double z_carrot = settings.value("map/z_values/carrot").toDouble();
+        target->setZValues(z_carrot, z_carrot);
+
+        //create the ACItemManager for this aircraft
+        item_manager = new ACItemManager(ac_id, target, aircraft_item, this);
+    } else {
+        //create the ACItemManager for this fake aircraft (flightplan only)
+        item_manager = new ACItemManager(ac_id, nullptr, nullptr, this);
+    }
+
     ac_items_managers[ac_id] = item_manager;
 
-    auto fp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan();
+    auto fp = ac->getFlightPlan();
 
     for(auto wp: fp->getWaypoints()) {
-        WaypointItem* wpi = new WaypointItem(wp, ac_id);
-        addItem(wpi);
-        item_manager->addWaypointItem(wpi);
-
-        auto dialog_move_waypoint = [=]() {
-            wpi->setMoving(true);
-            auto we = new WaypointEditor(wpi, ac_id);
-            auto view_pos = mapFromScene(wpi->scenePos());
-            auto global_pos = mapToGlobal(view_pos);
-            we->show(); //show just to get the width and height right.
-            we->move(global_pos - QPoint(we->width()/2, we->height()/2));
-            connect(we, &QDialog::finished, wpi, [=](int result) {
-                (void)result;
-                wpi->setMoving(false);
-
-            });
-            we->open();
-        };
-
-        connect(wpi, &WaypointItem::waypointMoveFinished, this, dialog_move_waypoint);
-
-        connect(wpi, &WaypointItem::itemDoubleClicked, this, dialog_move_waypoint);
-
-        connect(wpi, &WaypointItem::waypointMoved, this, [=](){
-            wpi->setAnimate(true);
-        });
-
-        if(wp->getName()[0] == '_') {
-            wpi->setStyle(GraphicsPoint::Style::CURRENT_NAV);
-        }
+        onWaypointAdded(wp, ac_id);
     }
 
     for(auto sector: fp->getSectors()) {
@@ -575,28 +569,57 @@ void MapWidget::removeAC(QString ac_id) {
     ac_items_managers.remove(ac_id);
 }
 
-
-void MapWidget::moveWaypoint(pprzlink::Message msg) {
-    QString ac_id;
-    uint8_t wp_id = 0;
-    float lat, lon, alt, ground_alt;
-    msg.getField("ac_id", ac_id);
-    msg.getField("wp_id", wp_id);
-    msg.getField("lat", lat);
-    msg.getField("long", lon);
-    msg.getField("alt", alt);
-    msg.getField("ground_alt", ground_alt);
-
-    if(AircraftManager::get()->aircraftExists(ac_id) && wp_id != 0) {
-        Waypoint* wp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoint(wp_id);
-        wp->setLat(static_cast<double>(lat));
-        wp->setLon(static_cast<double>(lon));
-        wp->setAlt(static_cast<double>(alt));
-
+void MapWidget::onWaypointChanged(Waypoint* wp, QString ac_id) {
+    if(AircraftManager::get()->aircraftExists(ac_id)) {
         for(auto wpi: ac_items_managers[ac_id]->getWaypointsItems()) {
             if(wpi->getOriginalWaypoint() == wp && !wpi->isMoving()) {
-                wpi->updatePosition();
+                wpi->update();
                 wpi->setAnimate(false);
+            }
+        }
+    }
+}
+
+void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
+    WaypointItem* wpi = new WaypointItem(wp, ac_id);
+    addItem(wpi);
+    ac_items_managers[ac_id]->addWaypointItem(wpi);
+
+    auto dialog_move_waypoint = [=]() {
+        wpi->setMoving(true);
+        auto we = new WaypointEditor(wpi, ac_id);
+        auto view_pos = mapFromScene(wpi->scenePos());
+        auto global_pos = mapToGlobal(view_pos);
+        we->show(); //show just to get the width and height right.
+        we->move(global_pos - QPoint(we->width()/2, we->height()/2));
+        connect(we, &QDialog::finished, wpi, [=](int result) {
+            (void)result;
+            wpi->setMoving(false);
+        });
+        we->open();
+    };
+
+    connect(wpi, &WaypointItem::waypointMoveFinished, this, dialog_move_waypoint);
+
+    connect(wpi, &WaypointItem::itemDoubleClicked, this, dialog_move_waypoint);
+
+    connect(wpi, &WaypointItem::waypointMoved, this, [=](){
+        wpi->setAnimate(true);
+    });
+
+    if(wp->getName()[0] == '_') {
+        wpi->setStyle(GraphicsPoint::Style::CURRENT_NAV);
+    }
+}
+
+void MapWidget::onMoveWaypointUi(Waypoint* wp, QString ac_id) {
+    // If this is a "flight plan only" AC, move the original waypoint
+    if(!AircraftManager::get()->getAircraft(ac_id)->isReal()) {
+        for(auto wpi: ac_items_managers[ac_id]->getWaypointsItems()) {
+            if(wpi->waypoint() == wp) {
+                wpi->commitPosition();
+                wpi->setAnimate(false);
+                emit AircraftManager::get()->waypoint_changed(wpi->getOriginalWaypoint(), ac_id);
             }
         }
     }
@@ -655,7 +678,7 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
             CircleItem* ci = static_cast<CircleItem*>(prev_item);
             ci->getCenter()->getOriginalWaypoint()->setLat(pos.lat());
             ci->getCenter()->getOriginalWaypoint()->setLon(pos.lon());
-            ci->getCenter()->updatePosition();
+            ci->getCenter()->update();
             ci->setRadius(radius);
         }
 
@@ -696,11 +719,11 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
             assert(wps.size() == 2);
             wps[0]->getOriginalWaypoint()->setLat(p1.lat());
             wps[0]->getOriginalWaypoint()->setLon(p1.lon());
-            wps[0]->updatePosition();
+            wps[0]->update();
 
             wps[1]->getOriginalWaypoint()->setLat(p2.lat());
             wps[1]->getOriginalWaypoint()->setLon(p2.lon());
-            wps[1]->updatePosition();
+            wps[1]->update();
         }
 
     }

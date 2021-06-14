@@ -69,9 +69,11 @@ protected:
 private slots:
     void changeCurrentAC(QString id);
     void updateAircraftItem(pprzlink::Message msg);
-    void moveWaypoint(pprzlink::Message msg);
+    void onWaypointChanged(Waypoint* wp, QString ac_id);
+    void onWaypointAdded(Waypoint* wp, QString ac_id);
     void updateTarget(pprzlink::Message msg);
     void updateNavShape(pprzlink::Message msg);
+    void onMoveWaypointUi(Waypoint* wp, QString ac_id);
 
 private:
 

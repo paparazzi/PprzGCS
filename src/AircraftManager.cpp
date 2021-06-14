@@ -17,6 +17,11 @@ AircraftManager::AircraftManager(PprzApplication* app, PprzToolbox* toolbox) : P
 
 }
 
+void AircraftManager::setToolbox(PprzToolbox* toolbox) {
+    PprzTool::setToolbox(toolbox);
+    connect(PprzDispatcher::get(), &PprzDispatcher::waypoint_moved, this, &AircraftManager::moveWaypoint);
+}
+
 Aircraft* AircraftManager::getAircraft(QString id) {
     if(aircrafts.find(id) != aircrafts.end()) {
         return aircrafts[id];
@@ -29,6 +34,25 @@ QList<Aircraft*> AircraftManager::getAircrafts() {
     return aircrafts.values();
 }
 
+void AircraftManager::moveWaypoint(pprzlink::Message msg) {
+    QString ac_id;
+    uint8_t wp_id = 0;
+    float lat, lon, alt, ground_alt;
+    msg.getField("ac_id", ac_id);
+    msg.getField("wp_id", wp_id);
+    msg.getField("lat", lat);
+    msg.getField("long", lon);
+    msg.getField("alt", alt);
+    msg.getField("ground_alt", ground_alt);
+
+    if(AircraftManager::get()->aircraftExists(ac_id) && wp_id != 0) {
+        Waypoint* wp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoint(wp_id);
+        wp->setLat(static_cast<double>(lat));
+        wp->setLon(static_cast<double>(lon));
+        wp->setAlt(static_cast<double>(alt));
+        emit waypoint_changed(wp, ac_id);
+    }
+}
 
 void AircraftManager::newAircraftConfig(pprzlink::Message msg) {
     QString id, ac_name, default_gui_color, flight_plan, airframe, radio, settings;
@@ -59,6 +83,15 @@ void AircraftManager::newAircraftConfig(pprzlink::Message msg) {
 void AircraftManager::addAircraft(ConfigData* config) {
     aircrafts[config->getId()] = new Aircraft(config);
     emit DispatcherUi::get()->new_ac_config(config->getId());
+}
+
+void AircraftManager::addFPAircraft(QString ac_id, QString flightplan) {
+    auto ac = new Aircraft(ac_id, flightplan);
+    aircrafts[ac_id] = ac;
+    auto config = new ConfigData(ac_id, Qt::red, flightplan ,ac);
+    ac->setConfig(config);
+    emit DispatcherUi::get()->new_ac_config(ac_id);
+    emit DispatcherUi::get()->ac_selected(ac_id);
 }
 
 bool AircraftManager::aircraftExists(QString id) {
@@ -99,6 +132,13 @@ ConfigData::ConfigData(QString ac_id, QString ac_name, QColor color, QObject* pa
     QObject(parent),
     ac_id(ac_id), ac_name(ac_name), color(color)
 {
+}
+
+ConfigData::ConfigData(QString ac_id, QColor color, QString flight_plan_path,QObject* parent) :
+    QObject(parent),
+    ac_id(ac_id), ac_name(ac_id), color(color), uri_flight_plan(flight_plan_path)
+{
+    // flightplan only config
 }
 
 void ConfigData::setData(QDomDocument* doc, QString uri) {

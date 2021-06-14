@@ -42,8 +42,8 @@ class FlightPlan: public QObject
     Q_OBJECT
 public:
 
-    FlightPlan(QObject* parent=nullptr);
-    FlightPlan(QDomDocument doc, QObject* parent=nullptr);
+    FlightPlan(QString ac_id, QObject* parent=nullptr);
+    FlightPlan(QString ac_id, QDomDocument doc, QObject* parent=nullptr);
 
     QList<Waypoint*>& getWaypoints() {return  waypoints;}
     Waypoint* getWaypoint(uint8_t id);
@@ -59,6 +59,11 @@ public:
     void setGroundAlt(double ga) {ground_alt = ga;}
     Waypoint* getOrigin() {return origin;}
     Waypoint::WpFrame getFrame() {return frame_type;}
+
+    Waypoint* addWaypoint(QString name, double x, double y);
+    Waypoint* addWaypoint(QString name, Point2DLatLon latlon);
+
+    QString requestNewName(QString requeste_name);
 
     /**
      * @brief boundingBox of the flightPlan (NW, SE)
@@ -95,6 +100,8 @@ private:
     double security_height;
 
     Waypoint::WpFrame frame_type;
+
+    QString ac_id;
 
 
 };

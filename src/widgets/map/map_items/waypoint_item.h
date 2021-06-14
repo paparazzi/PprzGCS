@@ -27,7 +27,11 @@ public:
     virtual void setEditable(bool ed);
     virtual void removeFromScene(MapWidget* map);
     virtual void updateGraphics(MapWidget* map);
-    void updatePosition();
+    void update();
+
+    // set original_waypoint position to the current _waypoint position.
+    void commitPosition();
+
     virtual ItemType getType() {return ITEM_WAYPOINT;}
     void setIgnoreEvent(bool ignore);
     bool isMoving() {return moving;}
@@ -44,7 +48,6 @@ signals:
 
 private:
     void init();
-    QString name;
     GraphicsPoint * point;
     GraphicsText* graphics_text;
     Waypoint* original_waypoint;

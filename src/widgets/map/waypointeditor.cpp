@@ -97,13 +97,12 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
             } else {
                 Waypoint* wp;
                 if(combo->currentText() == REF0) {
-                    //wp = wi->waypoint()->getOrigin();
-                    wp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getOrigin();
+                    wp = wi->waypoint()->getOrigin();
                 } else {
                     wp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoint(combo->currentText());
                 }
                 Waypoint::WpFrame frame = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getFrame();
-                wi->waypoint()->setRelative(wi->waypoint()->getOrigin(), wp, frame, a, b);
+                wi->waypoint()->setRelative(frame, a, b, wp);
                 Point2DLatLon geo(wi->waypoint());
                 wi->setPosition(geo);
             }
@@ -187,7 +186,7 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     lay->addWidget(buttonBox);
 
     connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [=](){
-        emit DispatcherUi::get()->move_waypoint(wi->waypoint(), ac_id);
+        emit DispatcherUi::get()->move_waypoint_ui(wi->waypoint(), ac_id);
         accept();
 
     });

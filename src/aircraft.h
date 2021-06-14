@@ -17,6 +17,7 @@ class Aircraft: public QObject
     Q_OBJECT
 public:
     Aircraft(ConfigData* config, QObject* parent=nullptr);
+    Aircraft(QString ac_id, QString flightplan, QObject* parent=nullptr);
 
     QColor getColor(){return color;}
     QString getId(){return ac_id;}
@@ -28,12 +29,15 @@ public:
     Airframe* getAirframe() {return airframe;}
     AircraftStatus* getStatus() {return status;}
     ConfigData* getConfig() {return config;}
+    void setConfig(ConfigData* c) {config = c;}
 
     Point2DLatLon getPosition() {return position;}
     void setPosition(Point2DLatLon pos) {position = pos;}
 
     void setSetting(Setting*, float value);
     void setSetting(uint8_t setting_no, float value);
+
+    bool isReal() {return real;}
 
 private:
     QString ac_id;
@@ -49,6 +53,8 @@ private:
 
     AircraftStatus* status;
 
+    // false if this is a "flight plan only" AC. Just to edit the flight plan.
+    bool real;
 
 };
 

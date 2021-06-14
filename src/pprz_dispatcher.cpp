@@ -93,17 +93,20 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
     bindDeftoSignal("SVSINFO", &PprzDispatcher::svsinfo);
 
 
-    connect(DispatcherUi::get(), &DispatcherUi::move_waypoint, this,
+    connect(DispatcherUi::get(), &DispatcherUi::move_waypoint_ui, this,
         [=](Waypoint* wp, QString ac_id) {
-            pprzlink::Message msg(dict->getDefinition("MOVE_WAYPOINT"));
-            msg.setSenderId(pprzlink_id);
-            msg.addField("ac_id", ac_id);
-            msg.addField("wp_id", wp->getId());
-            msg.addField("lat", wp->getLat());
-            msg.addField("long", wp->getLon());
-            msg.addField("alt", wp->getAlt());
-            if(started) {
-                this->sendMessage(msg);
+            //Do not send the message if this is a "flight plan only" AC.
+            if(AircraftManager::get()->getAircraft(ac_id)->isReal()) {
+                pprzlink::Message msg(dict->getDefinition("MOVE_WAYPOINT"));
+                msg.setSenderId(pprzlink_id);
+                msg.addField("ac_id", ac_id);
+                msg.addField("wp_id", wp->getId());
+                msg.addField("lat", wp->getLat());
+                msg.addField("long", wp->getLon());
+                msg.addField("alt", wp->getAlt());
+                if(started) {
+                    this->sendMessage(msg);
+                }
             }
         });
 
