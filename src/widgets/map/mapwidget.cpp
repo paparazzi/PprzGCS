@@ -78,7 +78,7 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
                 if(state) {
                     wpi->setStyle(GraphicsObject::Style::DEFAULT);
                 } else {
-                    if(wpi->getOriginalWaypoint()->getName()[0] == '_') {
+                    if(wpi->getOriginalWaypoint()->getName().startsWith('_')) {
                         wpi->setStyle(GraphicsPoint::Style::CURRENT_NAV);
                     }
                 }
@@ -611,7 +611,7 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
         wpi->setAnimate(true);
     });
 
-    if(wp->getName()[0] == '_') {
+    if(wp->getName().startsWith('_')) {
         wpi->setStyle(GraphicsPoint::Style::CURRENT_NAV);
     }
 }
