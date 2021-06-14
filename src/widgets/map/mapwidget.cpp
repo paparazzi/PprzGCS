@@ -595,6 +595,10 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
         connect(we, &QDialog::finished, wpi, [=](int result) {
             (void)result;
             wpi->setMoving(false);
+            if(!result) {
+                wpi->update();
+                wpi->setAnimate(false);
+            }
         });
         we->open();
     };
