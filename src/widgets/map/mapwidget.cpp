@@ -410,10 +410,12 @@ void MapWidget::keyReleaseEvent(QKeyEvent *event) {
     }
     else if (event->key() == Qt::Key_C) {
         if(AircraftManager::get()->aircraftExists(current_ac)) {
-
-
-
-            Point2DLatLon pos = AircraftManager::get()->getAircraft(current_ac)->getPosition();
+            auto ac = AircraftManager::get()->getAircraft(current_ac);
+            auto orig = ac->getFlightPlan()->getOrigin();
+            Point2DLatLon pos(orig);
+            if(ac->isReal()) {
+                pos = ac->getPosition();
+            }
             auto [nw, se] = AircraftManager::get()->getAircraft(current_ac)->getFlightPlan()->boundingBoxWith(pos);
             double zoo = zoomBox(nw, se);
             setZoom(zoo);
