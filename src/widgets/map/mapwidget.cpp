@@ -541,7 +541,7 @@ void MapWidget::handleNewAC(QString ac_id) {
 
     for(auto sector: fp->getSectors()) {
         // static sector are not supported
-        PathItem* pi = new PathItem(ac_id);
+        PathItem* pi = new PathItem(ac_id, sector->getColor());
         for(auto &wp: sector->getCorners()) {
             for(auto wpi: item_manager->getWaypointsItems()) {
                 if(wpi->getOriginalWaypoint() == wp) {

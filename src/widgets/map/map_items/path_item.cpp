@@ -6,10 +6,16 @@
 #include "AircraftManager.h"
 #include "gcs_utils.h"
 
-PathItem::PathItem(QString ac_id, double neutral_scale_zoom, QObject *parent) :
+PathItem::PathItem(QString ac_id, QColor color, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, neutral_scale_zoom, parent),
-    closing_line(nullptr), line_width(5)
+    closing_line(nullptr), line_width(5), color(color)
 {
+    if(!color.isValid()) {
+        auto aircraft = AircraftManager::get()->getAircraft(ac_id);
+        this->color = aircraft->getColor();
+    }
+
+    color_variants = makeColorVariants(this->color);
     auto settings = getAppSettings();
     z_value_highlighted = settings.value("map/z_values/highlighted").toDouble();
     z_value_unhighlighted = settings.value("map/z_values/unhighlighted").toDouble();
@@ -22,11 +28,9 @@ void PathItem::addPoint(WaypointItem* wp, bool own) {
     owned[wp] = own;
 
     if(waypoints.size() > 1){
-        auto aircraft = AircraftManager::get()->getAircraft(ac_id);
-        GraphicsLine* line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), aircraft->getColor(), line_width, this);
+        GraphicsLine* line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), color, line_width, this);
         line->setIgnoreEvent(true);
 
-        QList<QColor> color_variants = makeColorVariants(aircraft->getColor());
         line->setColors(color_variants[2]);
 
         lines.append(line);
@@ -47,9 +51,8 @@ void PathItem::setClosedPath(bool closed) {
         if(!closing_line) {
             // add closing line
             qDebug() << "add closing line";
-            auto aircraft = AircraftManager::get()->getAircraft(ac_id);
-            QList<QColor> color_variants = makeColorVariants(aircraft->getColor());
-            closing_line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), aircraft->getColor(), line_width, this);
+
+            closing_line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), color, line_width, this);
             closing_line->setIgnoreEvent(true);
             closing_line->setColors(color_variants[2]);
             to_be_added.append(closing_line);

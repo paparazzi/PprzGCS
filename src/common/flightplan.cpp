@@ -116,13 +116,8 @@ void FlightPlan::parse_sectors(QDomElement secs) {
     for(auto ele=secs.firstChildElement(); !ele.isNull(); ele=ele.nextSiblingElement()) {
         if(ele.tagName() == "sector") {
             // It's a sector!
-
             auto sec_name = ele.attribute("name");
-            auto color = ele.attribute("color");
-            optional<QString> sec_color = nullopt;
-            if(color != nullptr) {
-                sec_color = color;
-            }
+            auto sec_color = ele.attribute("color", "");
 
             QList<Waypoint*> corners;
             for(auto corner=ele.firstChildElement(); !corner.isNull(); corner=corner.nextSiblingElement()) {

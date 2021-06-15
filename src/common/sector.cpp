@@ -1,12 +1,7 @@
 #include "sector.h"
 
-Sector::Sector()
+Sector::Sector(QList<Waypoint*> corners, QString name, QString color_str):
+    name(name), corners(corners)
 {
-
-}
-
-Sector::Sector(QList<Waypoint*> corners, QString name, optional<QString> color):
-    name(name), color(color), corners(corners)
-{
-
+    color = QColor(color_str);
 }

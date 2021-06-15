@@ -10,7 +10,7 @@ class PathItem : public MapItem
 {
     Q_OBJECT
 public:
-    explicit PathItem(QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    explicit PathItem(QString ac_id, QColor color=QColor(), double neutral_scale_zoom = 15, QObject *parent = nullptr);
     void addPoint(WaypointItem* waypoint, bool own=false);
     void setClosedPath(bool closed);
     virtual void setHighlighted(bool h);
@@ -45,6 +45,8 @@ private:
     QList<WaypointItem*> waypoints_to_remove;
     GraphicsLine* closing_line;
     int line_width;
+    QColor color;
+    QList<QColor> color_variants;
 };
 
 #endif // SEGMENT_H

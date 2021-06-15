@@ -4,20 +4,22 @@
 #include <string>
 #include "waypoint.h"
 #include <memory>
+#include <QColor>
 
 using namespace std;
 class Sector
 {
 public:
-    Sector();
-    Sector(QList<Waypoint*> corners, QString name, optional<QString> color=nullopt);
+    Sector(QList<Waypoint*> corners, QString name, QString color);
 
     QString getName() {return name;}
     QList<Waypoint*> getCorners() {return corners;}
+    QColor getColor(){return color;}
+
 
 private:
     QString name;
-    optional<QString> color;   // override AC color
+    QColor color;   // override AC color
     QList<Waypoint*> corners;
 };
 
