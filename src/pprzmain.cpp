@@ -7,6 +7,9 @@
 #include <QSettings>
 #include "configure.h"
 #include "gcs_utils.h"
+#include "globalstate.h"
+
+LaunchTypes PprzMain::launch_type = DEFAULT;
 
 PprzMain::PprzMain(QWidget *parent) :
     QMainWindow(parent)
@@ -78,6 +81,24 @@ void PprzMain::populate_menu() {
     auto silent_mode_action = file_menu->addAction("Silent mode");
     silent_mode_action->setCheckable(true);
     silent_mode_action->setChecked(PprzDispatcher::get()->isSilent());
+
+    auto open_flight_plan = file_menu->addAction("Open FlightPlans");
+    connect(open_flight_plan, &QAction::triggered, [=](){
+        auto settings = getAppSettings();
+        auto pprz_home = settings.value("PAPARAZZI_HOME").toString();
+        auto files = QFileDialog::getOpenFileNames(this, "open fp", pprz_home + "/conf/flight_plans", "*.xml");
+        if(PprzMain::launch_type != FLIGHTPLAN_EDIT) {
+            PprzMain::launch_type = FLIGHTPLAN_EDIT;
+            GlobalState::get()->set("FLIGHTPLAN_FILES", files);
+            qApp->exit( PprzMain::EXIT_CODE_REBOOT );
+        } else {
+            for(auto &fp_file: files) {
+                qDebug() << "edit flightplan " << fp_file;
+                auto name = fp_file.split("/").last();
+                AircraftManager::get()->addFPAircraft(name, fp_file);
+            }
+        }
+    });
 
     connect(silent_mode_action, &QAction::toggled, [=](bool checked) {
         PprzDispatcher::get()->setSilent(checked);

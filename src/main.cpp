@@ -12,6 +12,7 @@
 #include "PprzApplication.h"
 #include "gcs_utils.h"
 #include "AircraftManager.h"
+#include "globalstate.h"
 
 #ifndef DEFAULT_APP_DATA_PATH
 #error "you need to define DEFAULT_APP_DATA_PATH!"
@@ -27,27 +28,38 @@ void launch_main_app() {
     QTextStream stream(&file);
     qApp->setStyleSheet(stream.readAll());
 
-    QString layout_path = settings.value("APP_LAYOUT_FILE").toString();
+    QString layout_path;
 
-    PprzMain* w = build_layout(layout_path);
+    switch (PprzMain::launch_type) {
+    case DEFAULT:
+    case NORMAL:
+        layout_path = settings.value("APP_LAYOUT_FILE").toString();
+        break;
+    case FLIGHTPLAN_EDIT:
+        layout_path = settings.value("APP_DATA_PATH").toString() + "/fp_editor_layout.xml";
+        break;
+    case CONFIGURE:
+        break;
+    case QUIT:
+        break;
+    }
 
-    PprzDispatcher::get()->start();
+    if(PprzMain::launch_type == CONFIGURE) {
+        auto setedit = new SettingsEditor(true);
+        setedit->show();
+    } else {
+        PprzMain* w = build_layout(layout_path);
+        PprzDispatcher::get()->start();
+        w->show();
+    }
 
-    w->show();
 }
 
 int main(int argc, char *argv[])
 {
     int return_code = 0;
-    bool setting_restarted = false;
     do {
         PprzApplication a(argc, argv);
-
-        auto settings_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/settings.conf";
-
-        pprzApp()->setProperty("SETTINGS_PATH", settings_path);
-        QSettings settings(settings_path, QSettings::IniFormat);
-
 
         QCoreApplication::setApplicationName("PprzGCS");
         QCoreApplication::setApplicationVersion("0.1");
@@ -56,15 +68,28 @@ int main(int argc, char *argv[])
         parser.setApplicationDescription("Test helper");
         parser.addHelpOption();
         parser.addVersionOption();
-
         parser.addOption({{"c", "configure"}, "Configure app settings."});
         parser.addOption({{"s", "silent"}, "Silent mode."});
         parser.addOption({{"v", "verbose"}, "Verbose"});
         parser.addOption({{"f", "fpedit"}, "edit flight plan", "file"});
-
         parser.process(a);
 
         setVerbose(parser.isSet("v"));
+
+        if(parser.isSet("fpedit") && PprzMain::launch_type == DEFAULT) {
+            PprzMain::launch_type = FLIGHTPLAN_EDIT;
+            GlobalState::get()->set("FLIGHTPLAN_FILES", parser.values("fpedit"));
+        }
+
+        if(parser.isSet("configure") && PprzMain::launch_type == DEFAULT) {
+            PprzMain::launch_type = CONFIGURE;
+        }
+
+
+        auto settings_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/settings.conf";
+
+        pprzApp()->setProperty("SETTINGS_PATH", settings_path);
+        QSettings settings(settings_path, QSettings::IniFormat);
 
 
         QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -82,28 +107,17 @@ int main(int argc, char *argv[])
         }
         settings.setValue("APP_DATA_PATH", data_path);
 
-        if(parser.isSet("fpedit")) {
-            //pprzApp()->setProperty("FLIGHTPLAN_EDIT", true);
-            auto settings = getAppSettings();
-            settings.setValue("APP_LAYOUT_FILE", settings.value("APP_DATA_PATH").toString() + "/fp_editor_layout.xml");
-        }
-
         configure();
 
         a.init();
 
         PprzDispatcher::get()->setSilent(parser.isSet("silent"));
 
-        if(parser.isSet("configure") && !setting_restarted) {
-            auto setedit = new SettingsEditor(true);
-            setedit->show();
-            setting_restarted = true;
-        } else {
-            launch_main_app();
-        }
 
-        if(parser.isSet("fpedit")) {
-            auto fp_files = parser.values("fpedit");
+        launch_main_app();
+
+        if(PprzMain::launch_type == FLIGHTPLAN_EDIT) {
+            auto fp_files = GlobalState::get()->get("FLIGHTPLAN_FILES").toStringList();
             for(auto &fp_file: fp_files) {
                 qDebug() << "edit flightplan " << fp_file;
                 auto name = fp_file.split("/").last();

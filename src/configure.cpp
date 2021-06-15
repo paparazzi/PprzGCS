@@ -147,6 +147,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
         accept();
         if( restart == "yes") {
             qDebug() << "Restarting application...";
+            PprzMain::launch_type = NORMAL;
             qApp->exit( PprzMain::EXIT_CODE_REBOOT );
         }
 
@@ -156,6 +157,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
         reject();
         if(standalone) {
             qDebug() << "Restarting application...";
+            PprzMain::launch_type = NORMAL;
             qApp->exit( PprzMain::EXIT_CODE_REBOOT );
         }
     });

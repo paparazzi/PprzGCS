@@ -4,12 +4,21 @@
 #include <QMainWindow>
 #include <QtWidgets>
 
+enum LaunchTypes {
+    DEFAULT,
+    NORMAL,
+    FLIGHTPLAN_EDIT,
+    CONFIGURE,
+    QUIT,
+};
+
 class PprzMain : public QMainWindow
 {
     Q_OBJECT
 
 public:
     explicit PprzMain(QWidget *parent = nullptr);
+    static LaunchTypes launch_type;
     static int const EXIT_CODE_REBOOT = -123456;
     void setupUi(int width, int height, QWidget* centralWidget);
 
@@ -33,5 +42,6 @@ private:
     QLabel* serverStatusLed;
 
 };
+
 
 #endif // PPRZMAIN_H
