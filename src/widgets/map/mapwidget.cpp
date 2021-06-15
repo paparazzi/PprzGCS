@@ -298,19 +298,19 @@ void MapWidget::removeItem(MapItem* item) {
 }
 
 void MapWidget::itemsForbidHighlight(bool fh) {
-    for(auto item: _items) {
+    for(auto item: qAsConst(_items)) {
         item->setForbidHighlight(fh);
     }
 }
 
 void MapWidget::itemsEditable(bool ed) {
-    for(auto item: _items) {
+    for(auto item: qAsConst(_items)) {
         item->setEditable(ed);
     }
 }
 
 void MapWidget::updateHighlights(QString ac_id) {
-    for(auto item: _items) {
+    for(auto item: qAsConst(_items)) {
         if(item->acId() == ac_id) {
             item->setHighlighted(true);
         } else {
@@ -353,7 +353,7 @@ void MapWidget::mouseMoveEvent(QMouseEvent *event) {
             lastPos = event->pos();
         }
 
-        for(auto papget: papgets) {
+        for(auto papget: qAsConst(papgets)) {
             papget->updateGraphics(this);
         }
     }
@@ -425,10 +425,10 @@ void MapWidget::keyReleaseEvent(QKeyEvent *event) {
 }
 
 void MapWidget::updateGraphics() {
-    for(auto item: _items) {
+    for(auto item: qAsConst(_items)) {
         item->updateGraphics(this);
     }
-    for(auto papget: papgets) {
+    for(auto papget: qAsConst(papgets)) {
         papget->updateGraphics(this);
     }
 }
