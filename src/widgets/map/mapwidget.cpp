@@ -362,15 +362,17 @@ void MapWidget::mouseMoveEvent(QMouseEvent *event) {
 
 void MapWidget::mouseReleaseEvent(QMouseEvent *event) {
     Map2D::mouseReleaseEvent(event);
-    auto ac = AircraftManager::get()->getAircraft(current_ac);
-    if(pan_state != PAN_MOVE && !ac->isReal()) {
-        auto modifiers = qApp->keyboardModifiers();
-        if(modifiers.testFlag(Qt::KeyboardModifier::ControlModifier)) {
-            auto fp = AircraftManager::get()->getAircraft(current_ac)->getFlightPlan();
-            QPointF scenePos = mapToScene(event->pos());
-            auto pos = CoordinatesTransform::get()->wgs84_from_scene(scenePos, zoomLevel(zoom()), tileSize());
-            auto wp = fp->addWaypoint("???", pos);
-            emit AircraftManager::get()->waypoint_added(wp, current_ac);
+    if(current_ac != "") {
+        auto ac = AircraftManager::get()->getAircraft(current_ac);
+        if(pan_state != PAN_MOVE && !ac->isReal()) {
+            auto modifiers = qApp->keyboardModifiers();
+            if(modifiers.testFlag(Qt::KeyboardModifier::ControlModifier)) {
+                auto fp = AircraftManager::get()->getAircraft(current_ac)->getFlightPlan();
+                QPointF scenePos = mapToScene(event->pos());
+                auto pos = CoordinatesTransform::get()->wgs84_from_scene(scenePos, zoomLevel(zoom()), tileSize());
+                auto wp = fp->addWaypoint("???", pos);
+                emit AircraftManager::get()->waypoint_added(wp, current_ac);
+            }
         }
     }
     pan_state = PAN_IDLE;
