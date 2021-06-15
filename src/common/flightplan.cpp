@@ -51,7 +51,7 @@ FlightPlan::FlightPlan(QString ac_id, QDomDocument doc, QObject* parent) :
         }
     }
 
-    origin = new Waypoint("__ORIGIN", 0, _lat0, _lon0, defaultAlt, this);
+    origin = new Waypoint("__ORIGIN", 0, Point2DLatLon(_lat0, _lon0), defaultAlt, this);
     origin->setOrigin(origin);
 
     auto wps = fp_root.firstChildElement("waypoints");
@@ -148,7 +148,7 @@ void FlightPlan::parse_sectors(QDomElement secs) {
 void FlightPlan::parse_waypoints(QDomElement wps) {
     uint8_t wp_id = 1;
     for(auto wp=wps.firstChildElement(); !wp.isNull(); wp=wp.nextSiblingElement()) {
-        auto waypoint = new Waypoint(wp, wp_id, origin, defaultAlt, frame_type, this);
+        auto waypoint = new Waypoint(wp, wp_id, origin, defaultAlt, ground_alt, frame_type, this);
         waypoints.push_back(waypoint);
         ++wp_id;
     }

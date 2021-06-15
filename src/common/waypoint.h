@@ -22,16 +22,9 @@ public:
         LTP
     };
 
-    enum WpAltType {
-        ALT,
-        HEIGHT
-    };
-
     Waypoint(Waypoint* original, QObject* parent=nullptr);
-    Waypoint(QString name, uint8_t id, QObject* parent=nullptr);
     Waypoint(QString name, uint8_t id, Point2DLatLon pos, double alt, QObject* parent=nullptr);
-    Waypoint(QString name, uint8_t id, double lat, double lon, double alt, QObject* parent=nullptr);
-    Waypoint(QDomElement wp, uint8_t wp_id, Waypoint* orig, double defaultAlt, WpFrame frame_type, QObject* parent=nullptr);
+    Waypoint(QDomElement wp, uint8_t wp_id, Waypoint* orig, double defaultAlt, double ground_alt, WpFrame frame_type, QObject* parent=nullptr);
 
     uint8_t getId() const {return id;}
     double getLat() const;
@@ -69,7 +62,6 @@ private:
     Waypoint* origin;
 
     double alt;
-    WpAltType alt_type;
 
     QString name;
 
