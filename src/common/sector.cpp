@@ -5,8 +5,8 @@ Sector::Sector()
 
 }
 
-Sector::Sector(QList<Waypoint*> corners, QString name, Type type, optional<QString> color):
-    name(name), type(type), color(color), corners(corners)
+Sector::Sector(QList<Waypoint*> corners, QString name, optional<QString> color):
+    name(name), color(color), corners(corners)
 {
 
 }

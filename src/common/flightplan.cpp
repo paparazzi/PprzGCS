@@ -124,17 +124,12 @@ void FlightPlan::parse_sectors(QDomElement secs) {
                 sec_color = color;
             }
 
-            auto type = ele.attribute("type", "");
-            Sector::Type t = Sector::DYNAMIC;
-            if(type == "static") {
-                t = Sector::STATIC;
-            }
             QList<Waypoint*> corners;
             for(auto corner=ele.firstChildElement(); !corner.isNull(); corner=corner.nextSiblingElement()) {
                 auto wp = getWaypoint(corner.attribute("name"));
                 corners.push_back(wp);
             }
-            auto sec = make_shared<Sector>(corners, sec_name, t, sec_color);
+            auto sec = make_shared<Sector>(corners, sec_name, sec_color);
             sectors.push_back(sec);
         } else if (ele.tagName() == "kml") {
             //It's a KML!

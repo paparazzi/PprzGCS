@@ -541,21 +541,18 @@ void MapWidget::handleNewAC(QString ac_id) {
 
     for(auto sector: fp->getSectors()) {
         // static sector are not supported
-        if(sector->getType() == Sector::DYNAMIC) {
-            PathItem* pi = new PathItem(ac_id);
-            for(auto &wp: sector->getCorners()) {
-                for(auto wpi: item_manager->getWaypointsItems()) {
-                    if(wpi->getOriginalWaypoint() == wp) {
-                        pi->addPoint(wpi);
-                    }
+        PathItem* pi = new PathItem(ac_id);
+        for(auto &wp: sector->getCorners()) {
+            for(auto wpi: item_manager->getWaypointsItems()) {
+                if(wpi->getOriginalWaypoint() == wp) {
+                    pi->addPoint(wpi);
                 }
             }
-
-            pi->setClosedPath(true);
-            addItem(pi);
-            item_manager->addPathItem(pi);
-
         }
+
+        pi->setClosedPath(true);
+        addItem(pi);
+        item_manager->addPathItem(pi);
     }
 
     auto wp_orig = fp->getOrigin();

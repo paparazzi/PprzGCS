@@ -9,22 +9,14 @@ using namespace std;
 class Sector
 {
 public:
-
-    enum Type {
-        STATIC,
-        DYNAMIC,
-    };
-
     Sector();
-    Sector(QList<Waypoint*> corners, QString name, Type type=STATIC, optional<QString> color=nullopt);
+    Sector(QList<Waypoint*> corners, QString name, optional<QString> color=nullopt);
 
     QString getName() {return name;}
-    Type getType() {return type;}
     QList<Waypoint*> getCorners() {return corners;}
 
 private:
     QString name;
-    Type type;
     optional<QString> color;   // override AC color
     QList<Waypoint*> corners;
 };
