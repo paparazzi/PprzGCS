@@ -1,8 +1,8 @@
 #include "graphics_object.h"
 #include <QDebug>
 
-GraphicsObject::GraphicsObject(QObject *parent) : QObject(parent),
-    editable(true), scale_factor(1.0), ignore_events(false), style(DEFAULT), animation(NONE), highlighted(true)
+GraphicsObject::GraphicsObject(PprzPalette palette, QObject *parent) : QObject(parent),
+    editable(true), scale_factor(1.0), ignore_events(false), style(DEFAULT), animation(NONE), palette(palette), highlighted(true)
 {
     animation_timer = new QTimer(this);
 }

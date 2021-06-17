@@ -16,6 +16,13 @@ WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale
     init();
 }
 
+WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, PprzPalette palette, double neutral_scale_zoom, QObject *parent) :
+    MapItem(ac_id, palette, neutral_scale_zoom, parent), moving(false)
+{
+    original_waypoint = new Waypoint("", 0, pt, 0, this);
+    init();
+}
+
 // create WaypointItem based on existing Waypoint
 WaypointItem::WaypointItem(Waypoint* wp, QString ac_id, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, neutral_scale_zoom, parent), original_waypoint(wp), moving(false)
@@ -30,17 +37,12 @@ void WaypointItem::init() {
     z_value = z_value_unhighlighted;
 
     _waypoint = new Waypoint(original_waypoint, this);
-    auto aircraft = AircraftManager::get()->getAircraft(ac_id);
     int size = settings.value("map/waypoint/size").toInt();
-    point = new GraphicsPoint(size, aircraft->getColor(), this);
-    QList<QColor> color_variants = makeColorVariants(aircraft->getColor());
-    point->setColors(color_variants[0], color_variants[1], color_variants[2]);
+    point = new GraphicsPoint(size, palette, this);
     point->setZValue(z_value);
 
 
-    graphics_text = new GraphicsText(original_waypoint->getName(), this);
-    //graphics_text->setDefaultTextColor(aircraft.getColor());
-    graphics_text->setDefaultTextColor(Qt::white);
+    graphics_text = new GraphicsText(original_waypoint->getName(), QColor(Qt::white), this);
     graphics_text->setZValue(z_value);
 
 

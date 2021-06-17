@@ -14,25 +14,27 @@ CircleItem::CircleItem(WaypointItem* center, double radius, QString ac_id, doubl
   MapItem(ac_id, neutral_scale_zoom),
   center(center), _radius(radius), own_center(false)
 {
+    init(center);
+}
+
+CircleItem::CircleItem(WaypointItem* center, double radius, QString ac_id, PprzPalette palette, double neutral_scale_zoom):
+  MapItem(ac_id, palette, neutral_scale_zoom),
+  center(center), _radius(radius), own_center(false)
+{
+    init(center);
+}
+
+void CircleItem::init(WaypointItem* center) {
+
     auto settings = getAppSettings();
     stroke = settings.value("map/circle/stroke").toInt();
     z_value_highlighted = settings.value("map/z_values/highlighted").toDouble();
     z_value_unhighlighted = settings.value("map/z_values/unhighlighted").toDouble();
     z_value = z_value_unhighlighted;
-    init(center);
-}
 
-void CircleItem::init(WaypointItem* center) {
-    auto aircraft = AircraftManager::get()->getAircraft(ac_id);
-
-    circle = new GraphicsCircle(0, aircraft->getColor(), stroke, this);
+    circle = new GraphicsCircle(0, palette, stroke, this);
     circle->setPos(center->scenePos());
     circle->setZValue(center->zValue() + 0.5);
-
-    QList<QColor> color_variants = makeColorVariants(aircraft->getColor());
-    circle->setColors(color_variants[0], color_variants[1], color_variants[2]);
-
-
 
     // dependence over center: if center changed, so do the CircleItem.
     connect(
@@ -108,7 +110,8 @@ void CircleItem::updateGraphics(MapWidget* map) {
     double s = getScale(map->zoom(), map->scaleFactor());
     circle->setScaleFactor(s);
 
-    QPointF scene_pos = scenePoint(center->position(), zoomLevel(map->zoom()), map->tileSize());
+    auto pos = center->position();
+    QPointF scene_pos = scenePoint(pos, zoomLevel(map->zoom()), map->tileSize());
     circle->setPos(scene_pos);
 
     double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(map->zoom()))*map->tileSize();

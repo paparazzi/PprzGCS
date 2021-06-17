@@ -8,13 +8,17 @@
 #include <QTimer>
 #include "gcs_utils.h"
 
-GraphicsPoint::GraphicsPoint(int size, QColor color, QObject *parent) :
-    GraphicsObject(parent),
+#define COLOR_IDLE 0
+#define COLOR_PRESSED 1
+#define COLOR_MOVED 2
+#define COLOR_UNFOCUSED 3
+
+GraphicsPoint::GraphicsPoint(int size, PprzPalette palette, QObject *parent) :
+    GraphicsObject(palette, parent),
     QGraphicsItem (),
-    halfSize(size), move_state(PMS_IDLE), current_color(nullptr), animation_couter(0)
+    halfSize(size), move_state(PMS_IDLE), animation_couter(0)
 {
-    color_idle = color;
-    current_color = &color_idle;
+    current_color = COLOR_IDLE;
 
     animation_timer->setInterval(500);
     connect(animation_timer, &QTimer::timeout, this, [=]()
@@ -22,12 +26,6 @@ GraphicsPoint::GraphicsPoint(int size, QColor color, QObject *parent) :
         animation_couter += 1;
         prepareGeometryChange();
     });
-}
-
-void GraphicsPoint::setColors(QColor colPressed, QColor colMoving, QColor colUnfocused) {
-    color_pressed = colPressed;
-    color_moved = colMoving;
-    color_unfocused = colUnfocused;
 }
 
 QRectF GraphicsPoint::boundingRect() const {
@@ -45,7 +43,7 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         double fx = 0.8;
         double fy = 1.0;
         if(!isHighlighted()) {
-            current_color = &color_unfocused;
+            current_color = COLOR_UNFOCUSED;
             fx /= settings.value("map/size_highlight_factor").toDouble();
             fy /= settings.value("map/size_highlight_factor").toDouble();
         }
@@ -60,7 +58,7 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
 
         path.addPolygon(poly);
 
-        painter->setBrush(QBrush(*current_color));
+        painter->setBrush(QBrush(palette.getVariant(current_color)));
         //painter->setPen(Qt::NoPen);
 
     } else if (style == CARROT) {
@@ -147,17 +145,17 @@ void GraphicsPoint::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
 
 void GraphicsPoint::changeFocus() {
     if(!isHighlighted()) {
-        current_color = &color_unfocused;
+        current_color = COLOR_UNFOCUSED;
     } else {
         switch (move_state) {
         case PMS_IDLE:
-            current_color = &color_idle;
+            current_color = COLOR_IDLE;
             break;
         case PMS_PRESSED:
-            current_color = &color_pressed;
+            current_color = COLOR_PRESSED;
             break;
         case PMS_MOVED:
-            current_color = &color_moved;
+            current_color = COLOR_MOVED;
             break;
         }
     }

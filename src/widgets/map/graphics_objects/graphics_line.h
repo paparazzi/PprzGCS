@@ -5,6 +5,7 @@
 #include <QGraphicsItem>
 #include "graphics_object.h"
 #include <QPen>
+#include "pprzpalette.h"
 
 class GraphicsLine : public GraphicsObject, public QGraphicsItem
 {
@@ -12,8 +13,7 @@ class GraphicsLine : public GraphicsObject, public QGraphicsItem
     Q_INTERFACES(QGraphicsItem)
 public:
 
-    explicit GraphicsLine(QPointF a, QPointF b, QColor color, int stroke, QObject *parent = nullptr);
-    void setColors(QColor color_unfocused);
+    explicit GraphicsLine(QPointF a, QPointF b, PprzPalette palette, int stroke, QObject *parent = nullptr);
     virtual void changeFocus() override;
     void setIgnoreEvent(bool ignore) {ignore_events = ignore;}
     //void setText(QString t) {text = t;}
@@ -35,10 +35,7 @@ private:
     QPointF A;
     QPointF B;
 
-    QColor* current_color;
-
-    QColor color_idle;
-    QColor color_unfocused;
+    int current_color;
 
     int base_stroke;
     int stroke;

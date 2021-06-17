@@ -5,6 +5,7 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QColor>
 #include <QTimer>
+#include "pprzpalette.h"
 
 class GraphicsObject : public QObject
 {
@@ -22,7 +23,7 @@ public:
         WP_MOVING,
     };
 
-    explicit GraphicsObject(QObject *parent = nullptr);
+    explicit GraphicsObject(PprzPalette palette, QObject *parent = nullptr);
     bool isHighlighted() {return highlighted;}
     virtual void setHighlighted(bool h);
     void setForbidHighlight(bool fh) {forbid_highlight = fh;}
@@ -41,8 +42,8 @@ protected:
     bool ignore_events;
     Style style;
     Animation animation;
-
     QTimer* animation_timer;
+    PprzPalette palette;
 
 signals:
     void objectClicked(QPointF scene_pos);

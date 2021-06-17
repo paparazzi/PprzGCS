@@ -12,12 +12,14 @@ class CircleItem : public MapItem
     Q_OBJECT
 public:
     explicit CircleItem(WaypointItem* center, double radius, QString ac_id, double neutral_scale_zoom = 15);
+    explicit CircleItem(WaypointItem* center, double radius, QString ac_id, PprzPalette palette, double neutral_scale_zoom = 15);
     WaypointItem* getCenter() { return center;}
     GraphicsCircle* getGraphicsCircle() {return circle;}
     void setOwnCenter(bool own) {own_center = own;}
     void setScalable(bool scalable) {
         circle->setIgnoreEvent(!scalable);
     }
+    void setFilled(bool f) {circle->setFilled(f);}
     virtual void addToMap(MapWidget* mw);
     virtual void setHighlighted(bool h);
     void setForbidHighlight(bool fh);

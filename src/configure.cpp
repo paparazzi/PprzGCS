@@ -43,6 +43,7 @@ void configure() {
     default_setting("map/circle/stroke", 4);
     default_setting("map/size_highlight_factor", 1.5);
 
+    default_setting("map/z_values/shapes", 50);
     default_setting("map/z_values/unhighlighted", 100);
     default_setting("map/z_values/highlighted", 200);
     default_setting("map/z_values/aircraft", 400);

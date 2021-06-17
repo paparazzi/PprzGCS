@@ -19,6 +19,7 @@ class ACItemManager;
 class ItemEditStateMachine;
 class MapItem;
 class LayerCombo;
+class PathItem;
 
 enum InteractionState {
     PMIS_FLIGHT_PLAN_EDIT,
@@ -74,6 +75,7 @@ private slots:
     void updateTarget(pprzlink::Message msg);
     void updateNavShape(pprzlink::Message msg);
     void onMoveWaypointUi(Waypoint* wp, QString ac_id);
+    void onShape(QString sender, pprzlink::Message msg);
 
 private:
 
@@ -99,6 +101,8 @@ private:
     QList<MapItem*> _items;
     QList<Papget*> papgets;
 
+    QMap<QString, MapItem*> shapes;
+
     QHBoxLayout* horizontalLayout;
 
     //ButtonBand
@@ -113,6 +117,8 @@ private:
     QPoint lastPos;
     PanState pan_state;
     int pan_mouse_mask;
+
+    long shape_bind_id;
 
 };
 

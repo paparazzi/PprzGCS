@@ -12,6 +12,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/gcs_utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/units.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/globalstate.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/pprzpalette.cpp
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})

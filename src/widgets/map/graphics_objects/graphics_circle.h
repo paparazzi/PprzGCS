@@ -5,6 +5,7 @@
 #include <QGraphicsItem>
 #include <QFont>
 #include "graphics_object.h"
+#include "pprzpalette.h"
 
 enum CircleScaleState {
     CSS_IDLE,
@@ -17,12 +18,12 @@ class GraphicsCircle : public GraphicsObject, public QGraphicsItem
     Q_OBJECT
     Q_INTERFACES(QGraphicsItem)
 public:
-    explicit GraphicsCircle(double radius, QColor color, int stroke, QObject *parent = nullptr);
+    explicit GraphicsCircle(double radius, PprzPalette palette, int stroke, QObject *parent = nullptr);
     void setRadius(double r);
-    void setColors(QColor colPressed, QColor colScaling, QColor colUnfocused);
     void displayRadius(bool dpr) {display_radius = dpr; update();}
     void setTextPos(QPointF pos) {textPos = pos;}
     void setText(QString t) {text = t;}
+    void setFilled(bool f) {filled = f;}
 
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -42,17 +43,13 @@ protected:
 public slots:
 
 private:
+
     double dr;
     QPointF textPos;
     double radius;
     CircleScaleState scale_state;
 
-    QColor* current_color;
-
-    QColor color_idle;
-    QColor color_pressed;
-    QColor color_scaling;
-    QColor color_unfocused;
+    int current_color;
 
     int base_stroke;
     int stroke;
@@ -62,6 +59,8 @@ private:
 
     bool display_radius;
     QRectF last_bounding_rect;
+
+    bool filled;
 };
 
 #endif // GRAPHICSCIRCLE_H

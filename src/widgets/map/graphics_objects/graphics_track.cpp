@@ -1,14 +1,17 @@
 #include "graphics_track.h"
 #include <QPainter>
 
-GraphicsTrack::GraphicsTrack(QColor color_idle, QColor color_unfocused, QObject *parent) :
-    GraphicsObject(parent), color_idle(color_idle), color_unfocused(color_unfocused)
+#define COLOR_IDLE 0
+#define COLOR_UNFOCUSED 3
+
+GraphicsTrack::GraphicsTrack(PprzPalette palette, QObject *parent) :
+    GraphicsObject(palette, parent), current_color(COLOR_IDLE)
 {
-    current_color = &color_idle;
+
 }
 
-GraphicsTrack::GraphicsTrack(QColor color_idle, QColor color_unfocused, QPolygonF points, QObject *parent) :
-    GraphicsTrack(color_idle, color_unfocused, parent)
+GraphicsTrack::GraphicsTrack(PprzPalette palette, QPolygonF points, QObject *parent) :
+    GraphicsTrack(palette, parent)
 {
     this->points = points;
 }
@@ -33,7 +36,7 @@ void GraphicsTrack::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     (void)option;
     (void)widget;
     QPen pen = painter->pen();
-    pen.setColor(*current_color);
+    pen.setColor(palette.getVariant(current_color));
     pen.setWidth(1);
     painter->setPen(pen);
     painter->drawPolyline(points);
@@ -41,9 +44,9 @@ void GraphicsTrack::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
 
 void GraphicsTrack::changeFocus() {
     if(!isHighlighted()) {
-        current_color = &color_unfocused;
+        current_color = COLOR_UNFOCUSED;
     } else {
-        current_color = &color_idle;
+        current_color = COLOR_IDLE;
     }
     update();
 }

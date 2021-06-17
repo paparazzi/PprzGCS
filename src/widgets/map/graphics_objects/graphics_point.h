@@ -5,6 +5,7 @@
 #include <QGraphicsItem>
 #include "graphics_object.h"
 #include <QBrush>
+#include "pprzpalette.h"
 
 enum PointMoveState {
     PMS_IDLE,
@@ -17,8 +18,7 @@ class GraphicsPoint : public GraphicsObject, public QGraphicsItem
     Q_OBJECT
     Q_INTERFACES(QGraphicsItem)
 public:
-    explicit GraphicsPoint(int size, QColor color, QObject *parent = nullptr);
-    void setColors(QColor colPressed, QColor colMoving, QColor colUnfocused);
+    explicit GraphicsPoint(int size, PprzPalette palette, QObject *parent = nullptr);
 
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -44,11 +44,7 @@ private:
     QPointF pressPos;
     PointMoveState move_state;
 
-    QColor* current_color;
-    QColor color_idle;
-    QColor color_pressed;
-    QColor color_moved;
-    QColor color_unfocused;
+    int current_color;
 
     int animation_couter;
 };

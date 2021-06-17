@@ -98,8 +98,14 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     connect(PprzDispatcher::get(), &PprzDispatcher::circle_status, this, &MapWidget::updateNavShape);
     connect(PprzDispatcher::get(), &PprzDispatcher::segment_status, this, &MapWidget::updateNavShape);
 
+    shape_bind_id = PprzDispatcher::get()->bind("SHAPE", this,
+        [=](QString sender, pprzlink::Message msg) {
+            onShape(sender, msg);
+        });
+
     setAcceptDrops(true);
 }
+
 
 void MapWidget::setEditorMode() {
     switch(interaction_state) {
@@ -274,7 +280,7 @@ void MapWidget::addItem(MapItem* map_item) {
     _items.append(map_item);
     emit itemAdded(map_item);
 
-    map_item->setHighlighted(map_item->acId() == current_ac);
+    map_item->setHighlighted(map_item->acId() == current_ac || map_item->acId() == "__SHAPES");
 
     if(map_item->getType() == ITEM_WAYPOINT) {
         registerWaypoint(dynamic_cast<WaypointItem*>(map_item));
@@ -286,7 +292,9 @@ void MapWidget::addItem(MapItem* map_item) {
 
     connect(map_item, &MapItem::itemGainedHighlight, map_item, [=]() {
         QString ac_id = map_item->acId();
-        emit DispatcherUi::get()->ac_selected(ac_id);
+        if(ac_id != "__SHAPES") {
+            emit DispatcherUi::get()->ac_selected(ac_id);
+        }
     });
 }
 
@@ -311,7 +319,7 @@ void MapWidget::itemsEditable(bool ed) {
 
 void MapWidget::updateHighlights(QString ac_id) {
     for(auto item: qAsConst(_items)) {
-        if(item->acId() == ac_id) {
+        if(item->acId() == ac_id || item->acId() == "__SHAPES") {
             item->setHighlighted(true);
         } else {
             item->setHighlighted(false);
@@ -754,3 +762,136 @@ void MapWidget::updateAircraftItem(pprzlink::Message msg) {
     }
 
 }
+
+
+void MapWidget::onShape(QString sender, pprzlink::Message msg) {
+    (void)sender;
+    /////////////////////////////////////////////////////////
+    /// Get shape_id and status: create/delete
+    uint8_t id;
+    uint8_t shape, status;
+    msg.getField("id", id);
+    msg.getField("shape", shape);
+    msg.getField("status", status);
+
+    QString shape_id;
+    if(shape == 0) { //Circle
+        shape_id = "Circle_" + QString::number(id);
+    } else if(shape == 1) {
+        shape_id = "Polygon_" + QString::number(id);
+    } else if(shape == 2) {
+        shape_id = "Line_" + QString::number(id);
+    } else {
+        qDebug() << "Unknow shape.";
+        return;
+    }
+
+    /// in all cases: delete the shape. Then re-create it if it was just an update
+    if(shapes.contains(shape_id)) {
+        auto item = shapes[shape_id];
+        shapes.remove(shape_id);
+        removeItem(item);
+    }
+
+    if(status == 1) { //deletion, return now.
+        return;
+    }
+
+    /////////////////////////////////////////////////////////
+    /// build Palette
+    QString linecolor, fillcolor;
+    uint8_t opacity;
+    msg.getField("linecolor", linecolor);
+    msg.getField("fillcolor", fillcolor);
+    msg.getField("opacity", opacity);
+    int alpha;
+    switch(opacity) {
+        case 0: alpha = 0; break;
+        case 1: alpha = 85; break;
+        case 2: alpha = 170; break;
+        case 3: alpha = 255; break;
+        default: alpha = 255;
+    }
+    auto line = QColor(linecolor);
+    auto fill = QColor(fillcolor);
+    fill.setAlpha(alpha);
+    auto palette = PprzPalette(line, fill);
+
+    QList<int32_t> latarr;
+    QList<int32_t> lonarr;
+    float radius;
+    QString text;
+    msg.getField("latarr", latarr);
+    msg.getField("lonarr", lonarr);
+    msg.getField("radius", radius);
+    msg.getField("text", text);
+
+    if(latarr.size() != lonarr.size()) {
+        qDebug() << "latarr and lonarr have different size. Abort.";
+        return;
+    }
+
+    QVector<Point2DLatLon> points;
+    for(int i=0; i<latarr.size(); ++i) {
+        points.append(Point2DLatLon(latarr[i]/1e7, lonarr[i]/1e7));
+    }
+
+
+    auto settings = getAppSettings();
+    double z = settings.value("map/z_values/shapes").toDouble();
+
+    MapItem* item = nullptr;
+
+    if(shape == 0) { //Circle
+        if(points.size() < 1) {
+            qDebug() << "Circle shape need one point!";
+            return;
+        }
+
+        auto pos = points[0];
+        auto wcenter = new WaypointItem(pos, "__SHAPES", palette);
+        //wcenter->setEditable(false);
+        //wcenter->setZValues(z, z);
+        addItem(wcenter);
+        wcenter->setStyle(GraphicsObject::Style::CURRENT_NAV);
+
+        CircleItem* ci = new CircleItem(wcenter, radius, "__SHAPES", palette);
+        wcenter->setParent(ci);
+
+        ci->setOwnCenter(true);
+        ci->setZValues(z, z);
+        ci->setScalable(false);
+        ci->setEditable(false);
+        ci->setOwnCenter(true);
+        ci->setFilled(true);
+        addItem(ci);
+        item = ci;
+
+    } else if(shape == 1 || shape == 2) { // Polygon || Line
+        if(points.size() < 2) {
+            qDebug() << "Line/Polygon shape need at least two points!";
+            return;
+        }
+        auto pi = new PathItem("__SHAPES", palette);
+        pi->setFilled(true);
+        pi->setClosedPath(true);
+        pi->setZValues(z, z);
+        for(auto pos: points) {
+            auto wi = new WaypointItem(pos, "__SHAPES", palette);
+            //wcenter->setEditable(false);
+            //wcenter->setZValues(z, z);
+            addItem(wi);
+            wi->setStyle(GraphicsObject::Style::CURRENT_NAV);
+            pi->addPoint(wi);
+        }
+        addItem(pi);
+        item = pi;
+
+    }
+
+    if(item != nullptr && !shape_id.isNull()) {
+        shapes[shape_id] = item;
+    }
+
+}
+
