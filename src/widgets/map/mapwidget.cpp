@@ -873,8 +873,10 @@ void MapWidget::onShape(QString sender, pprzlink::Message msg) {
             return;
         }
         auto pi = new PathItem("__SHAPES", palette);
-        pi->setFilled(true);
-        pi->setClosedPath(true);
+        if(shape == 1) {    // Polygon
+            pi->setFilled(true);
+            pi->setClosedPath(true);
+        }
         pi->setZValues(z, z);
         for(auto pos: points) {
             auto wi = new WaypointItem(pos, "__SHAPES", palette);
