@@ -11,7 +11,7 @@ class GraphicsAircraft : public GraphicsObject, public QGraphicsItem
     Q_OBJECT
     Q_INTERFACES(QGraphicsItem)
 public:
-    GraphicsAircraft(QColor color, QString icon_path, int size);
+    GraphicsAircraft(PprzPalette palette, QString icon_path, int size, QObject *parent = nullptr);
 
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;

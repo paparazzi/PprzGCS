@@ -8,14 +8,24 @@
 
 PathItem::PathItem(QString ac_id, QColor color, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, neutral_scale_zoom, parent),
-    closing_line(nullptr), line_width(5), color(color)
+    closing_line(nullptr), line_width(5), color(color), polygon(nullptr)
 {
     if(!color.isValid()) {
-        auto aircraft = AircraftManager::get()->getAircraft(ac_id);
-        this->color = aircraft->getColor();
+        this->color = palette.getColor();
     }
+    auto settings = getAppSettings();
+    z_value_highlighted = settings.value("map/z_values/highlighted").toDouble();
+    z_value_unhighlighted = settings.value("map/z_values/unhighlighted").toDouble();
+    z_value = z_value_unhighlighted;
+}
 
-    color_variants = makeColorVariants(this->color);
+PathItem::PathItem(QString ac_id, PprzPalette palette, double neutral_scale_zoom, QObject *parent) :
+    MapItem(ac_id, palette, neutral_scale_zoom, parent),
+    closing_line(nullptr), line_width(5), polygon(nullptr)
+{
+    if(!color.isValid()) {
+        this->color = palette.getColor();
+    }
     auto settings = getAppSettings();
     z_value_highlighted = settings.value("map/z_values/highlighted").toDouble();
     z_value_unhighlighted = settings.value("map/z_values/unhighlighted").toDouble();
@@ -28,10 +38,8 @@ void PathItem::addPoint(WaypointItem* wp, bool own) {
     owned[wp] = own;
 
     if(waypoints.size() > 1){
-        GraphicsLine* line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), color, line_width, this);
+        GraphicsLine* line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), palette, line_width, this);
         line->setIgnoreEvent(true);
-
-        line->setColors(color_variants[2]);
 
         lines.append(line);
         to_be_added.append(line);
@@ -52,9 +60,8 @@ void PathItem::setClosedPath(bool closed) {
             // add closing line
             qDebug() << "add closing line";
 
-            closing_line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), color, line_width, this);
+            closing_line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), palette, line_width, this);
             closing_line->setIgnoreEvent(true);
-            closing_line->setColors(color_variants[2]);
             to_be_added.append(closing_line);
             closing_line->setZValue(z_value - 0.5);
         }
@@ -118,6 +125,9 @@ void PathItem::updateZValue() {
     if(closing_line) {
         closing_line->setZValue(z_value-0.5);
     }
+    if(polygon) {
+        polygon->setZValue(z_value - 0.5);
+    }
 }
 
 void PathItem::updateGraphics(MapWidget* map) {
@@ -130,6 +140,7 @@ void PathItem::updateGraphics(MapWidget* map) {
     while(to_be_removed.size() > 0) {
         auto l = to_be_removed.takeLast();
         map->scene()->removeItem(l);
+        delete l;
     }
 
     while(waypoints_to_remove.size() > 0) {
@@ -151,6 +162,15 @@ void PathItem::updateGraphics(MapWidget* map) {
         QPointF end_scene_pos = scenePoint(waypoints.last()->position(), zoomLevel(map->zoom()), map->tileSize());
         closing_line->setLine(start_scene_pos, end_scene_pos);
     }
+
+    if(polygon) {
+        QPolygonF poly;
+        for(auto wi: waypoints) {
+            auto pt = scenePoint(wi->position(), zoomLevel(map->zoom()), map->tileSize());
+            poly.append(pt);
+        }
+        polygon->setPolygon(poly);
+    }
 }
 
 void PathItem::addToMap(MapWidget* map) {
@@ -168,6 +188,12 @@ void PathItem::removeFromScene(MapWidget* map) {
         map->scene()->removeItem(closing_line);
         delete closing_line;
         closing_line = nullptr;
+    }
+
+    if(polygon) {
+        map->scene()->removeItem(polygon);
+        delete polygon;
+        polygon = nullptr;
     }
 
     for(auto wp: waypoints) {
@@ -218,5 +244,21 @@ void PathItem::setStyle(GraphicsLine::Style s) {
         for(auto w:waypoints) {
             w->setStyle(GraphicsObject::Style::CURRENT_NAV);
         }
+    }
+}
+
+void PathItem::setFilled(bool f) {
+    if(polygon == nullptr && f) {
+        // create polygon
+        polygon = new QGraphicsPolygonItem();
+        polygon->setBrush(palette.getBrush());
+        polygon->setPen(Qt::NoPen);
+        polygon->setZValue(z_value - 0.5);
+        to_be_added.append(polygon);
+
+    } else if(polygon != nullptr && !f) {
+        // remove polygon
+        to_be_removed.append(polygon);
+        polygon = nullptr;
     }
 }

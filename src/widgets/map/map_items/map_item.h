@@ -6,6 +6,7 @@
 #include "point2dlatlon.h"
 #include <QGraphicsSceneMouseEvent>
 #include <QVariant>
+#include "pprzpalette.h"
 
 class MapWidget;
 
@@ -28,6 +29,7 @@ class MapItem : public QObject
     Q_OBJECT
 public:
     MapItem(QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    MapItem(QString ac_id, PprzPalette palette, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     QList<QColor> makeColorVariants(QColor);
     QColor unfocusedColor(const QColor&);
     QColor trackUnfocusedColor(const QColor&);
@@ -54,6 +56,9 @@ public:
         z_value_unhighlighted = zuh;
         updateZValue();
     }
+    void setPalette(PprzPalette p) {
+        palette = p;
+    }
 
 signals:
     void itemClicked(QPointF scene_pos);
@@ -65,6 +70,7 @@ protected:
     double getScale(double zoom, double scale_factor);
 
     const QString ac_id;
+    PprzPalette palette;
 
     double zoom_factor;
     double neutral_scale_zoom;

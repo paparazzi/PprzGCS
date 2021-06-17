@@ -9,6 +9,7 @@ class Point2DTile;
 class Point2DLatLon
 {
 public:
+    Point2DLatLon();
     Point2DLatLon(double lat, double lon);
     //Point2DLatLon(Point2DTile pt);
     Point2DLatLon(Waypoint* wp);

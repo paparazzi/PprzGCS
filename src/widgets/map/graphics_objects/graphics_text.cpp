@@ -1,12 +1,12 @@
 #include "graphics_text.h"
 #include <QDebug>
 
-GraphicsText::GraphicsText(const QString &text, QObject *parent):
-    GraphicsObject(parent),
+GraphicsText::GraphicsText(const QString &text, PprzPalette palette,QObject *parent):
+    GraphicsObject(palette, parent),
     QGraphicsTextItem (text)
 
 {
-
+    setDefaultTextColor(palette.getColor());
 }
 
 void GraphicsText::changeFocus() {

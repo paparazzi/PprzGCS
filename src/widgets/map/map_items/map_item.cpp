@@ -5,9 +5,21 @@
 #include <utility>
 #include "mapwidget.h"
 
+#include "AircraftManager.h"
+
 MapItem::MapItem(QString ac_id, double neutral_scale_zoom, QObject *parent) :
     QObject(parent),
-    ac_id(std::move(ac_id)),
+    ac_id(ac_id),
+    zoom_factor(1), neutral_scale_zoom(neutral_scale_zoom),
+    z_value(0)
+{
+    auto color = AircraftManager::get()->getAircraft(ac_id)->getColor();
+    this->palette = PprzPalette(color);
+}
+
+MapItem::MapItem(QString ac_id, PprzPalette palette, double neutral_scale_zoom, QObject *parent) :
+    QObject(parent),
+    ac_id(ac_id), palette(palette),
     zoom_factor(1), neutral_scale_zoom(neutral_scale_zoom),
     z_value(0)
 {

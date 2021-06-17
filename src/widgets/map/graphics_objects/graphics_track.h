@@ -10,8 +10,8 @@ class GraphicsTrack : public GraphicsObject, public QGraphicsItem
     Q_OBJECT
     Q_INTERFACES(QGraphicsItem)
 public:
-    explicit GraphicsTrack(QColor color_idle, QColor color_unfocused, QObject *parent = nullptr);
-    explicit GraphicsTrack(QColor color_idle, QColor color_unfocused, QPolygonF points, QObject *parent = nullptr);
+    explicit GraphicsTrack(PprzPalette palette, QObject *parent = nullptr);
+    explicit GraphicsTrack(PprzPalette palette, QPolygonF points, QObject *parent = nullptr);
 
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -29,9 +29,7 @@ public slots:
 private:
     QPolygonF points;
 
-    QColor color_idle;
-    QColor color_unfocused;
-    QColor *current_color;
+    int current_color;
 };
 
 #endif // GRAPHICS_TRACK_H

@@ -5,6 +5,10 @@
 
 #include "iostream"
 
+Point2DLatLon::Point2DLatLon() : latp(0), lonp(0)
+{
+}
+
 Point2DLatLon::Point2DLatLon(double lat, double lon) {
     setLat(lat);
     setLon(lon);

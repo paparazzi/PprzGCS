@@ -5,12 +5,14 @@
 #include <QBrush>
 #include "waypoint_item.h"
 #include "graphics_line.h"
+#include <QGraphicsPolygonItem>
 
 class PathItem : public MapItem
 {
     Q_OBJECT
 public:
     explicit PathItem(QString ac_id, QColor color=QColor(), double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    explicit PathItem(QString ac_id, PprzPalette palette, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     void addPoint(WaypointItem* waypoint, bool own=false);
     void setClosedPath(bool closed);
     virtual void setHighlighted(bool h);
@@ -23,9 +25,11 @@ public:
     virtual ItemType getType() {return ITEM_PATH;}
     WaypointItem* getLastWaypoint() {return waypoints.last();}
     QList<WaypointItem*> getWaypoints() {return waypoints;}
+    int count() {return waypoints.size();}
 //    void setLinesIgnoreEvents(bool ignore);
 //    void setLastLineIgnoreEvents(bool ignore);
     void removeLastWaypoint();
+    void setFilled(bool f);
 
     void setStyle(GraphicsLine::Style s);
 
@@ -46,7 +50,8 @@ private:
     GraphicsLine* closing_line;
     int line_width;
     QColor color;
-    QList<QColor> color_variants;
+
+    QGraphicsPolygonItem* polygon;
 };
 
 #endif // SEGMENT_H

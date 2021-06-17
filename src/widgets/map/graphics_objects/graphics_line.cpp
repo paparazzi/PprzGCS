@@ -5,14 +5,16 @@
 #include <QSettings>
 #include "gcs_utils.h"
 
-GraphicsLine::GraphicsLine(QPointF a, QPointF b, QColor color, int stroke, QObject *parent) :
-    GraphicsObject(parent),
+#define COLOR_IDLE 0
+#define COLOR_UNFOCUSED 1
+
+GraphicsLine::GraphicsLine(QPointF a, QPointF b, PprzPalette palette, int stroke, QObject *parent) :
+    GraphicsObject(palette, parent),
     QGraphicsItem (),
     A(a), B(b),
-    color_idle(color), color_unfocused(color),
     base_stroke(stroke), stroke(stroke)
 {
-    current_color = &color_idle;
+    current_color = COLOR_IDLE;
 }
 
 
@@ -30,7 +32,7 @@ void GraphicsLine::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     (void)widget;
 
     if(style == Style::DEFAULT) {
-        painter->setPen(QPen(*current_color, stroke));
+        painter->setPen(QPen(palette.getVariant(current_color), stroke));
     } else if(style == Style::CURRENT_NAV) {
         painter->setPen(QPen(Qt::green));
     }
@@ -57,17 +59,12 @@ QPainterPath GraphicsLine::shape() const {
 void GraphicsLine::changeFocus() {
     auto settings = getAppSettings();
     if(!isHighlighted()) {
-        current_color = &color_unfocused;
+        current_color = COLOR_UNFOCUSED;
         stroke = static_cast<int>(base_stroke / settings.value("map/size_highlight_factor").toDouble());
     } else {
         stroke = base_stroke;
-        current_color = &color_idle;
+        current_color = COLOR_IDLE;
     }
-}
-
-
-void GraphicsLine::setColors(QColor colUnfocused) {
-    color_unfocused = colUnfocused;
 }
 
 void GraphicsLine::mousePressEvent(QGraphicsSceneMouseEvent *event) {

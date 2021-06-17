@@ -13,9 +13,10 @@ class WaypointItem : public MapItem
         Q_OBJECT
 public:
     WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    WaypointItem(Point2DLatLon pt, QString ac_id, PprzPalette palette, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     WaypointItem(Waypoint* wp, QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     // return position of the underlying "real" waypoint
-    Point2DLatLon position() {return Point2DLatLon(original_waypoint);}
+    Point2DLatLon position() {return Point2DLatLon(_waypoint);}
     Waypoint* getOriginalWaypoint() {return original_waypoint;}
     Waypoint* waypoint() {return _waypoint;}
     void setPosition(Point2DLatLon ll);

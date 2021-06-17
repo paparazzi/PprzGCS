@@ -8,10 +8,12 @@
 void SetAttrRecur(QDomElement &elem, QString ac_color);
 
 
-GraphicsAircraft::GraphicsAircraft(QColor color, QString icon_path, int size) : size(size)
+GraphicsAircraft::GraphicsAircraft(PprzPalette palette, QString icon_path, int size, QObject *parent) :
+    GraphicsObject(palette, parent),
+    size(size)
 {
     loadSvg(icon_path);
-    changeColor(color);
+    changeColor(palette.getColor());
 }
 
 QRectF GraphicsAircraft::boundingRect() const {
