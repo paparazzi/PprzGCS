@@ -20,7 +20,7 @@ class GraphicsCircle : public GraphicsObject, public QGraphicsItem
 public:
     explicit GraphicsCircle(double radius, PprzPalette palette, int stroke, QObject *parent = nullptr);
     void setRadius(double r);
-    void displayRadius(bool dpr) {display_radius = dpr; update();}
+    void displayRadius(bool dpr) {display_radius = dpr;}
     void setTextPos(QPointF pos) {textPos = pos;}
     void setText(QString t) {text = t;}
     void setFilled(bool f) {filled = f;}
@@ -48,6 +48,7 @@ private:
     QPointF textPos;
     double radius;
     CircleScaleState scale_state;
+    QFont font_radius;
 
     int current_color;
 

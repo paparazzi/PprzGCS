@@ -14,6 +14,8 @@
 #define COLOR_SCALING 2
 #define COLOR_UNFOCUSED 3
 
+QPointF TEXT_OFFSET(10, -10);
+
 GraphicsCircle::GraphicsCircle(double radius, PprzPalette palette, int stroke, QObject *parent) :
         GraphicsObject(palette, parent),
         QGraphicsItem (),
@@ -21,25 +23,19 @@ GraphicsCircle::GraphicsCircle(double radius, PprzPalette palette, int stroke, Q
         current_color(0),
         base_stroke(stroke), stroke(stroke), text(), display_radius(true), filled(false)
 {
-
+    font_radius.setWeight(QFont::DemiBold);
 }
 
 QRectF GraphicsCircle::boundingRect() const {
-    double recthalf = radius + (stroke + 10)*scale_factor;
+    double out_draw = radius + stroke*scale_factor;
+    QRectF outter_draw = QRectF(-out_draw, -out_draw, 2*out_draw, 2*out_draw);
 
-    QRectF brect;
-    if(display_radius) {
-        double maxWidth = qMax(2*recthalf, 2*textPos.x() + 100);
-        brect = QRectF(-recthalf, -recthalf, maxWidth, 2*recthalf);
-    } else {
-        brect = QRectF(-recthalf, -recthalf, 2*recthalf, 2*recthalf);
-    }
+    QFontMetrics fm(font_radius);
+    auto t_size = fm.size(Qt::TextSingleLine, text);
+    auto t_rect = QRect(textPos.x(), textPos.y()-20, t_size.width(), t_size.height()+20);
+    auto bounding = outter_draw.united(t_rect);
+    return bounding;
 
-    if(brect.width() > last_bounding_rect.width()) {
-        return brect;
-    } else {
-        return last_bounding_rect;
-    }
 }
 
 
@@ -62,14 +58,9 @@ void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
     }
 
     path_shape = QPainterPath();
-    double out_path = radius + (stroke + 5)*scale_factor;
-    QRectF outter_shape = QRectF(-out_path, -out_path, 2*out_path, 2*out_path);
-    path_shape.addEllipse(outter_shape);
-
+    path_shape.addEllipse(outter_draw);
     if(!filled) {
-        double in_path = radius - (stroke - 1)*scale_factor;
-        QRectF inner_shape = QRectF(-in_path, -in_path, 2*in_path, 2*in_path);
-        path_shape.addEllipse(inner_shape);
+        path_shape.addEllipse(inner_draw);
     }
 
     if(style == DEFAULT) {
@@ -90,24 +81,13 @@ void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
         painter->drawPath(fillpath);
     }
 
-
-    double recthalf = radius + (stroke + 10)*scale_factor;
     if(display_radius) {
+        font_radius.setPointSize (settings.value("map/items_font").toInt()*scale_factor);
         path_draw = QPainterPath();
-        QFont font;
-        font.setPointSize (settings.value("map/items_font").toInt()*scale_factor);
-        font.setWeight(QFont::DemiBold);
-        path_draw.addText(textPos.x()+10, textPos.y(), font, text);
+        path_draw.addText(textPos.x(), textPos.y(), font_radius, text);
         painter->setBrush(QBrush(palette.getVariant(COLOR_IDLE)));
         painter->setPen(Qt::NoPen);
         painter->drawPath(path_draw);
-
-        QFontMetrics fm(font);
-
-        double maxWidth = qMax(2*recthalf, 2*textPos.x() + fm.horizontalAdvance(text) + 100);
-        last_bounding_rect = QRectF(-recthalf, -recthalf, maxWidth, 2*recthalf);
-    } else {
-        last_bounding_rect = QRectF(-recthalf, -recthalf, 2*recthalf, 2*recthalf);
     }
 }
 
@@ -124,12 +104,14 @@ void GraphicsCircle::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         return;
     }
 
-    textPos = event->pos();
+    textPos = event->pos() + TEXT_OFFSET;
     QPointF pressPos = QPointF(event->pos().x() * scale(), event->pos().y() * scale());
     dr = sqrt(pressPos.x()*pressPos.x() + pressPos.y()*pressPos.y()) - radius;
     GraphicsObject::mousePressEvent(event);
-    scale_state = CSS_PRESSED;
-    display_radius = true;
+    if(abs(dr) < stroke*2) {
+        scale_state = CSS_PRESSED;
+        display_radius = true;
+    }
     changeFocus();
 }
 
@@ -150,7 +132,7 @@ void GraphicsCircle::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     } else if(scale_state == CSS_SCALED) {
         prepareGeometryChange();
         radius = static_cast<int>(r);
-        textPos = mousePos;
+        textPos = mousePos + TEXT_OFFSET;
         update();
         emit circleScaled(radius);
     }
