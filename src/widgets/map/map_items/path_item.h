@@ -23,6 +23,7 @@ public:
     virtual void removeFromScene(MapWidget* map);
     virtual void addToMap(MapWidget* mw);
     virtual ItemType getType() {return ITEM_PATH;}
+    void setText(QString text) {graphics_text->setPlainText(text);}
     WaypointItem* getLastWaypoint() {return waypoints.last();}
     QList<WaypointItem*> getWaypoints() {return waypoints;}
     int count() {return waypoints.size();}
@@ -48,6 +49,7 @@ private:
     QList<QGraphicsItem*> to_be_removed;
     QList<WaypointItem*> waypoints_to_remove;
     GraphicsLine* closing_line;
+    GraphicsText* graphics_text;
     int line_width;
     QColor color;
 

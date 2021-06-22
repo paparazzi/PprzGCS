@@ -27,6 +27,7 @@ public:
     virtual void updateZValue();
     virtual void updateGraphics(MapWidget* map);
     virtual void removeFromScene(MapWidget* map);
+    void setText(QString text);
     virtual ItemType getType() {return ITEM_CIRCLE;}
     double radius() {return _radius;}
     ///
@@ -47,6 +48,7 @@ private:
     void init(WaypointItem* center);
     WaypointItem* center;
     GraphicsCircle* circle;
+    GraphicsText* graphics_text;
     double _radius;
     int altitude;
     int stroke;

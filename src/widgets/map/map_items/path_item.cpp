@@ -17,6 +17,9 @@ PathItem::PathItem(QString ac_id, QColor color, double neutral_scale_zoom, QObje
     z_value_highlighted = settings.value("map/z_values/highlighted").toDouble();
     z_value_unhighlighted = settings.value("map/z_values/unhighlighted").toDouble();
     z_value = z_value_unhighlighted;
+    graphics_text = new GraphicsText("", palette, this);
+    graphics_text->setZValue(z_value);
+    setZoomFactor(1.1);
 }
 
 PathItem::PathItem(QString ac_id, PprzPalette palette, double neutral_scale_zoom, QObject *parent) :
@@ -30,6 +33,9 @@ PathItem::PathItem(QString ac_id, PprzPalette palette, double neutral_scale_zoom
     z_value_highlighted = settings.value("map/z_values/highlighted").toDouble();
     z_value_unhighlighted = settings.value("map/z_values/unhighlighted").toDouble();
     z_value = z_value_unhighlighted;
+    graphics_text = new GraphicsText("", palette, this);
+    graphics_text->setZValue(z_value);
+    setZoomFactor(1.1);
 }
 
 void PathItem::addPoint(WaypointItem* wp, bool own) {
@@ -76,6 +82,7 @@ void PathItem::setClosedPath(bool closed) {
 
 void PathItem::setHighlighted(bool h) {
     MapItem::setHighlighted(h);
+    graphics_text->setHighlighted(h);
     for(auto wp: waypoints) {
         wp->setHighlighted(h);
     }
@@ -90,6 +97,7 @@ void PathItem::setHighlighted(bool h) {
 }
 
 void PathItem::setForbidHighlight(bool sh) {
+    graphics_text->setForbidHighlight(sh);
     for(auto wp: waypoints) {
         wp->setForbidHighlight(sh);
     }
@@ -114,7 +122,7 @@ void PathItem::setEditable(bool ed) {
 }
 
 void PathItem::updateZValue() {
-
+    graphics_text->setZValue(z_value);
     //waypoints above lines
     for(auto w:waypoints) {
         w->updateZValue();
@@ -163,21 +171,35 @@ void PathItem::updateGraphics(MapWidget* map) {
         closing_line->setLine(start_scene_pos, end_scene_pos);
     }
 
+
+    QPolygonF poly;
+    QPointF centroid(0, 0);
+    for(auto wi: waypoints) {
+        auto pt = scenePoint(wi->position(), zoomLevel(map->zoom()), map->tileSize());
+        poly.append(pt);
+        centroid += pt;
+    }
+    centroid /= waypoints.size();
+
     if(polygon) {
-        QPolygonF poly;
-        for(auto wi: waypoints) {
-            auto pt = scenePoint(wi->position(), zoomLevel(map->zoom()), map->tileSize());
-            poly.append(pt);
-        }
         polygon->setPolygon(poly);
     }
+
+    graphics_text->setScale(s);
+
+    auto text_size = graphics_text->boundingRect().center();
+    graphics_text->setPos(centroid - text_size*s);
 }
 
 void PathItem::addToMap(MapWidget* map) {
     (void)map;
+    map->scene()->addItem(graphics_text);
 }
 
 void PathItem::removeFromScene(MapWidget* map) {
+    map->scene()->removeItem(graphics_text);
+    delete graphics_text;
+
     for(auto l:lines) {
         map->scene()->removeItem(l);
         delete l;
@@ -234,6 +256,7 @@ void PathItem::removeLastWaypoint() {
 }
 
 void PathItem::setStyle(GraphicsLine::Style s) {
+    graphics_text->setStyle(s);
     for(auto line: lines) {
         line->setStyle(s);
     }

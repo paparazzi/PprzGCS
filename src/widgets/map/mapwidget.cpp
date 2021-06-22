@@ -864,6 +864,7 @@ void MapWidget::onShape(QString sender, pprzlink::Message msg) {
         ci->setEditable(false);
         ci->setOwnCenter(true);
         ci->setFilled(true);
+        ci->setText(text);
         addItem(ci);
         item = ci;
 
@@ -886,6 +887,7 @@ void MapWidget::onShape(QString sender, pprzlink::Message msg) {
             wi->setStyle(GraphicsObject::Style::CURRENT_NAV);
             pi->addPoint(wi);
         }
+        pi->setText(text);
         addItem(pi);
         item = pi;
 

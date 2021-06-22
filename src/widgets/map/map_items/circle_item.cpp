@@ -36,6 +36,11 @@ void CircleItem::init(WaypointItem* center) {
     circle->setPos(center->scenePos());
     circle->setZValue(center->zValue() + 0.5);
 
+    graphics_text = new GraphicsText("", palette, this);
+    graphics_text->setZValue(z_value + 0.5);
+
+    setZoomFactor(1.1);
+
     // dependence over center: if center changed, so do the CircleItem.
     connect(
         center, &WaypointItem::itemChanged, this,
@@ -70,6 +75,7 @@ void CircleItem::init(WaypointItem* center) {
 
 void CircleItem::addToMap(MapWidget* map) {
     map->scene()->addItem(circle);
+    map->scene()->addItem(graphics_text);
 
     connect(
         circle, &GraphicsCircle::circleScaled, this,
@@ -86,6 +92,7 @@ void CircleItem::setHighlighted(bool h) {
     MapItem::setHighlighted(h);
     center->setHighlighted(h);
     circle->setHighlighted(h);
+    graphics_text->setHighlighted(h);
 
     updateZValue();
 }
@@ -104,6 +111,7 @@ void CircleItem::updateZValue() {
     //the circle is above the waypoint
     center->updateZValue();
     circle->setZValue(z_value+0.5);
+    graphics_text->setZValue(z_value + 0.5);
 }
 
 void CircleItem::updateGraphics(MapWidget* map) {
@@ -116,11 +124,18 @@ void CircleItem::updateGraphics(MapWidget* map) {
 
     double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(map->zoom()))*map->tileSize();
     circle->setRadius(pixelRadius);
+
+
+    auto text_size = graphics_text->boundingRect().center();
+    graphics_text->setPos(scene_pos - text_size*s);
+    graphics_text->setScale(s);
 }
 
 void CircleItem::removeFromScene(MapWidget* map) {
     map->scene()->removeItem(circle);
+    map->scene()->removeItem(graphics_text);
     delete circle;
+    delete graphics_text;
     if(own_center) {        // remove the waypoint only if it owns it.
         map->removeItem(center);
         center = nullptr;
@@ -133,8 +148,13 @@ void CircleItem::setRadius(double radius) {
     emit itemChanged();
 }
 
+void CircleItem::setText(QString text) {
+    graphics_text->setPlainText(text);
+}
+
 void CircleItem::setStyle(GraphicsCircle::Style s) {
     circle->setStyle(s);
+    graphics_text->setStyle(s);
     if(s == GraphicsCircle::Style::CURRENT_NAV) {
         center->setStyle(GraphicsObject::Style::CURRENT_NAV);
     }
