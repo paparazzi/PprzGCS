@@ -21,26 +21,13 @@ private:
     void handleNavStatus();
     void updateNavStatus(uint8_t cur_block, uint8_t cur_stage);
 
-    struct Facade {
-        QLabel* label;
-        QTreeWidget* tree;
-        QPushButton* button;
-    };
-
     QWidget* make_blocks_tab();
-    QWidget* make_waypoints_tab();
-    QWidget* make_exceptions_tab();
-    QWidget* make_variables_tab();
-    QWidget* make_sectors_tab();
-    QWidget* make_tree(shared_ptr<Block> block, std::function<void()>, struct Facade*);
-
     QString ac_id;
     uint8_t current_block, current_stage;
 
-    QList<struct Facade*> facades;
+    QList<QLabel*> block_labels;
 
     QString labels_stylesheet;
-    QString buttons_stylesheet;
 };
 
 #endif // FLIGHTPLAN_VIEWERV2_H

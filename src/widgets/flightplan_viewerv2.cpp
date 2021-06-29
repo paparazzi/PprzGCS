@@ -5,49 +5,37 @@
 #include <QDebug>
 #include <QSettings>
 #include "gcs_utils.h"
+#include "flightplaneditor.h"
 
 FlightPlanViewerV2::FlightPlanViewerV2(QString ac_id, QWidget *parent) : QTabWidget(parent),
     ac_id(ac_id), current_block(0), current_stage(0), labels_stylesheet("")
 {
     addTab(make_blocks_tab(), "Blocks");
-    addTab(make_waypoints_tab(), "Waypoints");
-
-    if(AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getExeptions().size() > 0) {
-        addTab(make_exceptions_tab(), "Exceptions");
-    }
-
-    if(AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getVariables().size() > 0) {
-        addTab(make_variables_tab(), "Variables");
-    }
-
-    if(AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getSectors().size() > 0) {
-        addTab(make_sectors_tab(), "Sectors");
-    }
-
-    addTab(new QWidget(), "Header");
+    addTab(new FlightPlanEditor(ac_id, this), "Details");
 
     connect(AircraftManager::get()->getAircraft(ac_id)->getStatus(),
-            &AircraftStatus::engine_status, this, &FlightPlanViewerV2::handleNavStatus);
+            &AircraftStatus::nav_status, this, &FlightPlanViewerV2::handleNavStatus);
 }
 
 
 QWidget* FlightPlanViewerV2::make_blocks_tab() {
     auto settings = getAppSettings();
-    auto stack = new QStackedWidget(this);
-
-
-    auto scroll = new QScrollArea(stack);
-    int index_main = stack->addWidget(scroll);
+    auto scroll = new QScrollArea(this);
     scroll->setWidgetResizable(true);
     scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     auto widget = new QWidget();
 
-    auto w_layout = new QVBoxLayout(widget);
-
-    auto return_home = [=](){stack->setCurrentIndex(index_main);};
+    auto hbox = new QHBoxLayout(widget);
+    auto vbox = new QVBoxLayout();
+    auto grid_layout = new QGridLayout();
+    grid_layout->setHorizontalSpacing(10);
+    grid_layout->setVerticalSpacing(5);
+    vbox->addItem(grid_layout);
+    vbox->addStretch();
+    hbox->addItem(vbox);
+    hbox->addStretch();
 
     for(auto block: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getBlocks()) {
-        auto lay = new QHBoxLayout();
         QString icon = block->getIcon();
         QString txt = block->getText();
         QString name = block->getName();
@@ -63,173 +51,37 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
                 msg.addField("block_id", block->getNo());
                 PprzDispatcher::get()->sendMessage(msg);
             });
-        auto child_button = new QToolButton(widget);
-        child_button->setText("+");
 
-        lay->addWidget(child_button);
-        lay->addWidget(go_button);
-        lay->addWidget(lbl);
+        int row = grid_layout->rowCount();
+        grid_layout->addWidget(go_button, row, 0);
 
         if(icon != "") {
             QString icon_path = settings.value("path/gcs_icons").toString() + "/" + icon;
             auto ll = new QLabel(widget);
             ll->setPixmap(QPixmap(icon_path));
             ll->setToolTip(txt);
-            lay->addWidget(ll);
+            grid_layout->addWidget(ll, row, 1);
         }
 
-        w_layout->addLayout(lay);
+        grid_layout->addWidget(lbl, row, 2);
+        grid_layout->setRowStretch(row, 0);
 
-        auto facade = new Facade();
-        facade->label = lbl;
-        facades.append(facade);
-
-
-        auto tree= make_tree(block, return_home, facade);
-        int index_tree = stack->addWidget(tree);
+        block_labels.append(lbl);
 
         connect(go_button, &QToolButton::clicked, [=]() {
             qDebug() << "go to " << name;
         });
-
-        connect(child_button, &QPushButton::clicked, [=]() {
-            stack->setCurrentIndex(index_tree);
-        });
-
     }
 
-    w_layout->addStretch();
-
-    if(facades.size() > 0) {
-        labels_stylesheet = facades[0]->label->styleSheet();
-        buttons_stylesheet = facades[0]->button->styleSheet();
+    if(block_labels.size() > 0) {
+        labels_stylesheet = block_labels[0]->styleSheet();
     }
 
     scroll->setWidget(widget);
 
-    return stack;
+    return scroll;
 }
 
-QWidget* FlightPlanViewerV2::make_tree(shared_ptr<Block> block, std::function<void()> return_home, struct Facade* facade) {
-    auto widget = new QWidget(this);
-    auto vlay = new QVBoxLayout(widget);
-    auto hlay = new QHBoxLayout();
-    vlay->addLayout(hlay);
-
-    auto ret_but = new QToolButton(widget);
-    ret_but->setText("<");
-    auto lbl = new QPushButton(block->getName(), widget);
-    facade->button = lbl;
-    hlay->addWidget(ret_but);
-    hlay->addWidget(lbl);
-
-    connect(ret_but, &QToolButton::clicked, return_home);
-    connect(lbl, &QPushButton::clicked, this,
-        [=]() {
-            auto ACId = ac_id.toStdString();
-            pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("JUMP_TO_BLOCK"));
-            msg.addField("ac_id", ACId);
-            msg.addField("block_id", block->getNo());
-            PprzDispatcher::get()->sendMessage(msg);
-        });
-
-    auto tree = new QTreeWidget();
-    facade->tree = tree;
-    tree->setColumnCount(3);
-    tree->setHeaderLabels(QStringList() << "Instr" << "Attrib" << "Value");
-    //tree->setHeaderHidden(true);
-    for(auto &stage: block->getStages()) {
-        auto instruction = stage.instruction;
-        auto item = new QTreeWidgetItem(tree);
-
-        item->setText(0, instruction);
-        tree->addTopLevelItem(item);
-        for(auto &[k, v]: stage.attributes) {
-            auto attr_item = new QTreeWidgetItem(item);
-
-            QString val = v;
-            val.replace("@DEREF", QString::fromUtf8("\xE2\x86\x92"));
-            val.replace("@GT", ">");
-            val.replace("@GEQ", QString::fromUtf8("\xE2\x89\xA5"));
-            val.replace("@LT", "<");
-            val.replace("@LEQ", QString::fromUtf8("\xE2\x89\xA4"));
-            val.replace("@AND", "&&");
-            val.replace("@OR", "||");
-
-            attr_item->setText(1, k);
-            attr_item->setText(2, val);
-            item->addChild(attr_item);
-        }
-    }
-
-    tree->resizeColumnToContents(2);
-    vlay->addWidget(tree);
-
-    return widget;
-}
-
-QWidget* FlightPlanViewerV2::make_waypoints_tab() {
-    auto list = new QListWidget(this);
-
-    for(auto waypoint: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoints()) {
-        QString txt = waypoint->getName() + QString("\t");
-
-        auto atts = waypoint->getXmlAttributes();
-        for(auto att=atts.begin(); att!=atts.end(); ++att) {
-            if(att.key() != "name") {
-                txt += QString("\t") + att.key() + "=" +  att.value();
-            }
-        }
-
-        list->addItem(txt);
-
-    }
-
-    return list;
-}
-
-QWidget* FlightPlanViewerV2::make_exceptions_tab() {
-    auto list = new QListWidget(this);
-    for(auto &ex: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getExeptions()) {
-        QString txt = QString("cond: ") + ex->cond + QString("\tderoute: ") + ex->deroute;
-        list->addItem(txt);
-    }
-    return list;
-}
-
-QWidget* FlightPlanViewerV2::make_variables_tab() {
-    auto list = new QListWidget(this);
-    for(auto &var: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getVariables()) {
-        QString txt;
-        if(var->type == Variable::VARIABLE) {
-            txt += QString("var: ");
-        } else if(var->type == Variable::ABI_BINDING) {
-            txt += QString("abi_binding: ");
-        }
-
-        for(auto &att:var->attributes) {
-            txt += QString("  ") + att.first + "=" + att.second;
-        }
-
-        list->addItem(txt);
-    }
-    return list;
-}
-
-QWidget* FlightPlanViewerV2::make_sectors_tab() {
-    auto list = new QListWidget(this);
-    for(auto sec: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getSectors()) {
-        QString txt;
-
-        txt += QString("sector ") + sec->getName() + ":";
-        for(auto &corner: sec->getCorners()) {
-            txt += QString(" ") + corner->getName();
-        }
-
-        list->addItem(txt);
-    }
-    return list;
-}
 
 void FlightPlanViewerV2::handleNavStatus() {
     auto msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("NAV_STATUS");
@@ -259,24 +111,10 @@ void FlightPlanViewerV2::updateNavStatus(uint8_t cur_block, uint8_t cur_stage) {
 
     if(cur_block != current_block || cur_stage != current_stage) {
         //reset idle state
-        facades[current_block]->label->setStyleSheet(labels_stylesheet);
-        facades[current_block]->button->setStyleSheet(buttons_stylesheet);
-//        for(int i=0; i<facades[current_block]->tree->topLevelItemCount(); i++) {
-//            facades[current_block]->tree->topLevelItem(i)->setBackgroundColor(0, Qt::white);
-//            facades[current_block]->tree->topLevelItem(i)->setTextColor(0, Qt::black);
-//        }
-//        for(int i=0; i<facades[cur_block]->tree->topLevelItemCount(); i++) {
-//            facades[cur_block]->tree->topLevelItem(i)->setBackgroundColor(0, Qt::white);
-//            facades[cur_block]->tree->topLevelItem(i)->setTextColor(0, Qt::black);
-//        }
-
+        block_labels[current_block]->setStyleSheet(labels_stylesheet);
 
         //set "current" state
-        facades[cur_block]->label->setStyleSheet("QLabel { background-color: darkGreen; color: white;}");
-        facades[cur_block]->button->setStyleSheet("QPushButton{background-color: darkGreen; color: white;}");
-//        assert(facades[cur_block]->tree->topLevelItem(cur_stage) != nullptr);
-//        facades[cur_block]->tree->topLevelItem(cur_stage)->setBackgroundColor(0, Qt::darkGreen);
-//        facades[cur_block]->tree->topLevelItem(cur_stage)->setTextColor(0, Qt::white);
+        block_labels[cur_block]->setStyleSheet("QLabel { background-color: darkGreen; color: white;}");
         current_block = cur_block;
         current_stage = cur_stage;
     }
