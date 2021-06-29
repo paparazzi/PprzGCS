@@ -32,8 +32,12 @@ signals:
 private:
     Ui::FlightPlanEditor *ui;
 
+    static void applyRecursive(QTreeWidgetItem* item, std::function<void(QTreeWidgetItem*)> f);
+
     void onItemClicked(QTreeWidgetItem *item, int column);
+    void onItemDoubleClicked(QTreeWidgetItem *item, int column);
     void onAttributeChanged(QTreeWidgetItem *item, int column);
+    void onNavStatus();
 
     void onMoveWaypointUi(Waypoint*, QString ac_id);
     void onWaypointAdded(Waypoint*, QString ac_id);
@@ -57,8 +61,13 @@ private:
     QMap<QTreeWidgetItem*, xmlNodePtr> nodes;
     QMap<QTreeWidgetItem*, xmlNodePtr> attributes_nodes;
     QMap<QTreeWidgetItem*, Waypoint*> waypoints;
+    QMap<uint8_t, QTreeWidgetItem*> blocks;
+
+    uint8_t last_block;
 
     QTreeWidgetItem* waypoints_item;
+
+    bool readOnly;
 
 };
 

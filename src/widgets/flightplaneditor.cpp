@@ -8,7 +8,7 @@
 
 FlightPlanEditor::FlightPlanEditor(QString ac_id, QWidget *parent) : QWidget(parent),
     ui(new Ui::FlightPlanEditor),
-    ac_id(ac_id), doc(nullptr), dtd(nullptr), waypoints_item(nullptr)
+    ac_id(ac_id), doc(nullptr), dtd(nullptr), last_block(0), waypoints_item(nullptr), readOnly(false)
 {
     ui->setupUi(this);
     ui->error_label->hide();
@@ -17,7 +17,7 @@ FlightPlanEditor::FlightPlanEditor(QString ac_id, QWidget *parent) : QWidget(par
     ui->down_button->setIcon(style()->standardIcon(QStyle::SP_ArrowDown));
 
     if(AircraftManager::get()->getAircraft(ac_id)->isReal()) {
-        throw std::runtime_error("can't edit flight plan of a real AC!");
+        readOnly = true;
     }
 
     auto config = AircraftManager::get()->getAircraft(ac_id)->getConfig();
@@ -33,56 +33,81 @@ FlightPlanEditor::FlightPlanEditor(QString ac_id, QWidget *parent) : QWidget(par
         ui->error_label->show();
     }
 
-
-    connect(ui->validate_button, &QPushButton::clicked, this, [=]() {
-        bool result = validate();
-        if(result) {
-            QMessageBox::information(this, "DTD Validation", "XML is valid!");
-        } else {
-            QMessageBox::critical(this, "DTD Validation", "XML not valid! Try check stderr for more information.");
-        }
-    });
-
-    connect(ui->save_button, &QPushButton::clicked, this, [=]() {
-        auto data = output();
-        auto out_path = QFileDialog::getSaveFileName(this, "save btu", config->getFlightPlanUri());
-        if(out_path != "") {
-            QFile out(out_path);
-            if(out.open(QIODevice::WriteOnly | QIODevice::Text)) {
-                QTextStream stream( &out );
-                stream << data;
-                out.close();
+    if(!readOnly) {
+        connect(ui->validate_button, &QPushButton::clicked, this, [=]() {
+            bool result = validate();
+            if(result) {
+                QMessageBox::information(this, "DTD Validation", "XML is valid!");
+            } else {
+                QMessageBox::critical(this, "DTD Validation", "XML not valid! Try check stderr for more information.");
             }
-        }
-    });
+        });
 
-    connect(ui->up_button, &QPushButton::clicked, this, [=]() {
-        onArrowClicked(true);
-    });
+        connect(ui->save_button, &QPushButton::clicked, this, [=]() {
+            auto data = output();
+            auto out_path = QFileDialog::getSaveFileName(this, "save btu", config->getFlightPlanUri());
+            if(out_path != "") {
+                QFile out(out_path);
+                if(out.open(QIODevice::WriteOnly | QIODevice::Text)) {
+                    QTextStream stream( &out );
+                    stream << data;
+                    out.close();
+                }
+            }
+        });
 
-    connect(ui->down_button, &QPushButton::clicked, this, [=]() {
-        onArrowClicked(false);
-    });
+        connect(ui->up_button, &QPushButton::clicked, this, [=]() {
+            onArrowClicked(true);
+        });
 
-    connect(ui->attributes, &QTreeWidget::itemDoubleClicked, this, [=](QTreeWidgetItem * item, int column) {
-        if(column == 1) {
-            ui->attributes->editItem(item, column);
-        }
-    });
+        connect(ui->down_button, &QPushButton::clicked, this, [=]() {
+            onArrowClicked(false);
+        });
 
-    connect(ui->tree, &QTreeWidget::itemClicked, this, &FlightPlanEditor::onItemClicked);
-    connect(ui->tree, &QTreeWidget::customContextMenuRequested, this, &FlightPlanEditor::openElementsContextMenu);
+        connect(ui->attributes, &QTreeWidget::itemDoubleClicked, this, [=](QTreeWidgetItem * item, int column) {
+            if(column == 1) {
+                ui->attributes->editItem(item, column);
+            }
+        });
+
+        connect(ui->tree, &QTreeWidget::itemClicked, this, &FlightPlanEditor::onItemClicked);
+        connect(ui->tree, &QTreeWidget::customContextMenuRequested, this, &FlightPlanEditor::openElementsContextMenu);
+        connect(AircraftManager::get(), &AircraftManager::waypoint_added, this, &FlightPlanEditor::onWaypointAdded);
+        connect(ui->attributes, &QTreeWidget::customContextMenuRequested, this, &FlightPlanEditor::openAttributesContextMenu);
+
+    } else {
+        ui->validate_button->hide();
+        ui->save_button->hide();
+        ui->up_button->hide();
+        ui->down_button->hide();
+
+        connect(ui->tree, &QTreeWidget::itemDoubleClicked, this, [=](QTreeWidgetItem * item, int column) {
+            qDebug() << column << item->text(0) << item->text(1);
+        });
+
+        connect(ui->tree, &QTreeWidget::itemClicked, this, &FlightPlanEditor::onItemClicked);
+        connect(ui->tree, &QTreeWidget::itemDoubleClicked, this, &FlightPlanEditor::onItemDoubleClicked);
+        connect(AircraftManager::get()->getAircraft(ac_id)->getStatus(),
+                &AircraftStatus::nav_status, this, &FlightPlanEditor::onNavStatus);
+
+    }
+
     connect(AircraftManager::get(), &AircraftManager::waypoint_changed, this, &FlightPlanEditor::onMoveWaypointUi);
-    connect(AircraftManager::get(), &AircraftManager::waypoint_added, this, &FlightPlanEditor::onWaypointAdded);
-
-    connect(ui->attributes, &QTreeWidget::customContextMenuRequested, this, &FlightPlanEditor::openAttributesContextMenu);
-
 
     if(doc) {
         xmlNode *root_element = xmlDocGetRootElement(doc);
+        if(QString((char*)root_element->name) == "dump") {
+            auto child = xmlFirstElementChild(root_element);
+            while(child) {
+                if(QString((char*)child->name) == "flight_plan") {
+                    root_element = child;
+                    break;
+                }
+                child = xmlNextElementSibling(child);
+            }
+        }
         populate(root_element);
     }
-
 }
 
 FlightPlanEditor::~FlightPlanEditor() {
@@ -116,6 +141,10 @@ int FlightPlanEditor::parse(QString filename) {
         auto systemId = (char*)internal_dtd->SystemID;
         auto finfo = QFileInfo(filename);
         auto dtd_path = finfo.absoluteDir().absoluteFilePath(systemId);
+        dtd = xmlParseDTD(NULL, BAD_CAST dtd_path.toStdString().c_str());
+    } else {
+        auto settings = getAppSettings();
+        auto dtd_path = settings.value("PAPARAZZI_HOME").toString() + "/conf/flight_plans/flight_plan.dtd";
         dtd = xmlParseDTD(NULL, BAD_CAST dtd_path.toStdString().c_str());
     }
 
@@ -162,6 +191,12 @@ QTreeWidgetItem* FlightPlanEditor::populate(xmlNodePtr cur_node, QTreeWidgetItem
                 qDebug() << "Waypoint " + wp_name + " not found!";
             }
 
+        } else if(name == "block") {
+            auto cno = xmlGetProp(cur_node, BAD_CAST "no");
+            if(cno) {
+               QString no = (char*)cno;
+               blocks[no.toUInt()] = item;
+            }
         }
 
         QTreeWidgetItem* prev_item = nullptr;
@@ -174,15 +209,17 @@ QTreeWidgetItem* FlightPlanEditor::populate(xmlNodePtr cur_node, QTreeWidgetItem
         }
     } else {
         auto elt = xmlGetDtdElementDesc(dtd, cur_node->parent->name);
-        xmlElementContentPtr c=elt->content;
-        auto elts = elementDefs(c);
-        if(elts.contains("#PCDATA")) {
-            //QString content = (char*)node->children->content;
-            item = new QTreeWidgetItem(parent);
-            item->setText(0, "PCDATA");
-            //item->setFlags(item->flags() | Qt::ItemIsEditable);
-            nodes[item] = cur_node;
+        if(elt) {
+            xmlElementContentPtr c=elt->content;
+            auto elts = elementDefs(c);
+            if(elts.contains("#PCDATA")) {
+                //QString content = (char*)node->children->content;
+                item = new QTreeWidgetItem(parent);
+                item->setText(0, "PCDATA");
+                //item->setFlags(item->flags() | Qt::ItemIsEditable);
+                nodes[item] = cur_node;
 
+            }
         }
     }
     return item;
@@ -587,9 +624,13 @@ void FlightPlanEditor::onMoveWaypointUi(Waypoint* wp, QString acid) {
                 xmlSetProp(node, BAD_CAST "lat", BAD_CAST QString::number(lat).toStdString().c_str());
                 xmlSetProp(node, BAD_CAST "lon", BAD_CAST QString::number(lon).toStdString().c_str());
             }
-            ui->tree->clearSelection();
-            ui->tree->setItemSelected(it.key(), true);
-            onItemClicked(it.key(), 1);
+            if(!readOnly) {
+                ui->tree->clearSelection();
+                ui->tree->setItemSelected(it.key(), true);
+            }
+            if(ui->tree->selectedItems().size() > 0 && ui->tree->selectedItems().first() == it.key()) {
+                onItemClicked(it.key(), 1);
+            }
         }
     }
 }
@@ -619,6 +660,13 @@ void FlightPlanEditor::onWaypointAdded(Waypoint* wp, QString ac_id) {
         }
 
     }
+}
+
+void FlightPlanEditor::applyRecursive(QTreeWidgetItem* item, std::function<void(QTreeWidgetItem*)> f) {
+    for(int c=0; c<item->childCount(); ++c) {
+        applyRecursive(item->child(c), f);
+    }
+    f(item);
 }
 
 void FlightPlanEditor::onItemClicked(QTreeWidgetItem *item, int column) {
@@ -651,6 +699,60 @@ void FlightPlanEditor::onItemClicked(QTreeWidgetItem *item, int column) {
 
     connect(ui->attributes, &QTreeWidget::itemChanged, this, &FlightPlanEditor::onAttributeChanged);
 
+}
+
+void FlightPlanEditor::onItemDoubleClicked(QTreeWidgetItem *item, int column) {
+    (void)column;
+    auto node = nodes[item];
+    if(item->text(0)=="block") {
+       auto cno = xmlGetProp(node, BAD_CAST "no");
+       if(cno) {
+           QString no = (char*)cno;
+           pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("JUMP_TO_BLOCK"));
+           msg.addField("ac_id", ac_id);
+           msg.addField("block_id", no.toUInt());
+           PprzDispatcher::get()->sendMessage(msg);
+       }
+    }
+
+}
+
+void FlightPlanEditor::onNavStatus() {
+    auto last = blocks[last_block];
+
+    applyRecursive(last, [=](QTreeWidgetItem* item){
+        for(int i=0; i<item->columnCount(); ++i) {
+            item->setBackgroundColor(i, Qt::transparent);
+        }
+    });
+
+    auto msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("NAV_STATUS");
+    if(msg) {
+        uint8_t cur_block, cur_stage;
+        //uint32_t block_time, stage_time;
+        //float target_lat, target_long, target_climb, target_alt, target_course, dist_to_wp;
+        msg->getField("cur_block", cur_block);
+        msg->getField("cur_stage", cur_stage);
+
+        applyRecursive(blocks[cur_block], [=](QTreeWidgetItem* item){
+            QColor color = Qt::darkGreen;
+            auto node = nodes[item];
+            auto cno = xmlGetProp(node, BAD_CAST "no");
+            if(item->text(0) != "block" && cno) {
+                QString no = (char*)cno;
+                if(no.toUInt() == cur_stage) {
+                    color = Qt::green;
+                }
+            }
+
+            for(int i=0; i<item->columnCount(); ++i) {
+                item->setBackgroundColor(i, color);
+            }
+        });
+
+        last_block = cur_block;
+
+    }
 }
 
 QStringList FlightPlanEditor::elementDefs(xmlElementContentPtr c) {
