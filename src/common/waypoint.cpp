@@ -143,6 +143,9 @@ void Waypoint::getRelative(WpFrame frame, double &dx, double &dy, Waypoint* wp) 
     }
     dx = x - wp_x;
     dy = y - wp_y;
+    // rounding to the millimeter.
+    dx = std::round(dx*1e3) / 1e3;
+    dy = std::round(dy*1e3) / 1e3;
 }
 
 
