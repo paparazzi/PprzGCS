@@ -55,8 +55,9 @@ Point2DLatLon CoordinatesTransform::ltp_to_wgs84(Point2DLatLon origin, double x,
     const std::lock_guard<std::recursive_mutex> lock(mtx);
 
     // cf https://proj.org/operations/projections/ortho.html
-    auto source = QString("+proj=ortho +lat_0=%1 +lon_0=%2").arg(origin.lat()).arg(origin.lon());
-
+    // at least 6 digits are needed to have a good precision.
+    // The default is too much rounded, which give a finale error of 1m...
+    auto source = QString("+proj=ortho +lat_0=%1 +lon_0=%2").arg(origin.lat(), 0, 'f', 7).arg(origin.lon(),  0, 'f', 7);
     QString proj_name = source + "_EPSG:4326";
     if(!projectors.contains(proj_name)) {
         auto proj = proj_create_crs_to_crs (pj_context, source.toStdString().c_str(), "EPSG:4326", nullptr);
