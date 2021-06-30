@@ -94,6 +94,8 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     auto w_map = new QWidget(tabWidget);
     auto l_map = new QGridLayout(w_map);
     row = 0;
+    cb = addSetting("Default tiles", "map/default_tiles", w_map, l_map, row, Type::STRING);
+    callbacks.append(cb);
     cb = addSetting("Waypoint Size", "map/waypoint/size", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
     cb = addSetting("Items Font", "map/items_font", w_map, l_map, row, Type::INT);
