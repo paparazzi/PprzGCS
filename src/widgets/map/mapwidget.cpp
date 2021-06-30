@@ -640,13 +640,13 @@ void MapWidget::onMoveWaypointUi(Waypoint* wp, QString ac_id) {
 
 void MapWidget::updateTarget(pprzlink::Message msg) {
     QString ac_id;
-    float target_lat, target_lon;
+    double target_lat, target_lon;
     msg.getField("ac_id", ac_id);
     msg.getField("target_lat", target_lat);
     msg.getField("target_long", target_lon);
 
     if(AircraftManager::get()->aircraftExists(ac_id)) {
-        ac_items_managers[ac_id]->getTarget()->setPosition(Point2DLatLon(static_cast<double>(target_lat), static_cast<double>(target_lon)));
+        ac_items_managers[ac_id]->getTarget()->setPosition(Point2DLatLon(target_lat, target_lon));
     }
 }
 
@@ -747,7 +747,8 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
 
 void MapWidget::updateAircraftItem(pprzlink::Message msg) {
     QString ac_id;
-    float lat, lon, heading;
+    double lat, lon;
+    float heading;
     msg.getField("ac_id", ac_id);
     msg.getField("lat", lat);
     msg.getField("long", lon);

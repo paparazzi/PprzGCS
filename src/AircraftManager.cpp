@@ -37,7 +37,8 @@ QList<Aircraft*> AircraftManager::getAircrafts() {
 void AircraftManager::moveWaypoint(pprzlink::Message msg) {
     QString ac_id;
     uint8_t wp_id = 0;
-    float lat, lon, alt, ground_alt;
+    float alt, ground_alt;
+    double lat, lon;
     msg.getField("ac_id", ac_id);
     msg.getField("wp_id", wp_id);
     msg.getField("lat", lat);
@@ -47,8 +48,8 @@ void AircraftManager::moveWaypoint(pprzlink::Message msg) {
 
     if(AircraftManager::get()->aircraftExists(ac_id) && wp_id != 0) {
         Waypoint* wp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoint(wp_id);
-        wp->setLat(static_cast<double>(lat));
-        wp->setLon(static_cast<double>(lon));
+        wp->setLat(lat);
+        wp->setLon(lon);
         wp->setAlt(static_cast<double>(alt));
         emit waypoint_changed(wp, ac_id);
     }
