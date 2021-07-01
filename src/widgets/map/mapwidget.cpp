@@ -668,14 +668,14 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
             prev_item = nullptr;
         }
 
-        float circle_lat, circle_long;
+        double circle_lat, circle_long;
         int16_t radius;
         msg.getField("circle_lat", circle_lat);
         msg.getField("circle_long", circle_long);
         msg.getField("radius", radius);
 
 
-        Point2DLatLon pos(static_cast<double>(circle_lat), static_cast<double>(circle_long));
+        Point2DLatLon pos(circle_lat, circle_long);
         if(prev_item == nullptr) {
             auto wcenter = new WaypointItem(pos, ac_id);
             wcenter->setZValues(z, z);
@@ -703,14 +703,14 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
             prev_item = nullptr;
         }
 
-        float segment1_lat, segment1_long, segment2_lat, segment2_long;
+        double segment1_lat, segment1_long, segment2_lat, segment2_long;
         msg.getField("segment1_lat", segment1_lat);
         msg.getField("segment1_long", segment1_long);
         msg.getField("segment2_lat", segment2_lat);
         msg.getField("segment2_long", segment2_long);
 
-        Point2DLatLon p1(static_cast<double>(segment1_lat), static_cast<double>(segment1_long));
-        Point2DLatLon p2(static_cast<double>(segment2_lat), static_cast<double>(segment2_long));
+        Point2DLatLon p1(segment1_lat, segment1_long);
+        Point2DLatLon p2(segment2_lat, segment2_long);
         if(prev_item == nullptr) {
             PathItem* pi = new PathItem(ac_id);
             pi->setZValues(z, z);
