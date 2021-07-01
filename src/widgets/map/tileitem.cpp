@@ -88,58 +88,13 @@ bool TileItem::paintPixmapFromOffspring(QPixmap* altPixmap) {
 }
 
 
-
-
-TileIterator::TileIterator(TileItem* base, int maxDepth) : current(base), maxDepth(maxDepth)
-{
-    explore.push_back(0);
-}
-
-TileItem* TileIterator::next() {
-    if(current==nullptr) {  // the iterator has been initialized with a null base!) {
-        return nullptr;
+void tileApplyRecursive(TileItem* current, std::function<void(TileItem*)> fn) {
+    if(current == nullptr) {
+        return;
     }
-
-    if(explore.last() < 4 && explore.length() <= maxDepth) {   // explore the children (unless maxDEPTH is reached)
-        int x=0, y=0;
-        switch (explore.last()) {
-        case 0:
-            x=0; y=0;
-            break;
-        case 1:
-            x=1; y=0;
-            break;
-        case 2:
-            x=0; y=1;
-            break;
-        case 3:
-            x=1; y=1;
-            break;
-        }
-
-        TileItem* n = current->child(x, y);
-
-        //    //prepare for next time
-
-        if(n != nullptr) {
-            // got a child ! explore this child from the beginning
-            current = n;
-            explore.push_back(0);
-            return next();
-        } else {
-            // no child :-( ! Then will try his brother...
-            explore.last() += 1;
-            return next();
-        }
-
-    } else {    // No more children. return the current then go to the parent
-        TileItem* ret = current;
-        explore.pop_back();
-        if(!explore.isEmpty()) {
-            explore.last() += 1;
-        }
-
-        current = static_cast<TileItem*>(current->mother());
-        return ret;
-    }
+    fn(current);
+    tileApplyRecursive(current->child(0, 0), fn);
+    tileApplyRecursive(current->child(1, 0), fn);
+    tileApplyRecursive(current->child(0, 1), fn);
+    tileApplyRecursive(current->child(1, 1), fn);
 }

@@ -50,17 +50,8 @@ private:
     TileItem* _mother;
 };
 
+void tileApplyRecursive(TileItem* base, std::function<void(TileItem*)> fn);
+
 Q_DECLARE_METATYPE(TileItem*)
-
-class TileIterator {
-public:
-    TileIterator(TileItem* base, int maxDepth = 19);
-    TileItem* next();
-
-private:
-    TileItem* current;
-    QVector<int> explore;
-    int maxDepth;
-};
 
 #endif // TILEITEM_H

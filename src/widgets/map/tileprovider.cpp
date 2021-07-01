@@ -238,18 +238,12 @@ void TileProvider::sendTile(TileItem* tileReady, TileItem* tileObj) {
 }
 
 void TileProvider::setZoomLevel(int z) {
-    //TODO improve iterator usability (make a C++ standard one)
-    TileIterator iter(motherTile);
-    while(true) {
-        TileItem* tile = iter.next();
-        if(tile == nullptr) {
-            break;
-        }
+
+    tileApplyRecursive(motherTile, [=](TileItem* tile) {
         if(tile->hasData() && tile->coordinates().zoom() != z) {
             tile->hide();
         }
-    }
-
+    });
 }
 
 TileItem* TileProvider::getTile(Point2DTile p) {
@@ -289,32 +283,23 @@ TileItem* TileProvider::getValidTile(Point2DTile p) {
 void TileProvider::setZValue(int z) {
     z_value = z;
     //iterate over all items in scene
-    //TODO improve iterator usability (make a C++ standard one)
-    TileIterator iter(motherTile);
-    while(true) {
-        TileItem* tile = iter.next();
-        if(tile == nullptr) {
-            break;
-        }
+
+
+    tileApplyRecursive(motherTile, [=](TileItem* tile) {
         if(tile->isInScene()) {
             tile->setZValue(z);
         }
-    }
+    });
 }
 
 void TileProvider::setOpacity(qreal a) {
     alpha = a;
-    //TODO improve iterator usability (make a C++ standard one)
-    TileIterator iter(motherTile);
-    while(true) {
-        TileItem* tile = iter.next();
-        if(tile == nullptr) {
-            break;
-        }
+
+    tileApplyRecursive(motherTile, [=](TileItem* tile) {
         if(tile->isInScene()) {
             tile->setOpacity(alpha);
         }
-    }
+    });
 }
 
 void TileProvider::setVisible(bool v) {
@@ -322,15 +307,10 @@ void TileProvider::setVisible(bool v) {
         return;
     }
     visibility = v;
-    //TODO improve iterator usability (make a C++ standard one)
-    TileIterator iter(motherTile);
-    while(true) {
-        TileItem* tile = iter.next();
-        if(tile == nullptr) {
-            break;
-        }
+
+    tileApplyRecursive(motherTile, [=](TileItem* tile) {
         if(tile->isInScene()) {
             tile->setVisible(visibility);
         }
-    }
+    });
 }
