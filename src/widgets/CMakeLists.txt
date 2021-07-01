@@ -6,10 +6,10 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/settings_viewer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pprzmap.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pfd.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/strips.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/listcontainer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mini_strip.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flightplan_viewerv2.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/widget_stack.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/stackcontainer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/layer_combo.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/widget_utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pprzmap.ui

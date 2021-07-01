@@ -1,5 +1,5 @@
-#ifndef WIDGET_STACK_H
-#define WIDGET_STACK_H
+#ifndef STACKCONTAINER_H
+#define STACKCONTAINER_H
 
 #include <QWidget>
 #include <QStackedWidget>
@@ -7,11 +7,11 @@
 #include "configurable.h"
 #include "ac_selector.h"
 
-class WidgetStack : public QWidget, public Configurable
+class StackContainer : public QWidget, public Configurable
 {
     Q_OBJECT
 public:
-    explicit WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent = nullptr, bool headers=true);
+    explicit StackContainer(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent = nullptr, bool headers=true);
     void configure(QDomElement) {};
 
 private:
@@ -27,4 +27,4 @@ private:
     std::function<QWidget*(QString, QWidget*)> constructor;
 };
 
-#endif // WIDGET_STACK_H
+#endif // STACKCONTAINER_H

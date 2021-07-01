@@ -1,9 +1,9 @@
-#include "widget_stack.h"
+#include "stackcontainer.h"
 #include "dispatcher_ui.h"
 #include "AircraftManager.h"
 #include <QLabel>
 
-WidgetStack::WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent, bool headers) : QWidget(parent),
+StackContainer::StackContainer(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent, bool headers) : QWidget(parent),
     constructor(constructor)
 {
     vLayout = new QVBoxLayout(this);
@@ -18,8 +18,8 @@ WidgetStack::WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor,
     }
     vLayout->addWidget(contentWidget);
 
-    connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &WidgetStack::handleNewAC);
-    connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &WidgetStack::removeAC);
+    connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &StackContainer::handleNewAC);
+    connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &StackContainer::removeAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this,
             [=](QString ac_id) {
                 for(auto &id : viewers_widgets.keys()) {
@@ -34,7 +34,7 @@ WidgetStack::WidgetStack(std::function<QWidget*(QString, QWidget*)> constructor,
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 }
 
-void WidgetStack::handleNewAC(QString ac_id) {
+void StackContainer::handleNewAC(QString ac_id) {
     QWidget* sv;
     try {
         sv = constructor(ac_id, this);
@@ -52,7 +52,7 @@ void WidgetStack::handleNewAC(QString ac_id) {
     sv->hide();
 }
 
-void WidgetStack::removeAC(QString ac_id) {
+void StackContainer::removeAC(QString ac_id) {
     (void)ac_id;
     auto w = viewers_widgets[ac_id];
     viewers_widgets.remove(ac_id);
