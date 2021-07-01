@@ -234,12 +234,13 @@ void MapWidget::configure(QDomElement ele) {
             QDomElement w_ele = w_node.toElement();
             assert(w_ele.tagName() == "widget");
             auto name = w_ele.attribute("name");
+            auto container = w_ele.attribute("container", "stack");
 
             QWidget* widget = nullptr;
             if(name == "layers") {
                 widget = makeLayerCombo();
             } else {
-                widget = makeWidget(name, this);
+                widget = makeWidget(name, container, this);
             }
 
 

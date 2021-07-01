@@ -12,9 +12,10 @@
 #include "flightplaneditor.h"
 #include "mini_strip.h"
 
-template<typename T>
-QWidget* make_stack(QWidget* parent) {
-    return new StackContainer(
+
+template<typename C, typename T>
+QWidget* new_container(QWidget* parent) {
+    return new C(
         [](QString ac_id, QWidget* container) {
             return new T(ac_id, container);
         },
@@ -22,44 +23,46 @@ QWidget* make_stack(QWidget* parent) {
 }
 
 template<typename T>
-QWidget* make_list(QWidget* parent) {
-    return new ListContainer(
-        [](QString ac_id, QWidget* container) {
-            return new T(ac_id, container);
-        },
-        parent);
+QWidget* make_container(QString container, QWidget* parent) {
+    if(container == "stack") {
+        return new_container<StackContainer, T>(parent);
+    } else if(container == "list") {
+        return new_container<ListContainer, T>(parent);
+    } else {
+        throw runtime_error("unkown container " + container.toStdString());
+    }
 }
 
-QWidget* makeWidget(QString name, QWidget* parent) {
+
+QWidget* makeWidget(QString name, QString container, QWidget* parent) {
     QWidget* widget = nullptr;
 
-    if (name == "strips") {
-        widget = make_list<MiniStrip>(parent);
-    } else if (name == "alarms") {
-        widget = new ACSelector(parent);
-    } else if(name == "map2d") {
+    if(name == "map2d") {
         widget = new PprzMap(parent);
-    } else if (name == "aircraft" or name=="altgraph") {
-        widget = new QWidget(); // dummy widget
-    } else if (name == "settings") {
-        widget = make_stack<SettingsViewer>(parent);
-    } else if (name == "PFD") {
+    }
+    else if (name == "PFD") {
         widget = new Pfd(parent);
     }
+    else if (name == "settings") {
+        widget = make_container<SettingsViewer>(container, parent);
+    }
+    else if (name == "strips") {
+        widget = make_container<MiniStrip>(container, parent);
+    }
     else if (name == "flight_planV2") {
-        widget = make_stack<FlightPlanViewerV2>(parent);
+        widget = make_container<FlightPlanViewerV2>(container, parent);
     }
     else if (name == "map_strip") {
-        widget = make_stack<Strip>(parent);
+        widget = make_container<Strip>(container, parent);
     }
     else if (name == "commands") {
-        widget = make_stack<Commands>(parent);
+        widget = make_container<Commands>(container, parent);
     }
     else if (name == "gps_classic_viewer") {
-        widget = make_stack<GPSClassicViewer>(parent);
+        widget = make_container<GPSClassicViewer>(container, parent);
     }
     else if (name == "flight_plan_editor") {
-        widget = make_stack<FlightPlanEditor>(parent);
+        widget = make_container<FlightPlanEditor>(container, parent);
     }
     else {
         std::string s = "Widget " + name.toStdString() + " unknown";

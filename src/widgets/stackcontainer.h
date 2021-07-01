@@ -11,7 +11,7 @@ class StackContainer : public QWidget, public Configurable
 {
     Q_OBJECT
 public:
-    explicit StackContainer(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent = nullptr, bool headers=true);
+    explicit StackContainer(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent = nullptr);
     void configure(QDomElement) {};
 
 private:

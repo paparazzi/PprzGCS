@@ -15,7 +15,7 @@
       </configure>
     </widget>
     <rows size="200">
-        <widget name="strips"/>
+        <widget name="strips" container="list"/>
         <widget name="flight_planV2"/>
     </rows>
   </columns>

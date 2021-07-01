@@ -48,11 +48,12 @@ QWidget* rec_build(QDomNode &node, QSplitter* parent, int* size) {
 
         } else if(ele.tagName()=="widget") {
             QString name = ele.attribute("name", "");
+            auto container = ele.attribute("container", "stack");
             if(name == "") {
                 throw invalid_widget_name("Invalid widget name");
             }
 
-            QWidget* widget = makeWidget(name, parent);
+            QWidget* widget = makeWidget(name, container, parent);
 
             for(int i=0; i<ele.childNodes().length(); i++) {
                 QDomNode node = ele.childNodes().item(i);
@@ -110,7 +111,8 @@ QLayout* layout_rec_build(QDomElement &ele, QWidget* parent) {
         }
         else if(child_ele.tagName() == "widget") {
             auto name = child_ele.attribute("name");
-            QWidget* widget = makeWidget(name, parent);
+            auto container = child_ele.attribute("container", "stack");
+            QWidget* widget = makeWidget(name, container, parent);
             layout->addWidget(widget);
         }
         else if (child_ele.tagName() == "spacer") {
