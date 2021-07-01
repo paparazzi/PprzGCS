@@ -118,23 +118,14 @@ FlightPlanEditor::~FlightPlanEditor() {
 int FlightPlanEditor::parse(QString filename) {
     LIBXML_TEST_VERSION
 
-    xmlParserCtxtPtr ctxt = xmlNewParserCtxt();
-    if (ctxt == nullptr) {
-        ui->error_label->setText("Failed to allocate parser context");
-        qDebug() << "Failed to allocate parser context";
-        return -1;
-    }
-    /* parse the file, activating the DTD validation option */
-    doc = xmlCtxtReadFile(ctxt, filename.toStdString().c_str(), nullptr, XML_PARSE_DTDVALID);  /* the resulting document tree */
+    // parse the file
+    doc = xmlReadFile(filename.toStdString().c_str(), nullptr, XML_PARSE_NOWARNING);
     /* check if parsing succeeded */
     if (doc == nullptr) {
         ui->error_label->setText("Failed to parse " + filename);
         qDebug() << "Failed to parse " + filename;
         return -1;
     }
-
-    xmlFreeParserCtxt(ctxt);
-
 
     auto internal_dtd = xmlGetIntSubset(doc);
     if(internal_dtd != nullptr) {
