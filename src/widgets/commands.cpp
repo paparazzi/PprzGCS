@@ -161,7 +161,7 @@ void Commands::addSpecialCommands(QGridLayout* glay) {
             });
         }
 
-        if(set->getName() == "altitude") {
+        if(set->getName() == "altitude" || set->getName() == "flight_altitude") {
             addCommandButton(glay, "up.png", 1, 1, [=]() mutable {
                 qDebug() << target_alt;
                 ac->setSetting(set, target_alt + ac->getAirframe()->getAltShiftPlus());
