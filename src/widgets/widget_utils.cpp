@@ -30,17 +30,27 @@ QWidget* make_list(QWidget* parent) {
         parent);
 }
 
+template<typename T>
+std::function<QWidget*(QWidget*)> container(QString container) {
+    if(container == "stack") {
+        return make_stack<T>;
+    } else if(container == "list") {
+        return make_list<T>;
+    } else {
+        throw runtime_error("unkown container " + container.toStdString());
+    }
+
+}
+
 QWidget* makeWidget(QString name, QWidget* parent) {
     QWidget* widget = nullptr;
 
     if (name == "strips") {
-        widget = make_list<MiniStrip>(parent);
+        widget = container<MiniStrip>("plop")(parent);
     } else if (name == "alarms") {
         widget = new ACSelector(parent);
     } else if(name == "map2d") {
         widget = new PprzMap(parent);
-    } else if (name == "aircraft" or name=="altgraph") {
-        widget = new QWidget(); // dummy widget
     } else if (name == "settings") {
         widget = make_stack<SettingsViewer>(parent);
     } else if (name == "PFD") {
