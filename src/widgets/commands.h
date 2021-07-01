@@ -22,7 +22,7 @@ private:
     void addFlightPlanButtons(QGridLayout* fp_buttons_layout);
     void addSettingsButtons(QGridLayout* settings_buttons_layout);
     void addSpecialCommands(QGridLayout* special_commands_layout);
-    void addCommandButton(QGridLayout*, QString icon, int row, int col, std::function<void()> callback);
+    void addCommandButton(QGridLayout*, QString icon, int row, int col, std::function<void()> callback, QString tootltip="");
 
     void updateTargetAlt(pprzlink::Message msg);
 
