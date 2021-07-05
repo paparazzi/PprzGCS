@@ -104,6 +104,11 @@ void GraphicsCircle::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         return;
     }
 
+    if(!editable) {
+        event->ignore();
+        return;
+    }
+
     textPos = event->pos() + TEXT_OFFSET;
     QPointF pressPos = QPointF(event->pos().x() * scale(), event->pos().y() * scale());
     dr = sqrt(pressPos.x()*pressPos.x() + pressPos.y()*pressPos.y()) - radius;

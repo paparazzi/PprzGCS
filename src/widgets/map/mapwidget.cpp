@@ -624,6 +624,14 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
     if(wp->getName().startsWith('_')) {
         wpi->setStyle(GraphicsPoint::Style::CURRENT_NAV);
     }
+
+    if(wp->getName() == "HOME") {
+        auto fp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan();
+        auto ci = new CircleItem(wpi, fp->getMaxDistFromHome(), ac_id);
+        ci->setEditable(false);
+        addItem(ci);
+    }
+
 }
 
 void MapWidget::onMoveWaypointUi(Waypoint* wp, QString ac_id) {

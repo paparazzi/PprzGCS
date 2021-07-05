@@ -52,7 +52,8 @@ void CircleItem::init(WaypointItem* center) {
     connect(
         circle, &GraphicsCircle::objectClicked, this,
         [=](QPointF scene_pos) {
-            qDebug() << "circle clicked at " << scene_pos;
+            emit itemClicked(scene_pos);
+            // qDebug() << "circle clicked at " << scene_pos;
         }
     );
 
@@ -103,7 +104,6 @@ void CircleItem::setForbidHighlight(bool fh) {
 }
 
 void CircleItem::setEditable(bool ed) {
-    center->setEditable(ed);
     circle->setEditable(ed);
 }
 

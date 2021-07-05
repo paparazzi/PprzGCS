@@ -55,6 +55,7 @@ public:
     QList<shared_ptr<Sector>> getSectors() {return  sectors;}
     shared_ptr<Block> getBlock(uint8_t id);
     double getDefaultAltitude() {return defaultAlt;}
+    double getMaxDistFromHome() {return max_dist_from_home;}
     double getGroundAlt() {return ground_alt;}
     void setGroundAlt(double ga) {ground_alt = ga;}
     Waypoint* getOrigin() {return origin;}
