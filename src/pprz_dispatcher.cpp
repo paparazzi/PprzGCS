@@ -85,6 +85,7 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
     bindDeftoSignal("NAV_STATUS", &PprzDispatcher::nav_status);
     bindDeftoSignal("CIRCLE_STATUS", &PprzDispatcher::circle_status);
     bindDeftoSignal("SEGMENT_STATUS", &PprzDispatcher::segment_status);
+    bindDeftoSignal("SURVEY_STATUS", &PprzDispatcher::survey_status);
     bindDeftoSignal("ENGINE_STATUS", &PprzDispatcher::engine_status);
     bindDeftoSignal("DL_VALUES", &PprzDispatcher::dl_values);
     bindDeftoSignal("TELEMETRY_STATUS", &PprzDispatcher::telemetry_status);

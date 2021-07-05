@@ -97,6 +97,7 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &MapWidget::updateTarget);
     connect(PprzDispatcher::get(), &PprzDispatcher::circle_status, this, &MapWidget::updateNavShape);
     connect(PprzDispatcher::get(), &PprzDispatcher::segment_status, this, &MapWidget::updateNavShape);
+    connect(PprzDispatcher::get(), &PprzDispatcher::survey_status, this, &MapWidget::updateNavShape);
 
     shape_bind_id = PprzDispatcher::get()->bind("SHAPE", this,
         [=](QString sender, pprzlink::Message msg) {
@@ -740,8 +741,41 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
             wps[1]->update();
         }
 
-    }
+    } else if (msg.getDefinition().getName() == "SEGMENT_STATUS") {
+        if(prev_item!= nullptr) {
+            ac_items_managers[ac_id]->setCurrentNavShape(nullptr);
+            removeItem(prev_item);
+            prev_item = nullptr;
+        }
 
+        double east_long, north_lat, west_long, south_lat;
+        msg.getField("segment1_lat", east_long);
+        msg.getField("segment1_long", north_lat);
+        msg.getField("segment2_lat", west_long);
+        msg.getField("segment2_long", south_lat);
+
+        QVector<Point2DLatLon> pts;
+
+        pts.append(Point2DLatLon(north_lat, east_long));
+        pts.append(Point2DLatLon(north_lat, west_long));
+        pts.append(Point2DLatLon(south_lat, east_long));
+        pts.append(Point2DLatLon(south_lat, west_long));
+
+        PathItem* pi = new PathItem(ac_id);
+        pi->setZValues(z, z);
+
+        for(auto pt: pts) {
+            auto wi = new WaypointItem(pt, ac_id);
+            wi->setZValues(z, z);
+            addItem(wi);
+            pi->addPoint(wi);
+        }
+
+        pi->setStyle(GraphicsObject::Style::CURRENT_NAV);
+        pi->setClosedPath(true);
+        addItem(pi);
+        ac_items_managers[ac_id]->setCurrentNavShape(pi);
+    }
 
 }
 

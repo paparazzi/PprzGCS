@@ -51,6 +51,7 @@ signals:
     void nav_status(pprzlink::Message);
     void circle_status(pprzlink::Message);
     void segment_status(pprzlink::Message);
+    void survey_status(pprzlink::Message);
     void engine_status(pprzlink::Message);
     void waypoint_moved(pprzlink::Message);
     void dl_values(pprzlink::Message);

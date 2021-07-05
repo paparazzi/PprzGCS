@@ -20,6 +20,7 @@ signals:
     void nav_status();
     void circle_status();
     void segment_status();
+    void survey_status();
     void engine_status();
     void waypoint_moved();
     void dl_values();

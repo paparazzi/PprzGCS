@@ -64,6 +64,9 @@ void AircraftStatus::updateMessage(pprzlink::Message msg) {
         else if(name == "SEGMENT_STATUS") {
             emit segment_status();
         }
+        else if(name == "SURVEY_STATUS") {
+            emit survey_status();
+        }
         else if(name == "ENGINE_STATUS") {
             emit engine_status();
         }
