@@ -10,7 +10,9 @@ PathItem::PathItem(QString ac_id, QColor color, double neutral_scale_zoom, QObje
     MapItem(ac_id, neutral_scale_zoom, parent),
     closing_line(nullptr), line_width(5), color(color), polygon(nullptr)
 {
-    if(!color.isValid()) {
+    if(color.isValid()) {
+        palette = PprzPalette(color);
+    } else {
         this->color = palette.getColor();
     }
     auto settings = getAppSettings();
