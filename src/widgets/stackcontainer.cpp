@@ -15,6 +15,7 @@ StackContainer::StackContainer(std::function<QWidget*(QString, QWidget*)> constr
     ac_selector = new ACSelector(this);
     vLayout->addWidget(ac_selector);
     vLayout->addWidget(contentWidget);
+    vLayout->setStretch(1, 1);
 
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &StackContainer::handleNewAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &StackContainer::removeAC);
