@@ -43,7 +43,7 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
         auto lbl = new QLabel(txt != "" ? txt: name, widget);
 
         auto go_button = new QToolButton(widget);
-        go_button->setText("go");
+        go_button->setText(QString::fromUtf8("\xE2\x86\x92"));
         connect(go_button, &QPushButton::clicked, this,
             [=]() {
                 pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("JUMP_TO_BLOCK"));
