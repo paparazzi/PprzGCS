@@ -55,6 +55,7 @@ public:
     bool isVisible() {return visibility;}
     void setVisible(bool v);
     void setTilesPath(QString path) {tiles_path = path;}
+    void removeFromScene(QGraphicsScene* scene);
 
 
     TileProviderConfig* config() {return _config;}

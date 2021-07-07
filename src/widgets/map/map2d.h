@@ -18,6 +18,7 @@ class Map2D : public QGraphicsView
     Q_OBJECT
 public:
     explicit Map2D(QWidget *parent = nullptr);
+    ~Map2D();
     virtual void centerLatLon(Point2DLatLon latLon);
     double zoomBox(Point2DLatLon nw, Point2DLatLon se);
     void toggleTileProvider(QString providerName, bool enable);

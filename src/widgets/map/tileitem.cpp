@@ -14,6 +14,17 @@ TileItem::TileItem(TileItem* mother, int size, Point2DTile coordinates, QGraphic
     }
 }
 
+TileItem::~TileItem() {
+    for(int i=0; i<2; i++) {
+        for(int j=0; j<2; j++) {
+            if(_childs[i][j] != nullptr) {
+                delete _childs[i][j];
+                _childs[i][j] = nullptr;
+            }
+        }
+    }
+}
+
 void TileItem::setPixmap(const QPixmap &pixmap) {
     QGraphicsPixmapItem::setPixmap(pixmap);
     _hasData = true;

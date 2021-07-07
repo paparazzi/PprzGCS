@@ -27,6 +27,16 @@ TileProvider::TileProvider(TileProviderConfig* config, int z, int displaySize, Q
 
 TileProvider::~TileProvider() {
     delete _config;
+    delete motherTile;
+}
+
+void TileProvider::removeFromScene(QGraphicsScene* scene) {
+    tileApplyRecursive(motherTile, [=](TileItem* tile) {
+        if(tile->isInScene()) {
+            scene->removeItem(tile);
+            tile->setInScene(false);
+        }
+    });
 }
 
 QString TileProvider::tilePath(Point2DTile coor) {

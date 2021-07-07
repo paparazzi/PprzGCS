@@ -34,7 +34,7 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     }
 
     qreal maxxy = pow(2, maxZoom);
-    _scene = new MapScene(-500, -500, tile_size*maxxy, tile_size*maxxy, parent);
+    _scene = new MapScene(-500, -500, tile_size*maxxy, tile_size*maxxy, this);
     setScene(_scene);
 
     setDragMode(QGraphicsView::ScrollHandDrag);
@@ -45,6 +45,12 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     setBackgroundBrush(QBrush(QColor(0x151515)));
 
     Point2DLatLon initLatLon(43.462344,1.273044);
+}
+
+Map2D::~Map2D() {
+    for(auto tp:qAsConst(tile_providers)) {
+        tp->removeFromScene(_scene);
+    }
 }
 
 void Map2D::toggleTileProvider(QString providerName, bool enable) {
