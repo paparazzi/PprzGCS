@@ -207,6 +207,11 @@ long PprzDispatcher::bind(QString msg_name, QObject* context, pprzlink::messageC
     return ret;
 }
 
+void PprzDispatcher::unBind(long bid) {
+    link->UnbindMessage(bid);
+    _bindIds.removeAll(bid);
+}
+
 void PprzDispatcher::stop() {
     link->stop();
 }
