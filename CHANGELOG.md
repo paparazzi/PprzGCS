@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.0
+
++ Save settings in airframe file (to be improved)
++ Fix some bugs in the map
++ Add shapes
++ Add FlightPlanEditor
++ Better FlighPlanViewer
++ ...
+
 ## v1.0/alpha-3
 
 + handle LTP coordinates
