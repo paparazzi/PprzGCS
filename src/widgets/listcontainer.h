@@ -11,9 +11,12 @@ class ListContainer : public QWidget, public Configurable
     Q_OBJECT
 public:
     explicit ListContainer(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent = nullptr);
-    void configure(QDomElement) {};
+    void configure(QDomElement c) override {conf = c;}
 
 signals:
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *ev) override;
 
 private:
     void handleNewAC(QString ac_id);
@@ -22,8 +25,13 @@ private:
     std::function<QWidget*(QString, QWidget*)> constructor;
 
     QMap<QString, QWidget*> widgets;
-    QVBoxLayout* scroll_layout;
+
+    QMap<QWidget*, QString> rects;
+    QGridLayout* grid_layout;
     QScrollArea* scroll;
+
+    QDomElement conf;
+
 public slots:
 };
 

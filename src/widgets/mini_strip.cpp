@@ -9,31 +9,10 @@
 MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     ac_id(ac_id), icons_size(QSize(30, 30)), alt_mode(true), speed_mode(true)
 {
-    auto hl = new QHBoxLayout(this);
-    auto gl = new QGridLayout();
-    hl->setSizeConstraint(QLayout::SetFixedSize);
-
+    auto gl = new QGridLayout(this);
     auto ac = AircraftManager::get()->getAircraft(ac_id);
-    QColor color = ac->getColor();
-    int hue = color.hue();
-    int sat = color.saturation();
-    color.setHsv(hue, static_cast<int>(sat*0.2), 255);
-
-
-    auto color_rect = new QWidget(this);
-    color_rect->setMinimumSize(QSize(20, 20));
-    color_rect->setStyleSheet("background: " + ac->getColor().name());
-
-    color_rect->installEventFilter(this);
-
-    hl->addWidget(color_rect);
-    hl->addLayout(gl);
-
     auto ac_name = new QLabel(ac->name());
     ac_name->setStyleSheet("font-weight: bold");
-//    auto ac_name = new ColorLabel(15, this);
-//    ac_name->setText(ac.name());
-//    ac_name->setBrush(color);
     gl->addWidget(ac_name, 0, 0);
 
 
