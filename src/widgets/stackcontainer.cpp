@@ -37,6 +37,14 @@ void StackContainer::handleNewAC(QString ac_id) {
     QWidget* sv;
     try {
         sv = constructor(ac_id, this);
+        if(!conf.isNull()) {
+            Configurable* c = dynamic_cast<Configurable*>(sv);
+            if(c != nullptr) {
+                c->configure(conf);
+            } else {
+                throw std::runtime_error("Widget is not Configurable!!!");
+            }
+        }
     }  catch (std::runtime_error &e) {
         auto msg = QString(e.what());
         sv = new QWidget(this);

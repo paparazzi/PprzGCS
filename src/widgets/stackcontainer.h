@@ -12,7 +12,7 @@ class StackContainer : public QWidget, public Configurable
     Q_OBJECT
 public:
     explicit StackContainer(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent = nullptr);
-    void configure(QDomElement) {};
+    void configure(QDomElement c) { conf = c;}
 
 private:
     void handleNewAC(QString ac_id);
@@ -23,6 +23,8 @@ private:
     QVBoxLayout* vLayout;
     ACSelector* ac_selector;
     QVBoxLayout* stackLayout;
+
+    QDomElement conf;
 
     std::function<QWidget*(QString, QWidget*)> constructor;
 };
