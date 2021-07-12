@@ -630,6 +630,7 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
         auto ci = new CircleItem(wpi, fp->getMaxDistFromHome(), ac_id);
         ci->setEditable(false);
         addItem(ci);
+        ac_items_managers[ac_id]->setMaxDistCircle(ci);
     }
 
 }

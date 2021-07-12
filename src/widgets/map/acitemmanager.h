@@ -6,6 +6,7 @@
 #include "aircraft_item.h"
 #include "path_item.h"
 #include "mapwidget.h"
+#include "circle_item.h"
 
 class ACItemManager: public QObject
 {
@@ -16,6 +17,7 @@ public:
     void addWaypointItem(WaypointItem*);
     void addPathItem(PathItem*);
     void setCurrentNavShape(MapItem*);
+    void setMaxDistCircle(CircleItem*);
 
 
     QList<WaypointItem*> getWaypointsItems() {return waypointItems;}
@@ -31,6 +33,8 @@ private:
     WaypointItem* target;
     AircraftItem* aircraft_item;
     MapItem* current_nav_shape;
+    CircleItem* max_dist_circle;
+
 };
 
 #endif // ACITEMMANAGER_H

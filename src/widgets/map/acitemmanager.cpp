@@ -2,7 +2,7 @@
 
 ACItemManager::ACItemManager(QString ac_id, WaypointItem* target, AircraftItem* aircraft_item, QObject* parent):
     QObject(parent),
-    ac_id(ac_id), target(target), aircraft_item(aircraft_item), current_nav_shape(nullptr)
+    ac_id(ac_id), target(target), aircraft_item(aircraft_item), current_nav_shape(nullptr), max_dist_circle(nullptr)
 {
 
 }
@@ -17,6 +17,10 @@ void ACItemManager::addPathItem(PathItem* pi) {
 
 void ACItemManager::setCurrentNavShape(MapItem* mi) {
     current_nav_shape = mi;
+}
+
+void ACItemManager::setMaxDistCircle(CircleItem* ci) {
+    max_dist_circle = ci;
 }
 
 void ACItemManager::removeItems(MapWidget* map) {
@@ -43,5 +47,10 @@ void ACItemManager::removeItems(MapWidget* map) {
     if(aircraft_item) {
         map->removeItem(aircraft_item);
         aircraft_item = nullptr;
+    }
+
+    if(max_dist_circle) {
+        map->removeItem(max_dist_circle);
+        max_dist_circle = nullptr;
     }
 }
