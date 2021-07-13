@@ -219,22 +219,11 @@ void MapWidget::addWidget(QWidget* widget, LockButton* button, WidgetContainer s
 }
 
 void MapWidget::configure(QDomElement ele) {
-    for(int i=0; i<ele.childNodes().length(); i++) {
-        QDomNode node = ele.childNodes().item(i);
-        if(!node.isElement()) {
-            continue;
-        }
-        QDomElement child_ele = node.toElement();
-
-        for(int i=0; i<child_ele.childNodes().length(); i++) {
-            QDomNode w_node = child_ele.childNodes().item(i);
-            if(!w_node.isElement()) {
-                continue;
-            }
-            QDomElement w_ele = w_node.toElement();
-            assert(w_ele.tagName() == "widget");
-            auto name = w_ele.attribute("name");
-            auto container = w_ele.attribute("container", "stack");
+    for(auto column_ele=ele.firstChildElement(); !column_ele.isNull(); column_ele=column_ele.nextSiblingElement()) {
+        for(auto widget_ele=column_ele.firstChildElement(); !widget_ele.isNull(); widget_ele=widget_ele.nextSiblingElement()) {
+            assert(widget_ele.tagName() == "widget");
+            auto name = widget_ele.attribute("name");
+            auto container = widget_ele.attribute("container", "stack");
 
             QWidget* widget = nullptr;
             if(name == "layers") {
@@ -243,19 +232,26 @@ void MapWidget::configure(QDomElement ele) {
                 widget = makeWidget(name, container, this);
             }
 
-
-            WidgetContainer side;
-            if(child_ele.tagName() == "columnLeft") {
-                side = WIDGETS_LEFT;
-            } else if (child_ele.tagName() == "columnRight") {
-                side = WIDGETS_RIGHT;
-            } else {
-                throw runtime_error("Unknow tag" + child_ele.tagName().toStdString());
+            auto conf = widget_ele.firstChildElement("configure");
+            if(!conf.isNull()) {
+                auto c = dynamic_cast<Configurable*>(widget);
+                if(c) {
+                    c->configure(conf);
+                }
             }
 
-            auto icon_src = w_ele.attribute("icon");
+            WidgetContainer side;
+            if(column_ele.tagName() == "columnLeft") {
+                side = WIDGETS_LEFT;
+            } else if (column_ele.tagName() == "columnRight") {
+                side = WIDGETS_RIGHT;
+            } else {
+                throw runtime_error("Unknow tag" + column_ele.tagName().toStdString());
+            }
+
+            auto icon_src = widget_ele.attribute("icon");
             if(icon_src == "") {
-                std::string s = "Missing attribute 'icon' for node " + child_ele.tagName().toStdString() + "!";
+                std::string s = "Missing attribute 'icon' for node " + column_ele.tagName().toStdString() + "!";
                 throw runtime_error(s);
             }
 
