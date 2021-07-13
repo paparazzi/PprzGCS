@@ -16,7 +16,7 @@ ListContainer::ListContainer(std::function<QWidget*(QString, QWidget*)> construc
     auto vbox = new QVBoxLayout(scroll_content);
     grid_layout = new QGridLayout();
     vbox->addLayout(grid_layout);
-    vbox->addStretch();
+    vbox->addStretch(1);
 
     auto main_layout  = new QVBoxLayout(this);
     main_layout->addWidget(scroll);
@@ -61,6 +61,7 @@ void ListContainer::handleNewAC(QString ac_id) {
     auto ac = AircraftManager::get()->getAircraft(ac_id);
     auto color_rect = new QWidget(this);
     color_rect->setMinimumSize(QSize(20, 20));
+    color_rect->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
     color_rect->setStyleSheet("background: " + ac->getColor().name());
     grid_layout->addWidget(color_rect, row, 0);
     color_rect->installEventFilter(this);
