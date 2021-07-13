@@ -10,6 +10,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/flowlayout.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mbpushbutton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/lock_button.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/graphwidget.cpp
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})

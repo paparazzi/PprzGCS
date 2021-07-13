@@ -11,6 +11,7 @@
 #include "gps_classic_viewer.h"
 #include "flightplaneditor.h"
 #include "mini_strip.h"
+#include "plotter.h"
 
 
 template<typename C, typename T>
@@ -63,6 +64,9 @@ QWidget* makeWidget(QString name, QString container, QWidget* parent) {
     }
     else if (name == "flight_plan_editor") {
         widget = make_container<FlightPlanEditor>(container, parent);
+    }
+    else if (name == "plotter") {
+        widget = make_container<Plotter>(container, parent);
     }
     else {
         std::string s = "Widget " + name.toStdString() + " unknown";

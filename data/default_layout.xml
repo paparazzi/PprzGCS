@@ -8,15 +8,28 @@
             <widget name="gps_classic_viewer" icon="gps.svg"/>
         </columnLeft>
         <columnRight>
-            <widget name="map_strip" icon="strips.png"/>
             <widget name="PFD" icon="pfd.svg"/>
             <widget name="settings" icon="settings.svg"/>
+            <widget name="plotter" icon="plotter.svg">
+    		    <configure>
+					<plot name="ground:ENGINE_STATUS:bat" min="9" max="13"/>
+				</configure>
+            </widget>
+            <widget name="flight_planV2" icon="flight_plan.svg"/>
         </columnRight>
       </configure>
     </widget>
     <rows size="200">
         <widget name="strips" container="list"/>
-        <widget name="flight_planV2"/>
+        <!--widget name="flight_planV2"/-->
+        <widget name="plotter">
+		    <configure>
+		    	
+		    	<plot name="ground:FLIGHT_PARAM:roll"/>
+			    <plot name="ground:FLIGHT_PARAM:alt" min="0" max ="500"/>
+			    <plot name="ground:FLIGHT_PARAM:climb" min="-3" max ="3"/>
+		    </configure>
+        </widget>
     </rows>
   </columns>
 </layout>
