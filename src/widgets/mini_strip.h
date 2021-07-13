@@ -23,6 +23,12 @@ signals:
     void updated();
 private:
 
+    enum SpeedMode {
+        GROUND_SPEED,
+        AIR_SPEED,
+        VERTICAL_SPEED,
+    };
+
     void updateData();
 
     void updateFlightTime(uint32_t flight_time);
@@ -45,8 +51,9 @@ private:
     QToolButton* speed_button;
     QIcon ground_speed_icon;
     QIcon air_speed_icon;
+    QIcon vertical_speed_icon;
     QLabel* speed_label;
-    bool speed_mode;
+    SpeedMode speed_mode;
 
     QLabel* block_label;
     QLabel* block_icon;

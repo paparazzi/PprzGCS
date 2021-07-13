@@ -7,7 +7,7 @@
 #include <QSettings>
 
 MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
-    ac_id(ac_id), icons_size(QSize(30, 30)), alt_mode(true), speed_mode(true)
+    ac_id(ac_id), icons_size(QSize(30, 30)), alt_mode(true), speed_mode(SpeedMode::GROUND_SPEED)
 {
     auto gl = new QGridLayout(this);
     auto ac = AircraftManager::get()->getAircraft(ac_id);
@@ -61,6 +61,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     speed_button->setIconSize(icons_size);
     ground_speed_icon = QIcon(":/pictures/ground_speed.svg");
     air_speed_icon = QIcon(":/pictures/airspeed.svg");
+    vertical_speed_icon = QIcon(":/pictures/vertical_speed.svg");
     speed_button->setIcon(ground_speed_icon);
     speed_lay->addWidget(speed_button);
     speed_label = new QLabel("0 m/s", this);
@@ -69,13 +70,22 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     gl->addLayout(speed_lay, 2, 1);
     connect(speed_button, &QToolButton::clicked, this,
         [=]() {
-            speed_mode = !speed_mode;
-            if(speed_mode) {
-                speed_button->setIcon(ground_speed_icon);
-                speed_label->setToolTip("Ground speed");
-            } else {
+            switch (speed_mode) {
+            case GROUND_SPEED:
+                speed_mode = AIR_SPEED;
                 speed_button->setIcon(air_speed_icon);
                 speed_label->setToolTip("Air speed");
+                break;
+            case AIR_SPEED:
+                speed_mode = VERTICAL_SPEED;
+                speed_button->setIcon(vertical_speed_icon);
+                speed_label->setToolTip("Vertical speed");
+                break;
+            case VERTICAL_SPEED:
+                speed_mode = GROUND_SPEED;
+                speed_button->setIcon(ground_speed_icon);
+                speed_label->setToolTip("Ground speed");
+                break;
             }
             updateData();
         });
@@ -353,10 +363,16 @@ void MiniStrip::updateData() {
     alt_label->setText(alt_str);
 
     // speed
-    if(speed_mode) {
+    switch (speed_mode) {
+    case GROUND_SPEED:
         speed_label->setText(QString::number(speed, 'f', 1) + " m/s");
-    } else {
+        break;
+    case AIR_SPEED:
         speed_label->setText(QString::number(airspeed, 'f', 1) + " m/s");
+        break;
+    case VERTICAL_SPEED:
+        speed_label->setText(QString::number(climb, 'f', 1) + " m/s");
+        break;
     }
 
     // current block
