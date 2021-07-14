@@ -49,6 +49,7 @@ private:
 
     QToolButton* var_button;
     QCheckBox* autoscale_checkbox;
+    QSpinBox* history_spinbox;
 
     QString ac_id;
 };

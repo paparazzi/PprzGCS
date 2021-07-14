@@ -40,7 +40,8 @@ public:
         params = new_params;
     }
 
-    void setHistory(int h) {history = h;}
+    void setHistory(int h) {history = h; update();}
+    int getHistory() {return history;}
     void pushData(double d);
     void clearData();
 

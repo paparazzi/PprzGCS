@@ -27,12 +27,23 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
         }
     });
 
+    history_spinbox = new QSpinBox(this);
+    top_lay->addWidget(history_spinbox);
+    history_spinbox->setRange(1, 999);
+    history_spinbox->setToolTip("history (s)");
+    connect(history_spinbox, qOverload<int>(&QSpinBox::valueChanged), this, [=](int value) {
+        if(graphs.contains(current_name)) {
+            graphs[current_name]->setHistory(value * 1000);
+        }
+    });
+
     var_button = new QToolButton(this);
     var_button->setIcon(style()->standardIcon(QStyle::SP_TitleBarUnshadeButton));
     top_lay->addWidget(var_button);
 
     auto close_button = new QToolButton(this);
     close_button->setIcon(style()->standardIcon(QStyle::SP_DialogCloseButton));
+    close_button->setToolTip("Close current graph");
     top_lay->addWidget(close_button);
 
     graph_stack = new QStackedWidget(this);
@@ -40,7 +51,6 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
     lay->setStretch(1, 1);
 
     connect(var_button, &QToolButton::clicked, this, &Plotter::onOpenContextMenu);
-
     connect(close_button, &QToolButton::clicked, this, [=]() {removeGraph(current_name);});
 
 
@@ -122,6 +132,7 @@ void Plotter::changeGraph(QString name) {
         graph_stack->setCurrentWidget(graphs[current_name]);
         title->setText(current_name.split(":")[2]);
         autoscale_checkbox->setChecked(graphs[current_name]->getParams().autoscale);
+        history_spinbox->setValue(graphs[current_name]->getHistory()/1000);
     } else {
         title->setText("no graph...");
     }
