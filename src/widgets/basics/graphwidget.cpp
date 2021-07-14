@@ -45,6 +45,7 @@ void GraphWidget::clearData() {
 
 const int Y_MARGIN = 30;
 const int NB_TIME_SCALE = 4;
+const int MIN_SCALE_SIZE = 20;
 
 void GraphWidget::paintEvent(QPaintEvent *e) {
     QPainter p(this);
@@ -69,6 +70,7 @@ void GraphWidget::paintEvent(QPaintEvent *e) {
     if(step < 1e-5) {
         min = params.min - 1;
         max = params.max + 1;
+        //step = 1;
     } else {
         min = params.min - fmod(params.min, step) - step;
         max = params.max + fmod(params.max, step);
@@ -87,21 +89,25 @@ void GraphWidget::paintEvent(QPaintEvent *e) {
 
     // draw y scale
     if(step > 1e-5) {
-
-        //
-        while(graph_rect.height() /((max-min)/step+1) < 20) {
-            step *= 2;
+        // Make sure there is enough space for the scale
+        if(graph_rect.height() > MIN_SCALE_SIZE*1.1) {
+            // make sure steps are not too small
+            while(graph_rect.height()/((max-min)/step+1) < MIN_SCALE_SIZE) {
+                step *= 2;
+            }
+            // draw scale
+            for(int i=0; i < (max-min)/step+1; ++i) {
+                double tick = min + i*step;
+                int y = y_of_val(tick);
+                ylines.append(y);
+                auto text = QString::number(tick);
+                p.drawText(0, y + fm.height()/2, text);
+                auto wt = fm.size(Qt::TextSingleLine, text).width();
+                max_w = qMax(max_w, wt);
+            }
         }
 
-        for(int i=0; i < (max-min)/step+1; ++i) {
-            double tick = min + i*step;
-            int y = y_of_val(tick);
-            ylines.append(y);
-            auto text = QString::number(tick);
-            p.drawText(0, y + fm.height()/2, text);
-            auto wt = fm.size(Qt::TextSingleLine, text).width();
-            max_w = qMax(max_w, wt);
-        }
+
     }
 
     // set left coordinate of the graph, so it do not collide with the text,
@@ -241,5 +247,5 @@ void GraphWidget::leaveEvent(QEvent *event) {
 QSize GraphWidget::minimumSizeHint() const
 {
     //return minSize;
-    return QSize(200, 100);
+    return QSize(400, 200);
 }

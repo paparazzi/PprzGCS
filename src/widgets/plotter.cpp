@@ -119,6 +119,7 @@ void Plotter::onOpenContextMenu() {
             connect(f_action, &QAction::triggered, this, [=]() {
                 auto name = "ground:" +  def.getName() + ":" + f.getName();
                 addGraph(name, {100, 0, true});
+                changeGraph(name);
             });
         }
     }
