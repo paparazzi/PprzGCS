@@ -14,6 +14,7 @@ public:
 
     void configure(QDomElement c);
     void addGraph(QString name, GraphWidget::Params p);
+    void removeGraph(QString name);
 
     void changeGraph(QString name);
 

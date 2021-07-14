@@ -20,20 +20,30 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
     autoscale_checkbox = new QCheckBox("autoscale", this);
     top_lay->addWidget(autoscale_checkbox);
     connect(autoscale_checkbox, &QCheckBox::stateChanged, this, [=](int state) {
-        auto p = graphs[current_name]->getParams();
-        p.autoscale = state;
-        graphs[current_name]->setParams(p);
+        if(graphs.contains(current_name)) {
+            auto p = graphs[current_name]->getParams();
+            p.autoscale = state;
+            graphs[current_name]->setParams(p);
+        }
     });
 
     var_button = new QToolButton(this);
     var_button->setIcon(style()->standardIcon(QStyle::SP_TitleBarUnshadeButton));
     top_lay->addWidget(var_button);
 
+    auto close_button = new QToolButton(this);
+    close_button->setIcon(style()->standardIcon(QStyle::SP_DialogCloseButton));
+    top_lay->addWidget(close_button);
+
     graph_stack = new QStackedWidget(this);
     lay->addWidget(graph_stack);
     lay->setStretch(1, 1);
 
     connect(var_button, &QToolButton::clicked, this, &Plotter::onOpenContextMenu);
+
+    connect(close_button, &QToolButton::clicked, this, [=]() {removeGraph(current_name);});
+
+
     setAcceptDrops(true);
 }
 
@@ -92,11 +102,29 @@ void Plotter::addGraph(QString name, GraphWidget::Params p) {
     changeGraph(current_name);
 }
 
+void Plotter::removeGraph(QString name) {
+    if(graphs.contains(name)) {
+        PprzDispatcher::get()->unBind(bids[name]);
+        auto graph = graphs[name];
+        graphs.remove(name);
+        graph->deleteLater();
+        if(!graphs.isEmpty()) {
+            changeGraph(graphs.firstKey());
+        } else {
+            changeGraph(QString::Null());
+        }
+    }
+}
+
 void Plotter::changeGraph(QString name) {
     current_name = name;
-    graph_stack->setCurrentWidget(graphs[current_name]);
-    title->setText(current_name.split(":")[2]);
-    autoscale_checkbox->setChecked(graphs[current_name]->getParams().autoscale);
+    if(graphs.contains(current_name)) {
+        graph_stack->setCurrentWidget(graphs[current_name]);
+        title->setText(current_name.split(":")[2]);
+        autoscale_checkbox->setChecked(graphs[current_name]->getParams().autoscale);
+    } else {
+        title->setText("no graph...");
+    }
 }
 
 void Plotter::onOpenContextMenu() {
