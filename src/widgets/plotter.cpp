@@ -34,6 +34,7 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
     lay->setStretch(1, 1);
 
     connect(var_button, &QToolButton::clicked, this, &Plotter::onOpenContextMenu);
+    setAcceptDrops(true);
 }
 
 void Plotter::configure(QDomElement c) {
@@ -128,6 +129,45 @@ void Plotter::onOpenContextMenu() {
     pos = mapToGlobal(pos);
 
     menu->popup(pos);
+}
+
+
+void Plotter::dragEnterEvent(QDragEnterEvent *event) {
+    if (event->mimeData()->hasFormat("text/plain")) {
+        event->acceptProposedAction();
+    }
+}
+
+void Plotter::dragMoveEvent(QDragMoveEvent *event) {
+    event->accept();
+}
+
+/**
+ * @brief Plotter::dropEvent handle drop for mime type text/plain
+ * @param event
+ * Paparazzi messages : "<id>:<class>:<msg name>:<field>:<???>" ex: "2:telemetry:WP_MOVED:utm_north:1."
+ */
+void Plotter::dropEvent(QDropEvent *event) {
+    QString text = event->mimeData()->text();
+    QStringList args = text.split(QString(":"));
+
+    QRegularExpression pprz_msg_re("^(\\w+):(\\w+):(\\w+):(\\w+):.*$");
+    QRegularExpressionMatch pprz_msg_match = pprz_msg_re.match(text);
+
+    if(pprz_msg_match.hasMatch()) {
+        // Paparazzi message, ex: "2:telemetry:WP_MOVED:utm_north:1."
+        QString id = pprz_msg_match.captured(1);
+        QString msg_class = pprz_msg_match.captured(2);
+        QString msg_name = pprz_msg_match.captured(3);
+        QString field = pprz_msg_match.captured(4);
+
+        if(id == ac_id) {
+            //qDebug() << id << msg_class << msg_name << field;;
+            auto name = QString("%1:%2:%3").arg(msg_class, msg_name, field);
+            addGraph(name, {100, 0, true});
+            changeGraph(name);
+        }
+    }
 }
 
 
