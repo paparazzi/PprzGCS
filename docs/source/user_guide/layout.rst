@@ -106,6 +106,9 @@ By default, opening a widget hide the other widgets in the same column. Widgets 
 
 	Widgets in the map can also be configured!
 
+
+.. _layout_plotter:
+
 Plotter
 _______
 
