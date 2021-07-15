@@ -50,7 +50,7 @@ QWidget* makeWidget(QString name, QString container, QWidget* parent) {
     else if (name == "strips") {
         widget = make_container<MiniStrip>(container, parent);
     }
-    else if (name == "flight_planV2") {
+    else if (name == "flightplan") {
         widget = make_container<FlightPlanViewerV2>(container, parent);
     }
     else if (name == "map_strip") {
