@@ -1,0 +1,311 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Widgets &mdash; PprzGCS  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Map tile sources" href="map_tile_sources.html" />
+    <link rel="prev" title="Layout" href="layout.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PprzGCS
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                master
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../developer_guide/index_developer.html">Developer guide</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index_user.html">User guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="layout.html">Layout</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Widgets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#map-2d">Map 2D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#strip">Strip</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pdf">PDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#commands">Commands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#flight-plan">Flight plan</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#settings">Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plotter">Plotter</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="map_tile_sources.html">Map tile sources</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PprzGCS</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index_user.html">User guide</a> &raquo;</li>
+        
+      <li>Widgets</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/user_guide/widgets.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="widgets">
+<h1>Widgets<a class="headerlink" href="#widgets" title="Permalink to this headline">¶</a></h1>
+<p>There are multiple widgets that you can use. They are described here.</p>
+<div class="section" id="map-2d">
+<h2>Map 2D<a class="headerlink" href="#map-2d" title="Permalink to this headline">¶</a></h2>
+<p>name: <code class="docutils literal notranslate"><span class="pre">map2d</span></code></p>
+<p>This is a classic 2D map to display waypoints and aircrafts.</p>
+<p>A telemetry message can be dropped on it to display a papget.</p>
+<p>It can be configured to add buttons in a left and right columns to display other widgets over it.</p>
+<div class="figure align-default" id="id1">
+<img alt="map2d widget" src="../_images/map2d_configure.png" />
+<p class="caption"><span class="caption-text">map2d, with an overlay widget</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="strip">
+<h2>Strip<a class="headerlink" href="#strip" title="Permalink to this headline">¶</a></h2>
+<p>name: <code class="docutils literal notranslate"><span class="pre">strips</span></code></p>
+<p>Display some data about the drone status.</p>
+<img alt="../_images/strip.png" src="../_images/strip.png" />
+<p>From left to right, top to bottom:</p>
+<ul class="simple">
+<li><p>aircraft name</p></li>
+<li><p>flight time</p></li>
+<li><p>current block</p></li>
+<li><p>battery</p></li>
+<li><p>altitude AMSL or AGL (click on the icon to change) | altitude diff to target</p></li>
+<li><p>AP mode</p></li>
+<li><p>throttle</p></li>
+<li><p>ground speed / air speed / vertical speed (click on the icon to change)</p></li>
+<li><p>status for Link, GPS, RC, IMU</p></li>
+</ul>
+</div>
+<div class="section" id="pdf">
+<h2>PDF<a class="headerlink" href="#pdf" title="Permalink to this headline">¶</a></h2>
+<p>name: <code class="docutils literal notranslate"><span class="pre">PFD</span></code></p>
+<p>Display attitude of the aircraft</p>
+<img alt="../_images/strip.png" src="../_images/strip.png" />
+<p>There are 3 views:</p>
+<ul class="simple">
+<li><p>from the rear</p></li>
+<li><p>from the left</p></li>
+<li><p>from the top</p></li>
+</ul>
+<p>Clicking on the small views make them switch with the main view.</p>
+</div>
+<div class="section" id="commands">
+<h2>Commands<a class="headerlink" href="#commands" title="Permalink to this headline">¶</a></h2>
+<p>name: <code class="docutils literal notranslate"><span class="pre">commands</span></code></p>
+<p>Basic commands, flight plan buttons and setting buttons.</p>
+<img alt="../_images/commands.png" src="../_images/commands.png" />
+</div>
+<div class="section" id="flight-plan">
+<h2>Flight plan<a class="headerlink" href="#flight-plan" title="Permalink to this headline">¶</a></h2>
+<p>name: <code class="docutils literal notranslate"><span class="pre">flightplan</span></code></p>
+<p>Control the flight plan.</p>
+<p>The first tab show the blocks, the current block being highlighted in green.
+You can switch to a block by cliking on the arrow button.</p>
+<img alt="../_images/flightplan_blocks.png" src="../_images/flightplan_blocks.png" />
+<p>The second tab show the detail of the flight plan, parsed from the XML.
+Double click on a block to switch to it.</p>
+<img alt="../_images/flightplan_details.png" src="../_images/flightplan_details.png" />
+</div>
+<div class="section" id="settings">
+<h2>Settings<a class="headerlink" href="#settings" title="Permalink to this headline">¶</a></h2>
+<p>name: <code class="docutils literal notranslate"><span class="pre">settings</span></code></p>
+<p>Aircraft settings. The search bar can be useful.</p>
+<img alt="../_images/settings.png" src="../_images/settings.png" />
+</div>
+<div class="section" id="plotter">
+<h2>Plotter<a class="headerlink" href="#plotter" title="Permalink to this headline">¶</a></h2>
+<p>name: <code class="docutils literal notranslate"><span class="pre">plotter</span></code></p>
+<p>Plot a field of a message.</p>
+<p>Switch between plots with menu opened by the arrow down button. You can also add new plots coming from ground messages from there.</p>
+<p>Add a plot coming from the telemetry class by dropping a field from the <em>Messages</em> tool (same as for the real-time plotter).</p>
+<ul class="simple">
+<li><p>Zoom on the plot with the mouse wheel.</p></li>
+<li><p>Move the plot up or down by dragging it.</p></li>
+<li><p>Tune the history time with the spinbox</p></li>
+<li><p>Remove the plot with the top right button.</p></li>
+</ul>
+<img alt="../_images/plotter.png" src="../_images/plotter.png" />
+<p>This widget can  be configured from the layout file. See <a class="reference internal" href="layout.html#layout-plotter"><span class="std std-ref">Layout/Plotter</span></a>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="map_tile_sources.html" class="btn btn-neutral float-right" title="Map tile sources" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="layout.html" class="btn btn-neutral float-left" title="Layout" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Fabien Bonneval.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

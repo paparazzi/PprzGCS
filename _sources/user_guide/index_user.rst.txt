@@ -11,5 +11,6 @@ Learn everything here!
     :maxdepth: 2
 
     layout
+    widgets
     map_tile_sources
     
