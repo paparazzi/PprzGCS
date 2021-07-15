@@ -120,8 +120,6 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     cb = addSetting("Style", "APP_STYLE_FILE", w_general, l_general, row, Type::PATH_FILE);
     callbacks.append(cb);
-    cb = addSetting("Restart app on setting edition", "restart", w_general, l_general, row, Type::STRING);
-    callbacks.append(cb);
     tabWidget->addTab(w_general, "General");
 
 
@@ -133,27 +131,13 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
             cb();
         }
 
-        auto settings = getAppSettings();
-        auto restart = settings.value("restart", "notset").toString();
-
-
-        if(restart == "") {
-            auto sr = new SettingsRestart();
-            int res = sr->exec();
-            if(res) {
-                restart = "yes";
-            } else {
-                restart = "no";
-            }
-        }
-
+        auto res = QMessageBox::question(nullptr, "Restart application?", "PprzGCS need to be restarted to update settings. Do you want to restart now?");
         accept();
-        if( restart == "yes") {
+        if(res == QMessageBox::Yes) {
             qDebug() << "Restarting application...";
             PprzMain::launch_type = NORMAL;
             qApp->exit( PprzMain::EXIT_CODE_REBOOT );
         }
-
     });
 
     connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=](){
@@ -253,43 +237,4 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
     } else {
         throw std::runtime_error("Error: Setting type not handled !");
     }
-}
-
-
-
-
-
-
-SettingsRestart::SettingsRestart(QWidget* parent): QDialog(parent)
-{
-    setWindowTitle("Restart application ?");
-    auto lay = new QVBoxLayout(this);
-
-    auto lbl = new QLabel("PprzGCS need to be restarted to update settings. Do you want to restart now?");
-    lbl->setWordWrap(true);
-
-    auto chk = new QCheckBox("remember my choice");
-
-    lay->addWidget(lbl);
-    lay->addWidget(chk);
-
-
-    auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Yes | QDialogButtonBox::No, this);
-    lay->addWidget(buttonBox);
-
-    connect(buttonBox->button(QDialogButtonBox::Yes), &QPushButton::clicked, this, [=](){
-        if(chk->isChecked()) {
-            auto settings = getAppSettings();
-            settings.setValue("restart", "yes");
-        }
-        accept();
-    });
-
-    connect(buttonBox->button(QDialogButtonBox::No), &QPushButton::clicked, this, [=](){
-        if(chk->isChecked()) {
-            auto settings = getAppSettings();
-            settings.setValue("restart", "no");
-        }
-        reject();
-    });
 }
