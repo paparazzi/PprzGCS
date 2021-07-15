@@ -2,16 +2,16 @@
 
 # Ubuntu 20.04
 
-Add Paparazzi UAV apt repository (needed for ivy-c):
+Install these dependencies:
 
-`sudo add-apt-repository -y ppa:paparazzi-uav/ppa`
-
-Install these packages:
-
-`sudo apt install ivy-c libzip5 libproj15 libqt5xml5 libqt5network5 libqt5svg5 libqt5widgets5 libqt5gui5 libqt5core5a`
+`sudo apt install libxml2 libzip5 libproj15 libqt5xml5 libqt5network5 libqt5svg5 libqt5widgets5 libqt5gui5 libqt5core5a`
 
 
 Install PprzGCS:
 
 `sudo dpkg -i pprzgcs_Linux.deb`
+
+# Ubuntu 18.04
+
+Build PprzGCS [from sources](https://fabien-b.github.io/PprzGCS/developer_guide/how_to_build.html#ubuntu-18-04).
 

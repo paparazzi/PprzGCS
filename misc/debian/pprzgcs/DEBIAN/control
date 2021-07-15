@@ -4,7 +4,7 @@ Depends: libzip5, libproj15, libqt5xml5, libqt5network5, libqt5svg5, libqt5widge
 Section: misc
 Priority: optional
 Architecture: amd64
-Installed-Size: 3996
+Installed-Size: 2480
 Maintainer: Fabien Bonneval <fabien.bonneval@gmail.com>
 Description: A GCS for PaparazziUAV
 
