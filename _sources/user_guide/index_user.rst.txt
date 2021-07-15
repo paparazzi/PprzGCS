@@ -8,7 +8,8 @@ How to configure it the way you want ?
 Learn everything here!
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   map_tile_sources
-   
+    layout
+    map_tile_sources
+    
