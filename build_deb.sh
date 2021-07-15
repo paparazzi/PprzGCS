@@ -35,6 +35,12 @@ cmake --install $WD/build/PprzGCS
 
 mv $deb_install_prefix/bin/PprzGCS $deb_install_prefix/bin/pprzgcs
 strip --strip-unneeded $deb_install_prefix/bin/pprzgcs
+
+# Add changelog
+cp $WD/CHANGELOG.md changelog.Debian
+gzip changelog.Debian
+mv changelog.Debian.gz $deb_install_prefix/share/doc/pprzgcs/
+
 dpkg-deb --root-owner-group --build misc/debian/pprzgcs
 
 
