@@ -121,9 +121,7 @@ void PprzMain::populate_menu() {
     auto help_menu = menuBar->addMenu("&Help");
     auto about = help_menu->addAction("&About");
 
-    connect(about, &QAction::triggered, [=](bool checked) {
-        (void)checked;
-
+    connect(about, &QAction::triggered, [=]() {
         QMessageBox::about(this,"About PprzGCS",
             "<h1>PprzGCS</h1>"
             "<p>PprzGCS is a ground control software for <a href=\"https://paparazziuav.org\">paparrazi UAV</a> drones.</p>"
@@ -148,6 +146,12 @@ void PprzMain::populate_menu() {
             "</ul>"
         );
 
+    });
+
+    auto doc = help_menu->addAction("&Documentation");
+
+    connect(doc, &QAction::triggered, [=]() {
+        QDesktopServices::openUrl(QUrl("https://fabien-b.github.io/PprzGCS/"));
     });
 
 }
