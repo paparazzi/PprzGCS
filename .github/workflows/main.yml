@@ -31,7 +31,7 @@ jobs:
         run: export MAKEFLAGS=-j$(nproc)
       
       - name: make deb
-        run: $GITHUB_WORKSPACE/build_deb.sh
+        run: $GITHUB_WORKSPACE/build_deb.sh ${{ github.ref }}
       
       - name: Create Release
         id: create_release

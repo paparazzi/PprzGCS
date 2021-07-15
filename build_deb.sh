@@ -1,5 +1,14 @@
 #!/bin/bash
 
+if [ -z ${1} ];
+then
+    echo "Usage: ./build_deb.sh <version>"
+    exit 1
+fi
+
+version=$(echo $1 | sed 's/.*v\(.*\)/\1/g')
+
+
 WD="${WD:-$(pwd)}"
 
 install_prefix=$WD/build/install
@@ -40,6 +49,15 @@ strip --strip-unneeded $deb_install_prefix/bin/pprzgcs
 cp $WD/CHANGELOG.md changelog.Debian
 gzip changelog.Debian
 mv changelog.Debian.gz $deb_install_prefix/share/doc/pprzgcs/
+
+# set correct version
+echo "Setting version to $version"
+sed -i "s/__VERSION__/$version/g" $debian/DEBIAN/control
+
+# set correct size
+size=$(du -s $debian/usr/ | cut -f 1)
+echo "Setting installed size to $size"
+sed -i "s/__SIZE__/$size/g" $debian/DEBIAN/control
 
 dpkg-deb --root-owner-group --build misc/debian/pprzgcs
 
