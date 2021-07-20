@@ -26,7 +26,7 @@ find_package(LibXml2 REQUIRED)
 
 add_definitions(-DDEFAULT_APP_DATA_PATH="/usr/local/${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}")
 
-find_package(Qt5 5.12 COMPONENTS Widgets Xml Network Svg REQUIRED)
+find_package(Qt5 5.12 COMPONENTS Widgets Xml Network Svg TextToSpeech REQUIRED)
 find_package(IvyQt REQUIRED)
 find_package(pprzlinkQt REQUIRED)
 
@@ -49,6 +49,7 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Xml
     Qt5::Network
     Qt5::Svg
+    Qt5::TextToSpeech
     ${PROJ4_LIBRARIES}
     ${LIBXML2_LIBRARIES}
     zip

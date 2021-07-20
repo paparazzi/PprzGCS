@@ -5,7 +5,7 @@
 #include <QDialog>
 #include <QtWidgets>
 
-void configure();
+void set_app_settings();
 
 class SettingsEditor : public QDialog
 {

@@ -1,34 +1,43 @@
-<layout width="1000" height="800">
-  <columns>
-    <widget name="map2d" size="800">
-      <configure>
-        <columnLeft>
-            <widget name="layers" icon="map_layers_normal.svg"/>
-            <widget name="commands" icon="nav.svg"/>
-            <widget name="gps_classic_viewer" icon="gps.svg"/>
-        </columnLeft>
-        <columnRight>
-            <widget name="PFD" icon="pfd.svg"/>
-            <widget name="settings" icon="settings.svg"/>
-            <widget name="plotter" icon="plotter.svg">
+<gcsconf>
+    <layout width="1000" height="800">
+      <columns>
+        <widget name="map2d" size="800">
+          <configure>
+            <columnLeft>
+                <widget name="layers" icon="map_layers_normal.svg"/>
+                <widget name="commands" icon="nav.svg"/>
+                <widget name="gps_classic_viewer" icon="gps.svg"/>
+            </columnLeft>
+            <columnRight>
+                <widget name="PFD" icon="pfd.svg"/>
+                <widget name="settings" icon="settings.svg"/>
+                <widget name="plotter" icon="plotter.svg">
+                    <configure>
+                        <plot name="ground:ENGINE_STATUS:bat" min="9" max="13"/>
+                    </configure>
+                </widget>
+                <widget name="flightplan" icon="flight_plan.svg"/>
+            </columnRight>
+          </configure>
+        </widget>
+        <rows size="200">
+            <widget name="strips" container="list"/>
+            <widget name="plotter">
                 <configure>
-                    <plot name="ground:ENGINE_STATUS:bat" min="9" max="13"/>
+                    <plot name="ground:FLIGHT_PARAM:roll"/>
+                    <plot name="ground:FLIGHT_PARAM:alt" min="0" max ="500"/>
+                    <plot name="ground:FLIGHT_PARAM:climb" min="-3" max ="3"/>
                 </configure>
             </widget>
-            <widget name="flightplan" icon="flight_plan.svg"/>
-        </columnRight>
-      </configure>
-    </widget>
-    <rows size="200">
-        <widget name="strips" container="list"/>
-        <widget name="plotter">
-            <configure>
-                <plot name="ground:FLIGHT_PARAM:roll"/>
-                <plot name="ground:FLIGHT_PARAM:alt" min="0" max ="500"/>
-                <plot name="ground:FLIGHT_PARAM:climb" min="-3" max ="3"/>
-            </configure>
-        </widget>
-    </rows>
-  </columns>
-</layout>
-
+        </rows>
+      </columns>
+    </layout>
+    <speech locale="en_GB">
+        <message name="ground:FLIGHT_PARAM:agl" text="{AC} altitude, {value} meters AGL" timeout="20" expire="10" priority="1"/>
+        <message name="ground:FLIGHT_PARAM:airspeed" text="airspeed.. {value} meters per second" timeout="20" expire="10" priority="0"/>
+        <message name="ground:FLIGHT_PARAM:airspeed" text="Paparazzi is better than pixhawk!" timeout="100" priority="0"/>
+        <message name="ground:AP_STATUS:ap_mode" text="mode {value}" timeout="2" expire="20" priority="2" onChange="true"/>
+        
+    </speech>
+    
+</gcsconf>

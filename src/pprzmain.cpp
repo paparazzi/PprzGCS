@@ -5,9 +5,10 @@
 #include "AircraftManager.h"
 #include "pprz_dispatcher.h"
 #include <QSettings>
-#include "configure.h"
+#include "app_settings.h"
 #include "gcs_utils.h"
 #include "globalstate.h"
+#include "speaker.h"
 
 LaunchTypes PprzMain::launch_type = DEFAULT;
 
@@ -82,6 +83,10 @@ void PprzMain::populate_menu() {
     silent_mode_action->setCheckable(true);
     silent_mode_action->setChecked(PprzDispatcher::get()->isSilent());
 
+    auto speech_action = file_menu->addAction("Enable Speech");
+    speech_action->setCheckable(true);
+    speech_action->setChecked(speech());
+
     auto open_flight_plan = file_menu->addAction("Open FlightPlans");
     connect(open_flight_plan, &QAction::triggered, [=](){
         auto settings = getAppSettings();
@@ -103,6 +108,8 @@ void PprzMain::populate_menu() {
     connect(silent_mode_action, &QAction::toggled, [=](bool checked) {
         PprzDispatcher::get()->setSilent(checked);
     });
+
+    connect(speech_action, &QAction::toggled, pprzApp()->toolbox()->speaker(), &Speaker::enableSpeech);
 
     auto quit = file_menu->addAction("&Quit");
     connect(quit, &QAction::triggered, qApp, QApplication::quit);
@@ -165,7 +172,6 @@ void PprzMain::newAC(QString ac_id) {
     menu->addAction("Remove", this, [ac_id](){
         AircraftManager::get()->removeAircraft(ac_id);
     });
-
 }
 
 void PprzMain::removeAC(QString ac_id) {

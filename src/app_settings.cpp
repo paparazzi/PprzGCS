@@ -1,4 +1,4 @@
-#include "configure.h"
+#include "app_settings.h"
 #include <QApplication>
 #include <QFile>
 #include <QTextStream>
@@ -23,7 +23,7 @@ void default_setting(QString key, QVariant value) {
     }
 }
 
-void configure() {
+void set_app_settings() {
     auto settings = getAppSettings();
 
     default_setting("ivy/name", "PprzGCS");

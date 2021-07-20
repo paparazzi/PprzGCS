@@ -40,7 +40,6 @@ private:
     QMap<QString, QMenu*> acMenus;
     QMap<QString, QAction*> acActions;
     QLabel* serverStatusLed;
-
 };
 
 
