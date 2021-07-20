@@ -79,9 +79,6 @@ int main(int argc, char *argv[])
         setVerbose(parser.isSet("v"));
         setSpeech(parser.isSet("speech"));
         pprzApp()->toolbox()->speaker()->enableSpeech(parser.isSet("speech"));
-        if(parser.isSet("speech")) {
-            pprzApp()->toolbox()->speaker()->addSentence("Welcome to Paparazzi!");
-        }
 
         if(parser.isSet("fpedit") && PprzMain::launch_type == DEFAULT) {
             PprzMain::launch_type = FLIGHTPLAN_EDIT;

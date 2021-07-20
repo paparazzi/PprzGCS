@@ -13,6 +13,7 @@
 #include "configurable.h"
 #include "widget_utils.h"
 #include "speaker.h"
+#include "gcs_utils.h"
 
 static const char* DEFAULT_WIDTH = "1024";
 static const char* DEFAULT_HEIGHT = "600";
@@ -99,6 +100,11 @@ void configure_speech(QDomElement ele) {
         }
         pprzApp()->toolbox()->speaker()->registerMessage(name, txt, period, priority, expire, onChange, postprocessing);
     }
+
+    if(speech()) {
+        pprzApp()->toolbox()->speaker()->addSentence("Welcome to Paparazzi!");
+    }
+
 }
 
 PprzMain* configure(QString filename) {
