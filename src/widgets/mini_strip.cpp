@@ -6,6 +6,26 @@
 #include <QDebug>
 #include <QSettings>
 
+const QMap<QString, QString> MiniStrip::mode_colors{
+    // fixedwings
+    {"HOME", "#ff0000"}, {"NOGPS", "#ff0000"},
+    {"MANUAL", "#ffa500"},
+    {"AUTO1", "#10f0e0"},
+    {"AUTO2", "#7ef17e"},
+
+    // rotorcrafts
+    {"KILL", "#ff0000"}, {"SAFE", "#ff0000"}, /*HOME, */
+
+    {"RATE", "#ffa500"}, {"ATT", "#ffa500"},
+    {"R_RCC", "#ffa500"},{"A_RCC", "#ffa500"},{"ATT_C", "#ffa500"},{"R_ZH", "#ffa500"},
+
+    {"HOVER", "#10f0e0"}, {"HOV_C", "#10f0e0"}, {"H_ZH", "#10f0e0"},
+    {"RC_D", "#10f0e0"}, {"CF", "#10f0e0"}, {"FWD", "#10f0e0"},
+    {"MODULE", "#10f0e0"}, {"FLIP", "#10f0e0"}, {"A_ZH", "#10f0e0"},
+
+    {"NAV", "#7ef17e"}, {"GUIDED", "#70c070"},
+};
+
 MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     ac_id(ac_id), icons_size(QSize(30, 30)), alt_mode(true), speed_mode(SpeedMode::GROUND_SPEED)
 {
@@ -190,12 +210,10 @@ void MiniStrip::updateFlightTime(uint32_t flight_time) {
 }
 
 void MiniStrip::updateAp(QString ap_mode) {
-    if(ap_mode == "HOME" || ap_mode == "FAILSAFE") {
-        ap_mode_label->setBrush(Qt::red);
-    } else if (ap_mode == "MANUAL") {
-        ap_mode_label->setBrush(QColor(0xffa500));
+    if(mode_colors.contains(ap_mode)) {
+        ap_mode_label->setBrush(QColor(mode_colors[ap_mode]));
     } else {
-        ap_mode_label->setBrush(QColor(0x7ef17e));
+        ap_mode_label->setBrush(Qt::white);
     }
     ap_mode_label->setText(ap_mode);
 }

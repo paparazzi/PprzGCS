@@ -23,6 +23,8 @@ signals:
     void updated();
 private:
 
+    static const QMap<QString, QString> mode_colors;
+
     enum SpeedMode {
         GROUND_SPEED,
         AIR_SPEED,
