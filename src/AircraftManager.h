@@ -22,7 +22,6 @@ class ConfigData: public QObject
 public:
 
     ConfigData(QString ac_id, QString ac_name, QColor color, QObject* parent = nullptr);
-    ConfigData(QString ac_id, QColor color, QString flight_plan_path,QObject* parent = nullptr);
 
     void setFlightPlan(QString uri);
     void setAirframe(QString uri);

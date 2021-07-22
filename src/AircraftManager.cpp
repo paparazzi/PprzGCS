@@ -87,11 +87,13 @@ void AircraftManager::addAircraft(ConfigData* config) {
 }
 
 void AircraftManager::addFPAircraft(QString ac_id, QString flightplan) {
-    auto ac = new Aircraft(ac_id, flightplan);
-    aircrafts[ac_id] = ac;
-    auto config = new ConfigData(ac_id, ac->getColor(), flightplan ,ac);
-    ac->setConfig(config);
-    emit DispatcherUi::get()->new_ac_config(ac_id);
+    static int last_color = (int) Qt::red;
+    auto color = QColor((Qt::GlobalColor)last_color++);
+    auto config = new ConfigData(ac_id, ac_id, color);
+    config->setFlightPlan(QString("file://%1").arg(flightplan));
+
+    aircrafts[config->getId()] = new Aircraft(config);
+    emit DispatcherUi::get()->new_ac_config(config->getId());
     emit DispatcherUi::get()->ac_selected(ac_id);
 }
 
@@ -144,19 +146,15 @@ ConfigData::ConfigData(QString ac_id, QString ac_name, QColor color, QObject* pa
 {
 }
 
-ConfigData::ConfigData(QString ac_id, QColor color, QString flight_plan_path,QObject* parent) :
-    QObject(parent),
-    ac_id(ac_id), ac_name(ac_id), color(color), uri_flight_plan(flight_plan_path)
-{
-    // flightplan only config
-}
-
 void ConfigData::setData(QDomDocument* doc, QString uri) {
     QString separator = "://";
     int sepi = uri.indexOf(separator);
 
     if(uri.left(sepi) == "file") {
         QString path = uri.mid(sepi + separator.size());
+        if(path == "replay") {
+            return;
+        }
         QFile f(path);
         if(!f.open(QIODevice::ReadOnly)) {
             throw std::runtime_error("Error while loading flightplan file");

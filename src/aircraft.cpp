@@ -12,7 +12,9 @@ Aircraft::Aircraft(ConfigData* config, QObject* parent): QObject(parent),
     flight_plan = new FlightPlan(ac_id, config->getFlightPlan(), this);
     setting_menu = new SettingMenu(config->getSettings(), this);
     airframe = new Airframe(config->getAirframe(), this);
-    icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(airframe->getIconName()) + ".svg";
+    if(airframe->getIconName() != "") {
+        icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(airframe->getIconName()) + ".svg";
+    }
     status = new AircraftStatus(ac_id, this);
 }
 
@@ -21,17 +23,18 @@ Aircraft::Aircraft(QString ac_id, QString flightplan, QObject* parent): QObject(
 {
     static int last_color = (int) Qt::red;
     color = QColor((Qt::GlobalColor)last_color++);
-    QFile f(flightplan);
-    if(!f.open(QIODevice::ReadOnly)) {
-        throw std::runtime_error("Error while loading flightplan file");
+    config = new ConfigData(ac_id, ac_id, color, this);
+    config->setFlightPlan(QString("file://%1").arg(flightplan));
+
+
+    QSettings app_settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    flight_plan = new FlightPlan(ac_id, config->getFlightPlan(), this);
+    setting_menu = new SettingMenu(config->getSettings(), this);
+    airframe = new Airframe(config->getAirframe(), this);
+    if(airframe->getIconName() != "") {
+        icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(airframe->getIconName()) + ".svg";
     }
-    QDomDocument fp;
-    fp.setContent(&f);
-    f.close();
-    flight_plan = new FlightPlan(ac_id, fp, this);
-    setting_menu = nullptr;
-    airframe = nullptr;
-    status = nullptr;
+    status = new AircraftStatus(ac_id, this);
 }
 
 void Aircraft::setSetting(Setting* setting, float value) {
