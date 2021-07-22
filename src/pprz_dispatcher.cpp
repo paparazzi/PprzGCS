@@ -240,13 +240,17 @@ void PprzDispatcher::updateSettings(pprzlink::Message msg) {
                 return sl->getNo() < sr->getNo();
     });
 
+    if(settings.size() == 0) {
+        return;
+    }
+
     size_t i=0;
-    for(QString token: values.split(",")) {
+    for(QString &token: values.split(",")) {
         if(token != "" && token != "?") {
             double s = token.toDouble();
             assert(settings[i]->getNo() == static_cast<uint8_t>(i));
             float value = static_cast<float>(s);
-            emit(DispatcherUi::get()->settingUpdated(ac_id, settings[i], value));
+            emit DispatcherUi::get()->settingUpdated(ac_id, settings[i], value);
         }
         i++;
     }
