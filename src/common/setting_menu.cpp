@@ -7,6 +7,9 @@
 
 SettingMenu::SettingMenu(QDomDocument doc, QObject* parent): QObject(parent) {
     auto st_root = doc.firstChildElement( "settings" );
+    if(st_root.isNull()) {
+        st_root = doc.firstChildElement("generated_settings");
+    }
     auto sets = st_root.firstChildElement("dl_settings");
     uint8_t setting_no = 0;
     init(sets, setting_no);
