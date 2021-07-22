@@ -30,7 +30,7 @@ void Speaker::say() {
     while(it.hasNext()) {
         auto next = it.next();
         if(next.expiration < now) {
-            qDebug() << "msg discarded: " << next.text;
+            //qDebug() << "msg discarded: " << next.text;
             it.remove();
         }
     }
@@ -50,7 +50,7 @@ void Speaker::say() {
 
         auto s = sentences.takeAt(index);
         tts->say(s.text);
-        qDebug() << "saying: " << s.text;
+        //qDebug() << "saying: " << s.text;
     }
 
     if(sentences.size() > 0 && !timer->isActive()) {
@@ -196,7 +196,7 @@ QString Speaker::postprocess(QString process, QString valstr, QString ac_id) {
         auto b = fp->getBlock(valstr.toUInt());
         return b->getName();
     } else {
-        qDebug() << "not postprocess " << process;
+        qDebug() << "no postprocess " << process;
         return valstr;
     }
 }

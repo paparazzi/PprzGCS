@@ -87,18 +87,27 @@ void configure_speech(QDomElement ele) {
     }
 
     for(auto m=ele.firstChildElement(); !m.isNull(); m=m.nextSiblingElement()) {
+        bool ok;
         auto name = m.attribute("name");
-        auto txt = m.attribute("text");
-        auto period = m.attribute("timeout").toInt();
-        auto priority = m.attribute("priority", "0").toInt();
-        auto expire = m.attribute("expire", "30").toInt();
+        auto text = m.attribute("text");
+        auto timeout = m.attribute("timeout").toInt(&ok);
+        if(!ok) {continue;}
+        auto priority = m.attribute("priority", "0").toInt(&ok);
+        if(!ok) {continue;}
+        int expire;
+        if(m.hasAttribute("expire")) {
+            expire = m.attribute("expire").toInt(&ok);
+            if(!ok) {continue;}
+        } else {
+            expire = timeout;
+        }
         auto onChangeStr = m.attribute("onChange", "false");
         auto postprocessing = m.attribute("postprocessing", "");
         bool onChange = false;
-        if(onChangeStr == "1" || onChangeStr == "true" || onChangeStr == "si senor") {
+        if(onChangeStr == "1" || onChangeStr == "true") {
             onChange = true;
         }
-        pprzApp()->toolbox()->speaker()->registerMessage(name, txt, period, priority, expire, onChange, postprocessing);
+        pprzApp()->toolbox()->speaker()->registerMessage(name, text, timeout, priority, expire, onChange, postprocessing);
     }
 
     if(speech()) {
