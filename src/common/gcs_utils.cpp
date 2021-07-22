@@ -51,6 +51,14 @@ void setVerbose(bool v) {
     qApp->setProperty("VERBOSE", v);
 }
 
+bool speech() {
+    return qApp->property("SPEECH").toBool();
+}
+
+void setSpeech(bool s) {
+    qApp->setProperty("SPEECH", s);
+}
+
 void logDebug(QString log_class, QString msg, LogLevel level) {
     (void)level;
     if(qApp->property("VERBOSE").toBool()) {

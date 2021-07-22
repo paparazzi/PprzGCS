@@ -24,8 +24,8 @@ DECLARE_LAYOUT_EXCEPT(file_error)
 DECLARE_LAYOUT_EXCEPT(invalid_node)
 DECLARE_LAYOUT_EXCEPT(unknown_widget)
 
-PprzMain* build_layout(QString filename);
-QWidget* rec_build(QDomNode &node, QSplitter* parent, int* size);
+PprzMain* configure(QString filename);
+QWidget* rec_layout_build(QDomNode &node, QSplitter* parent, int* size);
 
 
 #endif // LAYOUT_BUILDER_H

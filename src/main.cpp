@@ -1,18 +1,19 @@
 #include "pprzmain.h"
 #include <QApplication>
 #include <iostream>
-#include "layout_builder.h"
+#include "configurator.h"
 #include <QNetworkProxy>
 #include <QProcessEnvironment>
 #include "pprz_dispatcher.h"
 #include <QWizard>
-#include "configure.h"
+#include "app_settings.h"
 #include "gcs_utils.h"
 #include <QSettings>
 #include "PprzApplication.h"
 #include "gcs_utils.h"
 #include "AircraftManager.h"
 #include "globalstate.h"
+#include "speaker.h"
 
 #ifndef DEFAULT_APP_DATA_PATH
 #error "you need to define DEFAULT_APP_DATA_PATH!"
@@ -48,7 +49,7 @@ void launch_main_app() {
         auto setedit = new SettingsEditor(true);
         setedit->show();
     } else {
-        PprzMain* w = build_layout(layout_path);
+        PprzMain* w = configure(layout_path);
         PprzDispatcher::get()->start();
         w->show();
     }
@@ -72,9 +73,12 @@ int main(int argc, char *argv[])
         parser.addOption({{"s", "silent"}, "Silent mode."});
         parser.addOption({{"v", "verbose"}, "Verbose"});
         parser.addOption({{"f", "fpedit"}, "edit flight plan", "file"});
+        parser.addOption({"speech", "Enable speech"});
         parser.process(a);
 
         setVerbose(parser.isSet("v"));
+        setSpeech(parser.isSet("speech"));
+        pprzApp()->toolbox()->speaker()->enableSpeech(parser.isSet("speech"));
 
         if(parser.isSet("fpedit") && PprzMain::launch_type == DEFAULT) {
             PprzMain::launch_type = FLIGHTPLAN_EDIT;
@@ -84,6 +88,8 @@ int main(int argc, char *argv[])
         if(parser.isSet("configure") && PprzMain::launch_type == DEFAULT) {
             PprzMain::launch_type = CONFIGURE;
         }
+
+
 
 
         auto settings_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/settings.conf";
@@ -107,7 +113,7 @@ int main(int argc, char *argv[])
         }
         settings.setValue("APP_DATA_PATH", data_path);
 
-        configure();
+        set_app_settings();
 
         a.init();
 

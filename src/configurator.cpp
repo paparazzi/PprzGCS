@@ -1,4 +1,4 @@
-#include "layout_builder.h"
+#include "configurator.h"
 #include <QtXml>
 #include <QFile>
 #include <QPushButton>
@@ -12,11 +12,13 @@
 #include <iostream>
 #include "configurable.h"
 #include "widget_utils.h"
+#include "speaker.h"
+#include "gcs_utils.h"
 
 static const char* DEFAULT_WIDTH = "1024";
 static const char* DEFAULT_HEIGHT = "600";
 
-QWidget* rec_build(QDomElement &ele, QSplitter* parent, int* size) {
+QWidget* rec_layout_build(QDomElement &ele, QSplitter* parent, int* size) {
     *size = ele.attribute("size", "10").toInt();
     if(ele.tagName() == "rows" or ele.tagName()=="columns") {
         QSplitter* splitter = new QSplitter(parent);
@@ -30,7 +32,7 @@ QWidget* rec_build(QDomElement &ele, QSplitter* parent, int* size) {
         QList<int> sizes;
         for(auto child=ele.firstChildElement(); !child.isNull(); child=child.nextSiblingElement()) {
             int s = 0;
-            rec_build(child, splitter, &s);
+            rec_layout_build(child, splitter, &s);
             sizes.append(s);
         }
         splitter->setSizes(sizes);
@@ -74,7 +76,47 @@ QWidget* rec_build(QDomElement &ele, QSplitter* parent, int* size) {
     return nullptr;
 }
 
-PprzMain* build_layout(QString filename) {
+void configure_speech(QDomElement ele) {
+    if(ele.isNull()) {
+        return;
+    }
+
+    if(ele.hasAttribute("locale")) {
+        auto locale = ele.attribute("locale");
+        pprzApp()->toolbox()->speaker()->setLocale(locale);
+    }
+
+    for(auto m=ele.firstChildElement(); !m.isNull(); m=m.nextSiblingElement()) {
+        bool ok;
+        auto name = m.attribute("name");
+        auto text = m.attribute("text");
+        auto timeout = m.attribute("timeout").toInt(&ok);
+        if(!ok) {continue;}
+        auto priority = m.attribute("priority", "0").toInt(&ok);
+        if(!ok) {continue;}
+        int expire;
+        if(m.hasAttribute("expire")) {
+            expire = m.attribute("expire").toInt(&ok);
+            if(!ok) {continue;}
+        } else {
+            expire = timeout;
+        }
+        auto onChangeStr = m.attribute("onChange", "false");
+        auto postprocessing = m.attribute("postprocessing", "");
+        bool onChange = false;
+        if(onChangeStr == "1" || onChangeStr == "true") {
+            onChange = true;
+        }
+        pprzApp()->toolbox()->speaker()->registerMessage(name, text, timeout, priority, expire, onChange, postprocessing);
+    }
+
+    if(speech()) {
+        pprzApp()->toolbox()->speaker()->addSentence("Welcome to Paparazzi!");
+    }
+
+}
+
+PprzMain* configure(QString filename) {
     QDomDocument xmlLayout;
     QFile f(filename);
     if(!f.open(QIODevice::ReadOnly)) {
@@ -84,24 +126,31 @@ PprzMain* build_layout(QString filename) {
     f.close();
 
     QDomElement root = xmlLayout.documentElement();
-    QString rootTag = root.tagName();
-    if (rootTag != "layout") {
-        throw invalid_tag("Root tag expected to be \"layout\". Is this a layout file ?");
+
+    // configure layout
+    auto layout_ele = root.firstChildElement("layout");
+    if(layout_ele.isNull()) {
+        throw invalid_tag("Cannot find a \"layout\" element.");
     }
 
-    int width = root.attribute("width", DEFAULT_WIDTH).toInt();
-    int height = root.attribute("height", DEFAULT_HEIGHT).toInt();
+    int width = layout_ele.attribute("width", DEFAULT_WIDTH).toInt();
+    int height = layout_ele.attribute("height", DEFAULT_HEIGHT).toInt();
 
-    if (root.childNodes().length() != 1) {
+    if (layout_ele.childNodes().length() != 1) {
         throw invalid_tag("Root tag \"layout\" expected to have exactly one child, rows, colums or widget.");
     }
 
-    QDomElement first_element = root.firstChildElement();
+    QDomElement first_element = layout_ele.firstChildElement();
     int s;
-    QWidget* widget = rec_build(first_element, nullptr, &s);
+    QWidget* widget = rec_layout_build(first_element, nullptr, &s);
 
     auto window = pprzApp()->mainWindow();
     window->setupUi(width, height, widget);
+
+
+    //configure speech
+    configure_speech(root.firstChildElement("speech"));
+
 
     return window;
 }
