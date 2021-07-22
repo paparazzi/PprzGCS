@@ -24,7 +24,7 @@ AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent)
         }
     });
 
-    //listen for NAVIGATION_REF to update origin waypoint of rotorcrafts
+    //listen for INS_REF to update origin waypoint of rotorcrafts
     PprzDispatcher::get()->bind("INS_REF", this, [=](QString sender, pprzlink::Message msg) {
         if(sender == ac_id) {
 
