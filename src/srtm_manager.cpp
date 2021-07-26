@@ -136,7 +136,7 @@ int SRTMManager::load_tile(QString name, bool dl) {
     }
     auto settings = getAppSettings();
 
-    auto path = settings.value("USER_DATA_PATH").toString() + "/srtm/" + name + ".SRTMGL1.hgt.zip";
+    auto path = appConfig()->value("USER_DATA_PATH").toString() + "/srtm/" + name + ".SRTMGL1.hgt.zip";
 
     zip_t* zf = zip_open(path.toStdString().c_str(), ZIP_RDONLY, nullptr);
 
@@ -188,7 +188,7 @@ void SRTMManager::handleReply(QNetworkReply *reply) {
     if(reply->error() == QNetworkReply::NetworkError::NoError) {
         auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
         if(status.toInt() == 200) {
-            auto path = settings.value("USER_DATA_PATH").toString() + "/srtm/" + name + ".SRTMGL1.hgt.zip";
+            auto path = appConfig()->value("USER_DATA_PATH").toString() + "/srtm/" + name + ".SRTMGL1.hgt.zip";
             QFile file(path);
             QFileInfo fi(path);
             QDir dirName = fi.dir();

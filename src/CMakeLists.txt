@@ -12,6 +12,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/pprz_dispatcher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pprzmain.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dispatcher_ui.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/globalconfig.cpp
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})

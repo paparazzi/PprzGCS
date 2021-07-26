@@ -3,12 +3,13 @@
 #include "dispatcher_ui.h"
 #include <QDebug>
 #include "AircraftManager.h"
+#include "gcs_utils.h"
 
 Aircraft::Aircraft(ConfigData* config, QObject* parent): QObject(parent),
     ac_id(config->getId()), color(config->getColor()), _name(config->getName()), config(config), position(Point2DLatLon(0,0)), real(true)
 {
     config->setParent(this);
-    QSettings app_settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    QSettings app_settings(appConfig()->value("SETTINGS_PATH").toString(), QSettings::IniFormat);
     flight_plan = new FlightPlan(ac_id, config->getFlightPlan(), this);
     setting_menu = new SettingMenu(config->getSettings(), this);
     airframe = new Airframe(config->getAirframe(), this);
@@ -27,7 +28,7 @@ Aircraft::Aircraft(QString ac_id, QString flightplan, QObject* parent): QObject(
     config->setFlightPlan(QString("file://%1").arg(flightplan));
 
 
-    QSettings app_settings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    QSettings app_settings(appConfig()->value("SETTINGS_PATH").toString(), QSettings::IniFormat);
     flight_plan = new FlightPlan(ac_id, config->getFlightPlan(), this);
     setting_menu = new SettingMenu(config->getSettings(), this);
     airframe = new Airframe(config->getAirframe(), this);

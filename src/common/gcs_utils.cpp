@@ -5,11 +5,11 @@
 
 QString user_or_app_path(QString data_path) {
     auto settings = getAppSettings();
-    auto path = settings.value("USER_DATA_PATH").toString() + "/" + data_path;
+    auto path = appConfig()->value("USER_DATA_PATH").toString() + "/" + data_path;
     if(QFile::exists(path)) {
         return path;
     } else {
-        return settings.value("APP_DATA_PATH").toString() + "/" + data_path;
+        return appConfig()->value("APP_DATA_PATH").toString() + "/" + data_path;
     }
 }
 
@@ -40,7 +40,11 @@ double parse_coordinate(QString str) {
 }
 
 QSettings getAppSettings() {
-    return QSettings(qApp->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    return QSettings(appConfig()->value("SETTINGS_PATH").toString(), QSettings::IniFormat);
+}
+
+GlobalConfig* appConfig() {
+    return GlobalConfig::get();
 }
 
 bool verbose() {

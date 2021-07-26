@@ -30,12 +30,20 @@ void set_app_settings() {
     default_setting("pprzlink/id", "pprzcontrol");
     default_setting("ivy/bus", "127.255.255.255:2010");
 
-    default_setting("PAPARAZZI_HOME", QString(qgetenv("PAPARAZZI_HOME")));
-    default_setting("PAPARAZZI_SRC", QString(qgetenv("PAPARAZZI_SRC")));
+    auto PAPARAZZI_HOME = QString(qgetenv("PAPARAZZI_HOME"));
+    auto PAPARAZZI_SRC = QString(qgetenv("PAPARAZZI_SRC"));
+    if(PAPARAZZI_HOME == "" || PAPARAZZI_SRC == "") {
+        throw std::runtime_error("env PAPARAZZI_HOME and PAPARAZZI_SRC must be set!");
+    }
 
-    default_setting("pprzlink/messages", settings.value("PAPARAZZI_HOME").toString() + "/var/messages.xml");
-    default_setting("path/gcs_icons", settings.value("PAPARAZZI_HOME").toString() + "/data/pictures/gcs_icons");
-    default_setting("path/aircraft_icon", settings.value("APP_DATA_PATH").toString() + "/pictures/aircraft_icons");
+    appConfig()->setValue("PAPARAZZI_HOME", PAPARAZZI_HOME);
+    appConfig()->setValue("PAPARAZZI_SRC", PAPARAZZI_SRC);
+
+    auto messages=  appConfig()->value("PAPARAZZI_HOME").toString() + "/var/messages.xml";
+    appConfig()->setValue("MESSAGES", messages);
+
+    default_setting("path/gcs_icons", appConfig()->value("PAPARAZZI_HOME").toString() + "/data/pictures/gcs_icons");
+    default_setting("path/aircraft_icon", appConfig()->value("APP_DATA_PATH").toString() + "/pictures/aircraft_icons");
     default_setting("map/default_tiles", "Google");
 
     default_setting("map/move_hyteresis", 20);
@@ -53,7 +61,7 @@ void set_app_settings() {
     default_setting("map/items_font", 18);
     default_setting("map/aircraft/size", 40);
 
-    default_setting("map/tiles_path", settings.value("USER_DATA_PATH").toString() + "/map");
+    default_setting("map/tiles_path", appConfig()->value("USER_DATA_PATH").toString() + "/map");
 
 
     default_setting("map/aircraft/track_max_chunk", 10);
@@ -61,8 +69,8 @@ void set_app_settings() {
 
     default_setting("aircraft_default_color", "red");
 
-    default_setting("APP_STYLE_FILE", settings.value("APP_DATA_PATH").toString() + "/default_style.qss");
-    default_setting("APP_LAYOUT_FILE", settings.value("APP_DATA_PATH").toString() + "/default_layout.xml");
+    default_setting("APP_STYLE_FILE", appConfig()->value("APP_DATA_PATH").toString() + "/default_style.qss");
+    default_setting("APP_LAYOUT_FILE", appConfig()->value("APP_DATA_PATH").toString() + "/default_layout.xml");
 
 }
 

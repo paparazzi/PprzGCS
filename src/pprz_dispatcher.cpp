@@ -7,6 +7,7 @@
 #include <QDateTime>
 #include "pprzmain.h"
 #include <QSettings>
+#include "gcs_utils.h"
 
 using namespace std;
 
@@ -19,12 +20,16 @@ PprzDispatcher::PprzDispatcher(PprzApplication* app, PprzToolbox* toolbox) : Ppr
 
 void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
     PprzTool::setToolbox(toolbox);
-    QSettings settings(pprzApp()->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+
+    auto settings_path = appConfig()->value("SETTINGS_PATH").toString();
+
+    QSettings settings(settings_path, QSettings::IniFormat);
 
     QString ivy_name = settings.value("ivy/name").toString();
     pprzlink_id = settings.value("pprzlink/id").toString();
+    auto messages = appConfig()->value("MESSAGES").toString();
 
-    dict = new pprzlink::MessageDictionary(settings.value("pprzlink/messages").toString());
+    dict = new pprzlink::MessageDictionary(messages);
     link = new pprzlink::IvyQtLink(*dict, ivy_name, this);
 
     connect(link, &pprzlink::IvyQtLink::serverConnected, this, [=]() {
@@ -217,7 +222,7 @@ void PprzDispatcher::stop() {
 }
 
 void PprzDispatcher::start() {
-    QSettings settings(pprzApp()->property("SETTINGS_PATH").toString(), QSettings::IniFormat);
+    QSettings settings(appConfig()->value("SETTINGS_PATH").toString(), QSettings::IniFormat);
     link->start(settings.value("ivy/bus").toString());
 
     server_check_timer.setInterval(1000);

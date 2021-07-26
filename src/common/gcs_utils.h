@@ -3,6 +3,7 @@
 #include <QApplication>
 #include <QFile>
 #include <QSettings>
+#include "globalconfig.h"
 
 enum LogLevel {
     LOG_LOW,
@@ -15,6 +16,7 @@ QString user_or_app_path(QString data_path);
 double parse_coordinate(QString str);
 
 QSettings getAppSettings();
+GlobalConfig* appConfig();
 
 bool verbose();
 void setVerbose(bool v);

@@ -539,7 +539,7 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) : QDialog(parent),
             path = uri.mid(sepi + separator.size());
         } else {
             auto settings = getAppSettings();
-            path = settings.value("PAPARAZZI_HOME").toString() + "/conf/airframes";
+            path = appConfig()->value("PAPARAZZI_HOME").toString() + "/conf/airframes";
         }
 
         auto savePath = QFileDialog::getSaveFileName(this, "Save File", path, "XML files (*.xml)", 0, QFileDialog::DontUseNativeDialog);

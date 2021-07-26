@@ -135,7 +135,7 @@ int FlightPlanEditor::parse(QString filename) {
         dtd = xmlParseDTD(NULL, BAD_CAST dtd_path.toStdString().c_str());
     } else {
         auto settings = getAppSettings();
-        auto dtd_path = settings.value("PAPARAZZI_HOME").toString() + "/conf/flight_plans/flight_plan.dtd";
+        auto dtd_path = appConfig()->value("PAPARAZZI_HOME").toString() + "/conf/flight_plans/flight_plan.dtd";
         dtd = xmlParseDTD(NULL, BAD_CAST dtd_path.toStdString().c_str());
     }
 

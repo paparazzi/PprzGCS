@@ -62,14 +62,14 @@ void PprzMain::populate_menu() {
     auto user_dir = file_menu->addAction("Open user directory");
     connect(user_dir, &QAction::triggered, [=](){
         auto settings = getAppSettings();
-        QString path = QDir::toNativeSeparators(settings.value("USER_DATA_PATH").toString());
+        QString path = QDir::toNativeSeparators(appConfig()->value("USER_DATA_PATH").toString());
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
 
     auto app_dir = file_menu->addAction("Open app directory");
     connect(app_dir, &QAction::triggered, [=](){
         auto settings = getAppSettings();
-        QString path = QDir::toNativeSeparators(settings.value("APP_DATA_PATH").toString());
+        QString path = QDir::toNativeSeparators(appConfig()->value("APP_DATA_PATH").toString());
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
 
@@ -90,7 +90,7 @@ void PprzMain::populate_menu() {
     auto open_flight_plan = file_menu->addAction("Open FlightPlans");
     connect(open_flight_plan, &QAction::triggered, [=](){
         auto settings = getAppSettings();
-        auto pprz_home = settings.value("PAPARAZZI_HOME").toString();
+        auto pprz_home = appConfig()->value("PAPARAZZI_HOME").toString();
         auto files = QFileDialog::getOpenFileNames(this, "open fp", pprz_home + "/conf/flight_plans", "*.xml");
         if(PprzMain::launch_type != FLIGHTPLAN_EDIT) {
             PprzMain::launch_type = FLIGHTPLAN_EDIT;

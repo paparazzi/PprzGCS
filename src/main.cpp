@@ -14,6 +14,7 @@
 #include "AircraftManager.h"
 #include "globalstate.h"
 #include "speaker.h"
+#include "globalconfig.h"
 
 #ifndef DEFAULT_APP_DATA_PATH
 #error "you need to define DEFAULT_APP_DATA_PATH!"
@@ -60,6 +61,11 @@ int main(int argc, char *argv[])
 {
     int return_code = 0;
     do {
+        auto gconfig = GlobalConfig::get();
+
+        auto settings_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/settings.conf";
+        gconfig->setValue("SETTINGS_PATH", settings_path);
+
         PprzApplication a(argc, argv);
 
         QCoreApplication::setApplicationName("PprzGCS");
@@ -89,29 +95,20 @@ int main(int argc, char *argv[])
             PprzMain::launch_type = CONFIGURE;
         }
 
-
-
-
-        auto settings_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/settings.conf";
-
-        pprzApp()->setProperty("SETTINGS_PATH", settings_path);
-        QSettings settings(settings_path, QSettings::IniFormat);
-
-
         QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
         QDir conf_dir(config_path);
         if(!conf_dir.exists()) {
             conf_dir.mkpath(conf_dir.path());
         }
 
-        settings.setValue("USER_DATA_PATH", config_path);
+        gconfig->setValue("USER_DATA_PATH", config_path);
 
 
         auto data_path = QString(qgetenv("PPRZGCS_DATA_PATH"));
         if(data_path == "") {
             data_path = DEFAULT_APP_DATA_PATH;
         }
-        settings.setValue("APP_DATA_PATH", data_path);
+        gconfig->setValue("APP_DATA_PATH", data_path);
 
         set_app_settings();
 

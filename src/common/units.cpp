@@ -16,7 +16,7 @@ Units::Units(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox
 void Units::setToolbox(PprzToolbox* toolbox) {
     PprzTool::setToolbox(toolbox);
     auto settings = getAppSettings();
-    auto filename = settings.value("PAPARAZZI_HOME").toString() + "/var/units.xml";
+    auto filename = appConfig()->value("PAPARAZZI_HOME").toString() + "/var/units.xml";
 
 
     QDomDocument doc;
