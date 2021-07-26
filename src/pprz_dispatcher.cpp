@@ -223,7 +223,7 @@ void PprzDispatcher::stop() {
 
 void PprzDispatcher::start() {
     QSettings settings(appConfig()->value("SETTINGS_PATH").toString(), QSettings::IniFormat);
-    link->start(settings.value("ivy/bus").toString());
+    link->start(appConfig()->value("IVY_BUS").toString());
 
     server_check_timer.setInterval(1000);
     server_check_timer.start();

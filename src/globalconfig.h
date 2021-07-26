@@ -18,6 +18,9 @@ public:
 
     void setValue(const QString &key, const QVariant &value);
     QVariant value(const QString &key, const QVariant &default_value=QVariant());
+    bool contains(const QString &key) {
+        return map.contains(key);
+    }
 
 signals:
 

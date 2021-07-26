@@ -28,7 +28,10 @@ void set_app_settings() {
 
     default_setting("ivy/name", "PprzGCS");
     default_setting("pprzlink/id", "pprzcontrol");
-    default_setting("ivy/bus", "127.255.255.255:2010");
+
+    if(!appConfig()->contains("IVY_BUS")) {
+        appConfig()->setValue("IVY_BUS", "127.255.255.255:2010");
+    }
 
     auto PAPARAZZI_HOME = QString(qgetenv("PAPARAZZI_HOME"));
     auto PAPARAZZI_SRC = QString(qgetenv("PAPARAZZI_SRC"));
@@ -39,7 +42,7 @@ void set_app_settings() {
     appConfig()->setValue("PAPARAZZI_HOME", PAPARAZZI_HOME);
     appConfig()->setValue("PAPARAZZI_SRC", PAPARAZZI_SRC);
 
-    auto messages=  appConfig()->value("PAPARAZZI_HOME").toString() + "/var/messages.xml";
+    auto messages = appConfig()->value("PAPARAZZI_HOME").toString() + "/var/messages.xml";
     appConfig()->setValue("MESSAGES", messages);
 
     default_setting("path/gcs_icons", appConfig()->value("PAPARAZZI_HOME").toString() + "/data/pictures/gcs_icons");
@@ -91,8 +94,6 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     auto l_ivy = new QGridLayout(w_ivy);
     int row = 0;
     auto cb = addSetting("Ivy name", "ivy/name", w_ivy, l_ivy, row, Type::STRING);
-    callbacks.append(cb);
-    cb = addSetting("Bus", "ivy/bus", w_ivy, l_ivy, row, Type::STRING);
     callbacks.append(cb);
     cb = addSetting("Pprzlink ID", "pprzlink/id", w_ivy, l_ivy, row, Type::STRING);
     callbacks.append(cb);

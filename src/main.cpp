@@ -12,7 +12,6 @@
 #include "PprzApplication.h"
 #include "gcs_utils.h"
 #include "AircraftManager.h"
-#include "globalstate.h"
 #include "speaker.h"
 #include "globalconfig.h"
 
@@ -79,6 +78,7 @@ int main(int argc, char *argv[])
         parser.addOption({{"s", "silent"}, "Silent mode."});
         parser.addOption({{"v", "verbose"}, "Verbose"});
         parser.addOption({{"f", "fpedit"}, "edit flight plan", "file"});
+        parser.addOption({{"b", "bus"}, "Ivy bus", "bus"});
         parser.addOption({"speech", "Enable speech"});
         parser.process(a);
 
@@ -88,11 +88,15 @@ int main(int argc, char *argv[])
 
         if(parser.isSet("fpedit") && PprzMain::launch_type == DEFAULT) {
             PprzMain::launch_type = FLIGHTPLAN_EDIT;
-            GlobalState::get()->set("FLIGHTPLAN_FILES", parser.values("fpedit"));
+            appConfig()->setValue("FLIGHTPLAN_FILES", parser.values("fpedit"));
         }
 
         if(parser.isSet("configure") && PprzMain::launch_type == DEFAULT) {
             PprzMain::launch_type = CONFIGURE;
+        }
+
+        if(parser.isSet("bus")) {
+            appConfig()->setValue("IVY_BUS", parser.value("bus"));
         }
 
         QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -120,7 +124,7 @@ int main(int argc, char *argv[])
         launch_main_app();
 
         if(PprzMain::launch_type == FLIGHTPLAN_EDIT) {
-            auto fp_files = GlobalState::get()->get("FLIGHTPLAN_FILES").toStringList();
+            auto fp_files = appConfig()->value("FLIGHTPLAN_FILES").toStringList();
             for(auto &fp_file: fp_files) {
                 qDebug() << "edit flightplan " << fp_file;
                 auto name = fp_file.split("/").last();

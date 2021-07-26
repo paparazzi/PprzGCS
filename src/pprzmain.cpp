@@ -7,7 +7,6 @@
 #include <QSettings>
 #include "app_settings.h"
 #include "gcs_utils.h"
-#include "globalstate.h"
 #include "speaker.h"
 
 LaunchTypes PprzMain::launch_type = DEFAULT;
@@ -94,7 +93,7 @@ void PprzMain::populate_menu() {
         auto files = QFileDialog::getOpenFileNames(this, "open fp", pprz_home + "/conf/flight_plans", "*.xml");
         if(PprzMain::launch_type != FLIGHTPLAN_EDIT) {
             PprzMain::launch_type = FLIGHTPLAN_EDIT;
-            GlobalState::get()->set("FLIGHTPLAN_FILES", files);
+            appConfig()->setValue("FLIGHTPLAN_FILES", files);
             qApp->exit( PprzMain::EXIT_CODE_REBOOT );
         } else {
             for(auto &fp_file: files) {
