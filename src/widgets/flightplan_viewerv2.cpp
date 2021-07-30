@@ -56,7 +56,7 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
         grid_layout->addWidget(go_button, row, 0);
 
         if(icon != "") {
-            QString icon_path = settings.value("path/gcs_icons").toString() + "/" + icon;
+            QString icon_path = appConfig()->value("GCS_ICONS_PATH").toString() + "/" + icon;
             auto ll = new QLabel(widget);
             ll->setPixmap(QPixmap(icon_path));
             ll->setToolTip(txt);

@@ -250,7 +250,7 @@ void MiniStrip::updateCurrentBlock(uint8_t cur_block) {
 
     QString icon_name = block->getIcon();
     if(icon_name != "") {
-        QString icon_path = settings.value("path/gcs_icons").toString() + "/" + icon_name;
+        QString icon_path = appConfig()->value("GCS_ICONS_PATH").toString() + "/" + icon_name;
         block_icon->setPixmap(QIcon(icon_path).pixmap(icons_size));
     } else {
         block_icon->setText(QString::fromUtf8("\xE2\x88\x85"));

@@ -45,7 +45,9 @@ void set_app_settings() {
     auto messages = appConfig()->value("PAPARAZZI_HOME").toString() + "/var/messages.xml";
     appConfig()->setValue("MESSAGES", messages);
 
-    default_setting("path/gcs_icons", appConfig()->value("PAPARAZZI_HOME").toString() + "/data/pictures/gcs_icons");
+    auto gcs_icons_path = appConfig()->value("PAPARAZZI_HOME").toString() + "/data/pictures/gcs_icons";
+    appConfig()->setValue("GCS_ICONS_PATH", gcs_icons_path);
+
     default_setting("path/aircraft_icon", appConfig()->value("APP_DATA_PATH").toString() + "/pictures/aircraft_icons");
     default_setting("map/default_tiles", "Google");
 
