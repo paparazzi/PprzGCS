@@ -13,6 +13,18 @@ QString user_or_app_path(QString data_path) {
     }
 }
 
+double getFloatingField(pprzlink::Message &msg, const QString &field) {
+    try {
+        double val;
+        msg.getField(field, val);
+        return val;
+    }  catch (std::bad_any_cast& e) {
+        float val;
+        msg.getField(field, val);
+        return static_cast<double>(val);
+    }
+}
+
 double parse_coordinate(QString str) {
     str = str.toUpper();
     QRegExp decimal_rx("[+-]?([0-9]*[.])?[0-9]+");

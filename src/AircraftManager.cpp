@@ -38,11 +38,10 @@ void AircraftManager::moveWaypoint(pprzlink::Message msg) {
     QString ac_id;
     uint8_t wp_id = 0;
     float alt, ground_alt;
-    double lat, lon;
     msg.getField("ac_id", ac_id);
     msg.getField("wp_id", wp_id);
-    msg.getField("lat", lat);
-    msg.getField("long", lon);
+    double lat = getFloatingField(msg, "lat");
+    double lon = getFloatingField(msg, "long");
     msg.getField("alt", alt);
     msg.getField("ground_alt", ground_alt);
 

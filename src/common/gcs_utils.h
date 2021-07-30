@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QSettings>
 #include "globalconfig.h"
+#include <pprzlinkQt/Message.h>
 
 enum LogLevel {
     LOG_LOW,
@@ -14,6 +15,8 @@ enum LogLevel {
 QString user_or_app_path(QString data_path);
 
 double parse_coordinate(QString str);
+
+double getFloatingField(pprzlink::Message &msg, const QString &field);
 
 QSettings getAppSettings();
 GlobalConfig* appConfig();
