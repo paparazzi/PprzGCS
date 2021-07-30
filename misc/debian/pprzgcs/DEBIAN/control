@@ -1,6 +1,6 @@
 Package: pprzgcs
 Version: __VERSION__
-Depends: libzip5, libproj15, libqt5xml5, libqt5network5, libqt5svg5, libqt5widgets5, libqt5gui5, libqt5core5a
+Depends: libzip5, libproj15, libqt5xml5, libqt5network5, libqt5svg5, libqt5texttospeech5, libqt5widgets5, libqt5gui5, libqt5core5a
 Section: misc
 Priority: optional
 Architecture: amd64

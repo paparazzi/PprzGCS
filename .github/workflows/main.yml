@@ -25,7 +25,7 @@ jobs:
 
     # Install dependencies
       - name: Install dependencies
-        run: sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libproj-dev mesa-common-dev libglu1-mesa-dev patchelf
+        run: sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev libproj-dev mesa-common-dev libglu1-mesa-dev patchelf
       
       - name: setEnv
         run: export MAKEFLAGS=-j$(nproc)
