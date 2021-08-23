@@ -251,6 +251,9 @@ void PprzDispatcher::updateSettings(pprzlink::Message msg) {
 
     size_t i=0;
     for(QString &token: values.split(",")) {
+        if(settings.size() <= static_cast<int>(i)) {
+            break;
+        }
         if(token != "" && token != "?") {
             double s = token.toDouble();
             assert(settings[i]->getNo() == static_cast<uint8_t>(i));
