@@ -58,8 +58,8 @@ bool TileProviderConfig::isValid(Point2DTile pt_tile) {
 
     Point2DPseudoMercator pm(pt_tile);
     // check is position is in the extent
-    return pm.x() < xMax &&
-           pm.x() > xMin &&
-           pm.y() < yMax &&
-           pm.y() > yMin;
+    return pm.x() <= xMax &&
+           pm.x() >= xMin &&
+           pm.y() <= yMax &&
+           pm.y() >= yMin;
 }

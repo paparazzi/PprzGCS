@@ -213,7 +213,7 @@ void Map2D::updateTiles() {
 
     int xCenter = static_cast<int>(center.x()/tile_size);
     int yCenter = static_cast<int>(center.y()/tile_size);
-    int N = ceil(std::max(width(), height()) / (2.0 * tile_size)) + 1;
+    int N = ceil(std::max(width(), height()) / (2.0 * tile_size)) + 2;
 
     for(auto elt=tile_providers.begin(); elt!=tile_providers.end(); ++elt) {
         TileProvider* tileProvider = elt.value();
