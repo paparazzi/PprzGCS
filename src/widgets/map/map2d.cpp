@@ -33,15 +33,13 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
         tile_providers[providerName] = tp;
     }
 
-    qreal maxxy = pow(2, maxZoom);
-    _scene = new MapScene(-500, -500, tile_size*maxxy, tile_size*maxxy, this);
+    qreal maxxy = tile_size*pow(2, maxZoom);
+    _scene = new MapScene(-maxxy, -maxxy, 2*tile_size*maxxy, 2*tile_size*maxxy, this);
     setScene(_scene);
 
-    setDragMode(QGraphicsView::ScrollHandDrag);
     setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     setTransformationAnchor(QGraphicsView::NoAnchor);
-    setResizeAnchor(QGraphicsView::AnchorViewCenter);
     setBackgroundBrush(QBrush(QColor(0x151515)));
 
     Point2DLatLon initLatLon(43.462344,1.273044);
