@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.0.3
++ Add map touch support (zoom and pan)
++ Add map rotation
+
+## v1.0.2
++ Add text to speech
++ Fix strip mode colors
++ Make some setting non-persistant
+
+## v1.0.1
++ Fix some bugs
++ Improve containers
++ Add plotter
++ Add some doc
+
 ## v1.0.0
 
 + Save settings in airframe file (to be improved)
