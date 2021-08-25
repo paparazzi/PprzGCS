@@ -204,7 +204,25 @@ void Map2D::zoomCentered(double z, QPoint eventPos) {
     changeZoomTiles(nextZoomLevel);
 }
 
+void Map2D::zoomCenteredScene(double z, QPoint center, Point2DPseudoMercator pm) {
+    _zoom = std::clamp(z, minZoom, maxZoom);
+    // save initial numericZoom
+    double  numZoomIni = numericZoom;
+    int nextZoomLevel = zoomLevel(_zoom);
+    numericZoom = _zoom - nextZoomLevel;
 
+    double scaleFactor = pow(2, numericZoom) / pow(2, numZoomIni);
+    scale(scaleFactor, scaleFactor);    // apply scale
+
+    // center pos in scene after scale
+    QPointF newPos = mapToScene(center);
+    // new position of the poi in scene coordinates
+    QPointF poi_scene = scenePoint(pm, nextZoomLevel, tile_size);
+
+    QPointF delta = newPos - poi_scene;
+    translate(delta.x(), delta.y());
+
+    changeZoomTiles(nextZoomLevel);
 }
 
 void Map2D::mouseMoveEvent(QMouseEvent *event) {

@@ -29,6 +29,7 @@ public:
 //    int zoomLevel() {return static_cast<int>(ceil(_zoom));}
     virtual void setZoom(double z);
     void zoomCentered(double z, QPoint eventPos);
+    void zoomCenteredScene(double z, QPoint center, Point2DPseudoMercator pm);
     void changeZoomTiles(int z);
     int tileSize() {return tile_size;}
 
