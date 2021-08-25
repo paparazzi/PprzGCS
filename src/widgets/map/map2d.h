@@ -29,6 +29,8 @@ public:
 //    int zoomLevel() {return static_cast<int>(ceil(_zoom));}
     virtual void setZoom(double z);
     void zoomCentered(double z, QPoint eventPos);
+    void zoomCenteredScene(double z, QPoint center, Point2DPseudoMercator pm);
+    void changeZoomTiles(int z);
     int tileSize() {return tile_size;}
 
     void setLayerOpacity(QString providerName, qreal opacity);
@@ -46,6 +48,7 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
     virtual void keyPressEvent(QKeyEvent *event);
+    virtual bool viewportEvent(QEvent *event) override;
 
     Point2DLatLon latlonFromView(QPoint viewPos, int zoom);
 
@@ -72,6 +75,8 @@ private:
     int wheelAccumulator;
 
     QMap<QString, TileProvider*> tile_providers;
+
+    QMap<int, Point2DPseudoMercator> pms;
 
 };
 

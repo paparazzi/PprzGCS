@@ -33,15 +33,13 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
         tile_providers[providerName] = tp;
     }
 
-    qreal maxxy = pow(2, maxZoom);
-    _scene = new MapScene(-500, -500, tile_size*maxxy, tile_size*maxxy, this);
+    qreal maxxy = tile_size*pow(2, maxZoom);
+    _scene = new MapScene(-maxxy, -maxxy, 2*tile_size*maxxy, 2*tile_size*maxxy, this);
     setScene(_scene);
 
-    setDragMode(QGraphicsView::ScrollHandDrag);
     setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     setTransformationAnchor(QGraphicsView::NoAnchor);
-    setResizeAnchor(QGraphicsView::AnchorViewCenter);
     setBackgroundBrush(QBrush(QColor(0x151515)));
 
     Point2DLatLon initLatLon(43.462344,1.273044);
@@ -142,11 +140,14 @@ void Map2D::wheelEvent(QWheelEvent* event) {
         return;
     }
 
+    double new_zoom;
     if(wheelAccumulator > 0) {
-        zoomCentered(_zoom + 0.5, event->pos());
+        new_zoom = _zoom + 0.5;
     } else {
-        zoomCentered(_zoom - 0.5, event->pos());
+        new_zoom = _zoom - 0.5;
     }
+    new_zoom = round(new_zoom*2)/2.0;
+    zoomCentered(new_zoom, event->pos());
     wheelAccumulator = 0;
 }
 
@@ -160,6 +161,13 @@ void Map2D::keyPressEvent(QKeyEvent *event) {
     } else {
         event->ignore();
     }
+}
+
+void Map2D::changeZoomTiles(int zoom_level) {
+    for(auto elt: qAsConst(tile_providers)) {
+        elt->setZoomLevel(zoom_level);
+    }
+    updateTiles();
 }
 
 void Map2D::setZoom(double z) {
@@ -193,12 +201,28 @@ void Map2D::zoomCentered(double z, QPoint eventPos) {
     QPointF delta = newPos - poi_scene;
     translate(delta.x(), delta.y());
 
-    for(auto elt: qAsConst(tile_providers)) {
-        elt->setZoomLevel(nextZoomLevel);
-    }
+    changeZoomTiles(nextZoomLevel);
+}
 
-    updateTiles();
+void Map2D::zoomCenteredScene(double z, QPoint center, Point2DPseudoMercator pm) {
+    _zoom = std::clamp(z, minZoom, maxZoom);
+    // save initial numericZoom
+    double  numZoomIni = numericZoom;
+    int nextZoomLevel = zoomLevel(_zoom);
+    numericZoom = _zoom - nextZoomLevel;
 
+    double scaleFactor = pow(2, numericZoom) / pow(2, numZoomIni);
+    scale(scaleFactor, scaleFactor);    // apply scale
+
+    // center pos in scene after scale
+    QPointF newPos = mapToScene(center);
+    // new position of the poi in scene coordinates
+    QPointF poi_scene = scenePoint(pm, nextZoomLevel, tile_size);
+
+    QPointF delta = newPos - poi_scene;
+    translate(delta.x(), delta.y());
+
+    changeZoomTiles(nextZoomLevel);
 }
 
 void Map2D::mouseMoveEvent(QMouseEvent *event) {
@@ -206,6 +230,77 @@ void Map2D::mouseMoveEvent(QMouseEvent *event) {
     if(event->buttons() & mouse_load_tiles_mask) {
         updateTiles();
     }
+}
+
+
+bool Map2D::viewportEvent(QEvent *event) {
+    switch (event->type()) {
+    case QEvent::TouchBegin:
+    case QEvent::TouchUpdate:
+    case QEvent::TouchEnd:
+    {
+        QTouchEvent *touchEvent = static_cast<QTouchEvent *>(event);
+        QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
+
+        for(auto &touchPoint: touchPoints) {
+            if(touchPoint.state() == Qt::TouchPointPressed) {
+                auto scenePos = mapToScene(touchPoint.pos().toPoint());
+                auto tp = tilePoint(scenePos, zoomLevel(zoom()), tileSize());
+                pms[touchPoint.id()] = Point2DPseudoMercator(tp);
+            }
+            else if(touchPoint.state() == Qt::TouchPointReleased && pms.contains(touchPoint.id())) {
+                pms.remove(touchPoint.id());
+            }
+        }
+
+        if(touchPoints.count() == 2 && !(touchEvent->touchPointStates() & Qt::TouchPointPressed)) {
+            //Zoom and pan combined
+            auto id0 = pms.firstKey();
+            auto id1 = pms.lastKey();
+
+            auto tp0 = std::find_if(touchPoints.begin(), touchPoints.end(), [=](auto ele) {return ele.id() == id0;});
+            auto tp1 = std::find_if(touchPoints.begin(), touchPoints.end(), [=](auto ele) {return ele.id() == id1;});
+
+            if(tp0 == touchPoints.end() || tp1 == touchPoints.end()) {
+                // touch points not found!
+                qDebug() << "a touch point was not found!" << pms.count();
+                return true;
+            }
+
+            auto px_dist = QVector2D(tp1->pos() - tp0->pos()).length();
+
+            for(int zo=0; zo<25; zo++) {
+                auto pt1 = scenePoint(pms[id0], zo, tileSize());
+                auto pt2 = scenePoint(pms[id1], zo, tileSize());
+                auto dist = QVector2D(pt2-pt1).length();
+                if(dist > px_dist) {
+                    // found the right zoom level
+                    double s = px_dist/dist;
+                    double new_zoom = zo + log2(s);
+
+                    auto center = (tp1->pos() + tp0->pos())/2;
+                    auto pmc = (pms[id0] + pms[id1])/2;
+                    zoomCenteredScene(new_zoom, center.toPoint(), pmc);
+
+                    break;
+                }
+            }
+
+        } else if(touchPoints.count() == 1 && touchPoints.first().state() == Qt::TouchPointMoved) {
+            //Pan only
+            auto pm = pms[touchPoints.first().id()];
+            auto pos = touchPoints.first().pos().toPoint();
+            zoomCenteredScene(zoom(), pos, pm);
+        } else {
+
+        }
+
+        return true;
+    }
+    default:
+        break;
+    }
+    return QGraphicsView::viewportEvent(event);
 }
 
 void Map2D::updateTiles() {

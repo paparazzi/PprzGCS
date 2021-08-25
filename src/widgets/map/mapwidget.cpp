@@ -354,7 +354,11 @@ void MapWidget::mouseMoveEvent(QMouseEvent *event) {
             }
         } else if(pan_state == PAN_MOVE) {
             QPoint dp = event->pos()-lastPos;
-            translate(dp.x()/scaleFactor(), dp.y()/scaleFactor());
+            auto tr = transform();
+            double scale2 = tr.m11()*tr.m11() + tr.m12()*tr.m12();
+            auto dx = (dp.x() * tr.m11() + dp.y() * tr.m12()) / scale2;
+            auto dy = (dp.x() * tr.m21() + dp.y() * tr.m22()) / scale2;
+            translate(dx, dy);
             lastPos = event->pos();
         }
 

@@ -6,6 +6,10 @@ constexpr double EXTENT = 20037508.342789244;
 const QString Point2DPseudoMercator::EPSG = "EPSG:3857";
 //EPSG:900913
 
+Point2DPseudoMercator::Point2DPseudoMercator(): _x(0), _y(0)
+{
+}
+
 Point2DPseudoMercator::Point2DPseudoMercator(double x, double y): _x(x), _y(y)
 {
 }
@@ -24,4 +28,20 @@ Point2DTile Point2DPseudoMercator::toTile(int zoom) {
 
 QRectF Point2DPseudoMercator::getBounds() {
     return QRectF(-EXTENT, -EXTENT, 2*EXTENT, 2*EXTENT);
+}
+
+Point2DPseudoMercator Point2DPseudoMercator::operator-(const Point2DPseudoMercator& other) const {
+    return Point2DPseudoMercator(x() - other.x(), y() - other.y());
+}
+
+Point2DPseudoMercator Point2DPseudoMercator::operator+(const Point2DPseudoMercator& other) const {
+    return Point2DPseudoMercator(x() + other.x(), y() + other.y());
+}
+
+Point2DPseudoMercator Point2DPseudoMercator::operator/(double d) const {
+    return Point2DPseudoMercator(x()/d, y()/d);
+}
+
+Point2DPseudoMercator Point2DPseudoMercator::operator*(double d) const {
+    return Point2DPseudoMercator(x()*d, y()*d);
 }

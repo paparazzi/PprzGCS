@@ -9,11 +9,19 @@ class Point2DTile;
 class Point2DPseudoMercator
 {
 public:
+    Point2DPseudoMercator();
     Point2DPseudoMercator(double _x, double _y);
     Point2DPseudoMercator(Point2DTile);
 
-    double x() { return _x; }
-    double y() { return _y; }
+    double x() const { return _x; }
+    double y() const { return _y; }
+
+    Point2DPseudoMercator operator-(const Point2DPseudoMercator& other) const;
+    Point2DPseudoMercator operator+(const Point2DPseudoMercator& other) const;
+    Point2DPseudoMercator operator/(double d) const;
+    Point2DPseudoMercator operator*(double d) const;
+
+
 
     static QRectF getBounds();
 
