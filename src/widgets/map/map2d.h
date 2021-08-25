@@ -48,6 +48,7 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void resizeEvent(QResizeEvent *event);
     virtual void keyPressEvent(QKeyEvent *event);
+    virtual bool viewportEvent(QEvent *event) override;
 
     Point2DLatLon latlonFromView(QPoint viewPos, int zoom);
 
@@ -74,6 +75,8 @@ private:
     int wheelAccumulator;
 
     QMap<QString, TileProvider*> tile_providers;
+
+    QMap<int, Point2DPseudoMercator> pms;
 
 };
 
