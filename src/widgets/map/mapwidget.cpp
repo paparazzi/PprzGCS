@@ -433,6 +433,23 @@ void MapWidget::keyReleaseEvent(QKeyEvent *event) {
         }
         itemsForbidHighlight(false);
     }
+    else if (event->key() == Qt::Key_R) {
+        auto center = mapToScene(rect().center());
+        double rotation = 10;
+        if(event->modifiers() & Qt::KeyboardModifier::AltModifier) {
+            rotation = -getRotation();
+        } else {
+            if(event->modifiers() & Qt::KeyboardModifier::ControlModifier) {
+                rotation = -rotation;
+            }
+            if(event->modifiers() & Qt::KeyboardModifier::ShiftModifier) {
+                rotation /= 2;
+            }
+        }
+        rotate(rotation);
+        centerOn(center);
+        updateGraphics();
+    }
 }
 
 void MapWidget::updateGraphics() {

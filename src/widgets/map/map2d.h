@@ -32,6 +32,7 @@ public:
     void zoomCenteredScene(double z, QPoint center, Point2DPseudoMercator pm);
     void changeZoomTiles(int z);
     int tileSize() {return tile_size;}
+    double getRotation();
 
     void setLayerOpacity(QString providerName, qreal opacity);
     void setLayerZ(QString providerName, int z);
@@ -44,10 +45,10 @@ public slots:
 
 
 protected:
-    virtual void wheelEvent(QWheelEvent* event);
-    virtual void mouseMoveEvent(QMouseEvent *event);
-    virtual void resizeEvent(QResizeEvent *event);
-    virtual void keyPressEvent(QKeyEvent *event);
+    virtual void wheelEvent(QWheelEvent* event) override;
+    virtual void mouseMoveEvent(QMouseEvent *event) override;
+    virtual void resizeEvent(QResizeEvent *event) override;
+    virtual void keyPressEvent(QKeyEvent *event) override;
     virtual bool viewportEvent(QEvent *event) override;
 
     Point2DLatLon latlonFromView(QPoint viewPos, int zoom);

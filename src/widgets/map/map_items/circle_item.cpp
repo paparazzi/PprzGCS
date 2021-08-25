@@ -126,9 +126,12 @@ void CircleItem::updateGraphics(MapWidget* map) {
     circle->setRadius(pixelRadius);
 
 
+    double r = map->getRotation();
+    auto rot = QTransform().rotate(-r);
     auto text_size = graphics_text->boundingRect().center();
-    graphics_text->setPos(scene_pos - text_size*s);
+    graphics_text->setPos(scene_pos + rot.map(-text_size*s));
     graphics_text->setScale(s);
+    graphics_text->setRotation(-r);
 }
 
 void CircleItem::removeFromScene(MapWidget* map) {

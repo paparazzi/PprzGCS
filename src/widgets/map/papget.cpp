@@ -117,6 +117,8 @@ void Papget::updateGraphics(MapWidget* map) {
     if(move_state == IDLE) {
         setPos(pos_scene);
     }
+    double r = map->getRotation();
+    setRotation(-r);
 
 }
 

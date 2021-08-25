@@ -163,6 +163,23 @@ void Map2D::keyPressEvent(QKeyEvent *event) {
     }
 }
 
+double Map2D::getRotation() {
+    auto tr = transform();
+    double c = tr.m11();
+    double s = tr.m12();
+    double theta;
+    if(abs(c) < 0.01 ) {
+        double sca = sqrt(pow(c, 2) + pow(s, 2));
+        theta = asin(s/sca);
+    } else {
+        theta = atan(s/c);
+    }
+    if(tr.m11() < 0 || tr.m22() < 0) {
+        theta += M_PI;
+    }
+    return qRadiansToDegrees(theta);
+}
+
 void Map2D::changeZoomTiles(int zoom_level) {
     for(auto elt: qAsConst(tile_providers)) {
         elt->setZoomLevel(zoom_level);

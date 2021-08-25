@@ -52,8 +52,11 @@ void AircraftItem::updateGraphics(MapWidget* map) {
     graphics_aircraft->setScale(s);
     graphics_aircraft->setRotation(heading);
 
+    double r = map->getRotation();
+    auto rot = QTransform().rotate(-r);
     graphics_text->setScale(s);
-    graphics_text->setPos(scene_pos + QPointF(10, 10));
+    graphics_text->setPos(scene_pos + rot.map(QPointF(10, 10)));
+    graphics_text->setRotation(-r);
 
 
     for(int i = 0; i<track_chuncks.size(); i++) {

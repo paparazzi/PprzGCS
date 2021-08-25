@@ -121,12 +121,16 @@ void WaypointItem::updateZValue() {
 void WaypointItem::updateGraphics(MapWidget* map) {
     QPointF scene_pos = scenePoint(Point2DLatLon(_waypoint), zoomLevel(map->zoom()), map->tileSize());
     double s = getScale(map->zoom(), map->scaleFactor());
+    double r = map->getRotation();
     point->setPos(scene_pos);
     point->setScale(s);
+    point->setRotation(-r);
 
+    auto rot = QTransform().rotate(-r);
     graphics_text->setPlainText(_waypoint->getName());
-    graphics_text->setPos(scene_pos + QPointF(5*s, -30*s));
+    graphics_text->setPos(scene_pos + rot.map(QPointF(5*s, -30*s)));
     graphics_text->setScale(s);
+    graphics_text->setRotation(-r);
 }
 
 void WaypointItem::removeFromScene(MapWidget* map) {
