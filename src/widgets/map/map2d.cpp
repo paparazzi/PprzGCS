@@ -140,11 +140,14 @@ void Map2D::wheelEvent(QWheelEvent* event) {
         return;
     }
 
+    double new_zoom;
     if(wheelAccumulator > 0) {
-        zoomCentered(_zoom + 0.5, event->pos());
+        new_zoom = _zoom + 0.5;
     } else {
-        zoomCentered(_zoom - 0.5, event->pos());
+        new_zoom = _zoom - 0.5;
     }
+    new_zoom = round(new_zoom*2)/2.0;
+    zoomCentered(new_zoom, event->pos());
     wheelAccumulator = 0;
 }
 
