@@ -19,6 +19,11 @@ QPointF scenePoint(Point2DLatLon latlon, int zoomLvl, int tileSize) {
     return scenePoint(tile_pos, tileSize);
 }
 
+QPointF scenePoint(Point2DPseudoMercator pm, int zoomLvl, int tileSize) {
+    Point2DTile tile_pos = pm.toTile(zoomLvl);
+    return scenePoint(tile_pos, tileSize);
+}
+
 int zoomLevel(double zoom) {
     return static_cast<int>(ceil(zoom));
 }
