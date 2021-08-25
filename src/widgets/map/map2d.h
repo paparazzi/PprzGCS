@@ -29,6 +29,7 @@ public:
 //    int zoomLevel() {return static_cast<int>(ceil(_zoom));}
     virtual void setZoom(double z);
     void zoomCentered(double z, QPoint eventPos);
+    void changeZoomTiles(int z);
     int tileSize() {return tile_size;}
 
     void setLayerOpacity(QString providerName, qreal opacity);

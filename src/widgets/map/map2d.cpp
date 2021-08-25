@@ -163,6 +163,13 @@ void Map2D::keyPressEvent(QKeyEvent *event) {
     }
 }
 
+void Map2D::changeZoomTiles(int zoom_level) {
+    for(auto elt: qAsConst(tile_providers)) {
+        elt->setZoomLevel(zoom_level);
+    }
+    updateTiles();
+}
+
 void Map2D::setZoom(double z) {
     zoomCentered(z, QPoint(width()/2, height()/2));
 }
@@ -194,11 +201,9 @@ void Map2D::zoomCentered(double z, QPoint eventPos) {
     QPointF delta = newPos - poi_scene;
     translate(delta.x(), delta.y());
 
-    for(auto elt: qAsConst(tile_providers)) {
-        elt->setZoomLevel(nextZoomLevel);
-    }
+    changeZoomTiles(nextZoomLevel);
+}
 
-    updateTiles();
 
 }
 
