@@ -302,17 +302,15 @@ bool Map2D::viewportEvent(QEvent *event) {
                     break;
                 }
             }
-
+            return true;
         } else if(touchPoints.count() == 1 && touchPoints.first().state() == Qt::TouchPointMoved) {
             //Pan only
             auto pm = pms[touchPoints.first().id()];
             auto pos = touchPoints.first().pos().toPoint();
             zoomCenteredScene(zoom(), pos, pm);
-        } else {
-
+            return true;
         }
-
-        return true;
+        break;
     }
     default:
         break;
