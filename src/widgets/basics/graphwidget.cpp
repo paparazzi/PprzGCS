@@ -197,12 +197,19 @@ void GraphWidget::paintEvent(QPaintEvent *e) {
 }
 
 void GraphWidget::wheelEvent(QWheelEvent *event) {
+    wheelAccumulator += event->angleDelta().y();
+    if(qAbs(wheelAccumulator) < 120) {
+        return;
+    }
+
     params.autoscale = false;
     emit autoscaleChanged(params.autoscale);
     double val = val_of_y(event->y());
-    double s = event->delta() < 0 ? 2: 1/2.0;
+    double s = wheelAccumulator < 0 ? 2: 1/2.0;
     params.max = val + (params.max-val)*s;
     params.min = val + (params.min-val)*s;
+
+    wheelAccumulator = 0;
 }
 
 void GraphWidget::mousePressEvent(QMouseEvent *event) {

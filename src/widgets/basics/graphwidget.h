@@ -70,6 +70,7 @@ private:
     std::function<double(int)> val_of_y;
     double val_last_move;
     bool moving;
+    int wheelAccumulator;
 };
 
 #endif // GRAPHWIDGET_H
