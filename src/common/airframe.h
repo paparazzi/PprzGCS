@@ -15,19 +15,6 @@ class Airframe: public QObject
     Q_OBJECT
 public:
 
-    struct Define {
-        QString name;
-        QString value;
-        //...
-    };
-
-    struct Section {
-      QString name;
-      QString prefix;
-      QList<struct Define> defines;
-      //...
-    };
-
     Airframe(QDomDocument doc, QObject* parent=nullptr);
 
     QString getFirmware() {return firmware;}
@@ -35,6 +22,7 @@ public:
     float getAltShiftPlus();
     float getAltShiftPlusPlus();
     float getAltShiftMinus();
+    std::optional<struct Param> getDefine(QString name, QString section="");
 
     void saveSettings(QString filename);
     void setParams(QMap<QString, QString> changed_params);
@@ -45,8 +33,6 @@ private:
     QString firmware;
 
     QDomDocument doc;
-
-    QList<struct Section> sections;
 
     static constexpr float ALT_PLUS_FW = 10;
     static constexpr float ALT_MINUS_FW = -10;

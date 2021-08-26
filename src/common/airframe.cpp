@@ -18,31 +18,6 @@ Airframe::Airframe(QDomDocument doc, QObject* parent):  QObject(parent), doc(doc
 
     auto firmware_node = air_root.firstChildElement( "firmware" );
     firmware = getAttribute(firmware_node, "name");
-
-
-    for(auto section_node = air_root.firstChildElement( "section" );
-        !section_node.isNull();
-        section_node = section_node.nextSiblingElement("section")) {
-        //cout << endl;
-        struct Section section;
-        section.name = getAttribute(section_node, "name");
-        section.prefix = getAttribute(section_node, "prefix");
-
-
-        for(auto define = section_node.firstChildElement("define");
-            !define.isNull();
-            define = define.nextSiblingElement("define")) {
-            struct Define def;
-
-            def.name = getAttribute(define, "name");
-            def.value = getAttribute(define, "value");
-            section.defines.push_back(std::move(def));
-
-        }
-
-        sections.push_back(std::move(section));
-
-    }
 }
 
 QList<Param> Airframe::getParams() {
@@ -94,30 +69,19 @@ void Airframe::saveSettings(QString filename) {
 }
 
 QString Airframe::getIconName() {
-    for(auto &s: sections) {
-        if(s.name == "GCS") {
-            for(auto &d: s.defines) {
-                if(d.name == "AC_ICON") {
-                    return d.value;
-                }
-            }
-        }
+    auto d = getDefine("AC_ICON", "GCS");
+    if(d.has_value()) {
+        return d.value().value;
     }
 
     return firmware;
 }
 
 float Airframe::getAltShiftPlus() {
-    for(auto &s: sections) {
-        if(s.name == "GCS") {
-            for(auto &d: s.defines) {
-                if(d.name == "ALT_SHIFT_PLUS") {
-                    return d.value.toDouble();
-                }
-            }
-        }
+    auto d = getDefine("ALT_SHIFT_PLUS", "GCS");
+    if(d.has_value()) {
+        return d.value().value.toDouble();
     }
-
 
     if(firmware == "fixedwing") {
         return ALT_PLUS_FW;
@@ -129,14 +93,9 @@ float Airframe::getAltShiftPlus() {
 }
 
 float Airframe::getAltShiftPlusPlus() {
-    for(auto &s: sections) {
-        if(s.name == "GCS") {
-            for(auto &d: s.defines) {
-                if(d.name == "ALT_SHIFT_PLUS_PLUS") {
-                    return d.value.toDouble();
-                }
-            }
-        }
+    auto d = getDefine("ALT_SHIFT_PLUS_PLUS", "GCS");
+    if(d.has_value()) {
+        return d.value().value.toDouble();
     }
 
     if(firmware == "fixedwing") {
@@ -149,14 +108,9 @@ float Airframe::getAltShiftPlusPlus() {
 }
 
 float Airframe::getAltShiftMinus() {
-    for(auto &s: sections) {
-        if(s.name == "GCS") {
-            for(auto &d: s.defines) {
-                if(d.name == "ALT_SHIFT_MINUS") {
-                    return d.value.toDouble();
-                }
-            }
-        }
+    auto d = getDefine("ALT_SHIFT_MINUS", "GCS");
+    if(d.has_value()) {
+        return d.value().value.toDouble();
     }
 
     if(firmware == "fixedwing") {
@@ -166,4 +120,32 @@ float Airframe::getAltShiftMinus() {
     }
 
     return 0;
+}
+
+/**
+ * @brief Airframe::getDefine
+ * @param def_name: full name of the define, including prefix
+ * @param section: optional section name
+ * @return
+ */
+std::optional<Param> Airframe::getDefine(QString def_name, QString section_name) {
+    for(auto section=doc.firstChildElement().firstChildElement("section");
+        !section.isNull();
+        section=section.nextSiblingElement("section")) {
+        if(section_name != "" && section_name != section.attribute("name", "")) {
+            continue;
+        }
+        for(auto define=section.firstChildElement("define");
+            !define.isNull();
+            define=define.nextSiblingElement("define")) {
+            auto full_name = section.attribute("prefix", "") + define.attribute("name");
+            if(full_name == def_name) {
+                auto value = define.attribute("value");
+                auto unit = define.attribute("unit", "");
+                struct Param ret =  {full_name, unit, value};
+                return ret;
+            }
+        }
+    }
+    return std::nullopt;
 }
