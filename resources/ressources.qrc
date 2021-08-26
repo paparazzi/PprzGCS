@@ -10,9 +10,9 @@
         <file>pictures/cursor_path_black.svg</file>
         <file>pictures/link_ok.svg</file>
         <file>pictures/link_nok.svg</file>
-        <file>pictures/bat_empty.svg</file>
-        <file>pictures/bat_full.svg</file>
-        <file>pictures/bat_half.svg</file>
+        <file>pictures/bat_catastrophic.svg</file>
+        <file>pictures/bat_ok.svg</file>
+        <file>pictures/bat_critic.svg</file>
         <file>pictures/settings.svg</file>
         <file>pictures/pfd_aircraft_pitch.svg</file>
         <file>pictures/pfd_aircraft_roll.svg</file>
@@ -43,5 +43,6 @@
         <file>pictures/imu_nok.svg</file>
         <file>pictures/imu_ok.svg</file>
         <file>pictures/vertical_speed.svg</file>
+        <file>pictures/bat_low.svg</file>
     </qresource>
 </RCC>

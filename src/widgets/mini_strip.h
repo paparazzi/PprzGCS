@@ -61,8 +61,10 @@ private:
     QLabel* block_icon;
 
     QLabel* bat_icon;
-    QIcon bat_full, bat_half, bat_low;
+    QIcon bat_ok, bat_low, bat_critic, bat_catastrophic;
     QLabel* bat_label;
+    double low_bat_level, critic_bat_level, catastrophic_bat_level;
+    int bat_nb_cells;
 
     QLabel* throttle_icon;
     QLabel* throttle_label;

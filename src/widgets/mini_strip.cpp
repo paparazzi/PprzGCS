@@ -125,15 +125,28 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
 
     ////////// bat /////////////
     auto bat_lay = new QHBoxLayout();
-    bat_full = QIcon(":/pictures/bat_full.svg");
-    bat_half = QIcon(":/pictures/bat_half.svg");
-    bat_low = QIcon(":/pictures/bat_empty.svg");
+    bat_ok = QIcon(":/pictures/bat_ok.svg");
+    bat_low = QIcon(":/pictures/bat_low.svg");
+    bat_critic = QIcon(":/pictures/bat_critic.svg");
+    bat_catastrophic = QIcon(":/pictures/bat_catastrophic.svg");
     bat_icon = new QLabel(this);
-    bat_icon->setPixmap(bat_low.pixmap(icons_size));
+    bat_icon->setPixmap(bat_catastrophic.pixmap(icons_size));
     bat_label = new QLabel("00.0 V", this);
     bat_lay->addWidget(bat_icon);
     bat_lay->addWidget(bat_label);
     gl->addLayout(bat_lay, 1, 0);
+
+    auto lbv = ac->getAirframe()->getDefine("LOW_BAT_LEVEL");
+    low_bat_level = lbv.has_value() ? lbv->value.toDouble() : 10.5;
+
+    auto cbv = ac->getAirframe()->getDefine("CRITIC_BAT_LEVEL");
+    critic_bat_level = cbv.has_value() ? cbv->value.toDouble() : 10.;
+
+    auto ctbv = ac->getAirframe()->getDefine("CATASTROPHIC_BAT_LEVEL");
+    catastrophic_bat_level = ctbv.has_value() ? ctbv->value.toDouble() : 9.;
+
+    auto bnbc = ac->getAirframe()->getDefine("BAT_NB_CELLS");
+    bat_nb_cells = bnbc.has_value() ? bnbc->value.toInt() : 0;
 
 
     ////////// throttle /////////////
@@ -329,6 +342,18 @@ void MiniStrip::updateData() {
 
     // batterie
     bat_label->setText(QString::number(bat) + " V");
+    if(bat < catastrophic_bat_level) {
+        bat_icon->setPixmap(bat_catastrophic.pixmap(icons_size));
+    } else if(bat < critic_bat_level) {
+        bat_icon->setPixmap(bat_critic.pixmap(icons_size));
+    } else if(bat < low_bat_level) {
+        bat_icon->setPixmap(bat_low.pixmap(icons_size));
+    } else {
+        bat_icon->setPixmap(bat_ok.pixmap(icons_size));
+    }
+    if(bat_nb_cells != 0) {
+        bat_label->setToolTip(QString("%1 V/c").arg(bat/bat_nb_cells, 0, 'f', 2));
+    }
 
     // throttle
     /// TODO: change bat icon : full/half/low
