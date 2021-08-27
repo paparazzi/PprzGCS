@@ -44,5 +44,7 @@
         <file>pictures/imu_ok.svg</file>
         <file>pictures/vertical_speed.svg</file>
         <file>pictures/bat_low.svg</file>
+        <file>pictures/windsock.svg</file>
+        <file>pictures/windsock_no_wind.svg</file>
     </qresource>
 </RCC>

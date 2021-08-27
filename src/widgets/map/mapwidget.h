@@ -14,6 +14,7 @@
 #include "configurable.h"
 #include "lock_button.h"
 #include "papget.h"
+#include "windindicator.h"
 
 class ACItemManager;
 class ItemEditStateMachine;
@@ -51,6 +52,8 @@ public:
     void setZoom(double z) override;
 
     void configure(QDomElement) override;
+
+    void rotateMap(double rot);
 
 signals:
     void mouseMoved(QPointF scenePos);
@@ -109,8 +112,10 @@ private:
     //ButtonBand
     QVBoxLayout* buttonsLeftLayout;
     QVBoxLayout* columnLeft;
+    QVBoxLayout* rightLayout;
     QVBoxLayout* columnRight;
     QVBoxLayout* buttonsRightLayout;
+    WindIndicator* wind_indicator;
 
     QList<LockButton*> buttonsLeft;
     QList<LockButton*> buttonsRight;

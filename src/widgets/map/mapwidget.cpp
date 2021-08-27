@@ -25,6 +25,7 @@
 #include "acitemmanager.h"
 #include "circle_item.h"
 #include "waypointeditor.h"
+#include "windindicator.h"
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     interaction_state(PMIS_OTHER), drawState(false), fp_edit_sm(nullptr), pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton)
@@ -34,14 +35,18 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     horizontalLayout = new QHBoxLayout(this);   // main layout
     buttonsLeftLayout = new QVBoxLayout();
     columnLeft = new QVBoxLayout();
+    rightLayout = new QVBoxLayout();
+    auto h_right = new QHBoxLayout();
     columnRight = new QVBoxLayout();
     buttonsRightLayout = new QVBoxLayout();
 
     horizontalLayout->addItem(buttonsLeftLayout);
     horizontalLayout->addItem(columnLeft);
     horizontalLayout->addStretch(1);
-    horizontalLayout->addItem(columnRight);
-    horizontalLayout->addItem(buttonsRightLayout);
+    horizontalLayout->addItem(rightLayout);
+    rightLayout->addItem(h_right);
+    h_right->addItem(columnRight);
+    h_right->addItem(buttonsRightLayout);
 
     buttonsLeftLayout->addStretch(1);
     buttonsRightLayout->addStretch(1);
@@ -190,8 +195,8 @@ void MapWidget::addWidget(QWidget* widget, LockButton* button, WidgetContainer s
         button->setActiveSide(false);
         buttons = &buttonsLeft;
     } else  {
-        columnRight->insertWidget(columnRight->count() - 1, widget);
-        buttonsRightLayout->insertWidget(buttonsRightLayout->count()-1, button);
+        columnRight->insertWidget(columnRight->count() - 1, widget, 0, Qt::AlignRight);
+        buttonsRightLayout->insertWidget(buttonsRightLayout->count()-1, button, 0, Qt::AlignRight);
         button->setActiveSide(true);
         buttons = &buttonsRight;
         columnRight->setAlignment(widget, Qt::AlignRight);
@@ -257,12 +262,37 @@ void MapWidget::configure(QDomElement ele) {
 
             auto icon = QIcon(user_or_app_path("pictures/" + icon_src));
             auto button = new LockButton(icon, this);
+            button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
             addWidget(widget, button, side);
             installEventFilter(widget);
 
         }
     }
+
+    wind_indicator = new WindIndicator(this);
+    wind_indicator->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    rightLayout->addWidget(wind_indicator, 0, Qt::AlignRight);
+
+    PprzDispatcher::get()->bind("WIND", this, [=](QString sender, pprzlink::Message msg){
+        qDebug() << "WIND";
+        (void)sender;
+        QString ac_id;
+        float dir, wspeed, mean_aspeed, stddev;
+        msg.getField("ac_id", ac_id);
+        msg.getField("dir", dir);
+        msg.getField("wspeed", wspeed);
+        msg.getField("mean_aspeed", mean_aspeed);
+        msg.getField("stddev", stddev);
+        wind_indicator->setWindSpeed(wspeed);
+        wind_indicator->setWindDir(dir);
+        qDebug() << "WIND for " + ac_id << mean_aspeed << stddev;
+    });
+
+    connect(wind_indicator, &WindIndicator::requestRotation, this, [=](double rot) {
+        rotateMap(rot-getRotation());
+    });
+
 }
 
 void MapWidget::setCursor(const QCursor &cur) {
@@ -434,7 +464,6 @@ void MapWidget::keyReleaseEvent(QKeyEvent *event) {
         itemsForbidHighlight(false);
     }
     else if (event->key() == Qt::Key_R) {
-        auto center = mapToScene(rect().center());
         double rotation = 10;
         if(event->modifiers() & Qt::KeyboardModifier::AltModifier) {
             rotation = -getRotation();
@@ -446,10 +475,16 @@ void MapWidget::keyReleaseEvent(QKeyEvent *event) {
                 rotation /= 2;
             }
         }
-        rotate(rotation);
-        centerOn(center);
-        updateGraphics();
+        rotateMap(rotation);
     }
+}
+
+void MapWidget::rotateMap(double rot) {
+    auto center = mapToScene(rect().center());
+    rotate(rot);
+    centerOn(center);
+    updateGraphics();
+    wind_indicator->setCompass(getRotation());
 }
 
 

@@ -18,6 +18,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/flightplaneditor.ui
     ${CMAKE_CURRENT_SOURCE_DIR}/flightplaneditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/plotter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/windindicator.cpp
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
