@@ -275,7 +275,6 @@ void MapWidget::configure(QDomElement ele) {
     rightLayout->addWidget(wind_indicator, 0, Qt::AlignRight);
 
     PprzDispatcher::get()->bind("WIND", this, [=](QString sender, pprzlink::Message msg){
-        qDebug() << "WIND";
         (void)sender;
         QString ac_id;
         float dir, wspeed, mean_aspeed, stddev;
@@ -286,7 +285,6 @@ void MapWidget::configure(QDomElement ele) {
         msg.getField("stddev", stddev);
         wind_indicator->setWindSpeed(wspeed);
         wind_indicator->setWindDir(dir);
-        qDebug() << "WIND for " + ac_id << mean_aspeed << stddev;
     });
 
     connect(wind_indicator, &WindIndicator::requestRotation, this, [=](double rot) {
@@ -889,6 +887,13 @@ void MapWidget::updateAircraftItem(pprzlink::Message msg) {
         ai->setPosition(pos);
         ai->setHeading(static_cast<double>(heading));
         AircraftManager::get()->getAircraft(ac_id)->setPosition(pos);
+
+        if(GlobalConfig::get()->value("MAP_TRACK_AC", false).toBool() && ac_id == current_ac) {
+            auto scenePos = scenePoint(pos, zoomLevel(zoom()), tileSize());
+            centerOn(scenePos);
+            rotateMap(-heading - getRotation());
+        }
+
     }
 
 }

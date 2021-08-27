@@ -86,6 +86,10 @@ void PprzMain::populate_menu() {
     speech_action->setCheckable(true);
     speech_action->setChecked(speech());
 
+    auto map_track_ac = file_menu->addAction("Track AC");
+    map_track_ac->setCheckable(true);
+    map_track_ac->setChecked(false);
+
     auto open_flight_plan = file_menu->addAction("Open FlightPlans");
     connect(open_flight_plan, &QAction::triggered, [=](){
         auto settings = getAppSettings();
@@ -109,6 +113,10 @@ void PprzMain::populate_menu() {
     });
 
     connect(speech_action, &QAction::toggled, pprzApp()->toolbox()->speaker(), &Speaker::enableSpeech);
+
+    connect(map_track_ac, &QAction::toggled, [=](bool checked) {
+        GlobalConfig::get()->setValue("MAP_TRACK_AC", checked);
+    });
 
     auto quit = file_menu->addAction("&Quit");
     connect(quit, &QAction::triggered, qApp, QApplication::quit);
