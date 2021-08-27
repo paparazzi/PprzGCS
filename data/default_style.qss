@@ -7,6 +7,13 @@ LockButton {
     qproperty-size: 80;
 }
 
+WindIndicator {
+    qproperty-arrow_color: #ff0000;
+    qproperty-pen_color: #000000;
+    qproperty-background_color: #6046d0ff;
+    qproperty-size: 100;
+}
+
 MiniStrip {
     qproperty-size: 30;
 }

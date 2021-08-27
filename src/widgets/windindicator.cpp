@@ -8,7 +8,9 @@
 
 WindIndicator::WindIndicator(QWidget *parent) : QWidget(parent),
     compass(0), wind_dir(-90), wind_speed(0), wind_threshold(1),
-    speed_unit(MS), rotate_state(IDLE)
+    speed_unit(MS), rotate_state(IDLE),
+    _size(100, 100), m_background_color(70, 200, 255, 100),
+    m_arrow_color(Qt::red), m_pen_color(Qt::black)
 {
 
 }
@@ -28,8 +30,8 @@ void WindIndicator::paintEvent(QPaintEvent *event) {
     auto r_out = rect().marginsRemoved(QMargins(penWidth, penWidth, penWidth, penWidth));
 
     //outer border
-    painter.setBrush(QBrush(QColor(70, 200, 255, 100)));
-    painter.setPen(QPen(Qt::black, penWidth));
+    painter.setBrush(QBrush(m_background_color));
+    painter.setPen(QPen(m_pen_color, penWidth));
     painter.drawEllipse(r_out);
 
     int ringWidth = r_out.width()/6;
@@ -44,7 +46,7 @@ void WindIndicator::paintEvent(QPaintEvent *event) {
     painter.rotate(rotation);
 
     auto center = QPoint((r_out.width() + r_in.width())/4.0, 0);
-    painter.setBrush(QBrush(Qt::red));
+    painter.setBrush(QBrush(m_arrow_color));
     painter.setPen(Qt::NoPen);
     int dot_size = (r_out.width() - r_in.width())/4.0;
     north_rect = QRect(center.x()-dot_size, center.y()-dot_size, 2*dot_size, 2*dot_size);
@@ -68,7 +70,7 @@ void WindIndicator::paintEvent(QPaintEvent *event) {
 
     // text
     painter.resetMatrix();
-    painter.setPen(Qt::black);
+    painter.setPen(m_pen_color);
     auto font = QFont();
     font.setBold(true);
     painter.setFont(font);
@@ -111,7 +113,6 @@ bool WindIndicator::onNorth(QMouseEvent* event) {
 void WindIndicator::mousePressEvent(QMouseEvent *event) {
     if(onNorth(event)) {
         rotate_state = PRESSED;
-        last_pos = event->pos();
     } else {
         changeUnit();
     }
@@ -143,10 +144,10 @@ void WindIndicator::wheelEvent(QWheelEvent* event) {
 
 QSize WindIndicator::sizeHint() const
 {
-    return QSize(100, 100);
+    return minimumSizeHint();
 }
 
 QSize WindIndicator::minimumSizeHint() const
 {
-    return QSize(100, 100);
+    return _size;
 }

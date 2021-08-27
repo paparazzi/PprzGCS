@@ -6,6 +6,10 @@
 class WindIndicator : public QWidget
 {
     Q_OBJECT
+    Q_PROPERTY(int size READ getSizeProperty WRITE setSizeProperty)
+    Q_PROPERTY(QColor background_color MEMBER m_background_color)
+    Q_PROPERTY(QColor arrow_color MEMBER m_arrow_color)
+    Q_PROPERTY(QColor pen_color MEMBER m_pen_color)
 public:
 
     enum SpeedUnit {
@@ -20,6 +24,9 @@ public:
     };
 
     explicit WindIndicator(QWidget *parent = nullptr);
+
+    void setSizeProperty(int s) {_size = QSize(s,s); update();}
+    int getSizeProperty() {return _size.width();}
 
     void setCompass(double c) {compass = c; update();}
     void setWindDir(double dir) {wind_dir = dir; update();}
@@ -56,9 +63,10 @@ private:
 
     QRect north_rect;
 
-    QPoint last_pos;
-
-
+    QSize _size;
+    QColor m_background_color;
+    QColor m_arrow_color;
+    QColor m_pen_color;
 };
 
 #endif // WINDINDICATOR_H
