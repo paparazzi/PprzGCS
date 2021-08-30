@@ -46,5 +46,7 @@
         <file>pictures/bat_low.svg</file>
         <file>pictures/windsock.svg</file>
         <file>pictures/windsock_no_wind.svg</file>
+        <file>pictures/stage_time.svg</file>
+        <file>pictures/block_time.svg</file>
     </qresource>
 </RCC>

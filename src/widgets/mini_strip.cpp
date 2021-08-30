@@ -27,7 +27,8 @@ const QMap<QString, QString> MiniStrip::mode_colors{
 };
 
 MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
-    ac_id(ac_id), icons_size(QSize(30, 30)), alt_mode(true), speed_mode(SpeedMode::GROUND_SPEED)
+    ac_id(ac_id), icons_size(QSize(30, 30)), time_mode(TimeMode::FLIGHT_TIME),
+    alt_mode(true), speed_mode(SpeedMode::GROUND_SPEED)
 {
     auto gl = new QGridLayout(this);
     auto ac = AircraftManager::get()->getAircraft(ac_id);
@@ -63,16 +64,43 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
 
     /////////// flight time ///////////
     QHBoxLayout* ft_lay = new QHBoxLayout();
-    auto ft_icon = new QLabel(this);
-    auto ft_pix = QIcon(":/pictures/flight_time.svg").pixmap(icons_size);
-    ft_icon->setPixmap(ft_pix);
-    ft_icon->setToolTip("Flight time");
-    ft_lay->addWidget(ft_icon);
+    time_button = new QToolButton(this);
+    time_button->setIconSize(icons_size);
+    time_flight = QIcon(":/pictures/flight_time.svg");
+    time_block = QIcon(":/pictures/block_time.svg");
+    time_stage = QIcon(":/pictures/stage_time.svg");
+    time_button->setIcon(time_flight);
+    time_button->setToolTip("Flight time");
+    ft_lay->addWidget(time_button);
     flight_time_label = new QLabel("0 s", this);
     flight_time_label->setToolTip("Flight time");
     ft_lay->addWidget(flight_time_label);
     ft_lay->addStretch();
     gl->addLayout(ft_lay, 0, 1);
+    connect(time_button, &QToolButton::clicked, this,
+        [=]() {
+        switch (time_mode) {
+        case FLIGHT_TIME:
+            time_mode = BLOCK_TIME;
+            time_button->setToolTip("Block time");
+            time_button->setIcon(time_block);
+            flight_time_label->setToolTip("Block time");
+            break;
+        case BLOCK_TIME:
+            time_mode = STAGE_TIME;
+            time_button->setToolTip("Stage time");
+            time_button->setIcon(time_stage);
+            flight_time_label->setToolTip("Stage time");
+            break;
+        case STAGE_TIME:
+            time_mode = FLIGHT_TIME;
+            time_button->setToolTip("Flight time");
+            time_button->setIcon(time_flight);
+            flight_time_label->setToolTip("Flight time");
+            break;
+        }
+        updateData();
+        });
 
 
     /////////// speed //////////////////
@@ -155,7 +183,6 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     throttle_killed = QIcon(":/pictures/throttle_killed.svg");
     throttle_icon = new QLabel(this);
     throttle_icon->setPixmap(throttle_killed.pixmap(icons_size));
-    ft_icon->setToolTip("Flight Time");
     th_lay->addWidget(throttle_icon);
     throttle_label = new QLabel("0 %", this);
     throttle_label->setToolTip("Throttle");
@@ -211,10 +238,20 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     connect(ac_status, &AircraftStatus::nav_status, this, &MiniStrip::updateData);
 }
 
-void MiniStrip::updateFlightTime(uint32_t flight_time) {
-    int hours = static_cast<int>(static_cast<int64_t>(flight_time)/3600);
-    int minutes = static_cast<int>(static_cast<int64_t>(flight_time)/60 - hours*60);
-    int seconds = static_cast<int>(static_cast<int64_t>(flight_time) - minutes*60 -hours*3600);
+void MiniStrip::updateFlightTime(uint32_t flight_time, uint32_t block_time, uint32_t stage_time) {
+    uint32_t time = 0;
+    switch (time_mode) {
+    case FLIGHT_TIME:
+        time = flight_time; break;
+    case BLOCK_TIME:
+        time = block_time; break;
+    case STAGE_TIME:
+        time = stage_time; break;
+
+    }
+    int hours = static_cast<int>(static_cast<int64_t>(time)/3600);
+    int minutes = static_cast<int>(static_cast<int64_t>(time)/60 - hours*60);
+    int seconds = static_cast<int>(static_cast<int64_t>(time) - minutes*60 -hours*3600);
 
     QString f_time = QString("%1").arg(hours, 2, 10, QChar('0')) + ":" +
                      QString("%1").arg(minutes, 2, 10, QChar('0')) + ":" +
@@ -296,6 +333,9 @@ void MiniStrip::updateData() {
     // NAV_STATUS
     uint8_t cur_block = 0;
     float target_alt = 0;
+    uint32_t block_time = 0;
+    uint32_t stage_time = 0;
+
 
     auto engine_status_msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("ENGINE_STATUS");
     if(engine_status_msg) {
@@ -337,6 +377,8 @@ void MiniStrip::updateData() {
     if(nav_status_msg) {
         nav_status_msg->getField("cur_block", cur_block);
         nav_status_msg->getField("target_alt", target_alt);
+        nav_status_msg->getField("block_time", block_time);
+        nav_status_msg->getField("stage_time", stage_time);
     }
 
 
@@ -367,7 +409,7 @@ void MiniStrip::updateData() {
     }
 
     // flight time
-    updateFlightTime(flight_time);
+    updateFlightTime(flight_time, block_time, stage_time);
 
 
     // mode

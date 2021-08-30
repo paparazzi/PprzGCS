@@ -31,9 +31,15 @@ private:
         VERTICAL_SPEED,
     };
 
+    enum TimeMode {
+        FLIGHT_TIME,
+        BLOCK_TIME,
+        STAGE_TIME,
+    };
+
     void updateData();
 
-    void updateFlightTime(uint32_t flight_time);
+    void updateFlightTime(uint32_t flight_time, uint32_t block_time, uint32_t stage_time);
     void updateAp(QString ap_mode);
     void updateGps(QString gps_mode);
     void updateImu(QString state_filter_mode);
@@ -42,7 +48,12 @@ private:
     QString ac_id;
     QSize icons_size;
 
+    QToolButton* time_button;
     QLabel* flight_time_label;
+    TimeMode time_mode;
+    QIcon time_flight;
+    QIcon time_block;
+    QIcon time_stage;
 
     QToolButton* alt_button;
     QIcon agl_icon;
