@@ -5,6 +5,14 @@
 #include "dispatcher_ui.h"
 #include "ui_flightplaneditor.h"
 
+QString getProp(xmlNodePtr node, const QString& tag) {
+    auto att = (char*)xmlGetProp((node), BAD_CAST (tag.toUtf8().constData()));
+    if(att) {
+        return QString(att);
+    } else {
+        return QString();
+    }
+}
 
 FlightPlanEditor::FlightPlanEditor(QString ac_id, QWidget *parent) : QWidget(parent),
     ui(new Ui::FlightPlanEditor),
@@ -220,16 +228,61 @@ QString FlightPlanEditor::sumaryFromNode(xmlNodePtr node) {
     QString node_name = (const char*)node->name;
 
     if(node_name == "block" || node_name == "flight_plan" || node_name == "waypoint") {
-        auto name = (char*)xmlGetProp(node, BAD_CAST "name");
-        if(name) {
-            return QString(name);
-        }
+        return getProp(node, "name");
     } else if(node_name == "circle") {
-        auto wp = (char*)xmlGetProp(node, BAD_CAST "wp");
-        auto radius = (char*)xmlGetProp(node, BAD_CAST "radius");
-        if(wp && radius) {
-            return QString("wp=%1, radius=%2").arg(wp, radius);
+        return "wp=" + getProp(node, "wp") + ", radius=" + getProp(node, "radius");
+    } else if(node_name == "sector") {
+        auto name = getProp(node, "name");
+        auto color = getProp(node, "color");
+        if (color != "") {
+            return name + QString(", %1").arg(color);
+        } else {
+            return name;
         }
+    } else if(node_name == "corner") {
+        return getProp(node, "name");
+    } else if(node_name == "variable") {
+        auto var = getProp(node, "var");
+        return var;
+    } else if(node_name == "module") {
+        return getProp(node, "name");
+    } else if(node_name == "define") {
+        return getProp(node, "name");
+    } else if(node_name == "configure") {
+        return getProp(node, "name");
+    } else if(node_name == "exception") {
+        auto cond = getProp(node, "cond");
+        auto deroute = getProp(node, "deroute");
+        return QString("%1 -> %2").arg(cond, deroute);
+    } else if(node_name == "while") {
+        return getProp(node, "cond");
+    } else if(node_name == "for") {
+        auto var = getProp(node, "var");
+        auto from = getProp(node, "from");
+        auto to = getProp(node, "to");
+        return QString("%1: %2 -> %3").arg(var, from, to);
+    } else if(node_name == "heading") {
+        return getProp(node, "course");
+    } else if(node_name == "attitude") {
+        return getProp(node, "roll");
+    } else if(node_name == "go") {
+        return getProp(node, "wp");
+    } else if(node_name == "set") {
+        auto var = getProp(node, "var");
+        auto value = getProp(node, "value");
+        return QString("%1 := %2").arg(var, value);
+    } else if(node_name == "call") {
+        return getProp(node, "fun");
+    } else if(node_name == "call_once") {
+        return getProp(node, "fun");
+    } else if(node_name == "eight") {
+        return getProp(node, "center");
+    } else if(node_name == "oval") {
+        return getProp(node, "p1") + "-" + getProp(node, "p2");
+    } else if(node_name == "deroute") {
+        return getProp(node, "block");
+    } else if(node_name == "stay") {
+        return getProp(node, "wp");
     }
 
     return QString();
