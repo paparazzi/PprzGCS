@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.4
++ Improve touch
++ MiniStrip: handle bat level icon
++ Plotter: fix zoom with trackpad
++ Add wind and north indicator
++ Add AC tracking mode
++ MiniStrip: Add block time and stage time
++ FlightPlanEditor: add more details to 2nd column
+
 ## v1.0.3
 + Add map touch support (zoom and pan)
 + Add map rotation
