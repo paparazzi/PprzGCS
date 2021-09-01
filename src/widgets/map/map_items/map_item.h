@@ -21,6 +21,7 @@ enum ItemType {
     ITEM_CIRCLE,
     ITEM_PATH,
     ITEM_AIRCRAFT,
+    ITEM_INTRUDER,
     //ITEM_OVAL,
 };
 

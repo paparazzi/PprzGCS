@@ -26,6 +26,7 @@
 #include "circle_item.h"
 #include "waypointeditor.h"
 #include "windindicator.h"
+#include "intruder_item.h"
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     interaction_state(PMIS_OTHER), drawState(false), fp_edit_sm(nullptr), pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton)
@@ -68,6 +69,20 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
         }
     }
 
+    timer_intruders = new QTimer(this);
+    connect(timer_intruders, &QTimer::timeout, this, [=]() {
+        auto now = QTime::currentTime();
+        auto it = QMutableMapIterator(intruders);
+        while(it.hasNext()) {
+            auto next = it.next();
+            if(next.value().second.addSecs(20) < now) {
+                removeItem(next.value().first);
+                it.remove();
+            }
+        }
+    });
+    timer_intruders->start(1000);
+
     connect(scene(), &MapScene::eventScene, this,
         [=](SmEditEvent eventType, QGraphicsSceneMouseEvent *mouseEvent) {
             if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
@@ -106,6 +121,11 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     shape_bind_id = PprzDispatcher::get()->bind("SHAPE", this,
         [=](QString sender, pprzlink::Message msg) {
             onShape(sender, msg);
+        });
+
+    PprzDispatcher::get()->bind("INTRUDER", this,
+        [=](QString sender, pprzlink::Message msg) {
+            onIntruder(sender, msg);
         });
 
     setAcceptDrops(true);
@@ -1032,5 +1052,34 @@ void MapWidget::onShape(QString sender, pprzlink::Message msg) {
         shapes[shape_id] = item;
     }
 
+}
+
+void MapWidget::onIntruder(QString sender, pprzlink::Message msg) {
+    (void)sender;
+    QString id, name;
+    int32_t lat, lon;   // alt;
+    float course;   // speed, climb;
+    //uint32_t itow;
+
+    msg.getField("id", id);
+    msg.getField("name", name);
+    msg.getField("lat", lat);
+    msg.getField("lon", lon);
+    //msg.getField("alt", alt);
+    msg.getField("course", course);
+    //msg.getField("speed", speed);
+    //msg.getField("climb", climb);
+    //msg.getField("itow", itow);
+
+    if(intruders.contains(id)) {
+        intruders.remove(id);
+    }
+
+    auto pos = Point2DLatLon(lat/1e7, lon/1e7);
+
+    auto itd = new IntruderItem(name, pos, course);
+    addItem(itd);
+
+    intruders[id] = make_pair(itd, QTime::currentTime());
 }
 

@@ -65,6 +65,7 @@ void set_app_settings() {
 
     default_setting("map/items_font", 18);
     default_setting("map/aircraft/size", 40);
+    default_setting("map/intruder_size", 40);
 
     default_setting("map/tiles_path", appConfig()->value("USER_DATA_PATH").toString() + "/map");
 
