@@ -74,6 +74,9 @@ void AircraftStatus::updateMessage(pprzlink::Message msg) {
             emit dl_values();
         }
         else if(name == "TELEMETRY_STATUS") {
+            QString link_id;
+            msg.getField("link_id", link_id);
+            telemetry_messages[link_id] = msg;
             emit telemetry_status();
         }
         else if(name == "FLY_BY_WIRE") {
@@ -86,7 +89,11 @@ void AircraftStatus::updateMessage(pprzlink::Message msg) {
 }
 
 std::optional<pprzlink::Message> AircraftStatus::getMessage(QString name) {
-    if(last_messages.keys().contains(name)) {
+    if(name == "TELEMETRY_STATUS") {
+        throw std::runtime_error("TELEMETRY_STATUS messages should be handled via the specialized methods!");
+        return std::nullopt;
+    }
+    if(last_messages.contains(name)) {
         return last_messages[name];
     } else {
         return std::nullopt;

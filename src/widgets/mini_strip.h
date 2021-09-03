@@ -86,6 +86,7 @@ private:
 
     QLabel* link_icon;
     QIcon link_ok;
+    QIcon link_warning;
     QIcon link_lost;
 
     QLabel* gps_icon;

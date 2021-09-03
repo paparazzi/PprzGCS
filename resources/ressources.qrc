@@ -48,5 +48,6 @@
         <file>pictures/windsock_no_wind.svg</file>
         <file>pictures/stage_time.svg</file>
         <file>pictures/block_time.svg</file>
+        <file>pictures/link_warning.svg</file>
     </qresource>
 </RCC>

@@ -13,6 +13,7 @@ public:
 
     void updateMessage(pprzlink::Message msg);
     std::optional<pprzlink::Message> getMessage(QString name);
+    QMap<QString, pprzlink::Message> getTelemetryMessages() {return telemetry_messages;}
 
 signals:
     void flight_param();
@@ -33,6 +34,7 @@ private:
     QString ac_id;
 
     QMap<QString, pprzlink::Message> last_messages;
+    QMap<QString, pprzlink::Message> telemetry_messages;
 };
 
 #endif // AIRCRAFTSTATUS_H

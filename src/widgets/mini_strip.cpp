@@ -198,8 +198,9 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     ///// Link, GPS, RC //////
     auto misc_lay = new QHBoxLayout();
     link_icon = new QLabel(this);
-    link_ok = QIcon(":/pictures/link_ok");
-    link_lost = QIcon(":/pictures/link_nok");
+    link_ok = QIcon(":/pictures/link_ok.svg");
+    link_warning = QIcon(":/pictures/link_warning.svg");
+    link_lost = QIcon(":/pictures/link_nok.svg");
     link_icon->setPixmap(link_lost.pixmap(icons_size));
     link_icon->setToolTip("Link");
     misc_lay->addWidget(link_icon);
@@ -324,9 +325,6 @@ void MiniStrip::updateData() {
     float agl = 0;
     float airspeed = 0;
 
-    // TELEMETRY_STATUS
-    float time_since_last_msg = 99999;
-
     // FLY_BY_WIRE
     QString rc_status, rc_mode;
 
@@ -362,10 +360,7 @@ void MiniStrip::updateData() {
         flight_param_msg->getField("airspeed", airspeed);
     }
 
-    auto telemetry_status_msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("TELEMETRY_STATUS");
-    if(telemetry_status_msg) {
-        telemetry_status_msg->getField("time_since_last_msg", time_since_last_msg);
-    }
+    auto telemetry_messages = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getTelemetryMessages();
 
     auto fly_by_wire_msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("FLY_BY_WIRE");
     if(fly_by_wire_msg) {
@@ -422,13 +417,40 @@ void MiniStrip::updateData() {
     updateImu(state_filter_mode);
 
     // link
-    if(time_since_last_msg > 5) {
-        link_icon->setPixmap(link_lost.pixmap(icons_size));
-        link_icon->setToolTip("Link lost since " + QString::number(static_cast<int>(time_since_last_msg)) + " s");
-    } else {
-        link_icon->setPixmap(link_ok.pixmap(icons_size));
-        link_icon->setToolTip("Link");
+    QString tip_txt;
+    int nb_links_ok = 0;
+    for(auto &telemetry_msg: telemetry_messages) {
+        float time_since_last_msg = 9999;
+        telemetry_msg.getField("time_since_last_msg", time_since_last_msg);
+        if(time_since_last_msg <= 5) {
+            nb_links_ok += 1;
+        }
     }
+
+
+    if(nb_links_ok == telemetry_messages.size()) {
+        // all links ok
+        link_icon->setPixmap(link_ok.pixmap(icons_size));
+    } else if(nb_links_ok > 0) {
+        // some links lost
+        link_icon->setPixmap(link_warning.pixmap(icons_size));
+    } else {
+        // All links lost
+        link_icon->setPixmap(link_lost.pixmap(icons_size));
+    }
+
+    if(telemetry_messages.size() > 1) {
+        // multiple links
+        tip_txt = QString("Link %1 / %2").arg(nb_links_ok).arg(telemetry_messages.size());
+    } else {
+        // one link
+        if(nb_links_ok > 0) {
+            tip_txt = "Link ok";
+        } else {
+            tip_txt = "Link lost";
+        }
+    }
+    link_icon->setToolTip(tip_txt);
 
     // RC
     if(rc_status == "OK") {
