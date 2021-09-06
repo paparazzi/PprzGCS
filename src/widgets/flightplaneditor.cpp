@@ -138,7 +138,9 @@ int FlightPlanEditor::parse(QString filename) {
     auto internal_dtd = xmlGetIntSubset(doc);
     if(internal_dtd != nullptr) {
         auto systemId = (char*)internal_dtd->SystemID;
-        auto finfo = QFileInfo(filename);
+        QUrl url(filename);
+        auto finfo = QFileInfo(url.toLocalFile());
+        auto dir = finfo.absoluteDir();
         auto dtd_path = finfo.absoluteDir().absoluteFilePath(systemId);
         dtd = xmlParseDTD(NULL, BAD_CAST dtd_path.toStdString().c_str());
     } else {
