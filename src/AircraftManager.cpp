@@ -89,6 +89,7 @@ void AircraftManager::addFPAircraft(QString ac_id, QString flightplan) {
     static int last_color = (int) Qt::red;
     auto color = QColor((Qt::GlobalColor)last_color++);
     auto config = new ConfigData(ac_id, ac_id, color);
+    config->setReal(false);
     config->setFlightPlan(QString("file://%1").arg(flightplan));
 
     aircrafts[config->getId()] = new Aircraft(config);
@@ -141,7 +142,7 @@ QColor AircraftManager::parseColor(QString str) {
 
 ConfigData::ConfigData(QString ac_id, QString ac_name, QColor color, QObject* parent) :
     QObject(parent),
-    ac_id(ac_id), ac_name(ac_name), color(color)
+    ac_id(ac_id), ac_name(ac_name), color(color), real(true)
 {
 }
 

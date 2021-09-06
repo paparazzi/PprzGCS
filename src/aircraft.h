@@ -17,8 +17,6 @@ class Aircraft: public QObject
     Q_OBJECT
 public:
     Aircraft(ConfigData* config, QObject* parent=nullptr);
-    Aircraft(QString ac_id, QString flightplan, QObject* parent=nullptr);
-
     QColor getColor(){return color;}
     QString getId(){return ac_id;}
     QString getIcon(){return icon;}

@@ -17,25 +17,7 @@ Aircraft::Aircraft(ConfigData* config, QObject* parent): QObject(parent),
         icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(airframe->getIconName()) + ".svg";
     }
     status = new AircraftStatus(ac_id, this);
-}
-
-Aircraft::Aircraft(QString ac_id, QString flightplan, QObject* parent): QObject(parent),
-    ac_id(ac_id), _name(ac_id), config(nullptr), position(Point2DLatLon(0,0)), real(false)
-{
-    static int last_color = (int) Qt::red;
-    color = QColor((Qt::GlobalColor)last_color++);
-    config = new ConfigData(ac_id, ac_id, color, this);
-    config->setFlightPlan(QString("file://%1").arg(flightplan));
-
-
-    QSettings app_settings(appConfig()->value("SETTINGS_PATH").toString(), QSettings::IniFormat);
-    flight_plan = new FlightPlan(ac_id, config->getFlightPlan(), this);
-    setting_menu = new SettingMenu(config->getSettings(), this);
-    airframe = new Airframe(config->getAirframe(), this);
-    if(airframe->getIconName() != "") {
-        icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(airframe->getIconName()) + ".svg";
-    }
-    status = new AircraftStatus(ac_id, this);
+    real = config->isReal();
 }
 
 void Aircraft::setSetting(Setting* setting, float value) {

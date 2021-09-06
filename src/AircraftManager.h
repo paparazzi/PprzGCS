@@ -38,6 +38,9 @@ public:
     QString getName() {return ac_name;}
     QColor getColor() {return color;}
 
+    bool isReal() {return real;}
+    void setReal(bool r) {real = r;}
+
     bool isComplete() {
         return !flight_plan.isNull() &&
                !airframe.isNull() &&
@@ -62,6 +65,8 @@ private:
 
     QString uri_flight_plan;
     QString uri_airframe;
+
+    bool real;
 };
 
 
