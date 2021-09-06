@@ -37,7 +37,7 @@ void launch_main_app() {
         layout_path = settings.value("APP_LAYOUT_FILE").toString();
         break;
     case FLIGHTPLAN_EDIT:
-        layout_path = settings.value("APP_DATA_PATH").toString() + "/fp_editor_layout.xml";
+        layout_path = appConfig()->value("APP_DATA_PATH").toString() + "/fp_editor_layout.xml";
         break;
     case CONFIGURE:
         break;
