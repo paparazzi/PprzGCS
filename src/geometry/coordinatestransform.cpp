@@ -176,7 +176,7 @@ QString CoordinatesTransform::utm_epsg(double lat, double lon) {
     } else {
         epsg += "7";
     }
-    int zone_nb = (static_cast<int>(lon) + 180)/6 + 1;
+    int zone_nb = static_cast<int>((lon + 180.0)/6.0 + 1.0);
     epsg += QString("%1").arg(zone_nb, 2, 10, QChar('0'));
     return epsg;
 }
