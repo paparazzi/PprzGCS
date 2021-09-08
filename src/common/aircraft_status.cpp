@@ -76,6 +76,11 @@ void AircraftStatus::updateMessage(pprzlink::Message msg) {
         else if(name == "TELEMETRY_STATUS") {
             QString link_id;
             msg.getField("link_id", link_id);
+
+            if(telemetry_messages.contains("no_id") && link_id != "no_id") {
+                telemetry_messages.remove("no_id");
+            }
+
             telemetry_messages[link_id] = msg;
             emit telemetry_status();
         }

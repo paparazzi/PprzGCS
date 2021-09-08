@@ -16,6 +16,7 @@
                         <plot name="ground:ENGINE_STATUS:bat" min="9" max="13"/>
                     </configure>
                 </widget>
+                <widget name="link_status" icon="link_ok.svg"/>
             </columnRight>
           </configure>
         </widget>
