@@ -16,7 +16,7 @@ Install the dependencies:
 
 .. code-block:: bash
 
-    sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libproj-dev mesa-common-dev libglu1-mesa-dev
+    sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev libproj-dev mesa-common-dev libglu1-mesa-dev
 
 cd to the PprzGCS root, and build the needed libraries:
 
