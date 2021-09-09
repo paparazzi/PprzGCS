@@ -37,12 +37,10 @@ cmake -S $pprzlinkqt_src -B $pprzlinkqt_build -DCMAKE_BUILD_TYPE=Release -DCMAKE
 cmake --build $pprzlinkqt_build
 cmake --install $pprzlinkqt_build
 
-cmake -S . -B $WD/build/PprzGCS -DCMAKE_INSTALL_PREFIX=$deb_install_prefix -DCMAKE_PREFIX_PATH=$install_prefix -DCMAKE_BUILD_TYPE=Release
-cmake --build $WD/build/PprzGCS
-cmake --install $WD/build/PprzGCS
+cmake -S . -B $WD/build/pprzgcs -DCMAKE_INSTALL_PREFIX=$deb_install_prefix -DCMAKE_PREFIX_PATH=$install_prefix -DCMAKE_BUILD_TYPE=Release
+cmake --build $WD/build/pprzgcs
+cmake --install $WD/build/pprzgcs
 
-
-mv $deb_install_prefix/bin/PprzGCS $deb_install_prefix/bin/pprzgcs
 strip --strip-unneeded $deb_install_prefix/bin/pprzgcs
 
 # Add changelog

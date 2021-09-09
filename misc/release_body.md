@@ -9,7 +9,7 @@ Install these dependencies:
 
 Install PprzGCS:
 
-`sudo dpkg -i pprzgcs_Linux.deb`
+`sudo dpkg -i pprzgcs.deb`
 
 # Ubuntu 18.04
 

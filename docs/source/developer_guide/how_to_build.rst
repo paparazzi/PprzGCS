@@ -69,6 +69,6 @@ Before running it, you must set the environment variable ``PPRZGCS_DATA_PATH`` t
 
 	If you are in the PprzGCS root, you can run: ``export PPRZGCS_DATA_PATH=$(pwd)/data``
 
-Then just run ``./build/PprzGCS/PprzGCS``
+Then just run ``./build/pprzgcs/pprzgcs``
 
 

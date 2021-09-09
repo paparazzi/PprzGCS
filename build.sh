@@ -47,8 +47,8 @@ fi
 
 if [ $build_app = "app" ]
 then
-    cmake -S . -B $WD/build/PprzGCS -DCMAKE_INSTALL_PREFIX="$install_prefix"
+    cmake -S . -B $WD/build/pprzgcs -DCMAKE_INSTALL_PREFIX="$install_prefix"
     export MAKEFLAGS=-j$(nproc)
-    cmake --build $WD/build/PprzGCS
+    cmake --build $WD/build/pprzgcs
 fi
 
