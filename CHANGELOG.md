@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.5
++ Rename binary to lower case.
++ Fix bad UTM zone
++ Fix bug in FlightPlanEditor
++ Handle multiple links, and add a LinkStatus widget
++ Add intruders support
+
 ## v1.0.4
 + Improve touch
 + MiniStrip: handle bat level icon
