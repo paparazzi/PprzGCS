@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 
         PprzApplication a(argc, argv);
 
-        QCoreApplication::setApplicationName("PprzGCS");
+        QCoreApplication::setApplicationName("pprzgcs");
         QCoreApplication::setApplicationVersion("0.1");
 
         QCommandLineParser parser;
