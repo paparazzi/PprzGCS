@@ -62,13 +62,13 @@ int main(int argc, char *argv[])
     do {
         auto gconfig = GlobalConfig::get();
 
+        QCoreApplication::setApplicationName("pprzgcs");
+        QCoreApplication::setApplicationVersion("0.1");
+
         auto settings_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/settings.conf";
         gconfig->setValue("SETTINGS_PATH", settings_path);
 
         PprzApplication a(argc, argv);
-
-        QCoreApplication::setApplicationName("pprzgcs");
-        QCoreApplication::setApplicationVersion("0.1");
 
         QCommandLineParser parser;
         parser.setApplicationDescription("Test helper");
