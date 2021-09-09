@@ -41,20 +41,50 @@ Now you should be able to build the app with:
 
 `./build.sh app`
 
-PprzGCS must be able to locate the **data** directory. It default to `/usr/local/share/pprzgcs/data`. You need to override it by setting the `PPRZGCS_DATA_PATH` environment variable.
+To be able to run it from the paparazzi center, you need to add the `build/pprzgcs` directory to your *$PATH*. Adapt this command and add it to your .bashrc:
 
-Adapt this command to your path and run it:
+`export PATH="/path/to/PprzGCS/build/pprzgcs:$PATH"`
 
-`export PPRZGCS_DATA_PATH=/path/to/pprzgcs/data`
+You should now be able to launch it from the Paparazzi center.
 
-You can add this command to your `.bashrc` 
+If you want to run it from the terminal, set the `PAPARAZZI_HOME` and the `PAPARAZZI_SRC` environment variables to your paparazzi path, then just run `./build/pprzgcs/pprzgcs`
+
 
 
 ## Ubuntu 18.04
 
-Follow the instructions in the [documentation](https://fabien-b.github.io/PprzGCS/developer_guide/how_to_build.html#ubuntu-18-04)
+First, you need to install [Qt5.12.0 or above](https://www.qt.io/download-open-source).
+
+Setup in your .bashrc the environnement variable Qt5_DIR for cmake to find Qt5:
+
+`export Qt5_DIR="/path/to/Qt/5.12.0/gcc_64/lib/cmake/Qt5"`
+
+Install the dependencies: 
+
+`sudo apt install libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev`
+
+cd to the PprzGCS root, and build the needed libraries:
+
+`build_proj=true ./build.sh libs`
+
+Now you should be able to build the app with:
+
+`./build.sh app`
+
+To be able to run it from the paparazzi center, you need to add the `build/pprzgcs` directory to your *$PATH*. Adapt this command and add it to your .bashrc:
+
+`export PATH="/path/to/PprzGCS/build/pprzgcs:$PATH"`
+
+You should now be able to launch it from the Paparazzi center.
+
+If you want to run it from the terminal, set the `PAPARAZZI_HOME` and the `PAPARAZZI_SRC` environment variables to your paparazzi path, then just run `./build/pprzgcs/pprzgcs`
+
 
 ## Mac
 
-PprzGCS can be built for Mac, although is not yet officially supported.
+PprzGCS have been successfully built for Mac, although is not yet officially supported. You are on you own ;-)
+
+More details are given in the [documentation](https://fabien-b.github.io/PprzGCS/)
+
+
 

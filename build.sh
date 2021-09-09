@@ -47,7 +47,7 @@ fi
 
 if [ $build_app = "app" ]
 then
-    cmake -S . -B $WD/build/pprzgcs -DCMAKE_INSTALL_PREFIX="$install_prefix"
+    cmake -S . -B $WD/build/pprzgcs -DCMAKE_INSTALL_PREFIX="$install_prefix" -DDEFAULT_APP_DATA_PATH="$WD/data"
     export MAKEFLAGS=-j$(nproc)
     cmake --build $WD/build/pprzgcs
 fi

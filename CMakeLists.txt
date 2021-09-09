@@ -24,7 +24,11 @@ endif()
 
 find_package(LibXml2 REQUIRED)
 
-add_definitions(-DDEFAULT_APP_DATA_PATH="/usr/local/${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}")
+if(NOT DEFAULT_APP_DATA_PATH)
+    set(DEFAULT_APP_DATA_PATH "/usr/local/${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}")
+endif()
+message("DEFAULT_APP_DATA_PATH set to ${DEFAULT_APP_DATA_PATH}")
+add_definitions(-DDEFAULT_APP_DATA_PATH="${DEFAULT_APP_DATA_PATH}")
 
 find_package(Qt5 5.12 COMPONENTS Widgets Xml Network Svg TextToSpeech REQUIRED)
 find_package(IvyQt REQUIRED)
