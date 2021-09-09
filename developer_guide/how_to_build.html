@@ -212,12 +212,12 @@
 </div>
 <div class="section" id="running-pprzgcs">
 <h2>Running PprzGCS<a class="headerlink" href="#running-pprzgcs" title="Permalink to this headline">¶</a></h2>
-<p>Before running it, you must set the environment variable <code class="docutils literal notranslate"><span class="pre">PPRZGCS_DATA_PATH</span></code> to the absolute path of the <cite>data</cite> directory.</p>
-<div class="admonition-example admonition">
-<p class="admonition-title">Example</p>
-<p>If you are in the PprzGCS root, you can run: <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">PPRZGCS_DATA_PATH=$(pwd)/data</span></code></p>
+<p>To be able to run it from the paparazzi center, you need to add the <code class="docutils literal notranslate"><span class="pre">build/pprzgcs</span></code> directory to your <code class="docutils literal notranslate"><span class="pre">$PATH</span></code>. Adapt this command and add it to your .bashrc:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/path/to/PprzGCS/build/pprzgcs:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+</pre></div>
 </div>
-<p>Then just run <code class="docutils literal notranslate"><span class="pre">./build/pprzgcs/pprzgcs</span></code></p>
+<p>You should now be able to launch it from the Paparazzi center.</p>
+<p>If you want to run it from the terminal, set the <code class="docutils literal notranslate"><span class="pre">PAPARAZZI_HOME</span></code> and the <code class="docutils literal notranslate"><span class="pre">PAPARAZZI_SRC</span></code> environment variables to your paparazzi path, then just run <code class="docutils literal notranslate"><span class="pre">./build/pprzgcs/pprzgcs</span></code></p>
 </div>
 </div>
 

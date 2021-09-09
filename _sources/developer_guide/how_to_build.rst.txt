@@ -63,12 +63,15 @@ Now you should be able to build the app with:
 Running PprzGCS
 _______________
 
-Before running it, you must set the environment variable ``PPRZGCS_DATA_PATH`` to the absolute path of the `data` directory.
 
-.. admonition:: Example
+To be able to run it from the paparazzi center, you need to add the ``build/pprzgcs`` directory to your ``$PATH``. Adapt this command and add it to your .bashrc:
 
-	If you are in the PprzGCS root, you can run: ``export PPRZGCS_DATA_PATH=$(pwd)/data``
+.. code-block:: bash
 
-Then just run ``./build/pprzgcs/pprzgcs``
+    export PATH="/path/to/PprzGCS/build/pprzgcs:$PATH"
+
+You should now be able to launch it from the Paparazzi center.
+
+If you want to run it from the terminal, set the ``PAPARAZZI_HOME`` and the ``PAPARAZZI_SRC`` environment variables to your paparazzi path, then just run ``./build/pprzgcs/pprzgcs``
 
 
