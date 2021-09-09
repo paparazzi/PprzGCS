@@ -16,7 +16,7 @@ Install the dependencies:
 
 .. code-block:: bash
 
-    sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libproj-dev mesa-common-dev libglu1-mesa-dev
+    sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev libproj-dev mesa-common-dev libglu1-mesa-dev
 
 cd to the PprzGCS root, and build the needed libraries:
 
@@ -69,6 +69,6 @@ Before running it, you must set the environment variable ``PPRZGCS_DATA_PATH`` t
 
 	If you are in the PprzGCS root, you can run: ``export PPRZGCS_DATA_PATH=$(pwd)/data``
 
-Then just run ``./build/PprzGCS/PprzGCS``
+Then just run ``./build/pprzgcs/pprzgcs``
 
 
