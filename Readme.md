@@ -27,7 +27,7 @@ You can now launch PprzGCS from the paparazzi center via the `Tools` menu.
 ### Build from sources
 
 
-## Ubuntu 20.04
+#### Ubuntu 20.04
 
 Install the dependencies: 
 
@@ -51,7 +51,7 @@ If you want to run it from the terminal, set the `PAPARAZZI_HOME` and the `PAPAR
 
 
 
-## Ubuntu 18.04
+#### Ubuntu 18.04
 
 First, you need to install [Qt5.12.0 or above](https://www.qt.io/download-open-source).
 
@@ -80,7 +80,7 @@ You should now be able to launch it from the Paparazzi center.
 If you want to run it from the terminal, set the `PAPARAZZI_HOME` and the `PAPARAZZI_SRC` environment variables to your paparazzi path, then just run `./build/pprzgcs/pprzgcs`
 
 
-## Mac
+#### Mac
 
 PprzGCS have been successfully built for Mac, although is not yet officially supported. You are on you own ;-)
 
