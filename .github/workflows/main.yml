@@ -28,7 +28,9 @@ jobs:
         run: sudo apt update && sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev libproj-dev mesa-common-dev libglu1-mesa-dev patchelf
       
       - name: setEnv
-        run: export MAKEFLAGS=-j$(nproc)
+        run: |
+          export MAKEFLAGS=-j$(nproc)
+          echo "pprzgcs_version=$(echo "${{ github.ref }}" | sed 's/refs.tags.\(.*\)/\1/g')" >> $GITHUB_ENV
       
       - name: make deb
         run: $GITHUB_WORKSPACE/build_deb.sh ${{ github.ref }}
@@ -53,6 +55,6 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
           asset_path: ${{ github.workspace }}/misc/debian/pprzgcs.deb
-          asset_name: pprzgcs_${{ github.ref }}.deb
+          asset_name: pprzgcs_${{ env.pprzgcs_version }}.deb
           asset_content_type: application/vnd.debian.binary-package
         
