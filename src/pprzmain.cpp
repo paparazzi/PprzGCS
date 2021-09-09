@@ -135,9 +135,9 @@ void PprzMain::populate_menu() {
     auto help_menu = menuBar->addMenu("&Help");
     auto about = help_menu->addAction("&About");
 
-    connect(about, &QAction::triggered, [=]() {
-        QMessageBox::about(this,"About PprzGCS",
+    QString about_txt =  QString(
             "<h1>PprzGCS</h1>"
+            "version %1"
             "<p>PprzGCS is a ground control software for <a href=\"https://paparazziuav.org\">paparrazi UAV</a> drones.</p>"
             "<p>source code can be found here: "
             "<a href=\"https://github.com/Fabien-B/GcsAgain\">https://github.com/Fabien-B/GcsAgain</a></p>"
@@ -153,9 +153,11 @@ void PprzMain::populate_menu() {
             "<ul>"
             "<li><a href=\"https://www.qt.io/\">Qt 5.12.5</a></li>"
             "<li><a href=\"https://proj.org/\">Proj</a></li>"
-            "<li><a href=\"https://libzip.org/\">libzip</a></li>"
-            "</ul>"
-        );
+            "<li><a %1 href=\"https://libzip.org/\">libzip</a></li>"
+            "</ul>").arg(QCoreApplication::applicationVersion());
+
+    connect(about, &QAction::triggered, [=]() {
+        QMessageBox::about(this,"About PprzGCS", about_txt);
 
     });
 

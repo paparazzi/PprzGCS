@@ -19,6 +19,10 @@
 #error "you need to define DEFAULT_APP_DATA_PATH!"
 #endif
 
+#ifndef PPRZGCS_VERSION
+#error "you need to define PPRZGCS_VERSION!"
+#endif
+
 void launch_main_app() {
     auto settings = getAppSettings();
     QFile file(settings.value("APP_STYLE_FILE").toString());
@@ -63,7 +67,7 @@ int main(int argc, char *argv[])
         auto gconfig = GlobalConfig::get();
 
         QCoreApplication::setApplicationName("pprzgcs");
-        QCoreApplication::setApplicationVersion("0.1");
+        QCoreApplication::setApplicationVersion(PPRZGCS_VERSION);
 
         auto settings_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/settings.conf";
         gconfig->setValue("SETTINGS_PATH", settings_path);
