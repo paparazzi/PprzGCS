@@ -70,9 +70,10 @@ void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
             QString txt = block->getText();
             QPushButton* b = nullptr;
 
-            if(icon != "") {
+            QString icon_path = appConfig()->value("GCS_ICONS_PATH").toString() + "/" + icon;
+
+            if(icon != "" && QFile::exists(icon_path)) {
                 b = new QPushButton(this);
-                QString icon_path = appConfig()->value("GCS_ICONS_PATH").toString() + "/" + icon;
                 b->setIcon(QIcon(icon_path));
                 if(txt != "") {
                     b->setToolTip(txt);
@@ -109,9 +110,10 @@ void Commands::addSettingsButtons(QGridLayout* settings_buttons_layout) {
             QString name = sb->name;
             QPushButton* b = nullptr;
 
-            if(icon != "") {
+            QString icon_path = appConfig()->value("GCS_ICONS_PATH").toString() + "/" + icon;
+
+            if(icon != "" && QFile::exists(icon_path)) {
                 b = new QPushButton(this);
-                QString icon_path = appConfig()->value("GCS_ICONS_PATH").toString() + "/" + icon;
                 b->setIcon(QIcon(icon_path));
                 if(name != "") {
                     b->setToolTip(name);
