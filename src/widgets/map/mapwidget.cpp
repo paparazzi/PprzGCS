@@ -303,8 +303,7 @@ void MapWidget::configure(QDomElement ele) {
         msg.getField("wspeed", wspeed);
         msg.getField("mean_aspeed", mean_aspeed);
         msg.getField("stddev", stddev);
-        wind_indicator->setWindSpeed(wspeed);
-        wind_indicator->setWindDir(dir);
+        wind_indicator->setWindData(ac_id, dir, wspeed);
     });
 
     connect(wind_indicator, &WindIndicator::requestRotation, this, [=](double rot) {

@@ -5,14 +5,15 @@
 #include <QDebug>
 #include <QIcon>
 #include <QWheelEvent>
+#include "dispatcher_ui.h"
 
 WindIndicator::WindIndicator(QWidget *parent) : QWidget(parent),
-    compass(0), wind_dir(-90), wind_speed(0), wind_threshold(1),
+    current_ac_id(""), compass(0), wind_threshold(1),
     speed_unit(MS), rotate_state(IDLE),
     _size(100, 100), m_background_color(70, 200, 255, 100),
     m_arrow_color(Qt::red), m_pen_color(Qt::black)
 {
-
+    connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &WindIndicator::setAC);
 }
 
 void WindIndicator::resizeEvent(QResizeEvent *event) {
@@ -56,36 +57,41 @@ void WindIndicator::paintEvent(QPaintEvent *event) {
     tri.append(center + QPoint(-dot_size, dot_size));
     painter.drawPolygon(tri);
 
-    // windsock
-    QIcon windsock;
-    if(wind_speed > wind_threshold) {
-        windsock = QIcon(":/pictures/windsock.svg");
-    } else {
-        windsock = QIcon(":/pictures/windsock_no_wind.svg");
-    }
-    int wsWidth = r_in.width()*0.8;
-    auto r_ws = QRect(-wsWidth/2, -wsWidth/2, wsWidth, wsWidth);
-    painter.rotate(wind_dir + 180);
-    windsock.paint(&painter, r_ws, Qt::AlignCenter);
+    if(wind_data.contains(current_ac_id)) {
+        double wind_speed = wind_data[current_ac_id].wind_speed;
+        double wind_dir = wind_data[current_ac_id].wind_dir;
 
-    // text
-    painter.resetMatrix();
-    painter.setPen(m_pen_color);
-    auto font = QFont();
-    font.setBold(true);
-    painter.setFont(font);
-    QString txt;
-    switch (speed_unit) {
-    case MS:
-        txt = QString("%1 m/s").arg(wind_speed, 0, 'f', 1);
-        break;
-    case KT:
-        txt = QString("%1 kt").arg(wind_speed*1.9438, 0, 'f', 1);
-        break;
-    case KMH:
-        txt = QString("%1 km/h").arg(wind_speed*3.6, 0, 'f', 1);
+        // windsock
+        QIcon windsock;
+        if(wind_speed > wind_threshold) {
+            windsock = QIcon(":/pictures/windsock.svg");
+        } else {
+            windsock = QIcon(":/pictures/windsock_no_wind.svg");
+        }
+        int wsWidth = r_in.width()*0.8;
+        auto r_ws = QRect(-wsWidth/2, -wsWidth/2, wsWidth, wsWidth);
+        painter.rotate(wind_dir + 180);
+        windsock.paint(&painter, r_ws, Qt::AlignCenter);
+
+        // text
+        painter.resetMatrix();
+        painter.setPen(m_pen_color);
+        auto font = QFont();
+        font.setBold(true);
+        painter.setFont(font);
+        QString txt;
+        switch (speed_unit) {
+        case MS:
+            txt = QString("%1 m/s").arg(wind_speed, 0, 'f', 1);
+            break;
+        case KT:
+            txt = QString("%1 kt").arg(wind_speed*1.9438, 0, 'f', 1);
+            break;
+        case KMH:
+            txt = QString("%1 km/h").arg(wind_speed*3.6, 0, 'f', 1);
+        }
+        painter.drawText(r_in, Qt::AlignCenter, txt);
     }
-    painter.drawText(r_in, Qt::AlignCenter, txt);
 }
 
 void WindIndicator::changeUnit() {

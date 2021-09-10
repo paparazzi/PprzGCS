@@ -2,6 +2,7 @@
 #define WINDINDICATOR_H
 
 #include <QWidget>
+#include <QMap>
 
 class WindIndicator : public QWidget
 {
@@ -23,14 +24,21 @@ public:
         PRESSED,
     };
 
+    struct WindData {
+        double wind_dir;
+        double wind_speed;
+    };
+
     explicit WindIndicator(QWidget *parent = nullptr);
 
     void setSizeProperty(int s) {_size = QSize(s,s); update();}
     int getSizeProperty() {return _size.width();}
 
+    void setWindData(QString ac_id, double dir, double speed) {
+        wind_data[ac_id] = {dir, speed};
+        update();
+    }
     void setCompass(double c) {compass = c; update();}
-    void setWindDir(double dir) {wind_dir = dir; update();}
-    void setWindSpeed(double speed) {wind_speed = speed; update();}
     void setThreshold(double t) {wind_threshold = t; update();}
     void changeUnit();
 
@@ -49,12 +57,15 @@ protected:
     virtual void wheelEvent(QWheelEvent* event) override;
     void resizeEvent(QResizeEvent *event) override;
 
+private slots:
+    void setAC(QString ac_id) {current_ac_id = ac_id; update();}
+
 private:
     bool onNorth(QMouseEvent* event);
 
+    QString current_ac_id;
     double compass;
-    double wind_dir;
-    double wind_speed;
+    QMap<QString, WindData> wind_data;
 
     double wind_threshold;
 
