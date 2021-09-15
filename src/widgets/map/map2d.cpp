@@ -13,7 +13,8 @@
 #include "gcs_utils.h"
 
 Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
-    numericZoom(0.0), _zoom(5.0), tile_size(256), minZoom(0.0), maxZoom(25.0), wheelAccumulator(0)
+    numericZoom(0.0), _zoom(5.0), tile_size(256), minZoom(0.0), maxZoom(25.0), wheelAccumulator(0),
+    m_color_background(0x151515)
 {
     auto settings = getAppSettings();
     QString configFile = user_or_app_path("tile_sources.xml");
@@ -40,7 +41,11 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     setTransformationAnchor(QGraphicsView::NoAnchor);
-    setBackgroundBrush(QBrush(QColor(0x151515)));
+    setBackgroundBrush(QBrush(m_color_background));
+
+    connect(this, &Map2D::backgroundChanged, this, [=](QColor c) {
+        setBackgroundBrush(QBrush(c));
+    });
 
     Point2DLatLon initLatLon(43.462344,1.273044);
 }

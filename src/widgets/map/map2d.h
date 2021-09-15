@@ -16,6 +16,7 @@
 class Map2D : public QGraphicsView
 {
     Q_OBJECT
+    Q_PROPERTY(QColor color_background MEMBER m_color_background NOTIFY backgroundChanged)
 public:
     explicit Map2D(QWidget *parent = nullptr);
     ~Map2D();
@@ -40,6 +41,7 @@ public:
     void setMouseLoadTileMask(int mask) {mouse_load_tiles_mask = mask;}
 
 signals:
+    void backgroundChanged(QColor);
 
 public slots:
 
@@ -75,6 +77,8 @@ private:
     int wheelAccumulator;
 
     QMap<QString, TileProvider*> tile_providers;
+
+    QColor m_color_background;
 };
 
 #endif // MAP2D_H

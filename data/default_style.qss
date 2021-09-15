@@ -18,4 +18,6 @@ MiniStrip {
     qproperty-size: 30;
 }
 
-
+MapWidget {
+    qproperty-color_background: #404040;
+}
