@@ -29,7 +29,8 @@
 #include "intruder_item.h"
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
-    interaction_state(PMIS_OTHER), drawState(false), fp_edit_sm(nullptr), pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton)
+    interaction_state(PMIS_OTHER), drawState(false), fp_edit_sm(nullptr), gcsItem(nullptr),
+    pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton)
 {
     auto settings = getAppSettings();
 
@@ -127,6 +128,18 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
         [=](QString sender, pprzlink::Message msg) {
             onIntruder(sender, msg);
         });
+
+
+    PprzDispatcher::get()->bind("FLIGHT_PARAM", this,
+            [=](QString sender, pprzlink::Message msg) {
+                (void)sender;
+                QString id;
+                msg.getField("ac_id", id);
+                if(id == "GCS") {
+                    onGCSPos(msg);
+                }
+            });
+
 
     setAcceptDrops(true);
 }
@@ -324,7 +337,7 @@ void MapWidget::addItem(MapItem* map_item) {
     _items.append(map_item);
     emit itemAdded(map_item);
 
-    map_item->setHighlighted(map_item->acId() == current_ac || map_item->acId() == "__SHAPES");
+    map_item->setHighlighted(map_item->acId() == current_ac || map_item->acId() == "__NO_AC__");
 
     if(map_item->getType() == ITEM_WAYPOINT) {
         registerWaypoint(dynamic_cast<WaypointItem*>(map_item));
@@ -336,7 +349,7 @@ void MapWidget::addItem(MapItem* map_item) {
 
     connect(map_item, &MapItem::itemGainedHighlight, map_item, [=]() {
         QString ac_id = map_item->acId();
-        if(ac_id != "__SHAPES") {
+        if(ac_id != "__NO_AC__") {
             emit DispatcherUi::get()->ac_selected(ac_id);
         }
     });
@@ -363,7 +376,7 @@ void MapWidget::itemsEditable(bool ed) {
 
 void MapWidget::updateHighlights(QString ac_id) {
     for(auto item: qAsConst(_items)) {
-        if(item->acId() == ac_id || item->acId() == "__SHAPES") {
+        if(item->acId() == ac_id || item->acId() == "__NO_AC__") {
             item->setHighlighted(true);
         } else {
             item->setHighlighted(false);
@@ -1003,13 +1016,13 @@ void MapWidget::onShape(QString sender, pprzlink::Message msg) {
         }
 
         auto pos = points[0];
-        auto wcenter = new WaypointItem(pos, "__SHAPES", palette);
+        auto wcenter = new WaypointItem(pos, "__NO_AC__", palette);
         //wcenter->setEditable(false);
         //wcenter->setZValues(z, z);
         addItem(wcenter);
         wcenter->setStyle(GraphicsObject::Style::CURRENT_NAV);
 
-        CircleItem* ci = new CircleItem(wcenter, radius, "__SHAPES", palette);
+        CircleItem* ci = new CircleItem(wcenter, radius, "__NO_AC__", palette);
         wcenter->setParent(ci);
 
         ci->setOwnCenter(true);
@@ -1027,14 +1040,14 @@ void MapWidget::onShape(QString sender, pprzlink::Message msg) {
             qDebug() << "Line/Polygon shape need at least two points!";
             return;
         }
-        auto pi = new PathItem("__SHAPES", palette);
+        auto pi = new PathItem("__NO_AC__", palette);
         if(shape == 1) {    // Polygon
             pi->setFilled(true);
             pi->setClosedPath(true);
         }
         pi->setZValues(z, z);
         for(auto pos: points) {
-            auto wi = new WaypointItem(pos, "__SHAPES", palette);
+            auto wi = new WaypointItem(pos, "__NO_AC__", palette);
             //wcenter->setEditable(false);
             //wcenter->setZValues(z, z);
             addItem(wi);
@@ -1082,3 +1095,26 @@ void MapWidget::onIntruder(QString sender, pprzlink::Message msg) {
     intruders[id] = make_pair(itd, QTime::currentTime());
 }
 
+
+void MapWidget::onGCSPos(pprzlink::Message msg) {
+    if(gcsItem) {
+        removeItem(gcsItem);
+    }
+
+    double lat = getFloatingField(msg, "lat");
+    double lon = getFloatingField(msg, "long");
+    auto settings = getAppSettings();
+    QColor color(settings.value("map/gcs_icon_color").toString());
+
+    auto wcenter = new WaypointItem(Point2DLatLon(lat, lon), "__NO_AC__", PprzPalette(color));
+    //wcenter->setEditable(false);
+    //wcenter->setZValues(z, z);
+    addItem(wcenter);
+    wcenter->setStyle(GraphicsObject::Style::GCS);
+
+    int size = settings.value("map/gcs_icon_size").toInt();
+    wcenter->setSize(size);
+    //wcenter->getGraphicsPoint()->setProperty("size", 20);
+    addItem(wcenter);
+    gcsItem = wcenter;
+}

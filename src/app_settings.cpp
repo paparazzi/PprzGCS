@@ -53,6 +53,8 @@ void set_app_settings() {
 
     default_setting("map/move_hyteresis", 20);
     default_setting("map/waypoint/size", 8);
+    default_setting("map/gcs_icon_size", 16);
+    default_setting("map/gcs_icon_color", "#ffff00");
     default_setting("map/circle/stroke", 4);
     default_setting("map/size_highlight_factor", 1.5);
 

@@ -25,6 +25,9 @@ void GraphicsText::changeFocus() {
     case CURRENT_NAV:
         setVisible(false);
         break;
+    case GCS:
+        setVisible(false);
+        break;
     }
 
     update();

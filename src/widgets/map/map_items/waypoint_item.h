@@ -10,7 +10,8 @@
 
 class WaypointItem : public MapItem
 {
-        Q_OBJECT
+    Q_OBJECT
+    Q_PROPERTY(int size MEMBER m_size WRITE setSize)
 public:
     WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     WaypointItem(Point2DLatLon pt, QString ac_id, PprzPalette palette, double neutral_scale_zoom = 15, QObject *parent = nullptr);
@@ -40,6 +41,11 @@ public:
     void setAnimation(GraphicsObject::Animation a);
     void setMoving(bool m){moving = m;}
     void setAnimate(bool animate);
+    void setSize(int s) {
+        m_size = s;
+        point->setProperty("size", m_size);
+    }
+    GraphicsPoint* getGraphicsPoint() {return point;}
 
 signals:
     void waypointMoved(Point2DLatLon latlon_pos);
@@ -56,6 +62,7 @@ private:
     Waypoint* _waypoint;
     int altitude;
     bool moving;
+    int m_size;
 };
 
 #endif // WAYPOINTITEM_H

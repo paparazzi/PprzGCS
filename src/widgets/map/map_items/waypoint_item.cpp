@@ -10,14 +10,14 @@
 
 // create WaypointItem from position -> create corresponding Waypoint.
 WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom, QObject *parent) :
-    MapItem(ac_id, neutral_scale_zoom, parent), moving(false)
+    MapItem(ac_id, neutral_scale_zoom, parent), moving(false), m_size(0)
 {
     original_waypoint = new Waypoint("", 0, pt, 0, this);
     init();
 }
 
 WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, PprzPalette palette, double neutral_scale_zoom, QObject *parent) :
-    MapItem(ac_id, palette, neutral_scale_zoom, parent), moving(false)
+    MapItem(ac_id, palette, neutral_scale_zoom, parent), moving(false), m_size(0)
 {
     original_waypoint = new Waypoint("", 0, pt, 0, this);
     init();
@@ -25,7 +25,7 @@ WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, PprzPalette palette,
 
 // create WaypointItem based on existing Waypoint
 WaypointItem::WaypointItem(Waypoint* wp, QString ac_id, double neutral_scale_zoom, QObject *parent) :
-    MapItem(ac_id, neutral_scale_zoom, parent), original_waypoint(wp), moving(false)
+    MapItem(ac_id, neutral_scale_zoom, parent), original_waypoint(wp), moving(false), m_size(0)
 {
     init();
 }
@@ -37,8 +37,9 @@ void WaypointItem::init() {
     z_value = z_value_unhighlighted;
 
     _waypoint = new Waypoint(original_waypoint, this);
-    int size = settings.value("map/waypoint/size").toInt();
-    point = new GraphicsPoint(size, palette, this);
+    m_size = settings.value("map/waypoint/size").toInt();
+
+    point = new GraphicsPoint(m_size, palette, this);
     point->setZValue(z_value);
 
 

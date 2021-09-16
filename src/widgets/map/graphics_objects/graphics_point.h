@@ -17,6 +17,7 @@ class GraphicsPoint : public GraphicsObject, public QGraphicsItem
 {
     Q_OBJECT
     Q_INTERFACES(QGraphicsItem)
+    Q_PROPERTY(int size MEMBER halfSize)
 public:
     explicit GraphicsPoint(int size, PprzPalette palette, QObject *parent = nullptr);
 

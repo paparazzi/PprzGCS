@@ -220,7 +220,7 @@ void TileProvider::handleReply(QNetworkReply *reply) {
         if(parentTile != nullptr) {
             fetch_tile(parentTile->coordinates(), tileObj->coordinates());
         }
-        qDebug() << "Error " << reply->errorString() << "! ";
+        //qDebug() << "Error " << reply->errorString() << "! ";
     }
 
 }

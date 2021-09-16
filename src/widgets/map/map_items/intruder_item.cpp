@@ -3,7 +3,7 @@
 #include "mapwidget.h"
 
 IntruderItem::IntruderItem(QString name, Point2DLatLon pt, double course, double neutral_scale_zoom, QObject *parent) :
-    MapItem("__SHAPES", PprzPalette(Qt::red), neutral_scale_zoom, parent),
+    MapItem("__NO_AC__", PprzPalette(Qt::red), neutral_scale_zoom, parent),
     name(name), latlon(pt), course(course)
 {
     auto settings = getAppSettings();

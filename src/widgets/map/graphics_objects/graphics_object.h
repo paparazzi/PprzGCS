@@ -16,6 +16,7 @@ public:
         DEFAULT,
         CURRENT_NAV,
         CARROT,
+        GCS,
     };
 
     enum Animation {

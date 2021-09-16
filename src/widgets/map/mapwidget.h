@@ -81,6 +81,7 @@ private slots:
     void onMoveWaypointUi(Waypoint* wp, QString ac_id);
     void onShape(QString sender, pprzlink::Message msg);
     void onIntruder(QString sender, pprzlink::Message msg);
+    void onGCSPos(pprzlink::Message msg);
 
 private:
 
@@ -109,6 +110,7 @@ private:
     QMap<QString, MapItem*> shapes;
     QMap<QString, std::pair<MapItem*, QTime>> intruders;
     QTimer* timer_intruders;
+    MapItem* gcsItem;
 
     QHBoxLayout* horizontalLayout;
 

@@ -37,9 +37,14 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     (void)option;
     (void)widget;
     auto settings = getAppSettings();
-    QPainterPath path;
 
-    if(style == DEFAULT) {
+    if(animation == WP_MOVING) {
+        painter->rotate(animation_couter * 45 + 1);
+    }
+
+    switch (style) {
+    case DEFAULT: {
+        QPainterPath path;
         double fx = 0.8;
         double fy = 1.0;
         if(!isHighlighted()) {
@@ -59,9 +64,11 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         path.addPolygon(poly);
 
         painter->setBrush(QBrush(palette.getVariant(current_color)));
-        //painter->setPen(Qt::NoPen);
-
-    } else if (style == CARROT) {
+        painter->drawPath(path);
+        }
+        break;
+    case CARROT: {
+        QPainterPath path;
         QPolygonF poly;
         poly.append(QPointF(halfSize*cos(M_PI/6), -halfSize*sin(M_PI/6)));
         poly.append(QPointF(halfSize*cos(5*M_PI/6), -halfSize*sin(5*M_PI/6)));
@@ -70,15 +77,23 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         path.addPolygon(poly);
         painter->setBrush(QBrush(QColor(255, 170, 0)));
         painter->setPen(Qt::NoPen);
-    } else if (style == CURRENT_NAV) {
+        painter->drawPath(path);
+        }
+        break;
+    case CURRENT_NAV: {
         //draw nothing
+        }
+        break;
+    case GCS: {
+        painter->setBrush(Qt::NoBrush);
+        painter->setPen(QPen(palette.getVariant(current_color), 3));
+        painter->drawEllipse(QPoint(0,0), 2*halfSize/3, 2*halfSize/3);
+        painter->drawLine(0, -halfSize, 0, halfSize);
+        painter->drawLine(-halfSize, 0, halfSize, 0);
+        }
+        break;
     }
 
-    if(animation == WP_MOVING) {
-        painter->rotate(animation_couter * 45 + 1);
-    }
-
-    painter->drawPath(path);
 }
 
 QPainterPath GraphicsPoint::shape() const {
