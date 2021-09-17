@@ -33,7 +33,11 @@ Install the dependencies:
 
 `sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev libproj-dev mesa-common-dev libglu1-mesa-dev`
 
-cd to the PprzGCS root, and build the needed libraries:
+cd to the PprzGCS root, and get the submodules:
+
+`git submodule update --init --recursive`
+
+Build the needed libraries:
 
 `./build.sh libs`
 
@@ -63,7 +67,11 @@ Install the dependencies:
 
 `sudo apt install libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev`
 
-cd to the PprzGCS root, and build the needed libraries:
+cd to the PprzGCS root, and get the submodules:
+
+`git submodule update --init --recursive`
+
+Build the needed libraries:
 
 `build_proj=true ./build.sh libs`
 
