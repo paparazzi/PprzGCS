@@ -129,7 +129,6 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
             onIntruder(sender, msg);
         });
 
-
     PprzDispatcher::get()->bind("FLIGHT_PARAM", this,
             [=](QString sender, pprzlink::Message msg) {
                 (void)sender;
@@ -1107,14 +1106,12 @@ void MapWidget::onGCSPos(pprzlink::Message msg) {
     QColor color(settings.value("map/gcs_icon_color").toString());
 
     auto wcenter = new WaypointItem(Point2DLatLon(lat, lon), "__NO_AC__", PprzPalette(color));
-    //wcenter->setEditable(false);
+    wcenter->setEditable(false);
     //wcenter->setZValues(z, z);
     addItem(wcenter);
     wcenter->setStyle(GraphicsObject::Style::GCS);
 
     int size = settings.value("map/gcs_icon_size").toInt();
     wcenter->setSize(size);
-    //wcenter->getGraphicsPoint()->setProperty("size", 20);
-    addItem(wcenter);
     gcsItem = wcenter;
 }
