@@ -378,7 +378,7 @@ void MiniStrip::updateData() {
 
 
     // batterie
-    bat_label->setText(QString::number(bat) + " V");
+    bat_label->setText(QString("%1 V").arg(bat, 5, 'f', 2));
     if(bat < catastrophic_bat_level) {
         bat_icon->setPixmap(bat_catastrophic.pixmap(icons_size));
     } else if(bat < critic_bat_level) {
@@ -389,7 +389,7 @@ void MiniStrip::updateData() {
         bat_icon->setPixmap(bat_ok.pixmap(icons_size));
     }
     if(bat_nb_cells != 0) {
-        bat_label->setToolTip(QString("%1 V/c").arg(bat/bat_nb_cells, 0, 'f', 2));
+        bat_label->setToolTip(QString("%1 V/c").arg(bat/bat_nb_cells, 5, 'f', 2));
     }
 
     // throttle
