@@ -27,7 +27,7 @@ void launch_main_app() {
     auto settings = getAppSettings();
     QFile file(settings.value("APP_STYLE_FILE").toString());
     if(!file.open(QFile::ReadOnly | QFile::Text)) {
-        qDebug() << "could not open " << settings.value("APP_STYLE_FILE").toString();
+        qCritical()  << "could not open " << settings.value("APP_STYLE_FILE").toString();
         exit(-1);
     }
     QTextStream stream(&file);
@@ -62,6 +62,8 @@ void launch_main_app() {
 
 int main(int argc, char *argv[])
 {
+    qSetMessagePattern("[%{category}] %{file}:%{line} %{message}");
+
     int return_code = 0;
     do {
         auto gconfig = GlobalConfig::get();

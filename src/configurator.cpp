@@ -18,6 +18,8 @@
 static const char* DEFAULT_WIDTH = "1024";
 static const char* DEFAULT_HEIGHT = "600";
 
+Q_LOGGING_CATEGORY(LOG_CONFIG, "config")
+
 QWidget* rec_layout_build(QDomElement &ele, QSplitter* parent, int* size) {
     *size = ele.attribute("size", "10").toInt();
     if(ele.tagName() == "rows" or ele.tagName()=="columns") {
@@ -47,7 +49,8 @@ QWidget* rec_layout_build(QDomElement &ele, QSplitter* parent, int* size) {
         QString name = ele.attribute("name", "");
         auto container = ele.attribute("container", "stack");
         if(name == "") {
-            throw invalid_widget_name("Invalid widget name");
+            qCritical(LOG_CONFIG)  << "Invalid widget name";
+            exit(-1);
         }
 
         QWidget* widget = makeWidget(name, container, parent);
@@ -58,10 +61,12 @@ QWidget* rec_layout_build(QDomElement &ele, QSplitter* parent, int* size) {
                 if(c != nullptr) {
                     c->configure(layout_ele);
                 } else {
-                    throw std::runtime_error("Class does not inherit from Configurable!!!");
+                    qCritical(LOG_CONFIG)  << "Class does not inherit from Configurable!!!";
+                    exit(-1);
                 }
             } else {
-                throw std::runtime_error("Unhandled tag " + layout_ele.tagName().toStdString());
+                qCritical(LOG_CONFIG)  << "Unhandled tag " + layout_ele.tagName();
+                exit(-1);
             }
         }
 
@@ -71,7 +76,8 @@ QWidget* rec_layout_build(QDomElement &ele, QSplitter* parent, int* size) {
             return widget;
         }
     } else {
-        throw invalid_tag("Invalid tag: the tag should be one of [rows, columns, widget]");
+        qCritical(LOG_CONFIG)  << "Invalid tag: the tag should be one of [rows, columns, widget]";
+        exit(-1);
     }
     return nullptr;
 }
@@ -119,9 +125,11 @@ void configure_speech(QDomElement ele) {
 PprzMain* configure(QString filename) {
     QDomDocument xmlLayout;
     QFile f(filename);
-    if(!f.open(QIODevice::ReadOnly)) {
-        throw file_error("Error while loading layout file");
+    if(!f.open(QFile::ReadOnly | QFile::Text)) {
+        qCritical(LOG_CONFIG)  << "Error while loading layout file " << filename;
+        exit(-1);
     }
+
     xmlLayout.setContent(&f);
     f.close();
 
@@ -130,14 +138,16 @@ PprzMain* configure(QString filename) {
     // configure layout
     auto layout_ele = root.firstChildElement("layout");
     if(layout_ele.isNull()) {
-        throw invalid_tag("Cannot find a \"layout\" element.");
+        qCritical(LOG_CONFIG)  << "Cannot find a \"layout\" element.";
+        exit(-1);
     }
 
     int width = layout_ele.attribute("width", DEFAULT_WIDTH).toInt();
     int height = layout_ele.attribute("height", DEFAULT_HEIGHT).toInt();
 
     if (layout_ele.childNodes().length() != 1) {
-        throw invalid_tag("Root tag \"layout\" expected to have exactly one child, rows, colums or widget.");
+        qCritical(LOG_CONFIG)  << "Root tag \"layout\" expected to have exactly one child, rows, colums or widget.";
+        exit(-1);
     }
 
     QDomElement first_element = layout_ele.firstChildElement();
