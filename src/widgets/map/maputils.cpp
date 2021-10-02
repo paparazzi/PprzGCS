@@ -14,7 +14,7 @@ QPointF scenePoint(Point2DTile tilePoint, int tileSize) {
 }
 
 QPointF scenePoint(Point2DLatLon latlon, int zoomLvl, int tileSize) {
-    Point2DPseudoMercator pm = CoordinatesTransform::get()->WGS84_to_pseudoMercator(latlon);
+    Point2DPseudoMercator pm = CoordinatesTransform::get()->to_pseudoMercator(latlon);
     Point2DTile tile_pos = pm.toTile(zoomLvl);
     return scenePoint(tile_pos, tileSize);
 }

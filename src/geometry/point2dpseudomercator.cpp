@@ -6,17 +6,32 @@ constexpr double EXTENT = 20037508.342789244;
 const QString Point2DPseudoMercator::EPSG = "EPSG:3857";
 //EPSG:900913
 
-Point2DPseudoMercator::Point2DPseudoMercator(): _x(0), _y(0)
+Point2DPseudoMercator::Point2DPseudoMercator(): GeographicCoordinate(Point2DPseudoMercator::EPSG),
+    _x(0), _y(0)
 {
 }
 
-Point2DPseudoMercator::Point2DPseudoMercator(double x, double y): _x(x), _y(y)
+Point2DPseudoMercator::Point2DPseudoMercator(double x, double y):  GeographicCoordinate(Point2DPseudoMercator::EPSG),
+    _x(x), _y(y)
 {
 }
 
-Point2DPseudoMercator::Point2DPseudoMercator(Point2DTile pt) {
+Point2DPseudoMercator::Point2DPseudoMercator(Point2DTile pt) :  GeographicCoordinate(Point2DPseudoMercator::EPSG)
+{
     _x = (2*pt.x()/(1<<pt.zoom()) - 1) * EXTENT;
     _y = -(2*pt.y()/(1<<pt.zoom()) - 1) * EXTENT;
+}
+
+Point2DPseudoMercator::Point2DPseudoMercator(PJ_COORD coord) : GeographicCoordinate(Point2DPseudoMercator::EPSG),
+    _x(coord.xy.x), _y(coord.xy.y)
+{
+}
+
+//compatibility
+Point2DPseudoMercator::Point2DPseudoMercator(CartesianCoor car): GeographicCoordinate(Point2DPseudoMercator::EPSG),
+    _x(car.x()), _y(car.y())
+{
+    assert(car.getCRS() == "EPSG:3857");
 }
 
 Point2DTile Point2DPseudoMercator::toTile(int zoom) {
@@ -44,4 +59,8 @@ Point2DPseudoMercator Point2DPseudoMercator::operator/(double d) const {
 
 Point2DPseudoMercator Point2DPseudoMercator::operator*(double d) const {
     return Point2DPseudoMercator(x()*d, y()*d);
+}
+
+PJ_COORD Point2DPseudoMercator::toProj() {
+    return proj_coord (_x, _y, 0, 0);
 }

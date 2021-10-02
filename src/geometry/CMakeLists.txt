@@ -5,6 +5,9 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/point2dlatlon.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/point2dtile.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/point2dpseudomercator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/geographic_coordinate.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/projected_coordinate.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/cartesian_coor.cpp
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})

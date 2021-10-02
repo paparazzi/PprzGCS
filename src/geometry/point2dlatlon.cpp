@@ -5,11 +5,13 @@
 
 #include "iostream"
 
-Point2DLatLon::Point2DLatLon() : latp(0), lonp(0)
+Point2DLatLon::Point2DLatLon() : GeographicCoordinate("EPSG:4326"),
+    latp(0), lonp(0)
 {
 }
 
-Point2DLatLon::Point2DLatLon(double lat, double lon) {
+Point2DLatLon::Point2DLatLon(double lat, double lon): Point2DLatLon()
+{
     setLat(lat);
     setLon(lon);
 }
@@ -22,9 +24,15 @@ Point2DLatLon::Point2DLatLon(double lat, double lon) {
 //    setLon(lon);
 //}
 
-Point2DLatLon::Point2DLatLon(Waypoint* wp) {
+Point2DLatLon::Point2DLatLon(Waypoint* wp) : Point2DLatLon()
+{
     latp = wp->getLat();
     lonp = wp->getLon();
+}
+
+Point2DLatLon::Point2DLatLon(PJ_COORD coord, QString crs) : GeographicCoordinate(crs),
+    latp(coord.lp.lam), lonp(coord.lp.phi)
+{
 }
 
 
@@ -51,4 +59,8 @@ QString Point2DLatLon::toString(bool sexagesimal) {
         QString txt = QString("%1").arg(latp, 10, 'f', 6, QChar(' ')) + "," + QString("%1").arg(lonp, 11, 'f', 6, QChar(' '));
         return txt;
     }
+}
+
+PJ_COORD Point2DLatLon::toProj() {
+    return proj_coord(latp, lonp, 0, 0);
 }

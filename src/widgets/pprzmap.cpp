@@ -70,7 +70,7 @@ void PprzMap::configure(QDomElement e) {
 void PprzMap::handleMouseMove(QPointF scenePos) {
     auto tp = tilePoint(scenePos, zoomLevel(ui->map->zoom()), ui->map->tileSize());
     Point2DPseudoMercator ppm(tp);
-    auto pt = CoordinatesTransform::get()->pseudoMercator_to_WGS84(ppm);
+    auto pt = CoordinatesTransform::get()->to_WGS84(ppm);
 
     if(ui->reference_combobox->currentIndex() == 0) {
         auto txt = pt.toString();
