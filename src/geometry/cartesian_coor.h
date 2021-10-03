@@ -1,12 +1,12 @@
 #ifndef CARTESIANCOOR_H
 #define CARTESIANCOOR_H
 
-#include "geographic_coordinate.h"
+#include "coordinate.h"
 
 // compatibility
 class Point2DPseudoMercator;
 
-class CartesianCoor : public GeographicCoordinate
+class CartesianCoor : public Coordinate
 {
 public:
     CartesianCoor();

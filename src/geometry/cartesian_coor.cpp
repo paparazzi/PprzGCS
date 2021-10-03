@@ -2,19 +2,19 @@
 
 #include "point2dpseudomercator.h"
 
-CartesianCoor::CartesianCoor(): GeographicCoordinate("")
+CartesianCoor::CartesianCoor(): Coordinate("")
 {
 
 }
 
 
-CartesianCoor::CartesianCoor(double x, double y, QString crs): GeographicCoordinate(crs),
+CartesianCoor::CartesianCoor(double x, double y, QString crs): Coordinate(crs),
     _x(x), _y(y)
 {
 
 }
 
-CartesianCoor::CartesianCoor(Point2DPseudoMercator pm) : GeographicCoordinate("EPSG:3857"),
+CartesianCoor::CartesianCoor(Point2DPseudoMercator pm) : Coordinate("EPSG:3857"),
     _x(pm.x()), _y(pm.y())
 {
 

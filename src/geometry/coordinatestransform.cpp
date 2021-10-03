@@ -31,7 +31,7 @@ CoordinatesTransform::~CoordinatesTransform()
     proj_context_destroy(pj_context);
 }
 
-Point2DPseudoMercator CoordinatesTransform::to_pseudoMercator(GeographicCoordinate& input) {
+Point2DPseudoMercator CoordinatesTransform::to_pseudoMercator(Coordinate& input) {
     const std::lock_guard<std::recursive_mutex> lock(mtx);
     QString in_crs = input.getCRS();
     QString out_crs = "EPSG:3857";
@@ -61,15 +61,6 @@ PJ* CoordinatesTransform::crs_to_crs(QString in_crs, QString out_crs) {
     }
     return projectors[proj_name];
 }
-
-Point2DLatLon CoordinatesTransform::wgs84_from_scene(QPointF scenePoint, int zoom, int tile_size) {
-    const std::lock_guard<std::recursive_mutex> lock(mtx);
-    auto pi_tile = Point2DTile(scenePoint.x()/tile_size, scenePoint.y()/tile_size, zoom);
-    auto pt_ps_merc = Point2DPseudoMercator(pi_tile);
-    auto pt_latlon = proj_trans (projectors[TRANSFORM_WGS84_WEB_MERCATOR], PJ_INV, proj_coord(pt_ps_merc.x(), pt_ps_merc.y(), 0, 0));
-    return Point2DLatLon(pt_latlon.lp.lam, pt_latlon.lp.phi);
-}
-
 
 Point2DLatLon CoordinatesTransform::ltp_to_wgs84(Point2DLatLon origin, double x, double y) {
     const std::lock_guard<std::recursive_mutex> lock(mtx);
@@ -156,8 +147,8 @@ void CoordinatesTransform::distance_azimut(Point2DLatLon pt1, Point2DLatLon pt2,
     QString out_crs = CartesianCoor::utm_epsg(pt1.lat(), pt1.lon());
     auto proj = crs_to_crs(in_crs, out_crs);
 
-    auto geo1 = proj_coord (pt1.lat(), pt1.lon(), 0, 0);
-    auto geo2 = proj_coord (pt2.lat(), pt2.lon(), 0, 0);
+    auto geo1 = pt1.toProj();
+    auto geo2 = pt2.toProj();
 
     PJ_COORD utm1 = proj_trans (proj, PJ_FWD, geo1);
     PJ_COORD utm2 = proj_trans (proj, PJ_FWD, geo2);

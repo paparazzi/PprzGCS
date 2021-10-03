@@ -3,13 +3,14 @@
 
 #include "waypoint.h"
 #include <algorithm>
-#include "geographic_coordinate.h"
+#include "coordinate.h"
 #include "proj.h"
 
 class Point2DTile;
+class CartesianCoor;
 
 // TODO rename to EllipsoidalCoordiante or something like that
-class Point2DLatLon: public GeographicCoordinate
+class Point2DLatLon: public Coordinate
 {
 public:
     Point2DLatLon();

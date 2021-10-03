@@ -82,7 +82,11 @@ void WaypointItem::addToMap(MapWidget* map) {
         [=](QPointF scene_pos) {
             moving = true;
             // reverse position: from scene (mouse) to WGS84.
-            Point2DLatLon latlon = CoordinatesTransform::get()->wgs84_from_scene(scene_pos, zoomLevel(map->zoom()), map->tileSize());
+
+            auto tp = map->tilePoint(scene_pos);
+            auto latlon = CoordinatesTransform::get()->to_WGS84(tp.toCartesian(map->getCRS()));
+
+            //Point2DLatLon latlon = CoordinatesTransform::get()->wgs84_from_scene(scene_pos, map->zoomLevel(), map->tileSize());
             this->setPosition(latlon);
         }
     );
@@ -90,7 +94,10 @@ void WaypointItem::addToMap(MapWidget* map) {
     connect(
         point, &GraphicsPoint::pointMoveFinished, this,
         [=](QPointF scene_pos) {
-            Point2DLatLon latlon = CoordinatesTransform::get()->wgs84_from_scene(scene_pos, zoomLevel(map->zoom()), map->tileSize());
+            auto tp = map->tilePoint(scene_pos);
+            auto latlon = CoordinatesTransform::get()->to_WGS84(tp.toCartesian(map->getCRS()));
+
+//            Point2DLatLon latlon = CoordinatesTransform::get()->wgs84_from_scene(scene_pos, map->zoomLevel(), map->tileSize());
             this->setPosition(latlon);
             emit waypointMoveFinished();
         }
@@ -120,7 +127,7 @@ void WaypointItem::updateZValue() {
 }
 
 void WaypointItem::updateGraphics(MapWidget* map) {
-    QPointF scene_pos = scenePoint(Point2DLatLon(_waypoint), zoomLevel(map->zoom()), map->tileSize());
+    QPointF scene_pos = map->scenePoint(Point2DLatLon(_waypoint));
     double s = getScale(map->zoom(), map->scaleFactor());
     double r = map->getRotation();
     point->setPos(scene_pos);

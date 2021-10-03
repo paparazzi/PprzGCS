@@ -46,7 +46,7 @@ void AircraftItem::addToMap(MapWidget* map) {
 }
 
 void AircraftItem::updateGraphics(MapWidget* map) {
-    QPointF scene_pos = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());
+    QPointF scene_pos = map->scenePoint(latlon);
     graphics_aircraft->setPos(scene_pos);
     double s = getScale(map->zoom(), map->scaleFactor());
     graphics_aircraft->setScale(s);
@@ -62,7 +62,7 @@ void AircraftItem::updateGraphics(MapWidget* map) {
     for(int i = 0; i<track_chuncks.size(); i++) {
         QPolygonF scenePoints;
         for(auto pt: track_chuncks[i]) {
-            scenePoints.append(scenePoint(pt, zoomLevel(map->zoom()), map->tileSize()));
+            scenePoints.append(map->scenePoint(pt));
         }
         graphics_tracks[i]->setPoints(scenePoints);
     }

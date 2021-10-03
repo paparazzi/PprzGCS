@@ -2,10 +2,11 @@
 #include "point2dtile.h"
 #include "math.h"
 #include "maputils.h"
+#include "cartesian_coor.h"
 
 #include "iostream"
 
-Point2DLatLon::Point2DLatLon() : GeographicCoordinate("EPSG:4326"),
+Point2DLatLon::Point2DLatLon() : Coordinate("EPSG:4326"),
     latp(0), lonp(0)
 {
 }
@@ -30,11 +31,10 @@ Point2DLatLon::Point2DLatLon(Waypoint* wp) : Point2DLatLon()
     lonp = wp->getLon();
 }
 
-Point2DLatLon::Point2DLatLon(PJ_COORD coord, QString crs) : GeographicCoordinate(crs),
+Point2DLatLon::Point2DLatLon(PJ_COORD coord, QString crs) : Coordinate(crs),
     latp(coord.lp.lam), lonp(coord.lp.phi)
 {
 }
-
 
 QString Point2DLatLon::toString(bool sexagesimal) {
     if(sexagesimal) {

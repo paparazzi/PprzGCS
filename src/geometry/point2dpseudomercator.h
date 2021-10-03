@@ -3,12 +3,12 @@
 
 #include <string>
 #include <QRectF>
-#include "geographic_coordinate.h"
+#include "coordinate.h"
 #include "cartesian_coor.h"
 
 class Point2DTile;
 
-class Point2DPseudoMercator: public GeographicCoordinate
+class Point2DPseudoMercator: public Coordinate
 {
 public:
     Point2DPseudoMercator();

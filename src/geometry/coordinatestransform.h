@@ -13,7 +13,7 @@
 #include <QString>
 #include "PprzToolbox.h"
 #include "PprzApplication.h"
-#include "geographic_coordinate.h"
+#include "coordinate.h"
 
 class CoordinatesTransform : public PprzTool
 {
@@ -34,9 +34,8 @@ public:
     PJ* crs_to_crs(QString in_crs, QString out_crs);
 
     Point2DPseudoMercator WGS84_to_pseudoMercator(Point2DLatLon);
-    Point2DPseudoMercator to_pseudoMercator(GeographicCoordinate& input);
+    Point2DPseudoMercator to_pseudoMercator(Coordinate& input);
     Point2DLatLon to_WGS84(CartesianCoor);
-    Point2DLatLon wgs84_from_scene(QPointF scenePoint, int zoom, int tile_size);
 
     Point2DLatLon relative_utm_to_wgs84(Point2DLatLon origin, double x, double y);
     void wgs84_to_relative_utm(Point2DLatLon origin, Point2DLatLon geo, double& x, double& y);
@@ -48,8 +47,6 @@ public:
 
 
 private:
-//    static QString utm_epsg(double lat, double lon);
-//    static QString utm_epsg(int zone, bool isNorth);
 
     PJ_CONTEXT* pj_context;
     QMap<QString, PJ*> projectors;

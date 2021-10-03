@@ -8,11 +8,11 @@
  * @brief The GeographicCoordinate class describes a position on earth.
  * Not to be confused with a ProjectedCoordinate, which is a position on a map.
  */
-class GeographicCoordinate
+class Coordinate
 {
 public:
 
-    GeographicCoordinate(QString crs);
+    Coordinate(QString crs);
 
     QString getCRS() {return crs;}
     virtual PJ_COORD toProj() = 0;

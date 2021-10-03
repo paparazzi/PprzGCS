@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "QString"
 #include "QPointF"
+#include "cartesian_coor.h"
 
 class Point2DLatLon;
 class TileProvider;
@@ -30,6 +31,8 @@ public:
     QString to_istring();
     void changeZoom(int zoom);
     Point2DTile childPoint(int i, int j);
+
+    CartesianCoor toCartesian(QString crs);
 
 private:
     double xp;

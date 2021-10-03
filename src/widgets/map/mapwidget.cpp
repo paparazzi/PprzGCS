@@ -437,7 +437,9 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *event) {
             if(modifiers.testFlag(Qt::KeyboardModifier::ControlModifier)) {
                 auto fp = AircraftManager::get()->getAircraft(current_ac)->getFlightPlan();
                 QPointF scenePos = mapToScene(event->pos());
-                auto pos = CoordinatesTransform::get()->wgs84_from_scene(scenePos, zoomLevel(zoom()), tileSize());
+                auto tp = tilePoint(scenePos);
+                auto pos = CoordinatesTransform::get()->to_WGS84(tp.toCartesian(getCRS()));
+                //auto pos = CoordinatesTransform::get()->wgs84_from_scene(scenePos, zoomLevel(zoom()), tileSize());
                 auto wp = fp->addWaypoint("???", pos);
                 emit AircraftManager::get()->waypoint_added(wp, current_ac);
             }
@@ -529,7 +531,7 @@ bool MapWidget::viewportEvent(QEvent *event) {
         for(auto &touchPoint: touchPoints) {
             if(touchPoint.state() == Qt::TouchPointPressed) {
                 auto scenePos = mapToScene(touchPoint.pos().toPoint());
-                auto tp = tilePoint(scenePos, zoomLevel(zoom()), tileSize());
+                auto tp = tilePoint(scenePos);
                 pms[touchPoint.id()] = Point2DPseudoMercator(tp);
             }
             else if(touchPoint.state() == Qt::TouchPointReleased && pms.contains(touchPoint.id())) {
@@ -554,8 +556,8 @@ bool MapWidget::viewportEvent(QEvent *event) {
             auto px_dist = QVector2D(tp1->pos() - tp0->pos()).length();
 
             for(int zo=0; zo<25; zo++) {
-                auto pt1 = scenePoint(pms[id0], zo, tileSize());
-                auto pt2 = scenePoint(pms[id1], zo, tileSize());
+                auto pt1 = scenePoint(pms[id0], zo);
+                auto pt2 = scenePoint(pms[id1], zo);
                 auto dist = QVector2D(pt2-pt1).length();
                 if(dist > px_dist) {
                     // found the right zoom level
@@ -920,7 +922,7 @@ void MapWidget::updateAircraftItem(pprzlink::Message msg) {
         AircraftManager::get()->getAircraft(ac_id)->setPosition(pos);
 
         if(GlobalConfig::get()->value("MAP_TRACK_AC", false).toBool() && ac_id == current_ac) {
-            auto scenePos = scenePoint(pos, zoomLevel(zoom()), tileSize());
+            auto scenePos = scenePoint(pos, zoomLevel(zoom()));
             centerOn(scenePos);
             rotateMap(-heading - getRotation());
         }

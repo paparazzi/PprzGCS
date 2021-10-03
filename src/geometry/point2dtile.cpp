@@ -2,6 +2,9 @@
 #include "point2dlatlon.h"
 #include "math.h"
 
+
+constexpr double EXTENT_3857 = 20037508.342789244;
+
 Point2DTile::Point2DTile(double x, double y, int zoom) :
     xp(x), yp(y), zoomp(zoom)
 {
@@ -40,4 +43,15 @@ bool Point2DTile::isValid() {
 Point2DTile Point2DTile::childPoint(int i, int j) {
     Point2DTile child(xp*2+i, yp*2+j, zoomp+1);
     return child;
+}
+
+CartesianCoor Point2DTile::toCartesian(QString crs) {
+    if(crs == "EPSG:3857") {
+        double x = (2*xp/(1<<zoomp) - 1) * EXTENT_3857;
+        double y = -(2*yp/(1<<zoomp) - 1) * EXTENT_3857;
+        return CartesianCoor(x, y, crs);
+    } else {
+        qCritical() << "Unhandled CRS " + crs;
+        throw std::runtime_error("");
+    }
 }

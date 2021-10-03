@@ -81,7 +81,7 @@ void CircleItem::addToMap(MapWidget* map) {
     connect(
         circle, &GraphicsCircle::circleScaled, this,
         [=](qreal size) {
-            _radius = distTile2Meters(circle->pos().y()/map->tileSize(), size/map->tileSize(), zoomLevel(map->zoom()));
+            _radius = distTile2Meters(circle->pos().y()/map->tileSize(), size/map->tileSize(), map->zoomLevel());
             circle->setText(QString::number(static_cast<int>(_radius)) + "m");
             emit circleScaled(_radius);
         }
@@ -119,10 +119,10 @@ void CircleItem::updateGraphics(MapWidget* map) {
     circle->setScaleFactor(s);
 
     auto pos = center->position();
-    QPointF scene_pos = scenePoint(pos, zoomLevel(map->zoom()), map->tileSize());
+    QPointF scene_pos = map->scenePoint(pos);
     circle->setPos(scene_pos);
 
-    double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(map->zoom()))*map->tileSize();
+    double pixelRadius = distMeters2Tile(_radius, center->position().lat(), map->zoomLevel())*map->tileSize();
     circle->setRadius(pixelRadius);
 
 

@@ -14,7 +14,7 @@
 
 Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     numericZoom(0.0), _zoom(5.0), tile_size(256), minZoom(0.0), maxZoom(25.0), wheelAccumulator(0),
-    m_color_background(0x151515)
+    m_color_background(0x151515), crs("EPSG:3857")
 {
     auto settings = getAppSettings();
     QString configFile = user_or_app_path("tile_sources.xml");
@@ -46,8 +46,6 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     connect(this, &Map2D::backgroundChanged, this, [=](QColor c) {
         setBackgroundBrush(QBrush(c));
     });
-
-    Point2DLatLon initLatLon(43.462344,1.273044);
 }
 
 Map2D::~Map2D() {
@@ -75,7 +73,7 @@ void Map2D::setLayerZ(QString providerName, int z) {
 }
 
 void Map2D::centerLatLon(Point2DLatLon latLon) {
-    centerOn(scenePoint(latLon, zoomLevel(_zoom), tile_size));
+    centerOn(scenePoint(latLon));
     updateTiles();
 }
 
@@ -197,28 +195,27 @@ void Map2D::setZoom(double z) {
 }
 
 void Map2D::zoomCentered(double z, QPoint eventPos) {
-    int curZoom = zoomLevel(_zoom);
-    _zoom = std::clamp(z, minZoom, maxZoom);
+
+    // mouse pos in scene
+    QPointF oldPos = mapToScene(eventPos);
+    auto tp = tilePoint(oldPos).toCartesian(crs);
+    // lat lon point pointed by the mouse (at the current zoomLevel)
+    auto poi = CoordinatesTransform::get()->to_WGS84(tp);
 
     // save initial numericZoom
     double  numZoomIni = numericZoom;
-
-    // for tileProvider in tileProviders...
+    // new zoom
+    _zoom = std::clamp(z, minZoom, maxZoom);
     int nextZoomLevel = zoomLevel(_zoom);
     numericZoom = _zoom - nextZoomLevel;
 
     double scaleFactor = pow(2, numericZoom) / pow(2, numZoomIni);
-
-    // mouse pos in scene
-    QPointF oldPos = mapToScene(eventPos);
-    // lat lon point pointed by the mouse (at the current zoomLevel)
-    auto poi = CoordinatesTransform::get()->wgs84_from_scene(oldPos, curZoom, tile_size);
-
     scale(scaleFactor, scaleFactor);    // apply scale
+
     // mouse pos in scene after scale
     QPointF newPos = mapToScene(eventPos);
     // position of the poi in scene coordinates for the new zoom
-    QPointF poi_scene = scenePoint(poi, nextZoomLevel, tile_size);
+    QPointF poi_scene = scenePoint(poi, nextZoomLevel);
 
     QPointF delta = newPos - poi_scene;
     translate(delta.x(), delta.y());
@@ -239,7 +236,7 @@ void Map2D::zoomCenteredScene(double z, QPoint center, Point2DPseudoMercator pm)
     // center pos in scene after scale
     QPointF newPos = mapToScene(center);
     // new position of the poi in scene coordinates
-    QPointF poi_scene = scenePoint(pm, nextZoomLevel, tile_size);
+    QPointF poi_scene = scenePoint(pm, nextZoomLevel);
 
     QPointF delta = newPos - poi_scene;
     translate(delta.x(), delta.y());
@@ -289,8 +286,16 @@ void Map2D::updateTiles() {
 void Map2D::getViewPoints(Point2DLatLon& nw, Point2DLatLon& se) {
     QPointF top_left = mapToScene(QPoint(0,0));
     QPointF bottom_right = mapToScene(QPoint(width(),height()));
-    nw = CoordinatesTransform::get()->wgs84_from_scene(top_left, zoomLevel(zoom()), tile_size);
-    se = CoordinatesTransform::get()->wgs84_from_scene(bottom_right, zoomLevel(zoom()), tile_size);
+
+    auto tp_nw = tilePoint(top_left).toCartesian(crs);
+    nw = CoordinatesTransform::get()->to_WGS84(tp_nw);
+
+    auto tp_se = tilePoint(bottom_right).toCartesian(crs);
+    se = CoordinatesTransform::get()->to_WGS84(tp_se);
+
+
+//    nw = CoordinatesTransform::get()->wgs84_from_scene(top_left, zoomLevel(zoom()), tile_size);
+//    se = CoordinatesTransform::get()->wgs84_from_scene(bottom_right, zoomLevel(zoom()), tile_size);
 }
 
 
@@ -325,6 +330,4 @@ QList<TileProvider*> Map2D::tileProviders() {
     return tps;
 }
 
-Point2DLatLon Map2D::latlonFromView(QPoint viewPos, int zoom) {
-    return CoordinatesTransform::get()->wgs84_from_scene(mapToScene(viewPos), zoom, tile_size);
-}
+

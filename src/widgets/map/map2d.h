@@ -39,6 +39,45 @@ public:
     void setLayerZ(QString providerName, int z);
     double scaleFactor() {return pow(2, _zoom - zoomLevel(_zoom));}
     void setMouseLoadTileMask(int mask) {mouse_load_tiles_mask = mask;}
+    QString getCRS() {return crs;}
+
+    Point2DTile tilePoint(QPointF scenePos, int zoom) {
+        return Point2DTile(scenePos.x()/tileSize(), scenePos.y()/tileSize(), zoom);
+    }
+
+    Point2DTile tilePoint(QPointF scenePos) {
+        return Point2DTile(scenePos.x()/tileSize(), scenePos.y()/tileSize(), zoomLevel());
+    }
+
+    QPointF scenePoint(Point2DTile tilePoint) {
+        return QPointF(tilePoint.x()*tileSize(), tilePoint.y()*tileSize());
+    }
+
+
+    QPointF scenePoint(Point2DLatLon latlon, int zoomLvl) {
+        Point2DPseudoMercator pm = CoordinatesTransform::get()->to_pseudoMercator(latlon);
+        Point2DTile tile_pos = pm.toTile(zoomLvl);
+        return scenePoint(tile_pos);
+    }
+
+    QPointF scenePoint(Point2DLatLon latlon) {
+        Point2DPseudoMercator pm = CoordinatesTransform::get()->to_pseudoMercator(latlon);
+        Point2DTile tile_pos = pm.toTile(zoomLevel());
+        return scenePoint(tile_pos);
+    }
+
+    QPointF scenePoint(Point2DPseudoMercator pm, int zoomLvl) {
+        Point2DTile tile_pos = pm.toTile(zoomLvl);
+        return scenePoint(tile_pos);
+    }
+
+    QPointF scenePoint(Point2DPseudoMercator pm) {
+        Point2DTile tile_pos = pm.toTile(zoomLevel());
+        return scenePoint(tile_pos);
+    }
+
+    int zoomLevel(double zoom) { return static_cast<int>(ceil(zoom)); }
+    int zoomLevel() { return zoomLevel(_zoom); }
 
 signals:
     void backgroundChanged(QColor);
@@ -51,9 +90,6 @@ protected:
     virtual void mouseMoveEvent(QMouseEvent *event) override;
     virtual void resizeEvent(QResizeEvent *event) override;
     virtual void keyPressEvent(QKeyEvent *event) override;
-
-    Point2DLatLon latlonFromView(QPoint viewPos, int zoom);
-
 
     //QGraphicsScene* _scene;
     MapScene* _scene;
@@ -79,6 +115,8 @@ private:
     QMap<QString, TileProvider*> tile_providers;
 
     QColor m_color_background;
+
+    QString crs;
 };
 
 #endif // MAP2D_H

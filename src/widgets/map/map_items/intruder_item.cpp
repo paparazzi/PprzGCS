@@ -31,7 +31,7 @@ void IntruderItem::addToMap(MapWidget* map) {
 }
 
 void IntruderItem::updateGraphics(MapWidget* map) {
-    QPointF scene_pos = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());
+    QPointF scene_pos = map->scenePoint(latlon);
     graphics_intruder->setPos(scene_pos);
     double s = getScale(map->zoom(), map->scaleFactor());
     graphics_intruder->setScale(s);

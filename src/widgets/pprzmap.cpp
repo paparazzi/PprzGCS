@@ -68,7 +68,7 @@ void PprzMap::configure(QDomElement e) {
 }
 
 void PprzMap::handleMouseMove(QPointF scenePos) {
-    auto tp = tilePoint(scenePos, zoomLevel(ui->map->zoom()), ui->map->tileSize());
+    auto tp = ui->map->tilePoint(scenePos);
     Point2DPseudoMercator ppm(tp);
     auto pt = CoordinatesTransform::get()->to_WGS84(ppm);
 

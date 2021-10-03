@@ -162,14 +162,14 @@ void PathItem::updateGraphics(MapWidget* map) {
 (void)s;
 
     for(int i=0; i<lines.length(); i++) {
-        QPointF start_scene_pos = scenePoint(waypoints[i]->position(), zoomLevel(map->zoom()), map->tileSize());
-        QPointF end_scene_pos = scenePoint(waypoints[i+1]->position(), zoomLevel(map->zoom()), map->tileSize());
+        QPointF start_scene_pos = map->scenePoint(waypoints[i]->position());
+        QPointF end_scene_pos = map->scenePoint(waypoints[i+1]->position());
         lines[i]->setLine(start_scene_pos, end_scene_pos);
     }
 
     if(closing_line) {
-        QPointF start_scene_pos = scenePoint(waypoints.first()->position(), zoomLevel(map->zoom()), map->tileSize());
-        QPointF end_scene_pos = scenePoint(waypoints.last()->position(), zoomLevel(map->zoom()), map->tileSize());
+        QPointF start_scene_pos = map->scenePoint(waypoints.first()->position());
+        QPointF end_scene_pos = map->scenePoint(waypoints.last()->position());
         closing_line->setLine(start_scene_pos, end_scene_pos);
     }
 
@@ -177,7 +177,7 @@ void PathItem::updateGraphics(MapWidget* map) {
     QPolygonF poly;
     QPointF centroid(0, 0);
     for(auto wi: waypoints) {
-        auto pt = scenePoint(wi->position(), zoomLevel(map->zoom()), map->tileSize());
+        auto pt = map->scenePoint(wi->position());
         poly.append(pt);
         centroid += pt;
     }
