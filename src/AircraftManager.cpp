@@ -90,7 +90,8 @@ void AircraftManager::addFPAircraft(QString ac_id, QString flightplan) {
     auto color = QColor((Qt::GlobalColor)last_color++);
     auto config = new ConfigData(ac_id, ac_id, color);
     config->setReal(false);
-    config->setFlightPlan(QString("file://%1").arg(flightplan));
+    QFileInfo fi(flightplan);
+    config->setFlightPlan(QString("file://%1").arg(fi.absoluteFilePath()));
 
     aircrafts[config->getId()] = new Aircraft(config);
     emit DispatcherUi::get()->new_ac_config(config->getId());
