@@ -309,12 +309,11 @@ void MapWidget::configure(QDomElement ele) {
     PprzDispatcher::get()->bind("WIND", this, [=](QString sender, pprzlink::Message msg){
         (void)sender;
         QString ac_id;
-        float dir, wspeed, mean_aspeed, stddev;
         msg.getField("ac_id", ac_id);
-        msg.getField("dir", dir);
-        msg.getField("wspeed", wspeed);
-        msg.getField("mean_aspeed", mean_aspeed);
-        msg.getField("stddev", stddev);
+        double dir = getFloatingField(msg, "dir");
+        double wspeed = getFloatingField(msg, "wspeed");
+        // double mean_aspeed = getFloatingField(msg, "mean_aspeed");
+        // double stddev = getFloatingField(msg, "stddev");
         wind_indicator->setWindData(ac_id, dir, wspeed);
     });
 
@@ -826,10 +825,9 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
             prev_item = nullptr;
         }
 
-        double circle_lat, circle_long;
         int16_t radius;
-        msg.getField("circle_lat", circle_lat);
-        msg.getField("circle_long", circle_long);
+        double circle_lat = getFloatingField(msg, "circle_lat");
+        double circle_long = getFloatingField(msg, "circle_long");
         msg.getField("radius", radius);
 
 
@@ -861,11 +859,10 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
             prev_item = nullptr;
         }
 
-        double segment1_lat, segment1_long, segment2_lat, segment2_long;
-        msg.getField("segment1_lat", segment1_lat);
-        msg.getField("segment1_long", segment1_long);
-        msg.getField("segment2_lat", segment2_lat);
-        msg.getField("segment2_long", segment2_long);
+        double segment1_lat = getFloatingField(msg, "segment1_lat");
+        double segment1_long = getFloatingField(msg, "segment1_long");
+        double segment2_lat = getFloatingField(msg, "segment2_lat");
+        double segment2_long = getFloatingField(msg, "segment2_long");
 
         Point2DLatLon p1(segment1_lat, segment1_long);
         Point2DLatLon p2(segment2_lat, segment2_long);
@@ -906,11 +903,10 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
 
 void MapWidget::updateAircraftItem(pprzlink::Message msg) {
     QString ac_id;
-    float heading;
     msg.getField("ac_id", ac_id);
     double lat = getFloatingField(msg, "lat");
     double lon = getFloatingField(msg, "long");
-    msg.getField("heading", heading);
+    double heading = getFloatingField(msg, "heading");
 
     if(AircraftManager::get()->aircraftExists(ac_id)) {
         auto ai = ac_items_managers[ac_id]->getAircraftItem();
