@@ -1,0 +1,28 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+VERSION=1.0.6
+
+pprzlinkqt_src=ext/pprzlinkQt/
+pprzlinkqt_build=build/ext/pprzlinkQt
+install_prefix=build/install
+#export MAKEFLAGS=-j$(nproc)
+prefix = /usr
+DESTDIR=debian/pprzgcs
+
+%:
+	dh $@
+
+override_dh_auto_configure:
+	cmake -S $(pprzlinkqt_src) -B $(pprzlinkqt_build) -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$(install_prefix)
+	cmake --build $(pprzlinkqt_build)
+	cmake --install $(pprzlinkqt_build)
+	cmake -S . -B build/pprzgcs -DCMAKE_INSTALL_PREFIX=$(DESTDIR)$(prefix) -DCMAKE_PREFIX_PATH=$(install_prefix) -DCMAKE_BUILD_TYPE=Release -DPPRZGCS_VERSION=$(VERSION)
+
+override_dh_auto_build:
+
+	cmake --build build/pprzgcs
+
+override_dh_auto_install:
+	cmake --install build/pprzgcs
+

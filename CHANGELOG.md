@@ -1,5 +1,11 @@
 # Changelog
 
+## v1.0.6
++ Add GCS position
++ Fix flightplan editor bug
++ Fix compatibility with old paparazzi
++ Make deb package on launchpad
+
 ## v1.0.5
 + Rename binary to lower case.
 + Fix bad UTM zone
