@@ -1079,6 +1079,7 @@ void MapWidget::onIntruder(QString sender, pprzlink::Message msg) {
     //msg.getField("itow", itow);
 
     if(intruders.contains(id)) {
+        removeItem(intruders[id].first);
         intruders.remove(id);
     }
 
