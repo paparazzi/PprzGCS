@@ -1,7 +1,0 @@
-- Add radius label on circle when resized
-- Add distances labels between waypoints on path when path waypoints moved
-- Add middle ghost waypoints on path to insert waypoint.
-- item edit window
-
-- How to handle X/Y vs lat/lon for waypoints ?
-
