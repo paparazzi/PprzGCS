@@ -1,7 +1,6 @@
 #!/bin/bash
 
 WD="${WD:-$(pwd)}"
-build_proj="${build_proj:-false}"
 build_libs="${1:-false}"
 
 # try getting 2nd argument, then the first one
@@ -15,12 +14,12 @@ echo "install_prefix set to $install_prefix."
 # exit on error
 set -e
 
+export MAKEFLAGS=-j$(nproc)
+
 if [ $build_libs = "libs" ]
 then
-
-    
     ivyqt_src=$WD/ext/IvyQt
-    ivyqt_build=$WD/build/IvyQt
+    ivyqt_build=$WD/build/ext/IvyQt
     
     pprzlinkqt_src=$WD/ext/pprzlinkQt/
     pprzlinkqt_build=$WD/build/ext/pprzlinkQt
@@ -32,23 +31,11 @@ then
     cmake -S $pprzlinkqt_src -B $pprzlinkqt_build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=$install_prefix
     cmake --build $pprzlinkqt_build
     cmake --install $pprzlinkqt_build
-
-    if [ $build_proj = "true" ]
-    then
-        PROJ_src=$WD/ext/PROJ
-        PROJ_build=$WD/build/ext/PROJ
-        mkdir -p $PROJ_build
-        cmake -S $PROJ_src -B $PROJ_build -DPROJ_TESTS=OFF -DCMAKE_INSTALL_PREFIX="$install_prefix"
-        cmake --build $PROJ_build
-        cmake --install $PROJ_build
-    fi
-
 fi
 
 if [ $build_app = "app" ]
 then
     cmake -S . -B $WD/build/pprzgcs -DCMAKE_INSTALL_PREFIX="$install_prefix" -DDEFAULT_APP_DATA_PATH="$WD/data"
-    export MAKEFLAGS=-j$(nproc)
     cmake --build $WD/build/pprzgcs
 fi
 
