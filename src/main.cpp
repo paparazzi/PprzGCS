@@ -25,7 +25,8 @@
 
 void launch_main_app() {
     auto settings = getAppSettings();
-    QFile file(settings.value("APP_STYLE_FILE").toString());
+    QString style_path = user_or_app_path(settings.value("APP_STYLE_FILE").toString());
+    QFile file(style_path);
     if(!file.open(QFile::ReadOnly | QFile::Text)) {
         qCritical()  << "could not open " << settings.value("APP_STYLE_FILE").toString();
         exit(-1);
@@ -38,10 +39,10 @@ void launch_main_app() {
     switch (PprzMain::launch_type) {
     case DEFAULT:
     case NORMAL:
-        layout_path = settings.value("APP_LAYOUT_FILE").toString();
+        layout_path = user_or_app_path(settings.value("APP_LAYOUT_FILE").toString());
         break;
     case FLIGHTPLAN_EDIT:
-        layout_path = appConfig()->value("APP_DATA_PATH").toString() + "/fp_editor_layout.xml";
+        layout_path = user_or_app_path("fp_editor_layout.xml");
         break;
     case CONFIGURE:
         break;

@@ -48,7 +48,6 @@ void set_app_settings() {
     auto gcs_icons_path = appConfig()->value("PAPARAZZI_HOME").toString() + "/data/pictures/gcs_icons";
     appConfig()->setValue("GCS_ICONS_PATH", gcs_icons_path);
 
-    default_setting("path/aircraft_icon", appConfig()->value("APP_DATA_PATH").toString() + "/pictures/aircraft_icons");
     default_setting("map/default_tiles", "Google");
 
     default_setting("map/move_hyteresis", 20);
@@ -77,8 +76,8 @@ void set_app_settings() {
 
     default_setting("aircraft_default_color", "red");
 
-    default_setting("APP_STYLE_FILE", appConfig()->value("APP_DATA_PATH").toString() + "/default_style.qss");
-    default_setting("APP_LAYOUT_FILE", appConfig()->value("APP_DATA_PATH").toString() + "/default_layout.xml");
+    default_setting("APP_STYLE_FILE", "default_style.qss");
+    default_setting("APP_LAYOUT_FILE", "default_layout.xml");
 
 }
 

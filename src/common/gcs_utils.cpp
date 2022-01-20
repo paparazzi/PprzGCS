@@ -4,7 +4,6 @@
 #include <QSettings>
 
 QString user_or_app_path(QString data_path) {
-    auto settings = getAppSettings();
     auto path = appConfig()->value("USER_DATA_PATH").toString() + "/" + data_path;
     if(QFile::exists(path)) {
         return path;

@@ -14,7 +14,7 @@ Aircraft::Aircraft(ConfigData* config, QObject* parent): QObject(parent),
     setting_menu = new SettingMenu(config->getSettings(), this);
     airframe = new Airframe(config->getAirframe(), this);
     if(airframe->getIconName() != "") {
-        icon = app_settings.value("path/aircraft_icon").toString() + "/" + QString(airframe->getIconName()) + ".svg";
+        icon = user_or_app_path("pictures/aircraft_icons/" + QString(airframe->getIconName()) + ".svg");
     }
     status = new AircraftStatus(ac_id, this);
     real = config->isReal();
