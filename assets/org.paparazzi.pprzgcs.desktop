@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=PprzGCS
+Comment=GCS for PaparazziUAV
+Exec=/usr/bin/pprzgcs
+Terminal=false
+Type=Application
+Icon=pprzgcs
+StartupNotify=true
+Categories=Robotics;Science;Qt;
+

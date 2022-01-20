@@ -72,4 +72,6 @@ target_link_libraries(${PROJECT_NAME}
 install(TARGETS ${PROJECT_NAME})
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/data/ DESTINATION "${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}")
 
+add_subdirectory(assets)
+
 
