@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+  <id>org.paparazzi.pprzgcs</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <name>PprzGCS</name>
+  <summary>Paparazzi UAV GCS</summary>
+  <launchable type="desktop-id">org.paparazzi.pprzgcs.desktop</launchable>
+  <screenshots/>
+  <project_group>Paparazzi UAV</project_group>
+  <provides>
+    <binary>pprzgcs</binary>
+  </provides>
+  <releases>
+    <release version="1.0.6" date="2022-01-24"/>
+  </releases>
+  
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>PprzGCS is a ground control station for Paparazzi UAV.</p>
+  </description>
+  <categories>
+    <category>Science</category>
+  </categories>
+  <url type="homepage">https://docs.paparazziuav.org/PprzGCS/</url>
+  <url type="bugtracker">https://github.com/paparazzi/PprzGCS/issues</url>
+  <url type="help">https://docs.paparazziuav.org/PprzGCS/</url>
+</component>
+

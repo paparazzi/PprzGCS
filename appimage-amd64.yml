@@ -1,0 +1,70 @@
+version: 1
+
+AppDir:
+  path: AppDir
+
+  app_info:
+    id: org.paparazzi.pprzgcs
+    name: pprzgcs
+    icon: pprzgcs
+    version: !ENV ${PPRZGCS_VERSION}
+    exec: usr/bin/pprzgcs
+    exec_args: $@
+
+  runtime:
+    path_mappings:
+      - /usr/share/pprzgcs:$APPDIR/usr/share/pprzgcs
+      - /usr/share/proj:$APPDIR/usr/share/proj
+    env:
+      APPDIR_LIBRARY_PATH: $APPDIR/lib/x86_64-linux-gnu:$APPDIR/usr/lib/x86_64-linux-gnu
+      PPRZGCS_DATA_PATH: $APPDIR/usr/share/pprzgcs
+
+  apt:
+    arch: amd64
+    sources:
+      - sourceline: deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse
+      - sourceline: deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ focal-updates main restricted universe multiverse
+      - sourceline: deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ focal-backports main restricted universe multiverse
+        key_url: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32
+    include:
+      # Required Qt packages.
+      - libqt5gui5
+      - libqt5network5
+      - libqt5texttospeech5
+      - libqt5xml5
+      - libqt5widgets5
+      - libqt5svg5
+      # Other dependencies.
+      - libsqlite3-0
+      - libproj15
+      - libzip5
+    exclude:
+      - "*dbgsym*"
+      - gnupg
+      - libwacom*
+      - perl
+      - perl-*
+      - sound-theme-freedesktop
+      - systemd
+      - systemd-*
+
+  files:
+    exclude:
+      - usr/include
+      - usr/share/man
+      - usr/share/doc
+      - usr/share/doc/*/README.*
+      - usr/share/doc/*/changelog.*
+      - usr/share/doc/*/NEWS.*
+      - usr/share/doc/*/TODO.*
+      - lib/systemd
+      - etc/systemd
+      - usr/bin/systemd*
+      - usr/bin/dpkg*
+      - usr/bin/*-linux-gnu-*
+
+AppImage:
+  arch: x86_64
+  update-information: None
+  sign-key: None
+

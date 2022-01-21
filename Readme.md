@@ -31,14 +31,14 @@ You can now launch PprzGCS from the paparazzi center via the `Tools` menu.
 
 Install the dependencies: 
 
-`sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev libproj-dev mesa-common-dev libglu1-mesa-dev`
+`sudo apt install extra-cmake-modules libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev libproj-dev mesa-common-dev libglu1-mesa-dev`
 
 
 #### Ubuntu 18.04 prerequisite
 
 Install the dependencies:
 
-`sudo apt install libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev`
+`sudo apt install extra-cmake-modules libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev`
 
 __QT5.12.*__
 

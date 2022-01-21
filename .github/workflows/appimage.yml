@@ -1,0 +1,65 @@
+name: AppImage
+
+on:
+  push:
+      tags:
+      - '**'
+
+jobs:
+  build-appimage:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          path: ./pprzgcs
+      
+      - name: setEnv
+        run: |
+          export MAKEFLAGS=-j$(nproc)
+          PPRZGCS_VERSION=$(echo "${{ github.ref }}" | sed 's/refs.tags.\(.*\)/\1/g' | sed 's/\//_/g')
+          PPRZGCS_VERSION="${PPRZGCS_VERSION:-$(git describe --tags)}"
+          echo "VERSION: $PPRZGCS_VERSION"
+          echo "PPRZGCS_VERSION=$PPRZGCS_VERSION" >> $GITHUB_ENV
+          echo "VERSION: ${{ env.PPRZGCS_VERSION }}"
+        
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libproj-dev libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev mesa-common-dev libglu1-mesa-dev cmake extra-cmake-modules
+      
+
+      - name: build
+        run: |
+          cmake -S pprzgcs/ext/IvyQt -B build.appimage/ext/IvyQt -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=AppDir/usr
+          cmake --build build.appimage/ext/IvyQt -j$(nproc)
+          cmake --install build.appimage/ext/IvyQt
+          cmake -S pprzgcs/ext/pprzlinkQt -B build.appimage/ext/pprzlinkQt -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=AppDir/usr
+          cmake --build build.appimage/ext/pprzlinkQt -j$(nproc)
+          cmake --install build.appimage/ext/pprzlinkQt
+          cmake -S pprzgcs -B build.appimage/pprzgcs -DCMAKE_INSTALL_PREFIX="AppDir/usr"
+          cmake --build build.appimage/pprzgcs -j$(nproc)
+          cmake --install build.appimage/pprzgcs
+
+      - name: Build AppImage
+        uses: AppImageCrafters/build-appimage-action@master
+        env:
+          UPDATE_INFO: gh-releases-zsync|Fabien-B|PprzGCS|latest|*x86_64.AppImage.zsync
+        with:
+          recipe: pprzgcs/appimage-amd64.yml
+      - uses: actions/upload-artifact@v2
+        with:
+          name: AppImage_${{ env.PPRZGCS_VERSION }}
+          path: './*.AppImage*'
+
+
+      - name: make release
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          files: |
+            *.AppImage
+
+
