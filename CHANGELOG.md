@@ -5,6 +5,9 @@
 + Fix flightplan editor bug
 + Fix compatibility with old paparazzi
 + Make deb package on launchpad
++ Fix Intruders update
++ remove PROJ
++ build AppImage on Github
 
 ## v1.0.5
 + Rename binary to lower case.
