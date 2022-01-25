@@ -1,8 +1,9 @@
 
-set(SOURCE
-    ${SOURCE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/speaker.cpp
-)
+set(SOURCE ${SOURCE})
+
+if(SPEECH)
+    list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/speaker.cpp)
+endif()
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 

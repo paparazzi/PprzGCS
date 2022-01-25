@@ -12,8 +12,11 @@
 #include "PprzApplication.h"
 #include "gcs_utils.h"
 #include "AircraftManager.h"
-#include "speaker.h"
 #include "globalconfig.h"
+
+#if defined(SPEECH_ENABLED)
+#include "speaker.h"
+#endif
 
 #ifndef DEFAULT_APP_DATA_PATH
 #error "you need to define DEFAULT_APP_DATA_PATH!"
@@ -86,12 +89,17 @@ int main(int argc, char *argv[])
         parser.addOption({{"v", "verbose"}, "Verbose"});
         parser.addOption({{"f", "fpedit"}, "edit flight plan", "file"});
         parser.addOption({{"b", "bus"}, "Ivy bus", "bus"});
+#if defined(SPEECH_ENABLED)
         parser.addOption({"speech", "Enable speech"});
+#endif
         parser.process(a);
 
         setVerbose(parser.isSet("v"));
+
+#if defined(SPEECH_ENABLED)
         setSpeech(parser.isSet("speech"));
         pprzApp()->toolbox()->speaker()->enableSpeech(parser.isSet("speech"));
+#endif
 
         if(parser.isSet("fpedit") && PprzMain::launch_type == DEFAULT) {
             PprzMain::launch_type = FLIGHTPLAN_EDIT;

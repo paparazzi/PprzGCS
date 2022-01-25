@@ -11,8 +11,10 @@ class PprzDispatcher;
 class CoordinatesTransform;
 class Units;
 class DispatcherUi;
-class Speaker;
 
+#if defined(SPEECH_ENABLED)
+class Speaker;
+#endif
 class PprzToolbox : public QObject
 {
     Q_OBJECT
@@ -25,7 +27,9 @@ public:
     CoordinatesTransform* coordinatesTransform () {return _coordinatesTransform;}
     Units*                units                () {return _units               ;}
     DispatcherUi*         dispatcherUi         () {return _dispatcherUi        ;}
+#if defined(SPEECH_ENABLED)
     Speaker*              speaker              () {return _speaker             ;}
+#endif
 
 private:
     void setChildToolboxes(void);
@@ -35,7 +39,9 @@ private:
     CoordinatesTransform* _coordinatesTransform = nullptr;
     Units*                _units                = nullptr;
     DispatcherUi*         _dispatcherUi         = nullptr;
+#if defined(SPEECH_ENABLED)
     Speaker* _speaker                           = nullptr;
+#endif
 
     friend class PprzApplication;
 

@@ -12,8 +12,10 @@
 #include <iostream>
 #include "configurable.h"
 #include "widget_utils.h"
-#include "speaker.h"
 #include "gcs_utils.h"
+#if defined(SPEECH_ENABLED)
+#include "speaker.h"
+#endif
 
 static const char* DEFAULT_WIDTH = "1024";
 static const char* DEFAULT_HEIGHT = "600";
@@ -83,6 +85,8 @@ QWidget* rec_layout_build(QDomElement &ele, QSplitter* parent, int* size) {
 }
 
 void configure_speech(QDomElement ele) {
+    (void)ele;
+#if defined(SPEECH_ENABLED)
     if(ele.isNull()) {
         return;
     }
@@ -119,7 +123,7 @@ void configure_speech(QDomElement ele) {
     if(speech()) {
         pprzApp()->toolbox()->speaker()->addSentence("Welcome to Paparazzi!");
     }
-
+#endif
 }
 
 PprzMain* configure(QString filename) {

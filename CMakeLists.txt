@@ -38,9 +38,19 @@ endif()
 message("PPRZGCS_VERSION set to ${PPRZGCS_VERSION}")
 add_definitions(-DPPRZGCS_VERSION="${PPRZGCS_VERSION}")
 
-find_package(Qt5 5.12 COMPONENTS Widgets Xml Network Svg TextToSpeech REQUIRED)
+option(SPEECH "Enable speech" ON)
+
 find_package(IvyQt REQUIRED)
 find_package(pprzlinkQt REQUIRED)
+
+if(SPEECH)
+    message("SPEECH ENABLED !")
+    add_definitions(-DSPEECH_ENABLED)
+    find_package(Qt5 5.12 REQUIRED COMPONENTS Widgets Xml Network Svg TextToSpeech REQUIRED)
+else()
+    message("SPEECH DISABLED !")
+    find_package(Qt5 5.12 REQUIRED COMPONENTS Widgets Xml Network Svg  REQUIRED)
+endif()
 
 set(SOURCE
     ${SOURCE}
@@ -61,7 +71,7 @@ target_link_libraries(${PROJECT_NAME}
     Qt5::Xml
     Qt5::Network
     Qt5::Svg
-    Qt5::TextToSpeech
+    $<$<BOOL:${SPEECH}>:Qt5::TextToSpeech>
     ${PROJ4_LIBRARIES}
     ${LIBXML2_LIBRARIES}
     zip

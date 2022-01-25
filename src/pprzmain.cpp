@@ -7,7 +7,10 @@
 #include <QSettings>
 #include "app_settings.h"
 #include "gcs_utils.h"
+
+#if defined(SPEECH_ENABLED)
 #include "speaker.h"
+#endif
 
 LaunchTypes PprzMain::launch_type = DEFAULT;
 
@@ -112,7 +115,9 @@ void PprzMain::populate_menu() {
         PprzDispatcher::get()->setSilent(checked);
     });
 
+#if defined(SPEECH_ENABLED)
     connect(speech_action, &QAction::toggled, pprzApp()->toolbox()->speaker(), &Speaker::enableSpeech);
+#endif
 
     connect(map_track_ac, &QAction::toggled, [=](bool checked) {
         GlobalConfig::get()->setValue("MAP_TRACK_AC", checked);
