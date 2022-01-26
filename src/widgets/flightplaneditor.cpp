@@ -143,8 +143,9 @@ int FlightPlanEditor::parse(QString filename) {
         auto dir = finfo.absoluteDir();
         auto dtd_path = finfo.absoluteDir().absoluteFilePath(systemId);
         dtd = xmlParseDTD(NULL, BAD_CAST dtd_path.toStdString().c_str());
-    } else {
-        auto settings = getAppSettings();
+    }
+
+    if(internal_dtd == nullptr || dtd == nullptr) {
         auto dtd_path = appConfig()->value("PAPARAZZI_HOME").toString() + "/conf/flight_plans/flight_plan.dtd";
         dtd = xmlParseDTD(NULL, BAD_CAST dtd_path.toStdString().c_str());
     }
