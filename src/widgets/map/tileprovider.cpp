@@ -184,6 +184,28 @@ void TileProvider::handleReply(QNetworkReply *reply) {
     TileItem* tileObj = l.takeFirst().value<TileItem*>();
 
     if(reply->error() == QNetworkReply::NetworkError::NoError) {
+        auto status_code = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toString();
+        if(status_code != "200") {
+            qDebug() << "request to" << reply->request().url() << "returned" << status_code;
+            tileCur->setRequestStatus(TILE_REQUEST_FAILED);
+            return;
+        }
+
+        auto data = reply->readAll();
+        // load pixmap
+        QPixmap pixmap;
+        if(pixmap.loadFromData(data)) {
+            tileCur->setPixmap(pixmap.scaled(tileDisplaySize, tileDisplaySize));
+            tileCur->setRequestStatus(TILE_OK);
+        }
+
+        if(tileCur != tileObj) {
+            //an ancestor was loaded. inherit its data for tileObj
+            tileObj->setInheritedData();
+            sendTile(tileCur, tileObj);
+        }
+
+        //save file to disk
         QString path = tilePath(tileCur->coordinates());
         QFile file(path);
         QFileInfo fi(path);
@@ -193,26 +215,12 @@ void TileProvider::handleReply(QNetworkReply *reply) {
         }
 
         if(file.open(QIODevice::WriteOnly)) {
-            file.write(reply->readAll());
+            file.write(data);
             file.close();
-            reply->deleteLater();
-
-            if(load_tile_from_disk(tileCur)) {
-                if(/*!tileObj->hasData() && */tileCur != tileObj) {
-                    // an ancestor was loaded. inherit its data for tileObj
-                    tileObj->setInheritedData();
-                }
-                tileCur->setRequestStatus(TILE_OK);
-                sendTile(tileCur, tileObj);
-            } else {
-                tileCur->setRequestStatus(TILE_ERROR);
-                std::cout << "Image just saved, but it could not be loaded!" << std::endl;
-            }
         } else {
             tileCur->setRequestStatus(TILE_ERROR);
             std::cout << "Could not save image on the disk!" << std::endl;
         }
-
     } else {
         //tile dl failed. try the parent tile ?
         tileCur->setRequestStatus(TILE_REQUEST_FAILED);
