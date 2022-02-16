@@ -19,6 +19,12 @@ Aircraft::Aircraft(ConfigData* config, QObject* parent): QObject(parent),
     status = new AircraftStatus(ac_id, this);
     real = config->isReal();
 }
+void Aircraft::setSetting(Setting* setting, QString value) {
+    int idx = setting->getValues().indexOf(value);
+    if(idx != -1) {
+        setSetting(setting, static_cast<float>(idx));
+    }
+}
 
 void Aircraft::setSetting(Setting* setting, float value) {
     auto coef = setting->getAltUnitCoef();

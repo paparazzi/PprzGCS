@@ -4,7 +4,6 @@
 #include <QtWidgets>
 #include <QGridLayout>
 #include <QHBoxLayout>
-#include "colorlabel.h"
 
 class MiniStrip : public QWidget
 {
@@ -82,7 +81,7 @@ private:
     QIcon throttle_on;
     QIcon throttle_killed;
 
-    ColorLabel* ap_mode_label;
+    QPushButton* ap_mode_button;
 
     QLabel* link_icon;
     QIcon link_ok;

@@ -190,9 +190,20 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     gl->addLayout(th_lay, 2, 0);
 
     //////// mode //////////
-    ap_mode_label = new ColorLabel(10, this);
-    gl->addWidget(ap_mode_label, 1, 2);
-    ap_mode_label->setToolTip("AP mode");
+    ap_mode_button = new QPushButton("MODE");
+    ap_mode_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    gl->addWidget(ap_mode_button, 1, 2);
+    ap_mode_button->setToolTip("AP mode");
+    auto settings = ac->getSettingMenu()->getAllSettings();
+    for(auto setting: settings) {
+        if(setting->getName() == "autopilot.mode") {
+            connect(ap_mode_button, &QPushButton::clicked, this, [=](){
+                AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, "AUTO2");
+            });
+            break;
+        }
+    }
+
 
 
     ///// Link, GPS, RC //////
@@ -261,12 +272,19 @@ void MiniStrip::updateFlightTime(uint32_t flight_time, uint32_t block_time, uint
 }
 
 void MiniStrip::updateAp(QString ap_mode) {
+    QColor color = QColor(Qt::white);
     if(mode_colors.contains(ap_mode)) {
-        ap_mode_label->setBrush(QColor(mode_colors[ap_mode]));
-    } else {
-        ap_mode_label->setBrush(Qt::white);
+        color = QColor(mode_colors[ap_mode]);
+
     }
-    ap_mode_label->setText(ap_mode);
+    QString style_back = "background: rgb(%1, %2, %3);";
+    QString style = "QPushButton {";
+    style += style_back.arg(color.red()).arg(color.green()).arg(color.blue());
+    style += "color:black; font-size:12px;";
+    style += " font-weight:bold;";
+    style += "}";
+    ap_mode_button->setStyleSheet(style);
+    ap_mode_button->setText(ap_mode);
 }
 
 void MiniStrip::updateGps(QString gps_mode) {
