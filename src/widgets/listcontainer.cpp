@@ -3,28 +3,24 @@
 #include "AircraftManager.h"
 #include "strip.h"
 
-ListContainer::ListContainer(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent) : QWidget(parent),
+ListContainer::ListContainer(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent) : QScrollArea(parent),
     constructor(constructor)
 {
-    scroll = new QScrollArea(this);
-    auto scroll_content = new QWidget(scroll);
-    scroll->setWidget(scroll_content);
-    scroll->setWidgetResizable(true);
-    scroll->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
-    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    auto scroll_content = new QWidget(this);
+    setWidget(scroll_content);
+    setWidgetResizable(true);
+    setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     auto vbox = new QVBoxLayout(scroll_content);
     grid_layout = new QGridLayout();
     vbox->addLayout(grid_layout);
     vbox->addStretch(1);
 
-    auto main_layout  = new QVBoxLayout(this);
-    main_layout->addWidget(scroll);
-
     // FIXME: small hack to set minimum size of the scrollarea
     QTimer* t = new QTimer(this);
     connect(t, &QTimer::timeout, this, [=]() {
-        scroll->setMinimumWidth(grid_layout->sizeHint().width());
+        this->setMinimumWidth(grid_layout->sizeHint().width());
     });
     t->start(500);
 

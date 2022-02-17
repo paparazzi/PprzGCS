@@ -6,7 +6,7 @@
 #include "configurable.h"
 #include "strip.h"
 
-class ListContainer : public QWidget, public Configurable
+class ListContainer : public QScrollArea, public Configurable
 {
     Q_OBJECT
 public:
@@ -28,7 +28,6 @@ private:
 
     QMap<QWidget*, QString> rects;
     QGridLayout* grid_layout;
-    QScrollArea* scroll;
 
     QDomElement conf;
 
