@@ -240,6 +240,8 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
 
     gl->addLayout(misc_lay, 2, 2);
 
+    setStyleSheet("QLabel {font-family: \"Monospace\";}");
+
     auto ac_status = AircraftManager::get()->getAircraft(ac_id)->getStatus();
 
     connect(ac_status, &AircraftStatus::engine_status, this, &MiniStrip::updateData);
@@ -412,7 +414,7 @@ void MiniStrip::updateData() {
 
     // throttle
     /// TODO: change bat icon : full/half/low
-    throttle_label->setText(QString::number(throttle) + " %");
+    throttle_label->setText(QString("%1 %").arg(throttle, 4, 'f', 1));
 
     // kill
     if(kill_mode == "OFF") {
@@ -483,7 +485,7 @@ void MiniStrip::updateData() {
     double diff_alt = alt - target_alt;
     QString alt_str = QString("%1m | %2%3 m")
             .arg(alt_display, 0, 'f', 0)
-            .arg(diff_alt > 0 ? "+": "")
+            .arg(diff_alt >= 0 ? "+": "")
             .arg(diff_alt, 0, 'f', abs(diff_alt) > 10 ? 0: 1);
     alt_label->setText(alt_str);
 
