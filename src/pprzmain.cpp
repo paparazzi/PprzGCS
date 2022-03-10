@@ -145,8 +145,8 @@ void PprzMain::populate_menu() {
             "version %1"
             "<p>PprzGCS is a ground control software for <a href=\"https://paparazziuav.org\">paparrazi UAV</a> drones.</p>"
             "<p>source code can be found here: "
-            "<a href=\"https://github.com/Fabien-B/GcsAgain\">https://github.com/Fabien-B/GcsAgain</a></p>"
-            "<p>Copyright (C) 2019-2021 Fabien Bonneval (fabien.bonneval@gmail.com)</p>"
+            "<a href=\"https://github.com/paparazzi/PprzGCS\">https://github.com/paparazzi/PprzGCS</a></p>"
+            "<p>Copyright (C) 2019-2022 Fabien Bonneval (fabien.bonneval@gmail.com)</p>"
             "<p>PprzGCS is free software; you can redistribute it and/or modify "
             "it under the terms of the <a href=\"https://www.gnu.org/licenses/gpl-3.0.html\">GNU General Public License</a> as published by "
             "the Free Software Foundation; either version 3, or (at your option) "
@@ -169,7 +169,7 @@ void PprzMain::populate_menu() {
     auto doc = help_menu->addAction("&Documentation");
 
     connect(doc, &QAction::triggered, [=]() {
-        QDesktopServices::openUrl(QUrl("https://fabien-b.github.io/PprzGCS/"));
+        QDesktopServices::openUrl(QUrl("https://docs.paparazziuav.org/PprzGCS/"));
     });
 
 }
