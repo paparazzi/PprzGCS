@@ -1,3 +1,16 @@
+pprzgcs (1.0.7.3ubuntu3) jammy; urgency=medium
+
+  * update for jammy
+
+ -- Fabien <fabien.bonneval@gmail.com>  Fri, 01 Apr 2022 18:36:35 +0200
+
+pprzgcs (1.0.7.3) focal; urgency=medium
+
+  * Optional speech
+  * AUTO2 mode button
+
+ -- Fabien <fabien.bonneval@gmail.com>  Fri, 01 Apr 2022 14:28:37 +0200
+
 pprzgcs (1.0.6.2) focal; urgency=medium
 
   * Initial release

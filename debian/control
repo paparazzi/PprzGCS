@@ -2,10 +2,10 @@ Source: pprzgcs
 Maintainer: Fabien Bonneval <fabien.bonneval@gmail.com>
 Section: devel
 Priority: optional
-Build-Depends: debhelper (>= 8.0.0), cmake, git, libsqlite3-dev, libzip-dev, qtbase5-dev, libqt5svg5-dev, libqt5texttospeech5-dev, libproj-dev, mesa-common-dev, libglu1-mesa-dev, libxml2-dev, ivy-qt-dev
+Build-Depends: debhelper (>= 8.0.0), cmake, git, libsqlite3-dev, libzip-dev, qtbase5-dev, libqt5svg5-dev, libqt5texttospeech5-dev, libproj-dev, mesa-common-dev, libglu1-mesa-dev, libxml2-dev, ivy-qt-dev, extra-cmake-modules
 Standards-Version: 4.0.0
-Homepage: https://fabien-b.github.io/PprzGCS/
-Vcs-Git: https://github.com/Fabien-B/PprzGCS
+Homepage: https://paparazzi.github.io/PprzGCS/
+Vcs-Git: https://github.com/paparazzi/PprzGCS
 Rules-Requires-Root: binary-targets
 
 
@@ -13,7 +13,7 @@ Package: pprzgcs
 Architecture: amd64
 Section: devel
 Priority: optional
-Depends: libzip5, libproj15, libqt5xml5, libqt5network5, libqt5svg5, libqt5texttospeech5, libqt5widgets5, libqt5gui5, libqt5core5a, libxml2, ivy-qt
-Homepage: https://fabien-b.github.io/PprzGCS/
+Depends: ${shlibs:Depends}, ${misc:Depends}, ivy-qt
+Homepage: https://paparazzi.github.io/PprzGCS/
 Description: Ground Control Station for PaparazziUAV
 
