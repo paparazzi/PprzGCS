@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QMap>
 #include "pprz_dispatcher.h"
+#include <optional>
 
 class AircraftStatus : public QObject
 {

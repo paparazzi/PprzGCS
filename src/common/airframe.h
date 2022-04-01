@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QtXml>
+#include <optional>
 
 struct Param {
     QString name;
