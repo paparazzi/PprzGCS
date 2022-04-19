@@ -43,6 +43,7 @@ SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent)
 
     search_bar = new QLineEdit(this);
     search_bar->setPlaceholderText("search");
+    search_bar->setClearButtonEnabled(true);
     search_layout->addWidget(search_bar);
 
     auto search_callback = [=](const QString str) {
@@ -111,6 +112,7 @@ void SettingsViewer::init(QString ac_id) {
             scroll_content->setCurrentIndex(widgets_indexes[settings]);
             path->setCurrentIndex(path_indexes[settings]);
             scroll->verticalScrollBar()->setValue(0);
+            search_bar->clear();
         }
     );
 
