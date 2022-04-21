@@ -34,7 +34,6 @@ public:
     // set original_waypoint position to the current _waypoint position.
     void commitPosition();
 
-    virtual ItemType getType() {return ITEM_WAYPOINT;}
     void setIgnoreEvent(bool ignore);
     bool isMoving() {return moving;}
     void setStyle(GraphicsPoint::Style s);

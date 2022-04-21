@@ -22,7 +22,6 @@ public:
     virtual void updateGraphics(MapWidget* map);
     virtual void removeFromScene(MapWidget* map);
     virtual void addToMap(MapWidget* mw);
-    virtual ItemType getType() {return ITEM_PATH;}
     void setText(QString text) {graphics_text->setPlainText(text);}
     WaypointItem* getLastWaypoint() {return waypoints.last();}
     QList<WaypointItem*> getWaypoints() {return waypoints;}

@@ -70,10 +70,6 @@ void IntruderItem::setEditable(bool ed) {
     (void)ed;
 }
 
-ItemType IntruderItem::getType() {
-    return ITEM_INTRUDER;
-}
-
 void IntruderItem::updateZValue() {
     graphics_intruder->setZValue(z_value);
     graphics_text->setZValue(z_value);

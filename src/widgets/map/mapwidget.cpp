@@ -337,8 +337,9 @@ void MapWidget::addItem(MapItem* map_item) {
 
     map_item->setHighlighted(map_item->acId() == current_ac || map_item->acId() == "__NO_AC__");
 
-    if(map_item->getType() == ITEM_WAYPOINT) {
-        registerWaypoint(dynamic_cast<WaypointItem*>(map_item));
+    WaypointItem* wi = dynamic_cast<WaypointItem*>(map_item);
+    if(wi != nullptr) {
+        registerWaypoint(wi);
     }
 
     connect(map_item, &MapItem::itemChanged, map_item, [=]() {
@@ -816,27 +817,31 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
 
     MapItem* prev_item = ac_items_managers[ac_id]->getCurrentNavShape();
 
+    auto delete_prev = [=]() {
+        if(prev_item != nullptr) {
+            // prev_item not null, delete it
+            ac_items_managers[ac_id]->setCurrentNavShape(nullptr);
+            removeItem(prev_item);
+        }
+    };
+
     double z = settings.value("map/z_values/nav_shape").toDouble();
 
     if(msg.getDefinition().getName() == "CIRCLE_STATUS") {
-        if(prev_item!= nullptr && prev_item->getType() != ITEM_CIRCLE) {
-            ac_items_managers[ac_id]->setCurrentNavShape(nullptr);
-            removeItem(prev_item);
-            prev_item = nullptr;
-        }
-
         int16_t radius;
         double circle_lat = getFloatingField(msg, "circle_lat");
         double circle_long = getFloatingField(msg, "circle_long");
         msg.getField("radius", radius);
-
-
         Point2DLatLon pos(circle_lat, circle_long);
-        if(prev_item == nullptr) {
+
+        CircleItem* ci = dynamic_cast<CircleItem*>(prev_item);
+
+        if(ci == nullptr) {
+            delete_prev();
             auto wcenter = new WaypointItem(pos, ac_id);
             wcenter->setZValues(z, z);
             addItem(wcenter);
-            CircleItem* ci = new CircleItem(wcenter, radius, ac_id);
+            ci = new CircleItem(wcenter, radius, ac_id);
             ci->setZValues(z, z);
             ci->setScalable(false);
             ci->setEditable(false);
@@ -845,7 +850,6 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
             ci->setStyle(GraphicsObject::Style::CURRENT_NAV);
             ac_items_managers[ac_id]->setCurrentNavShape(ci);
         } else {
-            CircleItem* ci = static_cast<CircleItem*>(prev_item);
             ci->getCenter()->getOriginalWaypoint()->setLat(pos.lat());
             ci->getCenter()->getOriginalWaypoint()->setLon(pos.lon());
             ci->getCenter()->update();
@@ -853,12 +857,6 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
         }
 
     } else if (msg.getDefinition().getName() == "SEGMENT_STATUS") {
-        if(prev_item!= nullptr && prev_item->getType() != ITEM_PATH) {
-            ac_items_managers[ac_id]->setCurrentNavShape(nullptr);
-            removeItem(prev_item);
-            prev_item = nullptr;
-        }
-
         double segment1_lat = getFloatingField(msg, "segment1_lat");
         double segment1_long = getFloatingField(msg, "segment1_long");
         double segment2_lat = getFloatingField(msg, "segment2_lat");
@@ -866,8 +864,13 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
 
         Point2DLatLon p1(segment1_lat, segment1_long);
         Point2DLatLon p2(segment2_lat, segment2_long);
-        if(prev_item == nullptr) {
-            PathItem* pi = new PathItem(ac_id);
+
+        PathItem* pi = dynamic_cast<PathItem*>(prev_item);
+
+        if(pi == nullptr) {
+            delete_prev();
+
+            pi = new PathItem(ac_id);
             pi->setZValues(z, z);
 
             auto w1 = new WaypointItem(p1, ac_id);
@@ -883,7 +886,6 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
             ac_items_managers[ac_id]->setCurrentNavShape(pi);
             //qDebug() << "segment created!";
         } else {
-            PathItem* pi = static_cast<PathItem*>(prev_item);
             auto wps = pi->getWaypoints();
             assert(wps.size() == 2);
             wps[0]->getOriginalWaypoint()->setLat(p1.lat());

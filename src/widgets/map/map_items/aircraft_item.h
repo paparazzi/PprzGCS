@@ -20,7 +20,6 @@ public:
     virtual void setEditable(bool ed){(void)ed;}
     virtual void removeFromScene(MapWidget* map);
     virtual void addToMap(MapWidget* mw);
-    virtual ItemType getType() {return ITEM_AIRCRAFT;}
 
     void setPosition(Point2DLatLon pt);
     void setHeading(double h);

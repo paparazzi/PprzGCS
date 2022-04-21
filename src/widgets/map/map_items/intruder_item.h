@@ -15,7 +15,6 @@ public:
     virtual void removeFromScene(MapWidget* map) override;
     virtual void setForbidHighlight(bool fh) override;
     virtual void setEditable(bool ed) override;
-    virtual ItemType getType() override;
     virtual void updateZValue() override;
 
     void setPosition(Point2DLatLon pt);

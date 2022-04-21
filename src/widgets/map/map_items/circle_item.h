@@ -28,7 +28,6 @@ public:
     virtual void updateGraphics(MapWidget* map);
     virtual void removeFromScene(MapWidget* map);
     void setText(QString text);
-    virtual ItemType getType() {return ITEM_CIRCLE;}
     double radius() {return _radius;}
     ///
     /// \brief setRadius
