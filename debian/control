@@ -13,7 +13,7 @@ Package: pprzgcs
 Architecture: amd64
 Section: devel
 Priority: optional
-Depends: ${shlibs:Depends}, ${misc:Depends}, ivy-qt
+Depends: ${shlibs:Depends}, ${misc:Depends}, ivy-qt, appmenu-gtk3-module
 Homepage: https://paparazzi.github.io/PprzGCS/
 Description: Ground Control Station for PaparazziUAV
 
