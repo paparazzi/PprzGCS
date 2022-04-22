@@ -16,18 +16,26 @@ enum MoveState {
     MIS_MOVED,
 };
 
+enum UpdateEvent {
+    ITEM_CHANGED    = 0x01,
+    MAP_MOVED       = 0x02,
+    MAP_ZOOMED      = 0x04,
+    MAP_ROTATED     = 0x08,
+    MOUSE_MOVED     = 0x10,
+    ANY             = 0xFF,
+};
+
 class MapItem : public QObject
 {
     Q_OBJECT
 public:
     MapItem(QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     MapItem(QString ac_id, PprzPalette palette, double neutral_scale_zoom = 15, QObject *parent = nullptr);
-    QList<QColor> makeColorVariants(QColor);
     QColor unfocusedColor(const QColor&);
     QColor trackUnfocusedColor(const QColor&);
     QColor labelUnfocusedColor(const QColor&);
     virtual void addToMap(MapWidget* map) = 0;
-    virtual void updateGraphics(MapWidget* map) = 0;
+    virtual void updateGraphics(MapWidget* map, uint32_t update_event=static_cast<uint32_t>(UpdateEvent::ANY)) = 0;
     virtual void removeFromScene(MapWidget* map) = 0;
     virtual void setHighlighted(bool h) {
         highlighted = h;

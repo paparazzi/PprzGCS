@@ -119,19 +119,21 @@ void WaypointItem::updateZValue() {
     graphics_text->setZValue(z_value);
 }
 
-void WaypointItem::updateGraphics(MapWidget* map) {
-    QPointF scene_pos = scenePoint(Point2DLatLon(_waypoint), zoomLevel(map->zoom()), map->tileSize());
-    double s = getScale(map->zoom(), map->scaleFactor());
-    double r = map->getRotation();
-    point->setPos(scene_pos);
-    point->setScale(s);
-    point->setRotation(-r);
+void WaypointItem::updateGraphics(MapWidget* map, uint32_t update_event) {
+    if(update_event & (UpdateEvent::ITEM_CHANGED | UpdateEvent::MAP_ZOOMED | UpdateEvent::MAP_ROTATED)) {
+        QPointF scene_pos = scenePoint(Point2DLatLon(_waypoint), zoomLevel(map->zoom()), map->tileSize());
+        double s = getScale(map->zoom(), map->scaleFactor());
+        double r = map->getRotation();
+        point->setPos(scene_pos);
+        point->setScale(s);
+        point->setRotation(-r);
 
-    auto rot = QTransform().rotate(-r);
-    graphics_text->setPlainText(_waypoint->getName());
-    graphics_text->setPos(scene_pos + rot.map(QPointF(5*s, -30*s)));
-    graphics_text->setScale(s);
-    graphics_text->setRotation(-r);
+        auto rot = QTransform().rotate(-r);
+        graphics_text->setPlainText(_waypoint->getName());
+        graphics_text->setPos(scene_pos + rot.map(QPointF(5*s, -30*s)));
+        graphics_text->setScale(s);
+        graphics_text->setRotation(-r);
+    }
 }
 
 void WaypointItem::removeFromScene(MapWidget* map) {

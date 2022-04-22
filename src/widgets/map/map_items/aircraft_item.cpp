@@ -45,26 +45,28 @@ void AircraftItem::addToMap(MapWidget* map) {
     map->scene()->addItem(graphics_text);
 }
 
-void AircraftItem::updateGraphics(MapWidget* map) {
-    QPointF scene_pos = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());
-    graphics_aircraft->setPos(scene_pos);
-    double s = getScale(map->zoom(), map->scaleFactor());
-    graphics_aircraft->setScale(s);
-    graphics_aircraft->setRotation(heading);
+void AircraftItem::updateGraphics(MapWidget* map, uint32_t update_event) {
+    if(update_event & (UpdateEvent::ITEM_CHANGED | UpdateEvent::MAP_ZOOMED | UpdateEvent::MAP_ROTATED)) {
+        QPointF scene_pos = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());
+        graphics_aircraft->setPos(scene_pos);
+        double s = getScale(map->zoom(), map->scaleFactor());
+        graphics_aircraft->setScale(s);
+        graphics_aircraft->setRotation(heading);
 
-    double r = map->getRotation();
-    auto rot = QTransform().rotate(-r);
-    graphics_text->setScale(s);
-    graphics_text->setPos(scene_pos + rot.map(QPointF(10, 10)));
-    graphics_text->setRotation(-r);
+        double r = map->getRotation();
+        auto rot = QTransform().rotate(-r);
+        graphics_text->setScale(s);
+        graphics_text->setPos(scene_pos + rot.map(QPointF(10, 10)));
+        graphics_text->setRotation(-r);
 
 
-    for(int i = 0; i<track_chuncks.size(); i++) {
-        QPolygonF scenePoints;
-        for(auto pt: track_chuncks[i]) {
-            scenePoints.append(scenePoint(pt, zoomLevel(map->zoom()), map->tileSize()));
+        for(int i = 0; i<track_chuncks.size(); i++) {
+            QPolygonF scenePoints;
+            for(auto pt: track_chuncks[i]) {
+                scenePoints.append(scenePoint(pt, zoomLevel(map->zoom()), map->tileSize()));
+            }
+            graphics_tracks[i]->setPoints(scenePoints);
         }
-        graphics_tracks[i]->setPoints(scenePoints);
     }
 }
 

@@ -30,18 +30,20 @@ void IntruderItem::addToMap(MapWidget* map) {
     map->scene()->addItem(graphics_text);
 }
 
-void IntruderItem::updateGraphics(MapWidget* map) {
-    QPointF scene_pos = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());
-    graphics_intruder->setPos(scene_pos);
-    double s = getScale(map->zoom(), map->scaleFactor());
-    graphics_intruder->setScale(s);
-    graphics_intruder->setRotation(course);
+void IntruderItem::updateGraphics(MapWidget* map, uint32_t update_event) {
+    if(update_event & (UpdateEvent::ITEM_CHANGED | UpdateEvent::MAP_ZOOMED)) {
+        QPointF scene_pos = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());
+        graphics_intruder->setPos(scene_pos);
+        double s = getScale(map->zoom(), map->scaleFactor());
+        graphics_intruder->setScale(s);
+        graphics_intruder->setRotation(course);
 
-    double r = map->getRotation();
-    auto rot = QTransform().rotate(-r);
-    graphics_text->setPos(scene_pos + rot.map(QPointF(5*s, -30*s)));
-    graphics_text->setScale(s);
-    graphics_text->setRotation(-r);
+        double r = map->getRotation();
+        auto rot = QTransform().rotate(-r);
+        graphics_text->setPos(scene_pos + rot.map(QPointF(5*s, -30*s)));
+        graphics_text->setScale(s);
+        graphics_text->setRotation(-r);
+    }
 }
 
 void IntruderItem::setPosition(Point2DLatLon pt) {

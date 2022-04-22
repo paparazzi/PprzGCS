@@ -140,57 +140,59 @@ void PathItem::updateZValue() {
     }
 }
 
-void PathItem::updateGraphics(MapWidget* map) {
-    // add new graphics objects to map
-    while(to_be_added.size() > 0) {
-        auto l = to_be_added.takeLast();
-        map->scene()->addItem(l);
+void PathItem::updateGraphics(MapWidget* map, uint32_t update_event) {
+    if(update_event & (UpdateEvent::ITEM_CHANGED | UpdateEvent::MAP_ZOOMED)) {
+        // add new graphics objects to map
+        while(to_be_added.size() > 0) {
+            auto l = to_be_added.takeLast();
+            map->scene()->addItem(l);
+        }
+
+        while(to_be_removed.size() > 0) {
+            auto l = to_be_removed.takeLast();
+            map->scene()->removeItem(l);
+            delete l;
+        }
+
+        while(waypoints_to_remove.size() > 0) {
+            auto wp = waypoints_to_remove.takeLast();
+            map->removeItem(wp);
+        }
+
+        double s = getScale(map->zoom(), map->scaleFactor());
+    (void)s;
+
+        for(int i=0; i<lines.length(); i++) {
+            QPointF start_scene_pos = scenePoint(waypoints[i]->position(), zoomLevel(map->zoom()), map->tileSize());
+            QPointF end_scene_pos = scenePoint(waypoints[i+1]->position(), zoomLevel(map->zoom()), map->tileSize());
+            lines[i]->setLine(start_scene_pos, end_scene_pos);
+        }
+
+        if(closing_line) {
+            QPointF start_scene_pos = scenePoint(waypoints.first()->position(), zoomLevel(map->zoom()), map->tileSize());
+            QPointF end_scene_pos = scenePoint(waypoints.last()->position(), zoomLevel(map->zoom()), map->tileSize());
+            closing_line->setLine(start_scene_pos, end_scene_pos);
+        }
+
+
+        QPolygonF poly;
+        QPointF centroid(0, 0);
+        for(auto wi: waypoints) {
+            auto pt = scenePoint(wi->position(), zoomLevel(map->zoom()), map->tileSize());
+            poly.append(pt);
+            centroid += pt;
+        }
+        centroid /= waypoints.size();
+
+        if(polygon) {
+            polygon->setPolygon(poly);
+        }
+
+        graphics_text->setScale(s);
+
+        auto text_size = graphics_text->boundingRect().center();
+        graphics_text->setPos(centroid - text_size*s);
     }
-
-    while(to_be_removed.size() > 0) {
-        auto l = to_be_removed.takeLast();
-        map->scene()->removeItem(l);
-        delete l;
-    }
-
-    while(waypoints_to_remove.size() > 0) {
-        auto wp = waypoints_to_remove.takeLast();
-        map->removeItem(wp);
-    }
-
-    double s = getScale(map->zoom(), map->scaleFactor());
-(void)s;
-
-    for(int i=0; i<lines.length(); i++) {
-        QPointF start_scene_pos = scenePoint(waypoints[i]->position(), zoomLevel(map->zoom()), map->tileSize());
-        QPointF end_scene_pos = scenePoint(waypoints[i+1]->position(), zoomLevel(map->zoom()), map->tileSize());
-        lines[i]->setLine(start_scene_pos, end_scene_pos);
-    }
-
-    if(closing_line) {
-        QPointF start_scene_pos = scenePoint(waypoints.first()->position(), zoomLevel(map->zoom()), map->tileSize());
-        QPointF end_scene_pos = scenePoint(waypoints.last()->position(), zoomLevel(map->zoom()), map->tileSize());
-        closing_line->setLine(start_scene_pos, end_scene_pos);
-    }
-
-
-    QPolygonF poly;
-    QPointF centroid(0, 0);
-    for(auto wi: waypoints) {
-        auto pt = scenePoint(wi->position(), zoomLevel(map->zoom()), map->tileSize());
-        poly.append(pt);
-        centroid += pt;
-    }
-    centroid /= waypoints.size();
-
-    if(polygon) {
-        polygon->setPolygon(poly);
-    }
-
-    graphics_text->setScale(s);
-
-    auto text_size = graphics_text->boundingRect().center();
-    graphics_text->setPos(centroid - text_size*s);
 }
 
 void PathItem::addToMap(MapWidget* map) {

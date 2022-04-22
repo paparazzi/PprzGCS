@@ -114,24 +114,26 @@ void CircleItem::updateZValue() {
     graphics_text->setZValue(z_value + 0.5);
 }
 
-void CircleItem::updateGraphics(MapWidget* map) {
-    double s = getScale(map->zoom(), map->scaleFactor());
-    circle->setScaleFactor(s);
+void CircleItem::updateGraphics(MapWidget* map, uint32_t update_event) {
+    if(update_event & (UpdateEvent::ITEM_CHANGED | UpdateEvent::MAP_ZOOMED)) {
+        double s = getScale(map->zoom(), map->scaleFactor());
+        circle->setScaleFactor(s);
 
-    auto pos = center->position();
-    QPointF scene_pos = scenePoint(pos, zoomLevel(map->zoom()), map->tileSize());
-    circle->setPos(scene_pos);
+        auto pos = center->position();
+        QPointF scene_pos = scenePoint(pos, zoomLevel(map->zoom()), map->tileSize());
+        circle->setPos(scene_pos);
 
-    double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(map->zoom()))*map->tileSize();
-    circle->setRadius(pixelRadius);
+        double pixelRadius = distMeters2Tile(_radius, center->position().lat(), zoomLevel(map->zoom()))*map->tileSize();
+        circle->setRadius(pixelRadius);
 
 
-    double r = map->getRotation();
-    auto rot = QTransform().rotate(-r);
-    auto text_size = graphics_text->boundingRect().center();
-    graphics_text->setPos(scene_pos + rot.map(-text_size*s));
-    graphics_text->setScale(s);
-    graphics_text->setRotation(-r);
+        double r = map->getRotation();
+        auto rot = QTransform().rotate(-r);
+        auto text_size = graphics_text->boundingRect().center();
+        graphics_text->setPos(scene_pos + rot.map(-text_size*s));
+        graphics_text->setScale(s);
+        graphics_text->setRotation(-r);
+    }
 }
 
 void CircleItem::removeFromScene(MapWidget* map) {

@@ -11,7 +11,7 @@ class IntruderItem : public MapItem
 public:
     explicit IntruderItem(QString name, Point2DLatLon pt, double course, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     virtual void addToMap(MapWidget* map) override;
-    virtual void updateGraphics(MapWidget* map) override;
+    virtual void updateGraphics(MapWidget* map, uint32_t update_event) override;
     virtual void removeFromScene(MapWidget* map) override;
     virtual void setForbidHighlight(bool fh) override;
     virtual void setEditable(bool ed) override;

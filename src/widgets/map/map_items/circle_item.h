@@ -25,7 +25,7 @@ public:
     void setForbidHighlight(bool fh);
     virtual void setEditable(bool ed);
     virtual void updateZValue();
-    virtual void updateGraphics(MapWidget* map);
+    virtual void updateGraphics(MapWidget* map, uint32_t update_event);
     virtual void removeFromScene(MapWidget* map);
     void setText(QString text);
     double radius() {return _radius;}

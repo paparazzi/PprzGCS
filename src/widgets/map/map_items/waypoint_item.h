@@ -28,7 +28,7 @@ public:
     virtual void setForbidHighlight(bool fh);
     virtual void setEditable(bool ed);
     virtual void removeFromScene(MapWidget* map);
-    virtual void updateGraphics(MapWidget* map);
+    virtual void updateGraphics(MapWidget* map, uint32_t update_event);
     void update();
 
     // set original_waypoint position to the current _waypoint position.

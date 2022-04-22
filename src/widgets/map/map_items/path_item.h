@@ -19,7 +19,7 @@ public:
     virtual void setForbidHighlight(bool sh);
     virtual void setEditable(bool ed);
     virtual void updateZValue();
-    virtual void updateGraphics(MapWidget* map);
+    virtual void updateGraphics(MapWidget* map, uint32_t update_event);
     virtual void removeFromScene(MapWidget* map);
     virtual void addToMap(MapWidget* mw);
     void setText(QString text) {graphics_text->setPlainText(text);}

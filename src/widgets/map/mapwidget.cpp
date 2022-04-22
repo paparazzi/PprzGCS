@@ -331,7 +331,7 @@ void MapWidget::setCursor(const QCursor &cur) {
 
 void MapWidget::addItem(MapItem* map_item) {
     map_item->addToMap(this);
-    map_item->updateGraphics(this);
+    map_item->updateGraphics(this, UpdateEvent::ANY);
     _items.append(map_item);
     emit itemAdded(map_item);
 
@@ -343,7 +343,7 @@ void MapWidget::addItem(MapItem* map_item) {
     }
 
     connect(map_item, &MapItem::itemChanged, map_item, [=]() {
-        map_item->updateGraphics(this);
+        map_item->updateGraphics(this, UpdateEvent::ITEM_CHANGED);
     });
 
     connect(map_item, &MapItem::itemGainedHighlight, map_item, [=]() {
@@ -385,12 +385,12 @@ void MapWidget::updateHighlights(QString ac_id) {
 
 void MapWidget::centerLatLon(Point2DLatLon latLon) {
     Map2D::centerLatLon(latLon);
-    updateGraphics();
+    updateGraphics(UpdateEvent::MAP_MOVED);
 }
 
 void MapWidget::setZoom(double z) {
     Map2D::setZoom(z);
-    updateGraphics();
+    updateGraphics(UpdateEvent::MAP_ZOOMED);
 }
 
 void MapWidget::mousePressEvent(QMouseEvent *event) {
@@ -421,7 +421,7 @@ void MapWidget::mouseMoveEvent(QMouseEvent *event) {
             lastPos = event->pos();
         }
 
-        updateGraphics();
+        updateGraphics(UpdateEvent::MOUSE_MOVED);
     }
     emit mouseMoved(mapToScene(event->pos()));
 }
@@ -510,7 +510,7 @@ void MapWidget::rotateMap(double rot) {
     auto center = mapToScene(rect().center());
     rotate(rot);
     centerOn(center);
-    updateGraphics();
+    updateGraphics(UpdateEvent::MAP_ROTATED);
     wind_indicator->setCompass(getRotation());
 }
 
@@ -563,7 +563,7 @@ bool MapWidget::viewportEvent(QEvent *event) {
                     auto center = (tp1->pos() + tp0->pos())/2;
                     auto pmc = (pms[id0] + pms[id1])/2;
                     zoomCenteredScene(new_zoom, center.toPoint(), pmc);
-                    updateGraphics();
+                    updateGraphics(UpdateEvent::MAP_ZOOMED|UpdateEvent::MAP_MOVED|UpdateEvent::MAP_ROTATED);
                     break;
                 }
             }
@@ -583,9 +583,9 @@ bool MapWidget::viewportEvent(QEvent *event) {
     return QGraphicsView::viewportEvent(event);
 }
 
-void MapWidget::updateGraphics() {
+void MapWidget::updateGraphics(uint32_t update_events) {
     for(auto item: qAsConst(_items)) {
-        item->updateGraphics(this);
+        item->updateGraphics(this, update_events);
     }
     for(auto papget: qAsConst(papgets)) {
         papget->updateGraphics(this);
@@ -594,7 +594,7 @@ void MapWidget::updateGraphics() {
 
 void MapWidget::wheelEvent(QWheelEvent* event) {
     Map2D::wheelEvent(event);
-    updateGraphics();
+    updateGraphics(UpdateEvent::MAP_ZOOMED);
 }
 
 void MapWidget::dragEnterEvent(QDragEnterEvent *event) {
