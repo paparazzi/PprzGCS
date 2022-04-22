@@ -421,9 +421,7 @@ void MapWidget::mouseMoveEvent(QMouseEvent *event) {
             lastPos = event->pos();
         }
 
-        for(auto papget: qAsConst(papgets)) {
-            papget->updateGraphics(this);
-        }
+        updateGraphics();
     }
     emit mouseMoved(mapToScene(event->pos()));
 }
