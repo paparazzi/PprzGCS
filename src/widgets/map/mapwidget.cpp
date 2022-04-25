@@ -485,11 +485,7 @@ void MapWidget::keyReleaseEvent(QKeyEvent *event) {
             if(ac->isReal()) {
                 pos = ac->getPosition();
             }
-            auto [nw, se] = AircraftManager::get()->getAircraft(current_ac)->getFlightPlan()->boundingBoxWith(pos);
-            double zoo = zoomBox(nw, se);
-            setZoom(zoo);
-            Point2DLatLon center((nw.lat()+se.lat()) / 2.0, (nw.lon()+se.lon()) / 2.0);
-            centerLatLon(center);
+            centerLatLon(pos);
         }
         itemsForbidHighlight(false);
     }
