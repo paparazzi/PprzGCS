@@ -1,9 +1,9 @@
 
 /* Buttons on the map */
 LockButton {
-    qproperty-color_idle: #252525;
-    qproperty-color_hover: #404040;
-    qproperty-color_pressed: #000000;
+    qproperty-color_idle: #b0252525;
+    qproperty-color_hover: #b0404040;
+    qproperty-color_pressed: #b0000000;
     qproperty-size: 80;
 }
 
