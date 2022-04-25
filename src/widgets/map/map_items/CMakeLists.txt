@@ -7,6 +7,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/circle_item.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/aircraft_item.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/intruder_item.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/arrow_item.cpp
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})

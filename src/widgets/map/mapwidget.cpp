@@ -27,10 +27,13 @@
 #include "waypointeditor.h"
 #include "windindicator.h"
 #include "intruder_item.h"
+#include "arrow_item.h"
+
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     interaction_state(PMIS_OTHER), drawState(false), fp_edit_sm(nullptr), gcsItem(nullptr),
-    pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton)
+    pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton),
+    _ac_arrow_size(30)
 {
     auto settings = getAppSettings();
 
@@ -683,11 +686,20 @@ void MapWidget::handleNewAC(QString ac_id) {
         double z_carrot = settings.value("map/z_values/carrot").toDouble();
         target->setZValues(z_carrot, z_carrot);
 
+        ArrowItem* arrow = new ArrowItem(ac_id, 15, this);
+        addItem(arrow);
+        arrow->setProperty("size", _ac_arrow_size);
+
+        connect(arrow, &ArrowItem::centerAC, this, [=]() {
+            auto pos = ac->getPosition();
+            centerLatLon(pos);
+        });
+
         //create the ACItemManager for this aircraft
-        item_manager = new ACItemManager(ac_id, target, aircraft_item, this);
+        item_manager = new ACItemManager(ac_id, target, aircraft_item, arrow, this);
     } else {
         //create the ACItemManager for this fake aircraft (flightplan only)
-        item_manager = new ACItemManager(ac_id, nullptr, nullptr, this);
+        item_manager = new ACItemManager(ac_id, nullptr, nullptr, nullptr, this);
     }
 
     ac_items_managers[ac_id] = item_manager;
@@ -910,8 +922,10 @@ void MapWidget::updateAircraftItem(pprzlink::Message msg) {
 
     if(AircraftManager::get()->aircraftExists(ac_id)) {
         auto ai = ac_items_managers[ac_id]->getAircraftItem();
+        auto arrow = ac_items_managers[ac_id]->getArrowItem();
         Point2DLatLon pos(static_cast<double>(lat), static_cast<double>(lon));
         ai->setPosition(pos);
+        arrow->setAcPos(pos);
         ai->setHeading(static_cast<double>(heading));
         AircraftManager::get()->getAircraft(ac_id)->setPosition(pos);
 
@@ -1112,3 +1126,14 @@ void MapWidget::onGCSPos(pprzlink::Message msg) {
     wcenter->setSize(size);
     gcsItem = wcenter;
 }
+
+void MapWidget::setAcArrowSize(int s) {
+    _ac_arrow_size = s;
+    for(auto item_manager: ac_items_managers) {
+        auto arrow = item_manager->getArrowItem();
+        if(arrow) {
+            arrow->setProperty("size", s);
+        }
+    }
+}
+

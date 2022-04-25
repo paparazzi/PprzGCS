@@ -37,6 +37,7 @@ enum PanState {
 class MapWidget : public Map2D, public Configurable
 {
     Q_OBJECT
+    Q_PROPERTY(int ac_arrow_size MEMBER _ac_arrow_size WRITE setAcArrowSize)
 public:
     explicit MapWidget(QWidget *parent = nullptr);
 
@@ -54,6 +55,7 @@ public:
     void configure(QDomElement) override;
 
     void rotateMap(double rot);
+    void setAcArrowSize(int s);
 
 signals:
     void mouseMoved(QPointF scenePos);
@@ -132,6 +134,8 @@ private:
     long shape_bind_id;
 
     QMap<int, Point2DPseudoMercator> pms;
+
+    int _ac_arrow_size;
 
 };
 

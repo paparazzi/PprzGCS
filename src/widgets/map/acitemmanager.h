@@ -7,12 +7,13 @@
 #include "path_item.h"
 #include "mapwidget.h"
 #include "circle_item.h"
+#include "arrow_item.h"
 
 class ACItemManager: public QObject
 {
     Q_OBJECT
 public:
-    ACItemManager(QString ac_id, WaypointItem* target, AircraftItem* aircraft_item, QObject* parent=nullptr);
+    ACItemManager(QString ac_id, WaypointItem* target, AircraftItem* aircraft_item, ArrowItem* arrow_item, QObject* parent=nullptr);
 
     void addWaypointItem(WaypointItem*);
     void addPathItem(PathItem*);
@@ -24,6 +25,7 @@ public:
     WaypointItem* getTarget() {return target;}
     MapItem* getCurrentNavShape() {return current_nav_shape;}
     AircraftItem* getAircraftItem() {return aircraft_item;}
+    ArrowItem* getArrowItem() {return arrow_item;}
     void removeItems(MapWidget* map);
 
 private:
@@ -34,6 +36,7 @@ private:
     AircraftItem* aircraft_item;
     MapItem* current_nav_shape;
     CircleItem* max_dist_circle;
+    ArrowItem* arrow_item;
 
 };
 
