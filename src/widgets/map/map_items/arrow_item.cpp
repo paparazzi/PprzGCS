@@ -93,11 +93,11 @@ std::tuple<QPoint, double, double> ArrowItem::intersect(QRect rect, QPoint p) {
     if(c.x() == p.x()) {
         x = c.x();
         if(p.y() >= c.y()) {
-            y = rect.top();
-            angle_deg = -90.0;
-        } else {
             y = rect.bottom();
             angle_deg = 90.0;
+        } else {
+            y = rect.top();
+            angle_deg = -90.0;
         }
     } else {
         double slope = static_cast<double>(p.y() - c.y()) / static_cast<double>(p.x() - c.x());
