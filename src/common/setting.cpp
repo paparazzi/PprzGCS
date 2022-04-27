@@ -80,7 +80,7 @@ Setting::Setting(QDomElement setel, uint8_t& setting_no, QObject* parent) : QObj
 }
 
 float Setting::getAltUnitCoef(QString altUnit) {
-    auto coef_alt = [=](QString alt){
+    auto coef_alt = [=, this](QString alt){
         auto coef = Units::get()->getCoef(unit, alt);
         if(coef.has_value()) {
             return coef.value();

@@ -18,7 +18,7 @@ PapgetConfig::PapgetConfig(Papget::DataDef datadef, Papget::Params params, QWidg
     callbacks.append(cb);
     stack->addWidget(text_widget);
 
-    connect(comboStyle, qOverload<int>(&QComboBox::currentIndexChanged), this, [=](int index) {
+    connect(comboStyle, qOverload<int>(&QComboBox::currentIndexChanged), this, [=, this](int index) {
         stack->setCurrentIndex(index);
         callbacks[index]();
     });
@@ -27,13 +27,13 @@ PapgetConfig::PapgetConfig(Papget::DataDef datadef, Papget::Params params, QWidg
     auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     lay->addWidget(buttonBox);
 
-    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, [=]() mutable {
+    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, [=, this]() mutable {
 
         emit paramsChanged(this->params);
         accept();
     });
 
-    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, [=](){
+    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, [=, this](){
         reject();
     });
 }
@@ -56,12 +56,12 @@ std::function<void()> PapgetConfig::config_text(QWidget* w) {
     combo_color->addItems(colors);
     layout->addLayout(color_layout);
 
-    connect(size_sp, qOverload<int>(&QSpinBox::valueChanged), [=](int val) {
+    connect(size_sp, qOverload<int>(&QSpinBox::valueChanged), [=, this](int val) {
         params.fontSize = val;
         emit paramsChanged(params);
     });
 
-    connect(combo_color, &QComboBox::currentTextChanged, this, [=](QString text) {
+    connect(combo_color, &QComboBox::currentTextChanged, this, [=, this](QString text) {
         if(text == "AC color" || text == ""){
             auto ac = AircraftManager::get()->getAircraft(datadef.ac_id);
             params.color = ac->getColor();
@@ -71,7 +71,7 @@ std::function<void()> PapgetConfig::config_text(QWidget* w) {
         emit paramsChanged(params);
     });
 
-    auto val = [=]() mutable {
+    auto val = [=, this]() mutable {
         params.fontSize = size_sp->value();
         params.style = Papget::Style::TEXT;
     };

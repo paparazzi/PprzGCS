@@ -55,7 +55,7 @@ void PathItem::addPoint(WaypointItem* wp, bool own) {
 
         connect(
             wp, &WaypointItem::itemChanged, this,
-            [=]() {
+            [=, this]() {
                 emit itemChanged();
             }
         );

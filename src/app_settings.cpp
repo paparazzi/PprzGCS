@@ -139,7 +139,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     lay->addWidget(buttonBox);
 
-    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [=](){
+    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [=, this](){
         for(auto &cb:callbacks) {
             cb();
         }
@@ -153,7 +153,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
         }
     });
 
-    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=](){
+    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=, this](){
         reject();
         if(standalone) {
             qDebug() << "Restarting application...";
@@ -178,7 +178,7 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
         auto edit = new QLineEdit(settings.value(key).toString(), w);
         gl->addWidget(edit, r, 1);
 
-        auto cb = [=]() {
+        auto cb = [=, this]() {
           auto settings = getAppSettings();
           settings.setValue(key, edit->text());
         };
@@ -188,7 +188,7 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
         auto edit = new QLineEdit(settings.value(key).toString(), w);
         gl->addWidget(edit, r, 1);
 
-        auto cb = [=]() {
+        auto cb = [=, this]() {
           auto settings = getAppSettings();
           settings.setValue(key, edit->text().toInt());
         };
@@ -198,7 +198,7 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
         auto edit = new QLineEdit(settings.value(key).toString(), w);
         gl->addWidget(edit, r, 1);
 
-        auto cb = [=]() {
+        auto cb = [=, this]() {
           auto settings = getAppSettings();
           settings.setValue(key, edit->text().toDouble());
         };
@@ -211,7 +211,7 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
         QToolButton* but = new QToolButton(w);
         but->setIcon(style()->standardIcon(QStyle::SP_DirOpenIcon));
         gl->addWidget(but, r, 2);
-        connect(but, &QToolButton::clicked, this, [=]() {
+        connect(but, &QToolButton::clicked, this, [=, this]() {
             auto dir = QFileDialog::getExistingDirectory(w, name, edit->text());
             qDebug() << dir;
             if(dir != "") {
@@ -219,7 +219,7 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
             }
         });
 
-        auto cb = [=]() {
+        auto cb = [=, this]() {
           auto settings = getAppSettings();
           settings.setValue(key, edit->text());
         };
@@ -232,7 +232,7 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
         QToolButton* but = new QToolButton(w);
         but->setIcon(style()->standardIcon(QStyle::SP_DirOpenIcon));
         gl->addWidget(but, r, 2);
-        connect(but, &QToolButton::clicked, this, [=]() {
+        connect(but, &QToolButton::clicked, this, [=, this]() {
             QFileInfo fi = (edit->text());
             auto dir = QFileDialog::getOpenFileName(w, name, fi.absoluteDir().path());
             qDebug() << dir;
@@ -241,7 +241,7 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
             }
         });
 
-        auto cb = [=]() {
+        auto cb = [=, this]() {
           auto settings = getAppSettings();
           settings.setValue(key, edit->text());
         };

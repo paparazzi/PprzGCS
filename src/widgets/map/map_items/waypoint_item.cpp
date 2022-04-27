@@ -52,21 +52,21 @@ void WaypointItem::init() {
 
     connect(
         point, &GraphicsPoint::objectClicked, this,
-        [=](QPointF scene_pos) {
+        [=, this](QPointF scene_pos) {
             emit itemClicked(scene_pos);
         }
     );
 
     connect(
         point, &GraphicsPoint::objectDoubleClicked, this,
-        [=](QPointF scene_pos) {
+        [=, this](QPointF scene_pos) {
             emit itemDoubleClicked(scene_pos);
         }
     );
 
     connect(
         point, &GraphicsPoint::objectGainedHighlight, this,
-        [=]() {
+        [=, this]() {
             setHighlighted(true);
             emit itemGainedHighlight();
         }
@@ -79,7 +79,7 @@ void WaypointItem::addToMap(MapWidget* map) {
 
     connect(
         point, &GraphicsPoint::pointMoved, this,
-        [=](QPointF scene_pos) {
+        [=, this](QPointF scene_pos) {
             moving = true;
             // reverse position: from scene (mouse) to WGS84.
             Point2DLatLon latlon = CoordinatesTransform::get()->wgs84_from_scene(scene_pos, zoomLevel(map->zoom()), map->tileSize());
@@ -89,7 +89,7 @@ void WaypointItem::addToMap(MapWidget* map) {
 
     connect(
         point, &GraphicsPoint::pointMoveFinished, this,
-        [=](QPointF scene_pos) {
+        [=, this](QPointF scene_pos) {
             Point2DLatLon latlon = CoordinatesTransform::get()->wgs84_from_scene(scene_pos, zoomLevel(map->zoom()), map->tileSize());
             this->setPosition(latlon);
             emit waypointMoveFinished();

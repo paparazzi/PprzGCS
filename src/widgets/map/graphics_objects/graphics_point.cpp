@@ -21,7 +21,7 @@ GraphicsPoint::GraphicsPoint(int size, PprzPalette palette, QObject *parent) :
     current_color = COLOR_IDLE;
 
     animation_timer->setInterval(500);
-    connect(animation_timer, &QTimer::timeout, this, [=]()
+    connect(animation_timer, &QTimer::timeout, this, [=, this]()
     {
         animation_couter += 1;
         prepareGeometryChange();

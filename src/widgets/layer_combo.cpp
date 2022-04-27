@@ -147,21 +147,21 @@ void LayerCombo::makeLayerControl(QString name, bool initialState, int z) {
 
     connect(
         layer_control, &MapLayerControl::showLayer, this,
-        [=](bool state) {
+        [=, this](bool state) {
             emit showLayer(name, state, layer_control->zValue(), layer_control->opacity());
         }
     );
 
     connect(
         layer_control, &MapLayerControl::layerOpacityChanged, this,
-        [=](qreal opacity) {
+        [=, this](qreal opacity) {
             emit layerOpacityChanged(name, opacity);
         }
     );
 
     connect(
         layer_control, &MapLayerControl::zValueChanged, this,
-        [=](int z) {
+        [=, this](int z) {
             emit zValueChanged(name, z);
         }
     );

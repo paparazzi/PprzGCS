@@ -120,7 +120,7 @@ void SRTMManager::load_tiles(QList<QString> names) {
     if(tiles_dl.size() > 0) {
         auto dialog = new SRTMDialog(tiles_dl);
 
-        connect(dialog, &SRTMDialog::tilesConfirmed, this, [=](QList<QString> tiles_confirmed) {
+        connect(dialog, &SRTMDialog::tilesConfirmed, this, [=, this](QList<QString> tiles_confirmed) {
             for(auto &name: tiles_confirmed) {
                 load_tile(name, true);
             }
@@ -234,7 +234,7 @@ SRTMDialog::SRTMDialog(QList<QString> tiles_names, QWidget *parent) : QDialog(pa
         chk_tiles.append(ck);
     }
 
-    connect(select_all, &QCheckBox::toggled, this, [=](bool checked) {
+    connect(select_all, &QCheckBox::toggled, this, [=, this](bool checked) {
         for(auto &ck: chk_tiles) {
             ck->setChecked(checked);
         }
@@ -244,7 +244,7 @@ SRTMDialog::SRTMDialog(QList<QString> tiles_names, QWidget *parent) : QDialog(pa
     auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     lay->addWidget(buttonBox);
 
-    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [=]() {
+    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [=, this]() {
         QList<QString> tiles_ok;
         for(auto ck: chk_tiles) {
             if(ck->isChecked()) {
@@ -255,7 +255,7 @@ SRTMDialog::SRTMDialog(QList<QString> tiles_names, QWidget *parent) : QDialog(pa
         accept();
     });
 
-    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=](){
+    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=, this](){
         reject();
     });
 }

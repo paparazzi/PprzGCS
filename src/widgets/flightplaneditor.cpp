@@ -42,7 +42,7 @@ FlightPlanEditor::FlightPlanEditor(QString ac_id, QWidget *parent) : QWidget(par
     }
 
     if(!readOnly) {
-        connect(ui->validate_button, &QPushButton::clicked, this, [=]() {
+        connect(ui->validate_button, &QPushButton::clicked, this, [=, this]() {
             bool result = validate();
             if(result) {
                 QMessageBox::information(this, "DTD Validation", "XML is valid!");
@@ -51,7 +51,7 @@ FlightPlanEditor::FlightPlanEditor(QString ac_id, QWidget *parent) : QWidget(par
             }
         });
 
-        connect(ui->save_button, &QPushButton::clicked, this, [=]() {
+        connect(ui->save_button, &QPushButton::clicked, this, [=, this]() {
             auto data = output();
             auto out_path = QFileDialog::getSaveFileName(this, "save btu", config->getFlightPlanUri());
             if(out_path != "") {
@@ -64,15 +64,15 @@ FlightPlanEditor::FlightPlanEditor(QString ac_id, QWidget *parent) : QWidget(par
             }
         });
 
-        connect(ui->up_button, &QPushButton::clicked, this, [=]() {
+        connect(ui->up_button, &QPushButton::clicked, this, [=, this]() {
             onArrowClicked(true);
         });
 
-        connect(ui->down_button, &QPushButton::clicked, this, [=]() {
+        connect(ui->down_button, &QPushButton::clicked, this, [=, this]() {
             onArrowClicked(false);
         });
 
-        connect(ui->attributes, &QTreeWidget::itemDoubleClicked, this, [=](QTreeWidgetItem * item, int column) {
+        connect(ui->attributes, &QTreeWidget::itemDoubleClicked, this, [=, this](QTreeWidgetItem * item, int column) {
             if(column == 1) {
                 ui->attributes->editItem(item, column);
             }
@@ -89,7 +89,7 @@ FlightPlanEditor::FlightPlanEditor(QString ac_id, QWidget *parent) : QWidget(par
         ui->up_button->hide();
         ui->down_button->hide();
 
-        connect(ui->tree, &QTreeWidget::itemDoubleClicked, this, [=](QTreeWidgetItem * item, int column) {
+        connect(ui->tree, &QTreeWidget::itemDoubleClicked, this, [=, this](QTreeWidgetItem * item, int column) {
             qDebug() << column << item->text(0) << item->text(1);
         });
 
@@ -362,7 +362,7 @@ void FlightPlanEditor::openElementsContextMenu(QPoint pos) {
 
     /// Delete action
     auto delete_action = menu->addAction("Delete");
-    connect(delete_action, &QAction::triggered, this, [=]() {
+    connect(delete_action, &QAction::triggered, this, [=, this]() {
         xmlUnlinkNode(node);
         xmlFreeNode(node);
 
@@ -396,7 +396,7 @@ void FlightPlanEditor::openElementsContextMenu(QPoint pos) {
         elements.removeAll("#PCDATA");
         for(auto &name: elements) {
             auto addchild_action = childMenu->addAction(name);
-            connect(addchild_action, &QAction::triggered, this, [=]() {
+            connect(addchild_action, &QAction::triggered, this, [=, this]() {
                 item->setExpanded(true);
                 xmlNodePtr new_node = xmlNewNode(nullptr, BAD_CAST name.toStdString().c_str());
                 for(auto att: attributeDefs(new_node->name)) {
@@ -427,7 +427,7 @@ void FlightPlanEditor::openElementsContextMenu(QPoint pos) {
 
     ///Copy after action
     auto copy_action = menu->addAction("Copy after");
-    connect(copy_action, &QAction::triggered, this, [=]() {
+    connect(copy_action, &QAction::triggered, this, [=, this]() {
         auto copy = xmlCopyNode(node, 1);
         xmlAddNextSibling(node, copy);
 
@@ -463,7 +463,7 @@ void FlightPlanEditor::openElementsContextMenu(QPoint pos) {
             elements.removeAll("#PCDATA");
             for(auto &name: elements) {
                 auto addafter_action = afterMenu->addAction(name);
-                connect(addafter_action, &QAction::triggered, this, [=]() {
+                connect(addafter_action, &QAction::triggered, this, [=, this]() {
                     xmlNodePtr new_node = xmlNewNode(nullptr, BAD_CAST name.toStdString().c_str());
                     for(auto att: attributeDefs(new_node->name)) {
                         if(att.required) {
@@ -526,7 +526,7 @@ void FlightPlanEditor::openAttributesContextMenu(QPoint pos) {
                 if(att_selected[0]->text(0) == QString((char*)att.name) && !att.required) {
                     /// Delete action
                     auto delete_action = menu->addAction("Delete");
-                    connect(delete_action, &QAction::triggered, this, [=]() {
+                    connect(delete_action, &QAction::triggered, this, [=, this]() {
                         xmlUnsetProp(node, att.name);
                         onItemClicked(node_item, 1);
                     });
@@ -542,7 +542,7 @@ void FlightPlanEditor::openAttributesContextMenu(QPoint pos) {
             if(prop == nullptr) {
                 // Add attribute if not already there
                 auto add_attribute_action = addAttMenu->addAction(QString((char*)att.name));
-                connect(add_attribute_action, &QAction::triggered, this, [=]() {
+                connect(add_attribute_action, &QAction::triggered, this, [=, this]() {
                     xmlSetProp(node, att.name, BAD_CAST "???");
                     onItemClicked(node_item, 1);
                 });
@@ -555,7 +555,7 @@ void FlightPlanEditor::openAttributesContextMenu(QPoint pos) {
         if(QString((char*)node->name) == "waypoint") {
             if(xmlGetProp(node, BAD_CAST "x")) {
                 auto convert_action = menu->addAction("Convert to lat/lon");
-                connect(convert_action, &QAction::triggered, this, [=]() {
+                connect(convert_action, &QAction::triggered, this, [=, this]() {
                     xmlUnsetProp(node, BAD_CAST "x");
                     xmlUnsetProp(node, BAD_CAST "y");
                     auto wp = waypoints[node_item];
@@ -567,7 +567,7 @@ void FlightPlanEditor::openAttributesContextMenu(QPoint pos) {
                 });
             } else if(xmlGetProp(node, BAD_CAST "lat")) {
                 auto convert_action = menu->addAction("Convert to x/y");
-                connect(convert_action, &QAction::triggered, this, [=]() {
+                connect(convert_action, &QAction::triggered, this, [=, this]() {
                     xmlUnsetProp(node, BAD_CAST "lat");
                     xmlUnsetProp(node, BAD_CAST "lon");
                     auto wp = waypoints[node_item];
@@ -767,7 +767,7 @@ void FlightPlanEditor::onItemDoubleClicked(QTreeWidgetItem *item, int column) {
 void FlightPlanEditor::onNavStatus() {
     auto last = blocks[last_block];
 
-    applyRecursive(last, [=](QTreeWidgetItem* item){
+    applyRecursive(last, [=, this](QTreeWidgetItem* item){
         for(int i=0; i<item->columnCount(); ++i) {
             item->setBackgroundColor(i, Qt::transparent);
         }
@@ -781,7 +781,7 @@ void FlightPlanEditor::onNavStatus() {
         msg->getField("cur_block", cur_block);
         msg->getField("cur_stage", cur_stage);
 
-        applyRecursive(blocks[cur_block], [=](QTreeWidgetItem* item){
+        applyRecursive(blocks[cur_block], [=, this](QTreeWidgetItem* item){
             QColor color = Qt::darkGreen;
             auto node = nodes[item];
             auto cno = xmlGetProp(node, BAD_CAST "no");

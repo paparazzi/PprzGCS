@@ -26,7 +26,7 @@ ListContainer::ListContainer(std::function<QWidget*(QString, QWidget*)> construc
 
     // FIXME: small hack to set minimum size of the scrollarea
     QTimer* t = new QTimer(this);
-    connect(t, &QTimer::timeout, this, [=]() {
+    connect(t, &QTimer::timeout, this, [=, this]() {
         this->setMinimumWidth(grid_layout->sizeHint().width());
     });
     t->start(500);

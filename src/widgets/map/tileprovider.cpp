@@ -31,7 +31,7 @@ TileProvider::~TileProvider() {
 }
 
 void TileProvider::removeFromScene(QGraphicsScene* scene) {
-    tileApplyRecursive(motherTile, [=](TileItem* tile) {
+    tileApplyRecursive(motherTile, [=, this](TileItem* tile) {
         if(tile->isInScene()) {
             scene->removeItem(tile);
             tile->setInScene(false);
@@ -257,7 +257,7 @@ void TileProvider::sendTile(TileItem* tileReady, TileItem* tileObj) {
 
 void TileProvider::setZoomLevel(int z) {
 
-    tileApplyRecursive(motherTile, [=](TileItem* tile) {
+    tileApplyRecursive(motherTile, [=, this](TileItem* tile) {
         if(tile->hasData() && tile->coordinates().zoom() != z) {
             tile->hide();
         }
@@ -303,7 +303,7 @@ void TileProvider::setZValue(int z) {
     //iterate over all items in scene
 
 
-    tileApplyRecursive(motherTile, [=](TileItem* tile) {
+    tileApplyRecursive(motherTile, [=, this](TileItem* tile) {
         if(tile->isInScene()) {
             tile->setZValue(z);
         }
@@ -313,7 +313,7 @@ void TileProvider::setZValue(int z) {
 void TileProvider::setOpacity(qreal a) {
     alpha = a;
 
-    tileApplyRecursive(motherTile, [=](TileItem* tile) {
+    tileApplyRecursive(motherTile, [=, this](TileItem* tile) {
         if(tile->isInScene()) {
             tile->setOpacity(alpha);
         }
@@ -326,7 +326,7 @@ void TileProvider::setVisible(bool v) {
     }
     visibility = v;
 
-    tileApplyRecursive(motherTile, [=](TileItem* tile) {
+    tileApplyRecursive(motherTile, [=, this](TileItem* tile) {
         if(tile->isInScene()) {
             tile->setVisible(visibility);
         }

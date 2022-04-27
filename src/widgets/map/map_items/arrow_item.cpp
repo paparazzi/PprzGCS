@@ -17,7 +17,7 @@ ArrowItem::ArrowItem(QString ac_id, double neutral_scale_zoom, QObject *parent) 
 
     scene_item = new GraphicsGroup(palette, this);
     polygon = new QGraphicsPolygonItem(scene_item);
-    connect(scene_item, &GraphicsGroup::mousePressed, this, [=](auto event) {
+    connect(scene_item, &GraphicsGroup::mousePressed, this, [=, this](auto event) {
         (void)event;
         emit centerAC();
         emit DispatcherUi::get()->ac_selected(ac_id);

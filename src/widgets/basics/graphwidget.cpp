@@ -80,8 +80,8 @@ void GraphWidget::paintEvent(QPaintEvent *e) {
 
 
 
-    auto y_of_val = [=](double val){return graph_rect.bottom() - ((val - min)*graph_rect.height())/(max-min);};
-    val_of_y = [=](int y){return ((graph_rect.bottom()-y)*(max-min)/graph_rect.height()) + min;};
+    auto y_of_val = [=, this](double val){return graph_rect.bottom() - ((val - min)*graph_rect.height())/(max-min);};
+    val_of_y = [=, this](int y){return ((graph_rect.bottom()-y)*(max-min)/graph_rect.height()) + min;};
 
     int max_w = 0;
     QList<int> ylines;
@@ -122,8 +122,8 @@ void GraphWidget::paintEvent(QPaintEvent *e) {
     }
 
     auto now = QTime::currentTime();
-    auto x_of_t = [=](int dt){return graph_rect.right() - (graph_rect.width()*dt)/history;};
-    auto dt_of_x = [=](int x){return ((graph_rect.right() - x) * history) / graph_rect.width();};
+    auto x_of_t = [=, this](int dt){return graph_rect.right() - (graph_rect.width()*dt)/history;};
+    auto dt_of_x = [=, this](int x){return ((graph_rect.right() - x) * history) / graph_rect.width();};
 
     // draw time scale
     p.setBrush(Qt::NoBrush);

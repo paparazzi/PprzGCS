@@ -6,7 +6,7 @@ GPSClassicViewer::GPSClassicViewer(QString ac_id, QWidget *parent) : QWidget(par
     ac_id(ac_id), reduced(true)
 {
     connect(AircraftManager::get()->getAircraft(ac_id)->getStatus(),
-            &AircraftStatus::engine_status, this, [=]() {
+            &AircraftStatus::engine_status, this, [=, this]() {
         this->update();
     });
 }

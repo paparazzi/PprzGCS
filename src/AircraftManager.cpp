@@ -167,7 +167,7 @@ void ConfigData::setData(QDomDocument* doc, QString uri) {
         }
     } else if(uri.left(sepi) == "http") {
         auto netacc = new QNetworkAccessManager(this);
-        connect(netacc, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply) {
+        connect(netacc, &QNetworkAccessManager::finished, this, [=, this](QNetworkReply* reply) {
             auto data = reply->readAll();
             doc->setContent(data);
             if(isComplete()) {

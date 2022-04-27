@@ -18,7 +18,7 @@ PprzMap::PprzMap(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(ui->srtm_button, &QPushButton::clicked, [=]() {
+    connect(ui->srtm_button, &QPushButton::clicked, [=, this]() {
 
         QSet<QString> tiles;
 

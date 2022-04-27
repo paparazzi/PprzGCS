@@ -64,7 +64,7 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     infoLay->addLayout(altLay);
     infoLay->addLayout(butLay);
 
-    auto updateAgl = [=]() {
+    auto updateAgl = [=, this]() {
         auto ele = SRTMManager::get()->get_elevation(wi->waypoint()->getLat(), wi->waypoint()->getLon());
         double agl;
         if(ele) {
@@ -81,7 +81,7 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
 
     updateAgl();
 
-    auto updateLatLon = [=]() {
+    auto updateLatLon = [=, this]() {
         bool ok_a = false;
         bool ok_b = false;
         double a = latEdit->text().toDouble(&ok_a);
@@ -114,36 +114,36 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
         }
     };
 
-    connect(latEdit, &QLineEdit::textEdited, [=](){
+    connect(latEdit, &QLineEdit::textEdited, [=, this](){
         updateLatLon();
         updateAgl();
     });
 
-    connect(lonEdit, &QLineEdit::textEdited, [=](){
+    connect(lonEdit, &QLineEdit::textEdited, [=, this](){
         updateLatLon();
         updateAgl();
     });
 
 
-    connect(altSpin, qOverload<double>(&QDoubleSpinBox::valueChanged), [=](double alt){
+    connect(altSpin, qOverload<double>(&QDoubleSpinBox::valueChanged), [=, this](double alt){
         wi->waypoint()->setAlt(alt);
         updateAgl();
     });
 
-    connect(upButton, &QAbstractButton::clicked, [=]() {
+    connect(upButton, &QAbstractButton::clicked, [=, this]() {
         wi->waypoint()->setAlt(wi->waypoint()->getAlt() + 10);
         altSpin->setValue(wi->waypoint()->getAlt());
         updateAgl();
     });
 
-    connect(downButton, &QAbstractButton::clicked, [=]() {
+    connect(downButton, &QAbstractButton::clicked, [=, this]() {
         wi->waypoint()->setAlt(wi->waypoint()->getAlt() - 10);
         altSpin->setValue(wi->waypoint()->getAlt());
         updateAgl();
     });
 
 
-    connect(combo, &QComboBox::currentTextChanged, this, [=](const QString &text) {
+    connect(combo, &QComboBox::currentTextChanged, this, [=, this](const QString &text) {
         if(text == WGS84) {
             axis1_label->setText("lat");
             axis2_label->setText("lon");
@@ -185,13 +185,13 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
     lay->addWidget(buttonBox);
 
-    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [=](){
+    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [=, this](){
         emit DispatcherUi::get()->move_waypoint_ui(wi->waypoint(), ac_id);
         accept();
 
     });
 
-    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=](){
+    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=, this](){
         reject();
     });
 }

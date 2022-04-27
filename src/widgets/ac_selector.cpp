@@ -11,7 +11,7 @@ ACSelector::ACSelector(QWidget *parent) : QWidget(parent)
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &ACSelector::handleNewAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &ACSelector::removeAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this,
-            [=](QString ac_id) {
+            [=, this](QString ac_id) {
                 current_ac_id = ac_id;
                 repaint();
             });

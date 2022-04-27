@@ -105,7 +105,7 @@ void Speaker::bindMessage(struct Message msg) {
     auto msg_class = def[0];
 
     auto bid = PprzDispatcher::get()->bind(def[1], this,
-        [=](QString sender, pprzlink::Message pprz_msg){
+        [=, this](QString sender, pprzlink::Message pprz_msg){
 
             QString ac_id;
             if(msg_class == "ground") {

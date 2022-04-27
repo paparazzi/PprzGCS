@@ -198,7 +198,7 @@ Waypoint* FlightPlan::addWaypoint(QString requested_name, Point2DLatLon latlon) 
 QString FlightPlan::requestNewName(QString requested_name) {
     QString name = requested_name;
     for(int i=2;
-        std::find_if(std::begin(waypoints), std::end(waypoints), [=](Waypoint* &wp) {
+        std::find_if(std::begin(waypoints), std::end(waypoints), [=, this](Waypoint* &wp) {
             return wp->getName() == name;
         }) != std::end(waypoints);
         i++) {

@@ -34,7 +34,7 @@ MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState
     image_layout->setAlignment(show_button, Qt::AlignHCenter);
     connect(
         show_button, &QPushButton::clicked,
-        [=]() {
+        [=, this]() {
             toggleShowState();
         });
 
@@ -44,7 +44,7 @@ MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState
 
     connect(
         opacitySlider, &QSlider::valueChanged,
-        [=](int value) {
+        [=, this](int value) {
             (void) value;
             emit layerOpacityChanged(opacity());
         });

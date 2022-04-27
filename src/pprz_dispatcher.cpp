@@ -32,7 +32,7 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
     dict = new pprzlink::MessageDictionary(messages);
     link = new pprzlink::IvyQtLink(*dict, ivy_name, this);
 
-    connect(link, &pprzlink::IvyQtLink::serverConnected, this, [=]() {
+    connect(link, &pprzlink::IvyQtLink::serverConnected, this, [=, this]() {
         started = true;
        requestAircrafts();
     });
@@ -52,7 +52,7 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
 
 
     long bid = link->BindMessage(dict->getDefinition("WAYPOINT_MOVED"), nullptr,
-        [=](QString ac_id, pprzlink::Message msg) {
+        [=, this](QString ac_id, pprzlink::Message msg) {
             (void)ac_id;
             QString id;
             uint8_t wp_id = 0;
@@ -65,7 +65,7 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
     _bindIds.append(bid);
 
     bid = link->BindMessage(dict->getDefinition("AIRCRAFT_DIE"), nullptr,
-        [=](QString ac_id, pprzlink::Message msg) {
+        [=, this](QString ac_id, pprzlink::Message msg) {
             (void)ac_id;
             QString id;
             msg.getField("ac_id", id);
@@ -99,7 +99,7 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
 
 
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint_ui, this,
-        [=](Waypoint* wp, QString ac_id) {
+        [=, this](Waypoint* wp, QString ac_id) {
             //Do not send the message if this is a "flight plan only" AC.
             if(AircraftManager::get()->getAircraft(ac_id)->isReal()) {
                 pprzlink::Message msg(dict->getDefinition("MOVE_WAYPOINT"));
@@ -116,7 +116,7 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
         });
 
     bid = link->BindMessage(dict->getDefinition("NEW_AIRCRAFT"), nullptr,
-        [=](QString ac_id, pprzlink::Message msg) {
+        [=, this](QString ac_id, pprzlink::Message msg) {
             (void)ac_id;
             QString id;
             msg.getField("ac_id", id);
@@ -141,7 +141,7 @@ void PprzDispatcher::unbindAll() {
 
 void PprzDispatcher::bindDeftoSignal(QString const &name, sig_ptr_t sig) {
     long bid = link->BindMessage(dict->getDefinition(name), nullptr,
-        [=](QString sender, pprzlink::Message msg) {
+        [=, this](QString sender, pprzlink::Message msg) {
             if(sender == "ground") {
                 time_msg_server = QDateTime::currentMSecsSinceEpoch();
             }
@@ -166,7 +166,7 @@ void PprzDispatcher::requestConfig(QString ac_id) {
     pprzlink::Message reqConfig(dict->getDefinition("CONFIG_REQ"));
     reqConfig.addField("ac_id", ac_id);
     reqConfig.setSenderId(pprzlink_id);
-    link->sendRequest(reqConfig, [=](QString ai, pprzlink::Message msg) {
+    link->sendRequest(reqConfig, [=, this](QString ai, pprzlink::Message msg) {
         (void)ai;
         AircraftManager::get()->newAircraftConfig(msg);
     });
@@ -185,7 +185,7 @@ void PprzDispatcher::requestAircrafts() {
     pprzlink::Message msg(def_ar);
     msg.setSenderId(pprzlink_id);
 
-    link->sendRequest(msg, [=](QString sender, pprzlink::Message msg) {
+    link->sendRequest(msg, [=, this](QString sender, pprzlink::Message msg) {
         (void)sender;
         QString ac_list;
         msg.getField("ac_list", ac_list);

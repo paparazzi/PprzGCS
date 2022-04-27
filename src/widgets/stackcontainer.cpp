@@ -27,7 +27,7 @@ StackContainer::StackContainer(std::function<QWidget*(QString, QWidget*)> constr
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &StackContainer::handleNewAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &StackContainer::removeAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this,
-            [=](QString ac_id) {
+            [=, this](QString ac_id) {
                 for(auto &id : viewers_widgets.keys()) {
                     if(id == ac_id) {
                         viewers_widgets[id]->show();

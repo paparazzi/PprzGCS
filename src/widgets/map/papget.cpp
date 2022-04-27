@@ -21,11 +21,11 @@ Papget::Papget(struct DataDef datadef, QPoint pos_view, QObject *parent) : QObje
     params.fontSize = settings.value("map/items_font").toInt();
 
     bindRet = PprzDispatcher::get()->bind(datadef.msg_name,
-        [=](QString sender, pprzlink::Message msg) {
+        [=, this](QString sender, pprzlink::Message msg) {
             QTimer* timer = new QTimer();
             timer->moveToThread(qApp->thread());
             timer->setSingleShot(true);
-            QObject::connect(timer, &QTimer::timeout, this, [=]()
+            QObject::connect(timer, &QTimer::timeout, this, [=, this]()
             {
                 // main thread
                 callback(sender, msg);
@@ -150,11 +150,11 @@ void Papget::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     Params old_params = params;
     auto pc = new PapgetConfig(datadef, params);
 
-    connect(pc, &PapgetConfig::paramsChanged, this, [=](Params new_params) mutable {
+    connect(pc, &PapgetConfig::paramsChanged, this, [=, this](Params new_params) mutable {
             params = new_params;
     });
 
-    connect(pc, &QDialog::finished, this, [=](int result) mutable {
+    connect(pc, &QDialog::finished, this, [=, this](int result) mutable {
         if(!result) {
             params = old_params;
         }

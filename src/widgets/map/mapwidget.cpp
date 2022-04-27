@@ -74,7 +74,7 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     }
 
     timer_intruders = new QTimer(this);
-    connect(timer_intruders, &QTimer::timeout, this, [=]() {
+    connect(timer_intruders, &QTimer::timeout, this, [=, this]() {
         auto now = QTime::currentTime();
         auto it = QMutableMapIterator(intruders);
         while(it.hasNext()) {
@@ -88,7 +88,7 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     timer_intruders->start(1000);
 
     connect(scene(), &MapScene::eventScene, this,
-        [=](SmEditEvent eventType, QGraphicsSceneMouseEvent *mouseEvent) {
+        [=, this](SmEditEvent eventType, QGraphicsSceneMouseEvent *mouseEvent) {
             if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
                 MapItem* item = fp_edit_sm->update(eventType, mouseEvent, nullptr, current_ac);
                 (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
@@ -96,7 +96,7 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
         });
 
 
-    connect(DispatcherUi::get(), &DispatcherUi::showHiddenWaypoints, this, [=](bool state) {
+    connect(DispatcherUi::get(), &DispatcherUi::showHiddenWaypoints, this, [=, this](bool state) {
         for(auto &itemManager: ac_items_managers) {
             for(auto &wpi: itemManager->getWaypointsItems()) {
                 if(state) {
@@ -123,17 +123,17 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     connect(PprzDispatcher::get(), &PprzDispatcher::segment_status, this, &MapWidget::updateNavShape);
 
     shape_bind_id = PprzDispatcher::get()->bind("SHAPE", this,
-        [=](QString sender, pprzlink::Message msg) {
+        [=, this](QString sender, pprzlink::Message msg) {
             onShape(sender, msg);
         });
 
     PprzDispatcher::get()->bind("INTRUDER", this,
-        [=](QString sender, pprzlink::Message msg) {
+        [=, this](QString sender, pprzlink::Message msg) {
             onIntruder(sender, msg);
         });
 
     PprzDispatcher::get()->bind("FLIGHT_PARAM", this,
-            [=](QString sender, pprzlink::Message msg) {
+            [=, this](QString sender, pprzlink::Message msg) {
                 (void)sender;
                 QString id;
                 msg.getField("ac_id", id);
@@ -171,7 +171,7 @@ void MapWidget::changeCurrentAC(QString id) {
 
 void MapWidget::registerWaypoint(WaypointItem* waypoint) {
     connect(waypoint, &WaypointItem::itemClicked, this,
-        [=](QPointF pos) {
+        [=, this](QPointF pos) {
             (void)pos;
             if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
                 MapItem* item = fp_edit_sm->update(FPEE_WP_CLICKED, nullptr, waypoint, current_ac);
@@ -195,7 +195,7 @@ LayerCombo* MapWidget::makeLayerCombo() {
 
     connect(
         layer_combo, &LayerCombo::showLayer, this,
-        [=](QString name, bool state) {
+        [=, this](QString name, bool state) {
             toggleTileProvider(name, state);
             updateTiles();
         }
@@ -203,14 +203,14 @@ LayerCombo* MapWidget::makeLayerCombo() {
 
     connect(
         layer_combo, &LayerCombo::layerOpacityChanged, this,
-        [=](QString name, qreal opacity) {
+        [=, this](QString name, qreal opacity) {
             setLayerOpacity(name, opacity);
         }
     );
 
     connect(
         layer_combo, &LayerCombo::zValueChanged, this,
-        [=](QString name, int z) {
+        [=, this](QString name, int z) {
             setLayerZ(name, z);
         }
     );
@@ -243,7 +243,7 @@ void MapWidget::addWidget(QWidget* widget, LockButton* button, WidgetContainer s
 
     connect(
         button, &LockButton::clicked,
-        [=](bool active) {
+        [=, this](bool active) {
             for(auto lb: *buttons) {
                 if(lb != button) {  //other buttons
                     if(!lb->isLocked()) {
@@ -309,7 +309,7 @@ void MapWidget::configure(QDomElement ele) {
     wind_indicator->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     rightLayout->addWidget(wind_indicator, 0, Qt::AlignRight);
 
-    PprzDispatcher::get()->bind("WIND", this, [=](QString sender, pprzlink::Message msg){
+    PprzDispatcher::get()->bind("WIND", this, [=, this](QString sender, pprzlink::Message msg){
         (void)sender;
         QString ac_id;
         msg.getField("ac_id", ac_id);
@@ -320,7 +320,7 @@ void MapWidget::configure(QDomElement ele) {
         wind_indicator->setWindData(ac_id, dir, wspeed);
     });
 
-    connect(wind_indicator, &WindIndicator::requestRotation, this, [=](double rot) {
+    connect(wind_indicator, &WindIndicator::requestRotation, this, [=, this](double rot) {
         rotateMap(rot-getRotation());
     });
 
@@ -345,11 +345,11 @@ void MapWidget::addItem(MapItem* map_item) {
         registerWaypoint(wi);
     }
 
-    connect(map_item, &MapItem::itemChanged, map_item, [=]() {
+    connect(map_item, &MapItem::itemChanged, map_item, [=, this]() {
         map_item->updateGraphics(this, UpdateEvent::ITEM_CHANGED);
     });
 
-    connect(map_item, &MapItem::itemGainedHighlight, map_item, [=]() {
+    connect(map_item, &MapItem::itemGainedHighlight, map_item, [=, this]() {
         QString ac_id = map_item->acId();
         if(ac_id != "__NO_AC__") {
             emit DispatcherUi::get()->ac_selected(ac_id);
@@ -539,8 +539,8 @@ bool MapWidget::viewportEvent(QEvent *event) {
             auto id0 = pms.firstKey();
             auto id1 = pms.lastKey();
 
-            auto tp0 = std::find_if(touchPoints.begin(), touchPoints.end(), [=](auto ele) {return ele.id() == id0;});
-            auto tp1 = std::find_if(touchPoints.begin(), touchPoints.end(), [=](auto ele) {return ele.id() == id1;});
+            auto tp0 = std::find_if(touchPoints.begin(), touchPoints.end(), [=, this](auto ele) {return ele.id() == id0;});
+            auto tp1 = std::find_if(touchPoints.begin(), touchPoints.end(), [=, this](auto ele) {return ele.id() == id1;});
 
             if(tp0 == touchPoints.end() || tp1 == touchPoints.end()) {
                 // touch points not found!
@@ -652,7 +652,7 @@ void MapWidget::dropEvent(QDropEvent *event) {
         papget->setZValue(1000);
         papgets.append(papget);
 
-        connect(papget, &Papget::moved, this, [=](QPointF pos) {
+        connect(papget, &Papget::moved, this, [=, this](QPointF pos) {
             QPoint viewPos = mapFromScene(pos);
             papget->setPosition(viewPos);
         });
@@ -686,7 +686,7 @@ void MapWidget::handleNewAC(QString ac_id) {
         addItem(arrow);
         arrow->setProperty("size", _ac_arrow_size);
 
-        connect(arrow, &ArrowItem::centerAC, this, [=]() {
+        connect(arrow, &ArrowItem::centerAC, this, [=, this]() {
             auto pos = ac->getPosition();
             centerLatLon(pos);
         });
@@ -751,14 +751,14 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
     addItem(wpi);
     ac_items_managers[ac_id]->addWaypointItem(wpi);
 
-    auto dialog_move_waypoint = [=]() {
+    auto dialog_move_waypoint = [=, this]() {
         wpi->setMoving(true);
         auto we = new WaypointEditor(wpi, ac_id);
         auto view_pos = mapFromScene(wpi->scenePos());
         auto global_pos = mapToGlobal(view_pos);
         we->show(); //show just to get the width and height right.
         we->move(global_pos - QPoint(we->width()/2, we->height()/2));
-        connect(we, &QDialog::finished, wpi, [=](int result) {
+        connect(we, &QDialog::finished, wpi, [=, this](int result) {
             (void)result;
             wpi->setMoving(false);
             if(!result) {
@@ -773,7 +773,7 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
 
     connect(wpi, &WaypointItem::itemDoubleClicked, this, dialog_move_waypoint);
 
-    connect(wpi, &WaypointItem::waypointMoved, this, [=](){
+    connect(wpi, &WaypointItem::waypointMoved, this, [=, this](){
         wpi->setAnimate(true);
     });
 
@@ -823,7 +823,7 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
 
     MapItem* prev_item = ac_items_managers[ac_id]->getCurrentNavShape();
 
-    auto delete_prev = [=]() {
+    auto delete_prev = [=, this]() {
         if(prev_item != nullptr) {
             // prev_item not null, delete it
             ac_items_managers[ac_id]->setCurrentNavShape(nullptr);

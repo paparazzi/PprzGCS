@@ -45,7 +45,7 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
         auto go_button = new QToolButton(widget);
         go_button->setText(QString::fromUtf8("\xE2\x86\x92"));
         connect(go_button, &QPushButton::clicked, this,
-            [=]() {
+            [=, this]() {
                 pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("JUMP_TO_BLOCK"));
                 msg.addField("ac_id", ac_id);
                 msg.addField("block_id", block->getNo());
@@ -68,7 +68,7 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
 
         block_labels.append(lbl);
 
-        connect(go_button, &QToolButton::clicked, [=]() {
+        connect(go_button, &QToolButton::clicked, [=, this]() {
             qDebug() << "go to " << name;
         });
     }
@@ -95,7 +95,7 @@ void FlightPlanViewerV2::handleNavStatus() {
         QTimer* timer = new QTimer();
         timer->moveToThread(qApp->thread());
         timer->setSingleShot(true);
-        QObject::connect(timer, &QTimer::timeout, this, [=]()
+        QObject::connect(timer, &QTimer::timeout, this, [=, this]()
         {
             // main thread
             updateNavStatus(cur_block, cur_stage);

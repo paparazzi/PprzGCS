@@ -50,7 +50,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     alt_layout->addWidget(alt_label);
     gl->addLayout(alt_layout, 1, 1);
     connect(alt_button, &QToolButton::clicked, this,
-        [=]() {
+        [=, this]() {
             alt_mode = !alt_mode;
             if(alt_mode) {
                 alt_button->setIcon(agl_icon);
@@ -78,7 +78,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     ft_lay->addStretch();
     gl->addLayout(ft_lay, 0, 1);
     connect(time_button, &QToolButton::clicked, this,
-        [=]() {
+        [=, this]() {
         switch (time_mode) {
         case FLIGHT_TIME:
             time_mode = BLOCK_TIME;
@@ -117,7 +117,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     speed_lay->addWidget(speed_label);
     gl->addLayout(speed_lay, 2, 1);
     connect(speed_button, &QToolButton::clicked, this,
-        [=]() {
+        [=, this]() {
             switch (speed_mode) {
             case GROUND_SPEED:
                 speed_mode = AIR_SPEED;
@@ -197,7 +197,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     auto settings = ac->getSettingMenu()->getAllSettings();
     for(auto setting: settings) {
         if(setting->getName() == "autopilot.mode") {
-            connect(ap_mode_button, &QPushButton::clicked, this, [=](){
+            connect(ap_mode_button, &QPushButton::clicked, this, [=, this](){
                 AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, "AUTO2");
             });
             break;

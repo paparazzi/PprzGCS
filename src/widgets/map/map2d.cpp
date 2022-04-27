@@ -43,7 +43,7 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     setTransformationAnchor(QGraphicsView::NoAnchor);
     setBackgroundBrush(QBrush(m_color_background));
 
-    connect(this, &Map2D::backgroundChanged, this, [=](QColor c) {
+    connect(this, &Map2D::backgroundChanged, this, [=, this](QColor c) {
         setBackgroundBrush(QBrush(c));
     });
 
