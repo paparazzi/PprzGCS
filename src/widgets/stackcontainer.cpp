@@ -3,6 +3,13 @@
 #include "AircraftManager.h"
 #include <QLabel>
 
+StackContainer::StackContainer(std::function<QWidget*(QString, QWidget*)> constructor,
+                               [[maybe_unused]] std::function<QWidget*(QString, QWidget*)> alt_constructor,
+                               QWidget *parent) : StackContainer(constructor, parent)
+{
+
+}
+
 StackContainer::StackContainer(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent) : QWidget(parent),
     constructor(constructor)
 {

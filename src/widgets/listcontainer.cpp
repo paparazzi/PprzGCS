@@ -3,8 +3,15 @@
 #include "AircraftManager.h"
 #include "strip.h"
 
-ListContainer::ListContainer(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent) : QScrollArea(parent),
-    constructor(constructor)
+ListContainer::ListContainer(std::function<QWidget*(QString, QWidget*)> constructor, QWidget *parent) :
+    ListContainer(constructor, nullptr, parent)
+{}
+
+ListContainer::ListContainer(std::function<QWidget*(QString, QWidget*)> constructor,
+                             std::function<QWidget*(QString, QWidget*)> alt_constructor,
+                             QWidget *parent) : QScrollArea(parent),
+    constructor(constructor),
+    alt_constructor(alt_constructor)
 {
     auto scroll_content = new QWidget(this);
     setWidget(scroll_content);
@@ -55,13 +62,39 @@ void ListContainer::handleNewAC(QString ac_id) {
 
 
     auto ac = AircraftManager::get()->getAircraft(ac_id);
-    auto color_rect = new QWidget(this);
-    color_rect->setMinimumSize(QSize(20, 20));
-    color_rect->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-    color_rect->setStyleSheet("background: " + ac->getColor().name());
-    grid_layout->addWidget(color_rect, row, 0);
-    color_rect->installEventFilter(this);
-    rects[color_rect] = ac_id;
+    auto header = new QWidget(this);
+    auto header_vbox = new QVBoxLayout(header);
+
+    auto select_ac_button = new QToolButton(header);
+    select_ac_button->setMinimumSize(QSize(20, 20));
+    select_ac_button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+    select_ac_button->setStyleSheet("background: " + ac->getColor().name());
+    header_vbox->addWidget(select_ac_button);
+    if(alt_constructor != nullptr) {
+        auto action_button = new QToolButton(header);
+        action_button->setArrowType(Qt::DownArrow);
+        header_vbox->addWidget(action_button);
+        QWidget* alt_widget = alt_constructor(ac_id, nullptr);
+        alt_widgets[ac_id] = alt_widget;
+        alt_widget->setWindowFlags(Qt::FramelessWindowHint | Qt::Popup);
+
+        connect(action_button, &QToolButton::clicked, this,
+            [=]() {
+                auto p = action_button->mapToGlobal(action_button->rect().bottomRight());
+                alt_widget->move(p);
+                alt_widget->show();
+            });
+    }
+
+    grid_layout->addWidget(header, row, 0);
+
+    buttons[select_ac_button] = ac_id;
+
+    connect(select_ac_button, &QToolButton::clicked, this,
+        [=]() {
+            emit DispatcherUi::get()->ac_selected(ac_id);
+        });
+
 }
 
 void ListContainer::removeAC(QString ac_id) {
@@ -69,20 +102,10 @@ void ListContainer::removeAC(QString ac_id) {
     widgets[ac_id]->deleteLater();
     widgets.remove(ac_id);
 
-    auto rect = std::find(rects.begin(), rects.end(), ac_id);
-    if(rect != rects.end()) {
+    auto rect = std::find(buttons.begin(), buttons.end(), ac_id);
+    if(rect != buttons.end()) {
         grid_layout->removeWidget(rect.key());
         rect.key()->deleteLater();
-        rects.remove(rect.key());
+        buttons.remove(rect.key());
     }
-}
-
-bool ListContainer::eventFilter(QObject *object, QEvent *event)
-{
-    auto widget = dynamic_cast<QWidget*>(object);
-    if (event->type() == QEvent::MouseButtonPress && rects.contains(widget)) {
-        emit DispatcherUi::get()->ac_selected(rects[widget]);
-        return true;
-    }
-    return false;
 }
