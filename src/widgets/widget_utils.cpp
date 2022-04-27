@@ -14,63 +14,160 @@
 #include "plotter.h"
 #include "link_status.h"
 
+using ac_widgets_list = std::tuple<
+    SettingsViewer, MiniStrip,
+    Commands, FlightPlanViewerV2,
+    GPSClassicViewer, FlightPlanEditor,
+    Plotter, LinkStatus
+>;
 
-template<typename C, typename T>
-QWidget* new_container(QWidget* parent) {
-    return new C(
-        [](QString ac_id, QWidget* container) {
-            return new T(ac_id, container);
-        },
-        parent);
+enum ACW {
+    SETTINGS_VIEWER,
+    MINISTRIP,
+    COMMANDS,
+    FLIGHTPLAN,
+    GPS,
+    FPEDITOR,
+    PLOTTER,
+    LINKSTATUS
+};
+
+
+std::map<QString, size_t> AC_WIDGETS_MAP = {
+    {"settings", ACW::SETTINGS_VIEWER},
+    {"strips", ACW::MINISTRIP},
+    {"commands", ACW::COMMANDS},
+    {"flightplan", ACW::FLIGHTPLAN},
+    {"gps_classic_viewer", ACW::GPS},
+    {"flight_plan_editor", ACW::FPEDITOR},
+    {"plotter", ACW::PLOTTER},
+    {"link_status", ACW::LINKSTATUS},
+};
+
+
+using simple_widgets_list = std::tuple<PprzMap, Pfd>;
+
+enum SW {
+    MAP,
+    PFD
+};
+
+std::map<QString, size_t> SIMPLE_WIDGETS_MAP = {
+    {"map2d", SW::MAP},
+    {"PFD", SW::PFD},
+};
+
+using containers_list = std::tuple<StackContainer, ListContainer>;
+
+enum CW {
+    STACK,
+    LIST,
+};
+
+std::map<QString, size_t> CONTAINER_WIDGETS_MAP = {
+    {"stack", CW::STACK},
+    {"list", CW::LIST},
+};
+
+// the following code is inspired by https://codereview.stackexchange.com/a/166731
+
+template <std::size_t... Is, class F>
+static inline void static_for_impl(F&& f, std::index_sequence<Is...>) {
+    (f(std::integral_constant<std::size_t, Is>()), ...);
+}
+template <std::size_t N, class F>
+void static_for(F f) {
+    static_for_impl(f, std::make_index_sequence<N>());
 }
 
-template<typename T>
-QWidget* make_container(QString container, QWidget* parent) {
-    if(container == "stack") {
-        return new_container<StackContainer, T>(parent);
-    } else if(container == "list") {
-        return new_container<ListContainer, T>(parent);
+template <class tuple, class F>
+void for_all_types(F f) {
+    static_for<std::tuple_size_v<tuple>>([&](auto N){
+        using T = std::tuple_element_t<N, tuple>;
+        if constexpr (!std::is_same_v<void, T>)
+            f((T*)0, N);
+    });
+}
+
+template <class R, class tuple, class F>
+R select_type(F f, std::size_t i) {
+    R r;
+    bool found = false;
+    for_all_types<tuple>([&](auto p, auto N){
+        if (i == N) {
+            r = f(p);
+            found = true;
+        }
+    });
+    if (!found)
+        throw std::invalid_argument("");
+    return r;
+}
+
+
+
+template<typename tutu, class... X, class ET>
+auto createInstance(const ET eventType, X&&... x) {
+    return select_type<QWidget*, tutu>([&](auto p){
+        return new std::decay_t<decltype(*p)>(std::forward<X>(x)...);
+    }, (std::size_t)eventType);
+}
+
+
+template<class ET>
+auto getConstructor(const ET eventType) {
+    return select_type<std::function<QWidget*(QString, QWidget*)>, ac_widgets_list>([&](auto p){
+        return [](QString ac_id, QWidget* container) {
+            return new std::decay_t<decltype(*p)>(ac_id, container);
+        };
+    }, (std::size_t)eventType);
+}
+
+
+template<class... X, class ET>
+auto createContainer(const ET eventType, X&&... x) {
+    return select_type<QWidget*, containers_list>([&](auto p){
+        return new std::decay_t<decltype(*p)>(std::forward<X>(x)...);
+    }, (std::size_t)eventType);
+}
+
+
+QWidget* make_container(QString container, QWidget* parent, size_t wt) {
+    auto container_index = CONTAINER_WIDGETS_MAP.find(container);
+    if(container_index != CONTAINER_WIDGETS_MAP.end()) {
+        return createContainer(container_index->second, getConstructor(wt), parent);
+    } else {
+        throw runtime_error("unkown container " + container.toStdString());
+    }
+}
+
+QWidget* make_container(QString container, QWidget* parent, size_t wt, size_t wt2) {
+    auto container_index = CONTAINER_WIDGETS_MAP.find(container);
+    if(container_index != CONTAINER_WIDGETS_MAP.end()) {
+        return createContainer(container_index->second, getConstructor(wt), getConstructor(wt2), parent);
     } else {
         throw runtime_error("unkown container " + container.toStdString());
     }
 }
 
 
-QWidget* makeWidget(QString name, QString container, QWidget* parent) {
+QWidget* makeWidget(QWidget* parent, QString container, QString name, QString alt) {
     QWidget* widget = nullptr;
 
-    if(name == "map2d") {
-        widget = new PprzMap(parent);
+    auto ac_widget_index = AC_WIDGETS_MAP.find(name);
+    auto alt_index = AC_WIDGETS_MAP.find(alt);
+    auto simple_widget_index = SIMPLE_WIDGETS_MAP.find(name);
+
+    if(ac_widget_index != AC_WIDGETS_MAP.end()) {
+        if(alt_index != AC_WIDGETS_MAP.end()) {
+            widget = make_container(container, parent, ac_widget_index->second, alt_index->second);
+        } else {
+            widget = make_container(container, parent, ac_widget_index->second);
+        }
+
     }
-    else if (name == "PFD") {
-        widget = new Pfd(parent);
-    }
-    else if (name == "settings") {
-        widget = make_container<SettingsViewer>(container, parent);
-    }
-    else if (name == "strips") {
-        widget = make_container<MiniStrip>(container, parent);
-    }
-    else if (name == "flightplan") {
-        widget = make_container<FlightPlanViewerV2>(container, parent);
-    }
-    else if (name == "map_strip") {
-        widget = make_container<Strip>(container, parent);
-    }
-    else if (name == "commands") {
-        widget = make_container<Commands>(container, parent);
-    }
-    else if (name == "gps_classic_viewer") {
-        widget = make_container<GPSClassicViewer>(container, parent);
-    }
-    else if (name == "flight_plan_editor") {
-        widget = make_container<FlightPlanEditor>(container, parent);
-    }
-    else if (name == "plotter") {
-        widget = make_container<Plotter>(container, parent);
-    }
-    else if (name == "link_status") {
-        widget = make_container<LinkStatus>(container, parent);
+    else if(simple_widget_index != SIMPLE_WIDGETS_MAP.end()) {
+        widget = createInstance<simple_widgets_list>(simple_widget_index->second, parent);
     }
     else {
         std::string s = "Widget " + name.toStdString() + " unknown";

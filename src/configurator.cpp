@@ -55,7 +55,9 @@ QWidget* rec_layout_build(QDomElement &ele, QSplitter* parent, int* size) {
             exit(-1);
         }
 
-        QWidget* widget = makeWidget(name, container, parent);
+        QString alt = ele.attribute("alt", "");
+
+        QWidget* widget = makeWidget(parent, container, name, alt);
 
         for(auto layout_ele=ele.firstChildElement(); !layout_ele.isNull(); layout_ele=layout_ele.nextSiblingElement()) {
             if(layout_ele.tagName() == "configure") {
