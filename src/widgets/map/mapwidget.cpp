@@ -269,7 +269,7 @@ void MapWidget::configure(QDomElement ele) {
             if(name == "layers") {
                 widget = makeLayerCombo();
             } else {
-                widget = makeWidget(name, container, this);
+                widget = makeWidget(this, container, name);
             }
 
             auto conf = widget_ele.firstChildElement("configure");

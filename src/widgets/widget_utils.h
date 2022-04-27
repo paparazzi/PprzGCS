@@ -3,7 +3,7 @@
 
 #include "QWidget"
 
-QWidget* makeWidget(QString name, QString container, QWidget* parent = nullptr);
+QWidget* makeWidget(QWidget* parent, QString container, QString name, QString alt="");
 
 
 
