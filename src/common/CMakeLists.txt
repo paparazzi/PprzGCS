@@ -1,6 +1,7 @@
 
 set(SOURCE
     ${SOURCE}
+    ${CMAKE_CURRENT_SOURCE_DIR}/aircraft.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/waypoint.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/sector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/block.cpp
@@ -10,7 +11,6 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/airframe.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/aircraft_status.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gcs_utils.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/units.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pprzpalette.cpp
 )
 

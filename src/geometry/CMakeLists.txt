@@ -1,7 +1,6 @@
 
 set(SOURCE
     ${SOURCE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/coordinatestransform.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/point2dlatlon.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/point2dtile.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/point2dpseudomercator.cpp
