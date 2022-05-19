@@ -1,31 +1,43 @@
 
 # Ground Control Station for Paparazzi UAV
 
-GCS for [Paparazzi UAV](http://wiki.paparazziuav.org/wiki/Main_Page) in C++/QT5, aiming at replacing the historical GCS in a near future.
-
+The new GCS for [Paparazzi UAV](http://wiki.paparazziuav.org/wiki/Main_Page) in C++/QT5!
 
 ![GCS FP strip PFD](screenshots/screenshot.png)
+
+It should be straightforward to use it if you are familiar with paparazzi.
+Check the [documentation](https://docs.paparazziuav.org/PprzGCS/) for more details.
+
+If you did not installed Paparazzi yet, see the [quick Paparazzi installation guide](https://paparazzi-uav.readthedocs.io/en/latest/quickstart/install.html).
 
 
 ## INSTALLATION
 
-### Precompiled binary
+### From Paparazzi PPA
 
-Precompilied binary is available only for Ubuntu 20.04 on amd64 architecture (intel 64 bits).
+Add the paparazzi PPA:
 
-First, install the dependencies:
+`sudo add-apt-repository -y ppa:paparazzi-uav/ppa`
 
-`sudo apt install libxml2 libzip5 libproj15 libqt5xml5 libqt5network5 libqt5svg5  libqt5texttospeech5 libqt5widgets5 libqt5gui5 libqt5core5a`
+And install Pprzgcs!
 
-Download the `.deb` from latest release at [https://github.com/paparazzi/PprzGCS/releases/latest](https://github.com/Fabien-B/PprzGCS/releases/latest), then install it (adjust the filename as needed) :
+`sudo apt-get install pprzgcs`
 
-`sudo dpkg -i pprzgcs_*.deb`
+If you don't launch it from the paparazzi center, set the `PAPARAZZI_HOME` and `PAPARAZZI_SRC` environment variables.
 
-You can now launch PprzGCS from the paparazzi center via the `Tools` menu.
+
+### Using the AppImage
+
+If you are not on Ubuntu 20.04 or later, or if you want the latest changes, the best is to use the AppImage.
+
+Get the [latest release](https://github.com/paparazzi/PprzGCS/releases/latest), and give the AppImage the execution rights, then launch it.
+
+To make it work with the paparazzi center, make a symbolic link named `pprzgcs` in one of you `PATH` directories.
+
+The developer version may have new features or bug fixes not landed in releases yet. Open an issue to ask a developer to make a new release.
 
 
 ### Build from sources
-
 
 #### Ubuntu 20.04 prerequisite
 
@@ -40,7 +52,7 @@ Install the dependencies:
 
 `sudo apt install extra-cmake-modules libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev`
 
-__QT5.12.*__
+__QT5__
 
 Install [Qt5.12.0 or above](https://www.qt.io/download-open-source).
 
@@ -88,9 +100,20 @@ If you want to run it from the terminal, set the `PAPARAZZI_HOME` and the `PAPAR
 
 #### Mac
 
-PprzGCS have been successfully built for Mac, although is not yet officially supported. You are on you own ;-)
+PprzGCS have been successfully built for Mac, although is not officially supported. You are on you own ;-)
 
-More details are given in the [documentation](https://fabien-b.github.io/PprzGCS/)
+More details are given in the [documentation](https://docs.paparazziuav.org/PprzGCS/)
+
+
+## CONTRIBUTING
+
+Project home repository is at [https://github.com/paparazzi/PprzGCS](https://github.com/paparazzi/PprzGCS).
+
+Make pull requests here to contribute.
+
+Ask questions to other developers on [Gitter](https://gitter.im/paparazzi/discuss).
+
+Make sure that the changes you bring are compatible with Ubuntu 20.04 and later.
 
 
 
