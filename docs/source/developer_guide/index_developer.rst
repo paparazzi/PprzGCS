@@ -9,4 +9,9 @@ This part will guide you through the code of PprzGCS, and some desing choices th
    :maxdepth: 2
 
    how_to_build
+   concepts
+   pprzapplication
+   aircraft
+   widgets
+   map
    

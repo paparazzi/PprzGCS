@@ -16,7 +16,7 @@ Install the dependencies:
 
 .. code-block:: bash
 
-    sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev libproj-dev mesa-common-dev libglu1-mesa-dev
+    sudo apt install extra-cmake-modules libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev libproj-dev mesa-common-dev libglu1-mesa-dev
 
 cd to the PprzGCS root, and build the needed libraries:
 
@@ -34,6 +34,9 @@ Now you should be able to build the app with:
 Ubuntu 18.04
 ____________
 
+Qt5
+---
+
 First, you need to `install Qt5.12.0 or above. <https://www.qt.io/download-open-source>`_
 
 Setup in your `.bashrc` the environnement variable `Qt5_DIR` for cmake to find Qt5:
@@ -42,17 +45,32 @@ Setup in your `.bashrc` the environnement variable `Qt5_DIR` for cmake to find Q
 
     export Qt5_DIR="/path/to/Qt/5.12.0/gcc_64/lib/cmake/Qt5"
 
+Dependencies
+------------
+
 Install the dependencies:
 
 .. code-block:: bash
 
-    sudo apt install libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev
+    sudo apt install extra-cmake-modules libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev
+
+PROJ
+----
+
+Download and build proj (run these commands from the przGCS root directory):
+
+    .. code-block:: bash
+    
+        curl -L https://github.com/OSGeo/PROJ/releases/download/6.3.1/proj-6.3.1.tar.gz | tar -xz -C ext
+        cmake -S ext/proj-6.3.1/ -B build/ext/proj -DPROJ_TESTS=OFF -DCMAKE_INSTALL_PREFIX=build/install
+        cmake --build build/ext/proj
+        cmake --install build/ext/proj  
 
 cd to the PprzGCS root, and build the needed libraries:
 
 .. code-block:: bash
 
-    build_proj=true ./build.sh libs
+    ./build.sh libs
 
 Now you should be able to build the app with:
 
