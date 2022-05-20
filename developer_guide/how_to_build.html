@@ -1,75 +1,35 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>How to build from sources &mdash; PprzGCS  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>How to build from sources &mdash; PprzGCS  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+  <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/language_data.js"></script>
-    
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-
-    
+    <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="User guide" href="../user_guide/index_user.html" />
+    <link rel="next" title="Arborescence" href="concepts.html" />
     <link rel="prev" title="Developer guide" href="index_developer.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../index.html" class="icon icon-home"> PprzGCS
-          
-
-          
           </a>
-
-          
-            
-            
               <div class="version">
                 master
               </div>
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -77,98 +37,55 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index_developer.html">Developer guide</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">How to build from sources</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#ubuntu-20-04-and-above">Ubuntu 20.04 and above</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ubuntu-18-04">Ubuntu 18.04</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ubuntu-18-04">Ubuntu 18.04</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#qt5">Qt5</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#proj">PROJ</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#running-pprzgcs">Running PprzGCS</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html">Arborescence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pprzapplication.html">PprzApplication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aircraft.html">Aircrafts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="widgets.html">Widgets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="map.html">Map</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../user_guide/index_user.html">User guide</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../index.html">PprzGCS</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="index_developer.html">Developer guide</a> &raquo;</li>
-        
       <li>How to build from sources</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../_sources/developer_guide/how_to_build.rst.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <div class="section" id="how-to-build-from-sources">
 <h1>How to build from sources<a class="headerlink" href="#how-to-build-from-sources" title="Permalink to this headline">¶</a></h1>
 <p>First, get all submodules:</p>
@@ -178,7 +95,7 @@
 <div class="section" id="ubuntu-20-04-and-above">
 <h2>Ubuntu 20.04 and above<a class="headerlink" href="#ubuntu-20-04-and-above" title="Permalink to this headline">¶</a></h2>
 <p>Install the dependencies:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev libproj-dev mesa-common-dev libglu1-mesa-dev
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install extra-cmake-modules libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev libproj-dev mesa-common-dev libglu1-mesa-dev
 </pre></div>
 </div>
 <p>cd to the PprzGCS root, and build the needed libraries:</p>
@@ -192,22 +109,40 @@
 </div>
 <div class="section" id="ubuntu-18-04">
 <h2>Ubuntu 18.04<a class="headerlink" href="#ubuntu-18-04" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="qt5">
+<h3>Qt5<a class="headerlink" href="#qt5" title="Permalink to this headline">¶</a></h3>
 <p>First, you need to <a class="reference external" href="https://www.qt.io/download-open-source">install Qt5.12.0 or above.</a></p>
 <p>Setup in your <cite>.bashrc</cite> the environnement variable <cite>Qt5_DIR</cite> for cmake to find Qt5:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">Qt5_DIR</span><span class="o">=</span><span class="s2">&quot;/path/to/Qt/5.12.0/gcc_64/lib/cmake/Qt5&quot;</span>
 </pre></div>
 </div>
+</div>
+<div class="section" id="dependencies">
+<h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h3>
 <p>Install the dependencies:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo apt install extra-cmake-modules libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev
 </pre></div>
 </div>
+</div>
+<div class="section" id="proj">
+<h3>PROJ<a class="headerlink" href="#proj" title="Permalink to this headline">¶</a></h3>
+<p>Download and build proj (run these commands from the przGCS root directory):</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl -L https://github.com/OSGeo/PROJ/releases/download/6.3.1/proj-6.3.1.tar.gz <span class="p">|</span> tar -xz -C ext
+cmake -S ext/proj-6.3.1/ -B build/ext/proj -DPROJ_TESTS<span class="o">=</span>OFF -DCMAKE_INSTALL_PREFIX<span class="o">=</span>build/install
+cmake --build build/ext/proj
+cmake --install build/ext/proj
+</pre></div>
+</div>
+</div></blockquote>
 <p>cd to the PprzGCS root, and build the needed libraries:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">build_proj</span><span class="o">=</span><span class="nb">true</span> ./build.sh libs
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./build.sh libs
 </pre></div>
 </div>
 <p>Now you should be able to build the app with:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./build.sh app
 </pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="running-pprzgcs">
@@ -223,50 +158,33 @@
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="../user_guide/index_user.html" class="btn btn-neutral float-right" title="User guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="index_developer.html" class="btn btn-neutral float-left" title="Developer guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="concepts.html" class="btn btn-neutral float-right" title="Arborescence" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Fabien Bonneval.
-
-    </p>
+    <p>&#169; Copyright 2021, Fabien Bonneval.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer guide &mdash; PprzGCS  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <title>Map &mdash; PprzGCS  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
@@ -16,8 +16,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="How to build from sources" href="how_to_build.html" />
-    <link rel="prev" title="PprzGCS’s documentation" href="../index.html" /> 
+    <link rel="next" title="User guide" href="../user_guide/index_user.html" />
+    <link rel="prev" title="Widgets" href="widgets.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -39,13 +39,16 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Developer guide</a><ul>
+<li class="toctree-l1 current"><a class="reference internal" href="index_developer.html">Developer guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="how_to_build.html">How to build from sources</a></li>
 <li class="toctree-l2"><a class="reference internal" href="concepts.html">Arborescence</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pprzapplication.html">PprzApplication</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aircraft.html">Aircrafts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="widgets.html">Widgets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="map.html">Map</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Map</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#map2d">Map2D</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../user_guide/index_user.html">User guide</a></li>
@@ -65,9 +68,10 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Developer guide</li>
+          <li><a href="index_developer.html">Developer guide</a> &raquo;</li>
+      <li>Map</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/developer_guide/index_developer.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/developer_guide/map.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -75,43 +79,29 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="developer-guide">
-<h1>Developer guide<a class="headerlink" href="#developer-guide" title="Permalink to this headline">¶</a></h1>
-<p>This part will guide you through the code of PprzGCS, and some desing choices that have been made.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="how_to_build.html">How to build from sources</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how_to_build.html#ubuntu-20-04-and-above">Ubuntu 20.04 and above</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how_to_build.html#ubuntu-18-04">Ubuntu 18.04</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how_to_build.html#running-pprzgcs">Running PprzGCS</a></li>
+  <div class="section" id="map">
+<h1>Map<a class="headerlink" href="#map" title="Permalink to this headline">¶</a></h1>
+<p>The map is by far the most complex widget. Let’s see how is works!</p>
+<div class="section" id="map2d">
+<h2>Map2D<a class="headerlink" href="#map2d" title="Permalink to this headline">¶</a></h2>
+<p>First, let focus on the map itself, without all the elements that populates it.</p>
+<p>The <em>Map2D</em> widget inherits <em>QGraphicsView</em>, and holds a <em>MapScene</em> (that inherits <em>QGraphicsScene</em>).</p>
+<p>This widget only support maps in the Pseudo-Mercator projected coordinate system, a.k.a <em>EPSG:3857</em>. There are plans to support other coordinate systems in the future.</p>
+<p>See <a class="reference external" href="https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/">https://www.maptiler.com/google-maps-coordinates-tile-bounds-projection/</a> to learn how this kind of map works.</p>
+<p>In our case, the QGraphicsScene coordinates are directly related to the tiles coordinates, multiplied by the size of the tiles.</p>
+<div class="admonition-example admonition">
+<p class="admonition-title">Example</p>
+<ul class="simple">
+<li><p>At zoom level 0, the map’s bottom right coordinate is (256, 256),</p></li>
+<li><p>At zoom level 1, it’s (512, 512),</p></li>
+<li><p>At zoom level 1, it’s (1024, 1024),</p></li>
+<li><p>…</p></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="concepts.html">Arborescence</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="concepts.html#root-directory">Root directory</a></li>
-<li class="toctree-l2"><a class="reference internal" href="concepts.html#sources">Sources</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="pprzapplication.html">PprzApplication</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pprzapplication.html#toolbox">Toolbox</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pprzapplication.html#pprzmain">PprzMain</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="aircraft.html">Aircrafts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="aircraft.html#aircraftmanager">AircraftManager</a></li>
-<li class="toctree-l2"><a class="reference internal" href="aircraft.html#aircraft">Aircraft</a></li>
-<li class="toctree-l2"><a class="reference internal" href="aircraft.html#status">Status</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="widgets.html">Widgets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="widgets.html#creating-a-new-widget">Creating a new widget</a></li>
-<li class="toctree-l2"><a class="reference internal" href="widgets.html#typical-widget-architecture">Typical widget architecture</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="map.html">Map</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="map.html#map2d">Map2D</a></li>
-</ul>
-</li>
-</ul>
+<p>See <code class="docutils literal notranslate"><span class="pre">src/widgets/map/maputils.cpp</span></code> for some helper functions.</p>
+</div>
+<p>There is a <em>TileProvider</em>, associated with each map layers. New tile providers can be added in the <code class="docutils literal notranslate"><span class="pre">tile_sources.xml</span></code> file.</p>
+<p>Tiles are fist opened from local cache directory, or downloaded from the net is not present locally. Remove local cache to get the latest tiles.</p>
+<p>Downloading tile can take a few seconds, or can fail. Before a tile is downloaded succesfully, it is recreated by assembling its 4 child tiles (at zoom n+1), or by scaling up its parent’s tile.</p>
 </div>
 </div>
 
@@ -119,8 +109,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../index.html" class="btn btn-neutral float-left" title="PprzGCS’s documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="how_to_build.html" class="btn btn-neutral float-right" title="How to build from sources" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="widgets.html" class="btn btn-neutral float-left" title="Widgets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../user_guide/index_user.html" class="btn btn-neutral float-right" title="User guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

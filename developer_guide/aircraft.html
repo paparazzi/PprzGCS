@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer guide &mdash; PprzGCS  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <title>Aircrafts &mdash; PprzGCS  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
@@ -16,8 +16,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="How to build from sources" href="how_to_build.html" />
-    <link rel="prev" title="PprzGCS’s documentation" href="../index.html" /> 
+    <link rel="next" title="Widgets" href="widgets.html" />
+    <link rel="prev" title="PprzApplication" href="pprzapplication.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -39,11 +39,16 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Developer guide</a><ul>
+<li class="toctree-l1 current"><a class="reference internal" href="index_developer.html">Developer guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="how_to_build.html">How to build from sources</a></li>
 <li class="toctree-l2"><a class="reference internal" href="concepts.html">Arborescence</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pprzapplication.html">PprzApplication</a></li>
-<li class="toctree-l2"><a class="reference internal" href="aircraft.html">Aircrafts</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Aircrafts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#aircraftmanager">AircraftManager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#aircraft">Aircraft</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#status">Status</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="widgets.html">Widgets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="map.html">Map</a></li>
 </ul>
@@ -65,9 +70,10 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Developer guide</li>
+          <li><a href="index_developer.html">Developer guide</a> &raquo;</li>
+      <li>Aircrafts</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/developer_guide/index_developer.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/developer_guide/aircraft.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -75,43 +81,45 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="developer-guide">
-<h1>Developer guide<a class="headerlink" href="#developer-guide" title="Permalink to this headline">¶</a></h1>
-<p>This part will guide you through the code of PprzGCS, and some desing choices that have been made.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="how_to_build.html">How to build from sources</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how_to_build.html#ubuntu-20-04-and-above">Ubuntu 20.04 and above</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how_to_build.html#ubuntu-18-04">Ubuntu 18.04</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how_to_build.html#running-pprzgcs">Running PprzGCS</a></li>
+  <div class="section" id="aircrafts">
+<h1>Aircrafts<a class="headerlink" href="#aircrafts" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="aircraftmanager">
+<h2>AircraftManager<a class="headerlink" href="#aircraftmanager" title="Permalink to this headline">¶</a></h2>
+<p>Aircrafts are uniquely identified by  their ID.</p>
+<p>Get an aircraft with the <code class="docutils literal notranslate"><span class="pre">Aircraft*</span> <span class="pre">AircraftManager::getAircraft(QString</span> <span class="pre">id)</span></code> method.</p>
+</div>
+<div class="section" id="aircraft">
+<span id="id1"></span><h2>Aircraft<a class="headerlink" href="#aircraft" title="Permalink to this headline">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">Aircraft</span></code> class is central in PprzGCS. It holds all the data relative to a given aircraft:</p>
+<ul class="simple">
+<li><p>AC ID</p></li>
+<li><p>name</p></li>
+<li><p>flight plan</p></li>
+<li><p>airframe</p></li>
+<li><p>settings</p></li>
+<li><p>position</p></li>
+<li><p>status</p></li>
+<li><p>config</p></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="concepts.html">Arborescence</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="concepts.html#root-directory">Root directory</a></li>
-<li class="toctree-l2"><a class="reference internal" href="concepts.html#sources">Sources</a></li>
+</div>
+<div class="section" id="status">
+<h2>Status<a class="headerlink" href="#status" title="Permalink to this headline">¶</a></h2>
+<p>Get the status with the <code class="docutils literal notranslate"><span class="pre">Aircraft::getStatus()</span></code> method.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">AircraftStatus</span></code> class store some of the most used aircraft’s messages:</p>
+<ul class="simple">
+<li><p>AP_STATUS</p></li>
+<li><p>NAV_STATUS</p></li>
+<li><p>CIRCLE_STATUS</p></li>
+<li><p>SEGMENT_STATUS</p></li>
+<li><p>ENGINE_STATUS</p></li>
+<li><p>DL_VALUES</p></li>
+<li><p>TELEMETRY_STATUS</p></li>
+<li><p>FLY_BY_WIRE</p></li>
+<li><p>FLIGHT_PARAM</p></li>
+<li><p>SVSINFO</p></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="pprzapplication.html">PprzApplication</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pprzapplication.html#toolbox">Toolbox</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pprzapplication.html#pprzmain">PprzMain</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="aircraft.html">Aircrafts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="aircraft.html#aircraftmanager">AircraftManager</a></li>
-<li class="toctree-l2"><a class="reference internal" href="aircraft.html#aircraft">Aircraft</a></li>
-<li class="toctree-l2"><a class="reference internal" href="aircraft.html#status">Status</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="widgets.html">Widgets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="widgets.html#creating-a-new-widget">Creating a new widget</a></li>
-<li class="toctree-l2"><a class="reference internal" href="widgets.html#typical-widget-architecture">Typical widget architecture</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="map.html">Map</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="map.html#map2d">Map2D</a></li>
-</ul>
-</li>
-</ul>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">getMessage(QString</span> <span class="pre">name)</span></code> method to get the last received message.</p>
+<p>This class also emit a signal for each of the above messages when a new one is received.</p>
 </div>
 </div>
 
@@ -119,8 +127,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../index.html" class="btn btn-neutral float-left" title="PprzGCS’s documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="how_to_build.html" class="btn btn-neutral float-right" title="How to build from sources" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="pprzapplication.html" class="btn btn-neutral float-left" title="PprzApplication" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="widgets.html" class="btn btn-neutral float-right" title="Widgets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

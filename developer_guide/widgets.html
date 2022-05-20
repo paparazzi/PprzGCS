@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Widgets &mdash; PprzGCS  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Map" href="map.html" />
+    <link rel="prev" title="Aircrafts" href="aircraft.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> PprzGCS
+          </a>
+              <div class="version">
+                master
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index_developer.html">Developer guide</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="how_to_build.html">How to build from sources</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concepts.html">Arborescence</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pprzapplication.html">PprzApplication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="aircraft.html">Aircrafts</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Widgets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-new-widget">Creating a new widget</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#typical-widget-architecture">Typical widget architecture</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#with-aircraftstatus">With AircraftStatus</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#with-pprzdispatcher">With PprzDispatcher</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#connect-to-any-message">Connect to any message</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="map.html">Map</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/index_user.html">User guide</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PprzGCS</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index_developer.html">Developer guide</a> &raquo;</li>
+      <li>Widgets</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/developer_guide/widgets.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="widgets">
+<h1>Widgets<a class="headerlink" href="#widgets" title="Permalink to this headline">¶</a></h1>
+<p>Widgets can be related to a particular AC, or not.</p>
+<p>If related to an AC, it will be intanciated for each AC, and grouped under a <code class="docutils literal notranslate"><span class="pre">list</span></code> or a <code class="docutils literal notranslate"><span class="pre">stack</span></code> container.</p>
+<p>To access the Aircraft’s data, use:</p>
+<p><code class="docutils literal notranslate"><span class="pre">Aircraft*</span> <span class="pre">ac</span> <span class="pre">=</span> <span class="pre">pprzApp()-&gt;toolbox()-&gt;aircraftManager()-&gt;getAircraft(ac_id);</span></code></p>
+<p>See <a class="reference internal" href="aircraft.html#aircraft"><span class="std std-ref">Aircraft</span></a>.</p>
+<div class="section" id="creating-a-new-widget">
+<h2>Creating a new widget<a class="headerlink" href="#creating-a-new-widget" title="Permalink to this headline">¶</a></h2>
+<p>Create your widget, inheriting <code class="docutils literal notranslate"><span class="pre">QWidget</span></code>.</p>
+<p>For an AC related widget, the constructor must be of this form:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">MyAwesomeWidget::MyAwesomeWidget(QString</span> <span class="pre">ac_id,</span> <span class="pre">QWidget</span> <span class="pre">*parent)</span></code></p>
+</div></blockquote>
+<p>Put your files in the <code class="docutils literal notranslate"><span class="pre">src/widgets/</span></code> directory, and add the cpp filename to <code class="docutils literal notranslate"><span class="pre">src/widgets/CMakeLists.txt</span></code></p>
+<p>Add your widget type in the appropriate lists in the <code class="docutils literal notranslate"><span class="pre">src/widgets/widget_utils.cpp</span></code> file:</p>
+<ul class="simple">
+<li><p>the <strong>ac_widgets</strong> list is forwidgets related to an AC</p></li>
+<li><p><strong>simple_widgets</strong> is for widgets not related to a specific AC.</p></li>
+<li><p><strong>containers</strong> is for container widgets (containing AC widgets)</p></li>
+</ul>
+<p>You need to add it in the type definition (the <code class="docutils literal notranslate"><span class="pre">using...</span></code> lines), and in the map definition.
+The first element in the map definition is the designator of the widget in layout files.</p>
+</div>
+<div class="section" id="typical-widget-architecture">
+<h2>Typical widget architecture<a class="headerlink" href="#typical-widget-architecture" title="Permalink to this headline">¶</a></h2>
+<p>typically, a widget will connect to some signals to update its data accordingly.</p>
+<div class="section" id="with-aircraftstatus">
+<h3>With AircraftStatus<a class="headerlink" href="#with-aircraftstatus" title="Permalink to this headline">¶</a></h3>
+<p>Binding to AircraftStatus’s signal is the easiest way to get AC data.</p>
+<p>In this extract of the MiniStrip widget constructor, it connects to 3 signals and update widget’s data in the corresponding slots:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span> <span class="n">ac_status</span> <span class="o">=</span> <span class="n">AircraftManager</span><span class="o">::</span><span class="n">get</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getAircraft</span><span class="p">(</span><span class="n">ac_id</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">getStatus</span><span class="p">();</span>
+<span class="n">connect</span><span class="p">(</span><span class="n">ac_status</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">AircraftStatus</span><span class="o">::</span><span class="n">engine_status</span><span class="p">,</span> <span class="k">this</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">MiniStrip</span><span class="o">::</span><span class="n">updateData</span><span class="p">);</span>
+<span class="n">connect</span><span class="p">(</span><span class="n">ac_status</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">AircraftStatus</span><span class="o">::</span><span class="n">flight_param</span><span class="p">,</span> <span class="k">this</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">MiniStrip</span><span class="o">::</span><span class="n">updateData</span><span class="p">);</span>
+<span class="n">connect</span><span class="p">(</span><span class="n">ac_status</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">AircraftStatus</span><span class="o">::</span><span class="n">telemetry_status</span><span class="p">,</span> <span class="k">this</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">MiniStrip</span><span class="o">::</span><span class="n">updateData</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="with-pprzdispatcher">
+<h3>With PprzDispatcher<a class="headerlink" href="#with-pprzdispatcher" title="Permalink to this headline">¶</a></h3>
+<p>The signals emitted by AircraftsStatus are also emitted by the PprzDispatcher.
+It is usefull to bind to these signals to receive the corresponding message for any AC.
+This is the case for the map, that is not related to a particular AC:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">connect</span><span class="p">(</span><span class="n">pprzApp</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">toolbox</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">pprzDispatcher</span><span class="p">(),</span> <span class="o">&amp;</span><span class="n">PprzDispatcher</span><span class="o">::</span><span class="n">circle_status</span><span class="p">,</span> <span class="k">this</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">MapWidget</span><span class="o">::</span><span class="n">updateNavShape</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="connect-to-any-message">
+<h3>Connect to any message<a class="headerlink" href="#connect-to-any-message" title="Permalink to this headline">¶</a></h3>
+<p>Finally, you can bind a callback to any message with the PprzDispatcher’s <code class="docutils literal notranslate"><span class="pre">bind</span></code> method that returns the bind id, needed to unbind.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">using</span> <span class="n">messageCallback_t</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="n">QString</span><span class="p">,</span> <span class="n">Message</span><span class="p">)</span><span class="o">&gt;</span><span class="p">;</span>
+<span class="kt">long</span> <span class="n">PprzDispatcher</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="n">QString</span> <span class="n">msg_name</span><span class="p">,</span> <span class="n">QObject</span><span class="o">*</span> <span class="n">context</span><span class="p">,</span> <span class="n">pprzlink</span><span class="o">::</span><span class="n">messageCallback_t</span> <span class="n">cb</span><span class="p">);</span>
+</pre></div>
+</div>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">pprzApp</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">toolbox</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">pprzDispatcher</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">bind</span><span class="p">(</span><span class="s">&quot;INTRUDER&quot;</span><span class="p">,</span> <span class="k">this</span><span class="p">,</span>
+        <span class="p">[</span><span class="o">=</span><span class="p">](</span><span class="n">QString</span> <span class="n">sender</span><span class="p">,</span> <span class="n">pprzlink</span><span class="o">::</span><span class="n">Message</span> <span class="n">msg</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">onIntruder</span><span class="p">(</span><span class="n">sender</span><span class="p">,</span> <span class="n">msg</span><span class="p">);</span>
+        <span class="p">});</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>When using lambdas, always specify a context object (often <code class="docutils literal notranslate"><span class="pre">this</span></code>),
+otherwise Qt won’t be able to disconnect the signal when the object is destroyed,
+leading to a use after free.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="aircraft.html" class="btn btn-neutral float-left" title="Aircrafts" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="map.html" class="btn btn-neutral float-right" title="Map" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Fabien Bonneval.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

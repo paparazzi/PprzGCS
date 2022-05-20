@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Developer guide &mdash; PprzGCS  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <title>Arborescence &mdash; PprzGCS  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
@@ -16,8 +16,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="How to build from sources" href="how_to_build.html" />
-    <link rel="prev" title="PprzGCS’s documentation" href="../index.html" /> 
+    <link rel="next" title="PprzApplication" href="pprzapplication.html" />
+    <link rel="prev" title="How to build from sources" href="how_to_build.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -39,9 +39,13 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Developer guide</a><ul>
+<li class="toctree-l1 current"><a class="reference internal" href="index_developer.html">Developer guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="how_to_build.html">How to build from sources</a></li>
-<li class="toctree-l2"><a class="reference internal" href="concepts.html">Arborescence</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Arborescence</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#root-directory">Root directory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sources">Sources</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="pprzapplication.html">PprzApplication</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aircraft.html">Aircrafts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="widgets.html">Widgets</a></li>
@@ -65,9 +69,10 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Developer guide</li>
+          <li><a href="index_developer.html">Developer guide</a> &raquo;</li>
+      <li>Arborescence</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/developer_guide/index_developer.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/developer_guide/concepts.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -75,43 +80,30 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="developer-guide">
-<h1>Developer guide<a class="headerlink" href="#developer-guide" title="Permalink to this headline">¶</a></h1>
-<p>This part will guide you through the code of PprzGCS, and some desing choices that have been made.</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="how_to_build.html">How to build from sources</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="how_to_build.html#ubuntu-20-04-and-above">Ubuntu 20.04 and above</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how_to_build.html#ubuntu-18-04">Ubuntu 18.04</a></li>
-<li class="toctree-l2"><a class="reference internal" href="how_to_build.html#running-pprzgcs">Running PprzGCS</a></li>
+  <div class="section" id="arborescence">
+<h1>Arborescence<a class="headerlink" href="#arborescence" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="root-directory">
+<h2>Root directory<a class="headerlink" href="#root-directory" title="Permalink to this headline">¶</a></h2>
+<p>The essential directories are these ones :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>PprzGCS
+├── data
+├── docs
+├── ext
+├── resources
+└── src
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> holds all customizable resources. It will usually be installed in <code class="docutils literal notranslate"><span class="pre">/usr/share/pprzgcs</span></code>.
+Files in this directory are overridden by files with similar path in user’s directory <code class="docutils literal notranslate"><span class="pre">$HOME/.local/share/pprzgcs</span></code> (See AppDataLocation <a class="reference external" href="https://doc.qt.io/qt-5/qstandardpaths.html">QStandardPaths</a>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">docs</span></code> contains the documentation consultable at <a class="reference external" href="https://docs.paparazziuav.org/PprzGCS/">https://docs.paparazziuav.org/PprzGCS/</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ext</span></code> contains external dependencies</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resources</span></code> holds static resources. PprzGCS must be rebuild when changes are made in this directory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">src</span></code> contains all the source code.</p></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="concepts.html">Arborescence</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="concepts.html#root-directory">Root directory</a></li>
-<li class="toctree-l2"><a class="reference internal" href="concepts.html#sources">Sources</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="pprzapplication.html">PprzApplication</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pprzapplication.html#toolbox">Toolbox</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pprzapplication.html#pprzmain">PprzMain</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="aircraft.html">Aircrafts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="aircraft.html#aircraftmanager">AircraftManager</a></li>
-<li class="toctree-l2"><a class="reference internal" href="aircraft.html#aircraft">Aircraft</a></li>
-<li class="toctree-l2"><a class="reference internal" href="aircraft.html#status">Status</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="widgets.html">Widgets</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="widgets.html#creating-a-new-widget">Creating a new widget</a></li>
-<li class="toctree-l2"><a class="reference internal" href="widgets.html#typical-widget-architecture">Typical widget architecture</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="map.html">Map</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="map.html#map2d">Map2D</a></li>
-</ul>
-</li>
-</ul>
+</div>
+<div class="section" id="sources">
+<h2>Sources<a class="headerlink" href="#sources" title="Permalink to this headline">¶</a></h2>
 </div>
 </div>
 
@@ -119,8 +111,8 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../index.html" class="btn btn-neutral float-left" title="PprzGCS’s documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="how_to_build.html" class="btn btn-neutral float-right" title="How to build from sources" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="how_to_build.html" class="btn btn-neutral float-left" title="How to build from sources" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pprzapplication.html" class="btn btn-neutral float-right" title="PprzApplication" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
