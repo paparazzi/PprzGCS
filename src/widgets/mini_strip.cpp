@@ -164,15 +164,6 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     bat_lay->addWidget(bat_label);
     gl->addLayout(bat_lay, 1, 0);
 
-    auto lbv = ac->getAirframe()->getDefine("LOW_BAT_LEVEL");
-    low_bat_level = lbv.has_value() ? lbv->value.toDouble() : 10.5;
-
-    auto cbv = ac->getAirframe()->getDefine("CRITIC_BAT_LEVEL");
-    critic_bat_level = cbv.has_value() ? cbv->value.toDouble() : 10.;
-
-    auto ctbv = ac->getAirframe()->getDefine("CATASTROPHIC_BAT_LEVEL");
-    catastrophic_bat_level = ctbv.has_value() ? ctbv->value.toDouble() : 9.;
-
     auto bnbc = ac->getAirframe()->getDefine("BAT_NB_CELLS");
     bat_nb_cells = bnbc.has_value() ? bnbc->value.toInt() : 0;
 
@@ -250,6 +241,29 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     connect(ac_status, &AircraftStatus::fly_by_wire, this, &MiniStrip::updateData);
     connect(ac_status, &AircraftStatus::ap_status, this, &MiniStrip::updateData);
     connect(ac_status, &AircraftStatus::nav_status, this, &MiniStrip::updateData);
+    connect(pprzApp()->toolbox()->watcher(), &Watcher::bat_status, this, &MiniStrip::handle_bat_status);
+}
+
+void MiniStrip::handle_bat_status(QString id, Watcher::BatStatus bs) {
+    if(id != ac_id) {
+        return;
+    }
+
+    // change battery icon
+    switch (bs) {
+    case Watcher::BatStatus::CATASTROPHIC:
+        bat_icon->setPixmap(bat_catastrophic.pixmap(icons_size));
+        break;
+    case Watcher::BatStatus::CRITIC:
+        bat_icon->setPixmap(bat_critic.pixmap(icons_size));
+        break;
+    case Watcher::BatStatus::LOW:
+        bat_icon->setPixmap(bat_low.pixmap(icons_size));
+        break;
+    case Watcher::BatStatus::OK:
+        bat_icon->setPixmap(bat_ok.pixmap(icons_size));
+        break;
+    }
 }
 
 void MiniStrip::updateFlightTime(uint32_t flight_time, uint32_t block_time, uint32_t stage_time) {
@@ -399,15 +413,6 @@ void MiniStrip::updateData() {
 
     // batterie
     bat_label->setText(QString("%1 V").arg(bat, 5, 'f', 2));
-    if(bat < catastrophic_bat_level) {
-        bat_icon->setPixmap(bat_catastrophic.pixmap(icons_size));
-    } else if(bat < critic_bat_level) {
-        bat_icon->setPixmap(bat_critic.pixmap(icons_size));
-    } else if(bat < low_bat_level) {
-        bat_icon->setPixmap(bat_low.pixmap(icons_size));
-    } else {
-        bat_icon->setPixmap(bat_ok.pixmap(icons_size));
-    }
     if(bat_nb_cells != 0) {
         bat_label->setToolTip(QString("%1 V/c").arg(bat/bat_nb_cells, 5, 'f', 2));
     }

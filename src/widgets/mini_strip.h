@@ -4,6 +4,7 @@
 #include <QtWidgets>
 #include <QGridLayout>
 #include <QHBoxLayout>
+#include "watcher.h"
 
 class MiniStrip : public QWidget
 {
@@ -35,6 +36,8 @@ private:
         BLOCK_TIME,
         STAGE_TIME,
     };
+
+    void handle_bat_status(QString ac_id, Watcher::BatStatus);
 
     void updateData();
 
@@ -73,7 +76,6 @@ private:
     QLabel* bat_icon;
     QIcon bat_ok, bat_low, bat_critic, bat_catastrophic;
     QLabel* bat_label;
-    double low_bat_level, critic_bat_level, catastrophic_bat_level;
     int bat_nb_cells;
 
     QLabel* throttle_icon;
