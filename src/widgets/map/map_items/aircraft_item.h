@@ -6,7 +6,8 @@
 #include "graphics_text.h"
 #include "QGraphicsTextItem"
 #include "graphics_track.h"
-
+#include "graphics_icon.h"
+#include "watcher.h"
 
 class AircraftItem : public MapItem
 {
@@ -31,10 +32,14 @@ public slots:
 
 protected:
     virtual void updateGraphics(MapWidget* map, uint32_t update_event);
+    void handle_bat_alarm(QString id, Watcher::BatStatus bs);
 
 private:
     GraphicsAircraft* graphics_aircraft;
     GraphicsText* graphics_text;
+    QGraphicsItemGroup* alarms;
+    GraphicsIcon* bat_alarm;
+
     Point2DLatLon latlon;
     double heading;
     QList<GraphicsTrack*> graphics_tracks;

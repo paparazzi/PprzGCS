@@ -10,6 +10,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/graphics_text.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/graphics_intruder.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/graphics_group.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/graphics_icon.cpp
     
 )
 

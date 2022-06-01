@@ -5,6 +5,8 @@
 #include <QDebug>
 #include "aircraft.h"
 #include "gcs_utils.h"
+#include "graphics_icon.h"
+
 
 AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, neutral_scale_zoom, parent),
@@ -24,6 +26,9 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
 
     graphics_aircraft = new GraphicsAircraft(palette.getColor(), aircraft->getIcon(), size);
     graphics_text = new GraphicsText(aircraft->name(), palette);
+    alarms = new QGraphicsItemGroup();
+    bat_alarm = new GraphicsIcon(":/pictures/bat_low.svg", size);
+    alarms->addToGroup(bat_alarm);
 
     for(int i=0; i<settings.value("map/aircraft/track_max_chunk").toInt(); i++) {
         auto gt = new GraphicsTrack(palette);
@@ -31,6 +36,8 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
         QList<Point2DLatLon> l;
         track_chuncks.append(l);
     }
+
+    connect(pprzApp()->toolbox()->watcher(), &Watcher::bat_status, this, &AircraftItem::handle_bat_alarm);
 
     setZoomFactor(1.1);
 }
@@ -43,6 +50,7 @@ void AircraftItem::addToMap(MapWidget* map) {
 
     map->scene()->addItem(graphics_aircraft);
     map->scene()->addItem(graphics_text);
+    map->scene()->addItem(alarms);
 }
 
 void AircraftItem::updateGraphics(MapWidget* map, uint32_t update_event) {
@@ -58,6 +66,12 @@ void AircraftItem::updateGraphics(MapWidget* map, uint32_t update_event) {
         graphics_text->setScale(s);
         graphics_text->setPos(scene_pos + rot.map(QPointF(10, 10)));
         graphics_text->setRotation(-r);
+
+        auto dh = graphics_aircraft->boundingRect().height()/2 + alarms->boundingRect().height();
+
+        alarms->setScale(s);
+        alarms->setPos(scene_pos + rot.map(s*QPointF(-alarms->boundingRect().width()/2, -dh)));
+        alarms->setRotation(-r);
 
 
         for(int i = 0; i<track_chuncks.size(); i++) {
@@ -124,6 +138,7 @@ void AircraftItem::updateZValue() {
     auto settings = getAppSettings();
     graphics_aircraft->setZValue(z_value);
     graphics_text->setZValue(z_value);
+    alarms->setZValue(z_value);
     double z_tracks = settings.value("map/z_values/aircraft").toDouble();
     for(auto gt: graphics_tracks) {
         gt->setZValue(z_tracks);
@@ -138,6 +153,7 @@ void AircraftItem::removeFromScene(MapWidget* map) {
     assert(graphics_aircraft != nullptr);
     map->scene()->removeItem(graphics_aircraft);
     map->scene()->removeItem(graphics_text);
+    map->scene()->removeItem(alarms);
     for(auto gt: graphics_tracks) {
         map->scene()->removeItem(gt);
         delete gt;
@@ -145,4 +161,30 @@ void AircraftItem::removeFromScene(MapWidget* map) {
     graphics_tracks.clear();
     delete graphics_aircraft;
     delete graphics_text;
+    delete alarms;
+}
+
+void AircraftItem::handle_bat_alarm(QString id, Watcher::BatStatus bs) {
+    if(id != ac_id) {
+        return;
+    }
+
+    switch (bs) {
+    case Watcher::BatStatus::CATASTROPHIC:
+        bat_alarm->setIcon(":/pictures/bat_catastrophic.svg");
+        alarms->show();
+        break;
+    case Watcher::BatStatus::CRITIC:
+        bat_alarm->setIcon(":/pictures/bat_critic.svg");
+        alarms->show();
+        break;
+    case Watcher::BatStatus::LOW:
+        bat_alarm->setIcon(":/pictures/bat_low.svg");
+        alarms->show();
+        break;
+    case Watcher::BatStatus::OK:
+        alarms->hide();
+        break;
+
+    }
 }
