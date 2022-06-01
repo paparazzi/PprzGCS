@@ -5,6 +5,7 @@
 #include "coordinatestransform.h"
 #include "units.h"
 #include "dispatcher_ui.h"
+#include "watcher.h"
 
 #if defined(SPEECH_ENABLED)
 #include "speaker.h"
@@ -18,6 +19,7 @@ PprzToolbox::PprzToolbox(PprzApplication* app)
     _coordinatesTransform = new CoordinatesTransform(app, this);
     _units                = new Units               (app, this);
     _dispatcherUi         = new DispatcherUi        (app, this);
+    _watcher              = new Watcher             (app, this);
 #if defined(SPEECH_ENABLED)
     _speaker              = new Speaker             (app, this);
 #endif
@@ -30,6 +32,7 @@ void PprzToolbox::setChildToolboxes(void) {
     _coordinatesTransform->setToolbox(this);
     _units->setToolbox(this);
     _dispatcherUi->setToolbox(this);
+    _watcher->setToolbox(this);
 #if defined(SPEECH_ENABLED)
     _speaker->setToolbox(this);
 #endif

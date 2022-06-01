@@ -10,6 +10,7 @@ if(SPEECH)
         ${CMAKE_CURRENT_SOURCE_DIR}/pprz_dispatcher.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/AircraftManager.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/units.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/watcher.cpp
         )
 endif()
 
