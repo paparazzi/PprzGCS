@@ -12,6 +12,7 @@ public:
     void init();
 
     void watch_bat(pprzlink::Message msg);
+    void watch_links(pprzlink::Message msg);
 
     enum BatStatus{
         OK,
@@ -20,8 +21,15 @@ public:
         CATASTROPHIC,
     };
 
+    enum LinkStatus {
+        LINK_OK,
+        LINK_LOST,
+        LINK_PARTIALY_LOST
+    };
+
 signals:
     void bat_status(BatStatus);
+    void link_status(LinkStatus);
 
 private:
 
@@ -32,6 +40,7 @@ private:
     float bat_critic;
     float bat_catastrophic;
 
+    QMap<QString, float> link_times;
 
 };
 

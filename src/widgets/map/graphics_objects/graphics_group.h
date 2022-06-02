@@ -12,7 +12,12 @@ class GraphicsGroup : public GraphicsObject, public QGraphicsItemGroup
     Q_OBJECT
     Q_INTERFACES(QGraphicsItem)
 public:
+    explicit GraphicsGroup(QObject *parent = nullptr);
     explicit GraphicsGroup(PprzPalette palette, QObject *parent = nullptr);
+
+    QRectF boundingRect() const override;
+
+    void arrange();
 
 signals:
     void mousePressed(QGraphicsSceneMouseEvent *event);

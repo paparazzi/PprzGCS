@@ -26,9 +26,11 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
 
     graphics_aircraft = new GraphicsAircraft(palette.getColor(), aircraft->getIcon(), size);
     graphics_text = new GraphicsText(aircraft->name(), palette);
-    alarms = new QGraphicsItemGroup();
+    alarms = new GraphicsGroup(this);
     bat_alarm = new GraphicsIcon(":/pictures/bat_low.svg", size);
+    link_alarm = new GraphicsIcon(":/pictures/link_ok.svg", size);
     alarms->addToGroup(bat_alarm);
+    alarms->addToGroup(link_alarm);
 
     for(int i=0; i<settings.value("map/aircraft/track_max_chunk").toInt(); i++) {
         auto gt = new GraphicsTrack(palette);
@@ -39,6 +41,7 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
     auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(ac_id);
     auto watcher = ac->getStatus()->getWatcher();
     connect(watcher, &AircraftWatcher::bat_status, this, &AircraftItem::handle_bat_alarm);
+    connect(watcher, &AircraftWatcher::link_status, this, &AircraftItem::handle_link_alarm);
 
     setZoomFactor(1.1);
 }
@@ -73,7 +76,6 @@ void AircraftItem::updateGraphics(MapWidget* map, uint32_t update_event) {
         alarms->setScale(s);
         alarms->setPos(scene_pos + rot.map(s*QPointF(-alarms->boundingRect().width()/2, -dh)));
         alarms->setRotation(-r);
-
 
         for(int i = 0; i<track_chuncks.size(); i++) {
             QPolygonF scenePoints;
@@ -169,19 +171,38 @@ void AircraftItem::handle_bat_alarm(AircraftWatcher::BatStatus bs) {
     switch (bs) {
     case AircraftWatcher::BatStatus::CATASTROPHIC:
         bat_alarm->setIcon(":/pictures/bat_catastrophic.svg");
-        alarms->show();
+        bat_alarm->show();
         break;
     case AircraftWatcher::BatStatus::CRITIC:
         bat_alarm->setIcon(":/pictures/bat_critic.svg");
-        alarms->show();
+        bat_alarm->show();
         break;
     case AircraftWatcher::BatStatus::LOW:
         bat_alarm->setIcon(":/pictures/bat_low.svg");
-        alarms->show();
+        bat_alarm->show();
         break;
     case AircraftWatcher::BatStatus::OK:
-        alarms->hide();
+        bat_alarm->hide();
         break;
-
     }
+    alarms->arrange();
+    emit itemChanged();
+}
+
+void AircraftItem::handle_link_alarm(AircraftWatcher::LinkStatus ls) {
+    switch (ls) {
+    case AircraftWatcher::LinkStatus::LINK_OK:
+        link_alarm->hide();
+        break;
+    case AircraftWatcher::LinkStatus::LINK_PARTIALY_LOST:
+        link_alarm->show();
+        link_alarm->setIcon(":/pictures/link_warning.svg");
+        break;
+    case AircraftWatcher::LinkStatus::LINK_LOST:
+        link_alarm->setIcon(":/pictures/link_nok.svg");
+        link_alarm->show();
+        break;
+    }
+    alarms->arrange();
+    emit itemChanged();
 }

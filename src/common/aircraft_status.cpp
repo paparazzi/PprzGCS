@@ -86,6 +86,7 @@ void AircraftStatus::updateMessage(pprzlink::Message msg) {
 
             telemetry_messages[link_id] = msg;
             emit telemetry_status();
+            watcher->watch_links(msg);
         }
         else if(name == "FLY_BY_WIRE") {
             emit fly_by_wire();
