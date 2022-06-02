@@ -4,7 +4,7 @@
 #include <QtWidgets>
 #include <QGridLayout>
 #include <QHBoxLayout>
-#include "watcher.h"
+#include "aircraft_watcher.h"
 
 class MiniStrip : public QWidget
 {
@@ -37,7 +37,7 @@ private:
         STAGE_TIME,
     };
 
-    void handle_bat_status(QString ac_id, Watcher::BatStatus);
+    void handle_bat_status(AircraftWatcher::BatStatus);
 
     void updateData();
 

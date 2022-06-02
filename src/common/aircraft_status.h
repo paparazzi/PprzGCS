@@ -5,6 +5,8 @@
 #include <QMap>
 #include "pprz_dispatcher.h"
 #include <optional>
+#include "aircraft_watcher.h"
+
 
 class AircraftStatus : public QObject
 {
@@ -15,6 +17,8 @@ public:
     void updateMessage(pprzlink::Message msg);
     std::optional<pprzlink::Message> getMessage(QString name);
     QMap<QString, pprzlink::Message> getTelemetryMessages() {return telemetry_messages;}
+
+    AircraftWatcher* getWatcher() {return watcher;}
 
 signals:
     void flight_param();
@@ -36,6 +40,8 @@ private:
 
     QMap<QString, pprzlink::Message> last_messages;
     QMap<QString, pprzlink::Message> telemetry_messages;
+
+    AircraftWatcher* watcher;
 };
 
 #endif // AIRCRAFTSTATUS_H

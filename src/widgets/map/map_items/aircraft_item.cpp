@@ -36,8 +36,9 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
         QList<Point2DLatLon> l;
         track_chuncks.append(l);
     }
-
-    connect(pprzApp()->toolbox()->watcher(), &Watcher::bat_status, this, &AircraftItem::handle_bat_alarm);
+    auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(ac_id);
+    auto watcher = ac->getStatus()->getWatcher();
+    connect(watcher, &AircraftWatcher::bat_status, this, &AircraftItem::handle_bat_alarm);
 
     setZoomFactor(1.1);
 }
@@ -164,25 +165,21 @@ void AircraftItem::removeFromScene(MapWidget* map) {
     delete alarms;
 }
 
-void AircraftItem::handle_bat_alarm(QString id, Watcher::BatStatus bs) {
-    if(id != ac_id) {
-        return;
-    }
-
+void AircraftItem::handle_bat_alarm(AircraftWatcher::BatStatus bs) {
     switch (bs) {
-    case Watcher::BatStatus::CATASTROPHIC:
+    case AircraftWatcher::BatStatus::CATASTROPHIC:
         bat_alarm->setIcon(":/pictures/bat_catastrophic.svg");
         alarms->show();
         break;
-    case Watcher::BatStatus::CRITIC:
+    case AircraftWatcher::BatStatus::CRITIC:
         bat_alarm->setIcon(":/pictures/bat_critic.svg");
         alarms->show();
         break;
-    case Watcher::BatStatus::LOW:
+    case AircraftWatcher::BatStatus::LOW:
         bat_alarm->setIcon(":/pictures/bat_low.svg");
         alarms->show();
         break;
-    case Watcher::BatStatus::OK:
+    case AircraftWatcher::BatStatus::OK:
         alarms->hide();
         break;
 

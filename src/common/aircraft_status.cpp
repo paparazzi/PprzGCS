@@ -6,6 +6,8 @@
 AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent),
     ac_id(ac_id)
 {
+    watcher = new AircraftWatcher(ac_id, this);
+
     //listen for NAVIGATION_REF to update origin waypoint of fixedwings
     PprzDispatcher::get()->bind("NAVIGATION_REF", this, [=](QString sender, pprzlink::Message msg) {
         if(sender == ac_id) {
@@ -66,6 +68,7 @@ void AircraftStatus::updateMessage(pprzlink::Message msg) {
         }
         else if(name == "ENGINE_STATUS") {
             emit engine_status();
+            watcher->watch_bat(msg);
         }
         else if(name == "WAYPOINT_MOVED") {
             emit waypoint_moved();

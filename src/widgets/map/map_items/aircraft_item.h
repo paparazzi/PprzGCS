@@ -7,7 +7,7 @@
 #include "QGraphicsTextItem"
 #include "graphics_track.h"
 #include "graphics_icon.h"
-#include "watcher.h"
+#include "aircraft_watcher.h"
 
 class AircraftItem : public MapItem
 {
@@ -32,7 +32,7 @@ public slots:
 
 protected:
     virtual void updateGraphics(MapWidget* map, uint32_t update_event);
-    void handle_bat_alarm(QString id, Watcher::BatStatus bs);
+    void handle_bat_alarm(AircraftWatcher::BatStatus bs);
 
 private:
     GraphicsAircraft* graphics_aircraft;

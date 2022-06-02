@@ -241,26 +241,22 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     connect(ac_status, &AircraftStatus::fly_by_wire, this, &MiniStrip::updateData);
     connect(ac_status, &AircraftStatus::ap_status, this, &MiniStrip::updateData);
     connect(ac_status, &AircraftStatus::nav_status, this, &MiniStrip::updateData);
-    connect(pprzApp()->toolbox()->watcher(), &Watcher::bat_status, this, &MiniStrip::handle_bat_status);
+    connect(ac_status->getWatcher(), &AircraftWatcher::bat_status, this, &MiniStrip::handle_bat_status);
 }
 
-void MiniStrip::handle_bat_status(QString id, Watcher::BatStatus bs) {
-    if(id != ac_id) {
-        return;
-    }
-
+void MiniStrip::handle_bat_status(AircraftWatcher::BatStatus bs) {
     // change battery icon
     switch (bs) {
-    case Watcher::BatStatus::CATASTROPHIC:
+    case AircraftWatcher::BatStatus::CATASTROPHIC:
         bat_icon->setPixmap(bat_catastrophic.pixmap(icons_size));
         break;
-    case Watcher::BatStatus::CRITIC:
+    case AircraftWatcher::BatStatus::CRITIC:
         bat_icon->setPixmap(bat_critic.pixmap(icons_size));
         break;
-    case Watcher::BatStatus::LOW:
+    case AircraftWatcher::BatStatus::LOW:
         bat_icon->setPixmap(bat_low.pixmap(icons_size));
         break;
-    case Watcher::BatStatus::OK:
+    case AircraftWatcher::BatStatus::OK:
         bat_icon->setPixmap(bat_ok.pixmap(icons_size));
         break;
     }
