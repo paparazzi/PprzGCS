@@ -101,3 +101,6 @@ void PprzMap::handleMouseMove(QPointF scenePos) {
     }
 }
 
+MapWidget* PprzMap::map() {
+    return ui->map;
+}

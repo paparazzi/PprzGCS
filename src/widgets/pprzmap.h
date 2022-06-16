@@ -29,6 +29,8 @@ public:
     MapLayerControl* makeLayerControl(QString name, bool initialState, int z);
     void configure(QDomElement e);
 
+    MapWidget* map();
+
 protected:
 //    void scenePressEvent(QGraphicsSceneMouseEvent *mouseEvent);
 //    void sceneMoveEvent(QGraphicsSceneMouseEvent *mouseEvent);

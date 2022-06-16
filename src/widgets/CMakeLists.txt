@@ -20,6 +20,8 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/plotter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/windindicator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/link_status.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scriptedit.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scriptedit.ui
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})

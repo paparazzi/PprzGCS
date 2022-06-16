@@ -14,6 +14,7 @@
 #include "plotter.h"
 #include "link_status.h"
 #include "tuple_helpers.h"
+#include "scriptedit.h"
 
 using ac_widgets_list = std::tuple<
     SettingsViewer, MiniStrip,
@@ -21,7 +22,7 @@ using ac_widgets_list = std::tuple<
     GPSClassicViewer, FlightPlanEditor,
     Plotter, LinkStatus
 >;
-using simple_widgets_list = std::tuple<PprzMap, Pfd>;
+using simple_widgets_list = std::tuple<PprzMap, Pfd, ScriptEdit>;
 using containers_list = std::tuple<StackContainer, ListContainer>;
 
 std::map<QString, size_t> AC_WIDGETS_MAP = {
@@ -39,6 +40,7 @@ std::map<QString, size_t> AC_WIDGETS_MAP = {
 std::map<QString, size_t> SIMPLE_WIDGETS_MAP = {
     {"map2d", tuple_element_index_v<PprzMap, simple_widgets_list>},
     {"PFD", tuple_element_index_v<Pfd, simple_widgets_list>},
+    {"script", tuple_element_index_v<ScriptEdit, simple_widgets_list>},
 };
 
 

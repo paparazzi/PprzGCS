@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<typesystem package="AppLib">
+    <load-typesystem name="typesystem_widgets.xml" generate="no"/>
+    <object-type name="PprzMain"/>
+    <!--object-type name="MapWidget"/>
+    <object-type name="PprzMap"/-->
+</typesystem>

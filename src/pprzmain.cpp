@@ -7,10 +7,13 @@
 #include <QSettings>
 #include "app_settings.h"
 #include "gcs_utils.h"
+#include "python_plugins.h"
 
 #if defined(SPEECH_ENABLED)
 #include "speaker.h"
 #endif
+
+const int PprzMain::EXIT_CODE_REBOOT = -123456;
 
 LaunchTypes PprzMain::launch_type = DEFAULT;
 

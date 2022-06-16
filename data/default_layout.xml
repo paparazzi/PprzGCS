@@ -1,7 +1,8 @@
 <gcsconf>
     <layout width="1000" height="800">
       <columns>
-        <widget name="map2d" size="800">
+      <rows>
+        <widget name="map2d" size="800" id="mapimapi">
           <configure>
             <columnLeft>
                 <widget name="layers" icon="map_layers_normal.svg"/>
@@ -20,6 +21,9 @@
             </columnRight>
           </configure>
         </widget>
+        <widget name="script"/>
+        </rows>
+        
         <rows size="200">
             <widget name="strips" container="list" alt="commands"/>
             <widget name="flightplan"/>
