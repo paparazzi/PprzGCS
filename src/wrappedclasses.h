@@ -52,8 +52,9 @@
 #define WRAPPEDCLASSES_H
 
 #include "pprzmain.h"
-//#include "common/waypoint.h"
-//#include "geometry/point2dlatlon.h"
+#include "point2dlatlon.h"
+#include "waypoint.h"
+//#include "tools/pprz_dispatcher.h"
 //#include "widgets/map/map_items/map_item.h"
 //#include "widgets/pprzmap.h"
 //#include "widgets/map/mapwidget.h"

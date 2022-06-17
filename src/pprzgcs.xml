@@ -1,7 +1,11 @@
 <?xml version="1.0"?>
 <typesystem package="AppLib">
-    <load-typesystem name="typesystem_widgets.xml" generate="no"/>
+<!--load-typesystem name="typesystem_xml.xml" generate="no"/-->
+<load-typesystem name="typesystem_widgets.xml" generate="no"/>
+
     <object-type name="PprzMain"/>
-    <!--object-type name="MapWidget"/>
-    <object-type name="PprzMap"/-->
+    <primitive-type name="Point2DLatLon"/>
+    <!--object-type name="PprzDispatcher"/-->
+    <object-type name="Waypoint"/>
+    <!--object-type name="PprzMap"/-->
 </typesystem>
