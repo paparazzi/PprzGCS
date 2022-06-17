@@ -7,6 +7,10 @@
 #include <QSlider>
 #include "imagebutton.h"
 
+#define STR(x) #x
+#define XSTR(x) STR(x)
+#define MSG(x) _Pragma (STR(message (x)))
+
 class MapLayerControl : public QWidget
 {
     Q_OBJECT
@@ -18,7 +22,14 @@ public:
     qreal opacity() {return static_cast<qreal>(opacitySlider->value())/opacitySlider->maximum();}
     int zValue() {return z_value;}
     void setZValue(int z);
-    const QPixmap* pixmap() {return imageLabel->pixmap();}
+    QPixmap pixmap() {
+
+#if QT_VERSION > QT_VERSION_CHECK(5, 15, 0)
+        return imageLabel->pixmap(Qt::ReturnByValueConstant::ReturnByValue);
+#else
+        return QPixmap(imageLabel->pixmap());
+#endif
+    }
     QString name() {return _name;}
 
     bool operator <(const MapLayerControl& mlc) const
