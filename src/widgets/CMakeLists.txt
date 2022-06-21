@@ -1,7 +1,7 @@
 
 set(SOURCE
     ${SOURCE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/strip.cpp
+    #${CMAKE_CURRENT_SOURCE_DIR}/strip.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ac_selector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/settings_viewer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pprzmap.cpp

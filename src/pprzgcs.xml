@@ -1,11 +1,24 @@
 <?xml version="1.0"?>
-<typesystem package="AppLib">
+<typesystem package="GCS">
 <!--load-typesystem name="typesystem_xml.xml" generate="no"/-->
 <load-typesystem name="typesystem_widgets.xml" generate="no"/>
-
+    <primitive-type name="std::optional"/>
     <object-type name="PprzMain"/>
-    <primitive-type name="Point2DLatLon"/>
+    <value-type name="Point2DLatLon">
+        <modify-function signature="toString(bool)" remove="all">
+        </modify-function>
+        <!--modify-function signature="Point2DLatLon(Waypoint*)" remove="all"/-->
+    </value-type>
     <!--object-type name="PprzDispatcher"/-->
-    <object-type name="Waypoint"/>
+    <object-type name="Waypoint">
+        <!--modify-function signature="getLon() const" remove="all"/-->
+    </object-type>
+    <object-type name="FlightPlan"/>
+    <value-type name="Sector"/>
+    <!--object-type name="AircraftManager"/-->
+    <!--object-type name="Aircraft"/-->
+    <!--object-type name="Setting"/-->
+    <!--object-type name="AircraftStatus"/-->
+    <!--object-type name="PprzDispatcher"/-->
     <!--object-type name="PprzMap"/-->
 </typesystem>

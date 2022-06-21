@@ -65,16 +65,16 @@
 /* from AppLib bindings */
 
 #if PY_MAJOR_VERSION >= 3
-    extern "C" PyObject *PyInit_AppLib();
+    extern "C" PyObject *PyInit_GCS();
 #else
-    extern "C" void initAppLib();
+    extern "C" void initGCS();
 #endif
 
 // This variable stores all Python types exported by this module.
-extern PyTypeObject **SbkAppLibTypes;
+extern PyTypeObject **SbkGCSTypes;
 
 // This variable stores all type converters exported by this module.
-extern SbkConverter **SbkAppLibTypeConverters;
+extern SbkConverter **SbkGCSTypeConverters;
 
 namespace PythonUtils {
 
@@ -101,6 +101,7 @@ static void initVirtualEnvironment()
         && (PY_MAJOR_VERSION > 3 || (PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 8))) {
         qputenv("PYTHONPATH", virtualEnvPath + "\\Lib\\site-packages");
     } else {
+        qputenv("PYTHONPATH", PYTHONPATH);
         //qputenv("PYTHONHOME", virtualEnvPath);
     }
 }
@@ -117,7 +118,7 @@ State init()
     qAddPostRoutine(cleanup);
     state = PythonInitialized;
 #if PY_MAJOR_VERSION >= 3
-    const bool pythonInitialized = PyInit_AppLib() != nullptr;
+    const bool pythonInitialized = PyInit_GCS() != nullptr;
 #else
     const bool pythonInitialized = true;
     initAppLib();
@@ -138,7 +139,7 @@ bool bindAppObject(const QString &moduleName, const QString &name,
 {
     if (init() != AppModuleLoaded)
         return false;
-    PyTypeObject *typeObject = SbkAppLibTypes[index];
+    PyTypeObject *typeObject = SbkGCSTypes[index];
 
     PyObject *po = Shiboken::Conversions::pointerToPython(reinterpret_cast<SbkObjectType *>(typeObject), o);
     if (!po) {

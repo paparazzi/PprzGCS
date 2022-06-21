@@ -51,9 +51,18 @@
 #ifndef WRAPPEDCLASSES_H
 #define WRAPPEDCLASSES_H
 
+#include "pprzlinkQt/IvyQtLink.h"
 #include "pprzmain.h"
 #include "point2dlatlon.h"
 #include "waypoint.h"
+#include "flightplan.h"
+//#include "AircraftManager.h"
+//#include "aircraft.h"
+//#include "aircraft_status.h"
+//#include "setting.h"
+//#include <optional>
+//#include "pprz_dispatcher.h"
+//#include "PprzToolbox.h"
 //#include "tools/pprz_dispatcher.h"
 //#include "widgets/map/map_items/map_item.h"
 //#include "widgets/pprzmap.h"
