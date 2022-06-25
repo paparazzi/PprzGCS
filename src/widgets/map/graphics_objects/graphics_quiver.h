@@ -11,12 +11,12 @@ class GraphicsQuiver : public GraphicsObject, public QGraphicsItem
     Q_OBJECT
     Q_INTERFACES(QGraphicsItem)
 public:
-    explicit GraphicsQuiver(float size, PprzPalette palette, QObject *parent = nullptr);
+    explicit GraphicsQuiver(double size, PprzPalette palette, QObject *parent = nullptr);
 
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-    float size;
+    double size;
 
 protected:
     virtual void changeFocus() override;

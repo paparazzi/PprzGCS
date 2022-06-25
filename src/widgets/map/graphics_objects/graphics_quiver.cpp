@@ -1,6 +1,6 @@
 #include "graphics_quiver.h"
 
-GraphicsQuiver::GraphicsQuiver(float size, PprzPalette palette, QObject *parent) : 
+GraphicsQuiver::GraphicsQuiver(double size, PprzPalette palette, QObject *parent) : 
     GraphicsObject(palette, parent),
     QGraphicsItem (),
     size(size)
@@ -19,10 +19,12 @@ void GraphicsQuiver::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
     (void)widget;
     painter->setPen(QPen(Qt::red, 3));
 
-    painter->drawLine(0, 0, 0, -size);
+    painter->drawLine(0, 0, 0, -size + size/50);
 
     painter->drawLine(0, -size, -size/10, -9*size/10);
     painter->drawLine(0, -size, size/10, -9*size/10);
+    
+    painter->setRenderHint(QPainter::Antialiasing);
 }
 
 void GraphicsQuiver::changeFocus() {

@@ -1114,12 +1114,9 @@ void MapWidget::onQuiver(QString sender, pprzlink::Message msg) {
     int32_t lat, lon;
     int32_t vlat, vlon;
 
+
     msg.getField("id", id);
     msg.getField("status", status);
-    msg.getField("lat", lat);
-    msg.getField("lon", lon);
-    msg.getField("vlat", vlat);
-    msg.getField("vlon", vlon);
 
     if(id == "clean") {
         for (MapItem* quiver : quivers){
@@ -1138,10 +1135,15 @@ void MapWidget::onQuiver(QString sender, pprzlink::Message msg) {
         return;
     }
 
-    auto pos = Point2DLatLon(lat/1e7, lon/1e7);
-    auto vec = Point2DLatLon(vlat/1e7, vlon/1e7);
+    msg.getField("lat", lat);
+    msg.getField("lon", lon);
+    msg.getField("vlat", vlat);
+    msg.getField("vlon", vlon);
 
-    auto quiver = new QuiverItem(pos, vec);
+    auto pos = Point2DLatLon(lat/1e7, lon/1e7);
+    auto vpos = Point2DLatLon(vlat/1e7, vlon/1e7);
+
+    auto quiver = new QuiverItem(pos, vpos);
     addItem(quiver);
 
     quivers[id] = quiver;

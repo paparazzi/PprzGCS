@@ -2,9 +2,12 @@
 #include "gcs_utils.h"
 #include "mapwidget.h"
 
-QuiverItem::QuiverItem(Point2DLatLon pos, Point2DLatLon vec, double neutral_scale_zoom, QObject *parent) :
+#include <QtDebug>
+
+QuiverItem::QuiverItem(Point2DLatLon pos, Point2DLatLon vpos, double neutral_scale_zoom, QObject *parent) :
     MapItem("__NO_AC__", PprzPalette(Qt::red), neutral_scale_zoom, parent),
-    latlon(pos)
+    latlon(pos),
+    vlatlon(vpos)
 {
     auto settings = getAppSettings();
 
@@ -12,13 +15,10 @@ QuiverItem::QuiverItem(Point2DLatLon pos, Point2DLatLon vec, double neutral_scal
     z_value_unhighlighted = settings.value("map/z_values/shapes").toDouble();
     z_value = z_value_unhighlighted;
 
-    // TODO: "size" y "course" vienen determinados por "pos" y "vec".
-    size = 100;
-    course = 10;
+    CoordinatesTransform::get()->distance_azimut(latlon, vlatlon, distance, azimut);
+    graphics_quiver = new GraphicsQuiver(distance, palette, this);
 
-    graphics_quiver = new GraphicsQuiver(size, palette, this);
     graphics_quiver->setZValue(z_value);
-
     setZoomFactor(1.1);
 }
 
@@ -29,20 +29,24 @@ void QuiverItem::addToMap(MapWidget* map) {
 void QuiverItem::updateGraphics(MapWidget* map, uint32_t update_event) {
     if(update_event & (UpdateEvent::ITEM_CHANGED | UpdateEvent::MAP_ZOOMED)) {
         QPointF scene_pos = scenePoint(latlon, zoomLevel(map->zoom()), map->tileSize());
+        double size = distMeters2Tile(distance*map->tileSize(), latlon.lat(), zoomLevel(map->zoom()));
+        double scale = size/graphics_quiver->size;
+
         graphics_quiver->setPos(scene_pos);
-        double s = getScale(map->zoom(), map->scaleFactor());
-        graphics_quiver->setScale(s);
-        graphics_quiver->setRotation(course);
+        graphics_quiver->setScale(scale);
+        graphics_quiver->setRotation(azimut);
     }
 }
 
 void QuiverItem::setPosition(Point2DLatLon pos) {
     latlon = pos;
+    CoordinatesTransform::get()->distance_azimut(latlon, vlatlon, distance, azimut);
     emit itemChanged();
 }
 
-void QuiverItem::setVector(Point2DLatLon vec) {
-    course = 10;  // TODO: "size" y "course" vienen determinados por "pos" y "vec".
+void QuiverItem::setVector(Point2DLatLon vpos) {
+    vlatlon = vpos;
+    CoordinatesTransform::get()->distance_azimut(latlon, vlatlon, distance, azimut);
     emit itemChanged();
 }
 
