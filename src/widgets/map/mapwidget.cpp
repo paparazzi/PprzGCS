@@ -1113,7 +1113,6 @@ void MapWidget::onQuiver(QString sender, pprzlink::Message msg) {
     uint8_t status;
     int32_t lat, lon;
     int32_t vlat, vlon;
-    float course;
 
     msg.getField("id", id);
     msg.getField("status", status);
@@ -1121,7 +1120,6 @@ void MapWidget::onQuiver(QString sender, pprzlink::Message msg) {
     msg.getField("lon", lon);
     msg.getField("vlat", vlat);
     msg.getField("vlon", vlon);
-    msg.getField("course", course);
 
     if(id == "clean") {
         for (MapItem* quiver : quivers){

@@ -17,7 +17,7 @@ void GraphicsQuiver::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
 {
     (void)option;
     (void)widget;
-    painter->setPen(QPen(Qt::black, 3));
+    painter->setPen(QPen(Qt::red, 3));
 
     painter->drawLine(0, 0, 0, -size);
 

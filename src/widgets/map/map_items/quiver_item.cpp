@@ -13,7 +13,7 @@ QuiverItem::QuiverItem(Point2DLatLon pos, Point2DLatLon vec, double neutral_scal
     z_value = z_value_unhighlighted;
 
     // TODO: "size" y "course" vienen determinados por "pos" y "vec".
-    size = 8;
+    size = 100;
     course = 10;
 
     graphics_quiver = new GraphicsQuiver(size, palette, this);
