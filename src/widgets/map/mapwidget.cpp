@@ -28,6 +28,7 @@
 #include "windindicator.h"
 #include "intruder_item.h"
 #include "arrow_item.h"
+#include "quiver_item.h"
 
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
@@ -130,6 +131,11 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     PprzDispatcher::get()->bind("INTRUDER", this,
         [=](QString sender, pprzlink::Message msg) {
             onIntruder(sender, msg);
+        });
+
+    PprzDispatcher::get()->bind("QUIVER", this,
+        [=](QString sender, pprzlink::Message msg) {
+            onQuiver(sender, msg);
         });
 
     PprzDispatcher::get()->bind("FLIGHT_PARAM", this,
@@ -1099,6 +1105,48 @@ void MapWidget::onIntruder(QString sender, pprzlink::Message msg) {
     addItem(itd);
 
     intruders[id] = make_pair(itd, QTime::currentTime());
+}
+
+void MapWidget::onQuiver(QString sender, pprzlink::Message msg) {
+    (void)sender;
+    QString id;
+    uint8_t status;
+    int32_t lat, lon;
+    int32_t vlat, vlon;
+    float course;
+
+    msg.getField("id", id);
+    msg.getField("status", status);
+    msg.getField("lat", lat);
+    msg.getField("lon", lon);
+    msg.getField("vlat", vlat);
+    msg.getField("vlon", vlon);
+    msg.getField("course", course);
+
+    if(id == "clean") {
+        for (MapItem* quiver : quivers){
+            removeItem(quiver);
+        }
+        quivers.clear();
+        return;
+    }
+
+    if(quivers.contains(id)) {
+        removeItem(quivers[id]);
+        quivers.remove(id);
+    }
+
+    if(status == 1) { //deletion, return now.
+        return;
+    }
+
+    auto pos = Point2DLatLon(lat/1e7, lon/1e7);
+    auto vec = Point2DLatLon(vlat/1e7, vlon/1e7);
+
+    auto quiver = new QuiverItem(pos, vec);
+    addItem(quiver);
+
+    quivers[id] = quiver;
 }
 
 
