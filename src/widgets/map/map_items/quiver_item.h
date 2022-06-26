@@ -8,7 +8,7 @@ class QuiverItem : public MapItem
 {
     Q_OBJECT
 public:
-    QuiverItem(Point2DLatLon pos, Point2DLatLon vpos, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    QuiverItem(Point2DLatLon pos, Point2DLatLon vpos, QString ac_id = "__NO_AC__", double neutral_scale_zoom = 15, QObject *parent = nullptr);
     virtual void addToMap(MapWidget* map) override;
     virtual void updateGraphics(MapWidget* map, uint32_t update_event) override;
     virtual void removeFromScene(MapWidget* map) override;
@@ -16,8 +16,9 @@ public:
     virtual void setEditable(bool ed) override;
     virtual void updateZValue() override;
 
-    void setPosition(Point2DLatLon pos);
-    void setVector(Point2DLatLon vpos);
+    void setPos(Point2DLatLon pos);
+    void setVec(Point2DLatLon vpos);
+    void setPosVec(Point2DLatLon pos, Point2DLatLon vpos);
 
 private:
     GraphicsQuiver* graphics_quiver;

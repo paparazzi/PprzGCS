@@ -135,19 +135,24 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
 
     PprzDispatcher::get()->bind("QUIVER", this,
         [=](QString sender, pprzlink::Message msg) {
-            onQuiver(sender, msg);
+            (void)sender;
+            onQuiver(msg);
         });
 
     PprzDispatcher::get()->bind("FLIGHT_PARAM", this,
-            [=](QString sender, pprzlink::Message msg) {
-                (void)sender;
-                QString id;
-                msg.getField("ac_id", id);
-                if(id == "GCS") {
-                    onGCSPos(msg);
-                }
-            });
+        [=](QString sender, pprzlink::Message msg) {
+            (void)sender;
+            QString id;
+            msg.getField("ac_id", id);
+            if(id == "GCS") {
+                onGCSPos(msg);
+            }
+        });
 
+    PprzDispatcher::get()->bind("GVF", this,
+        [=](QString sender, pprzlink::Message msg) {
+            onGVF(sender, msg);
+        });
 
     setAcceptDrops(true);
 }
@@ -1107,8 +1112,7 @@ void MapWidget::onIntruder(QString sender, pprzlink::Message msg) {
     intruders[id] = make_pair(itd, QTime::currentTime());
 }
 
-void MapWidget::onQuiver(QString sender, pprzlink::Message msg) {
-    (void)sender;
+void MapWidget::onQuiver(pprzlink::Message msg) {
     QString id;
     uint8_t status;
     int32_t lat, lon;
@@ -1169,6 +1173,70 @@ void MapWidget::onGCSPos(pprzlink::Message msg) {
     int size = settings.value("map/gcs_icon_size").toInt();
     wcenter->setSize(size);
     gcsItem = wcenter;
+}
+
+void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
+    // TODO: La primera vez que se reciba un mensaje de GVF de un AC se debería genera un botón sobre 
+    //       dicho AC que permite activar o no el campo vectorial y las trayectorias. Gautier ya hace
+    //       algo así con la lista desplegable de botones !!!
+
+    // TODO: Cada trayectoria y campo tiene que ir ligado a un AC_ID (SI O SI!!)
+    // CONSEGUIDO: Conocer origen wgs84.
+    // CONSEGUIDO: Conocer la posición wgs84 del AC indicado.
+    // CONSEGUIDO: Calcular la posición ltp del AC indicado.
+    // CONSEGUIDO: Extraer todos los tados necesarios usando el Ivy bus.
+
+    qDebug() << sender;
+
+    auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(sender);
+    auto origin  = ac->getFlightPlan()->getOrigin();
+    auto flight_param_msg = ac->getStatus()->getMessage("FLIGHT_PARAM");
+
+    if(origin && flight_param_msg) {
+    double lat0 = origin->getLat();
+    double lon0 = origin->getLon();
+    auto latlon0 = Point2DLatLon(lat0, lon0);
+
+    double lat,lon;
+    flight_param_msg->getField("lat" ,lat);
+    flight_param_msg->getField("long",lon);
+    auto latlon = Point2DLatLon(lat,lon);
+
+    // qDebug() << " - ON_GVF - ";  
+    // qDebug() << sender;
+    // qDebug() << "lat0: " << lat0 << "   lon0: " << lon0;
+    // qDebug() << "lat: "  << lat  << "   lon: "  << lon;
+
+    // CoordinatesTransform::get()->ltp_to_wgs84(Point2DLatLon origin, double x, double y)
+    // CoordinatesTransform::get()->wgs84_to_ltp(Point2DLatLon origin, Point2DLatLon geo, double& x, double& y)
+
+    auto ac_pos = QPointF(0,0);
+    CoordinatesTransform::get()->wgs84_to_ltp(latlon0, latlon, ac_pos.rx(), ac_pos.ry());
+    // qDebug() << "px: "  << ac_pos.x() << "   py: "  << ac_pos.y();
+
+    uint8_t traj;
+    float error, ke;
+    QList<float> param;
+    int8_t direction;
+    
+    msg.getField("error", error);
+    msg.getField("traj", traj);
+    msg.getField("s", direction);
+    msg.getField("ke", ke);
+    msg.getField("p", param);
+
+    // for (int i=0; i<param.size(); i++) {
+    //     qDebug() << i << ": " << param[i];
+    // }
+
+    // TODO: Ya tenemos todos los datos necesarios, ahora queda crear pasar por un switch que seleccione la 
+    //       GVF_trajectory que hay que crear y pintar.
+    // TODO: Crear todas las trayectorias (tienen que llevar un campo vertorial asociado).
+
+    } else {
+    qDebug() << "Can't read FLIGHT_PARAM and/or INS_REF/NAVIGATION_REF of AC " << sender;
+    return;
+    }
 }
 
 void MapWidget::setAcArrowSize(int s) {

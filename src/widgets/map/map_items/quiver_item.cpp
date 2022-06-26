@@ -4,8 +4,8 @@
 
 #include <QtDebug>
 
-QuiverItem::QuiverItem(Point2DLatLon pos, Point2DLatLon vpos, double neutral_scale_zoom, QObject *parent) :
-    MapItem("__NO_AC__", PprzPalette(Qt::red), neutral_scale_zoom, parent),
+QuiverItem::QuiverItem(Point2DLatLon pos, Point2DLatLon vpos, QString ac_id,double neutral_scale_zoom, QObject *parent) :
+    MapItem(ac_id, PprzPalette(Qt::red), neutral_scale_zoom, parent),
     latlon(pos),
     vlatlon(vpos)
 {
@@ -19,6 +19,7 @@ QuiverItem::QuiverItem(Point2DLatLon pos, Point2DLatLon vpos, double neutral_sca
     graphics_quiver = new GraphicsQuiver(distance, palette, this);
 
     graphics_quiver->setZValue(z_value);
+    
     setZoomFactor(1.1);
 }
 
@@ -38,13 +39,20 @@ void QuiverItem::updateGraphics(MapWidget* map, uint32_t update_event) {
     }
 }
 
-void QuiverItem::setPosition(Point2DLatLon pos) {
+void QuiverItem::setPos(Point2DLatLon pos) {
     latlon = pos;
     CoordinatesTransform::get()->distance_azimut(latlon, vlatlon, distance, azimut);
     emit itemChanged();
 }
 
-void QuiverItem::setVector(Point2DLatLon vpos) {
+void QuiverItem::setVec(Point2DLatLon vpos) {
+    vlatlon = vpos;
+    CoordinatesTransform::get()->distance_azimut(latlon, vlatlon, distance, azimut);
+    emit itemChanged();
+}
+
+void QuiverItem::setPosVec(Point2DLatLon pos, Point2DLatLon vpos) {
+    latlon = pos;
     vlatlon = vpos;
     CoordinatesTransform::get()->distance_azimut(latlon, vlatlon, distance, azimut);
     emit itemChanged();
