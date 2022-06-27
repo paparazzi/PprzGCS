@@ -5,7 +5,7 @@ GraphicsQuiver::GraphicsQuiver(double size, PprzPalette palette, QObject *parent
     QGraphicsItem (),
     size(size)
 {
-    setFlag(ItemIsMovable);
+
 }
 
 QRectF GraphicsQuiver::boundingRect() const
@@ -17,9 +17,9 @@ void GraphicsQuiver::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
 {
     (void)option;
     (void)widget;
-    painter->setPen(QPen(Qt::red, 3));
+    painter->setPen(QPen(Qt::red, 0.5));
 
-    painter->drawLine(0, 0, 0, -size + size/50);
+    painter->drawLine(0, 0, 0, -size);
 
     painter->drawLine(0, -size, -size/10, -9*size/10);
     painter->drawLine(0, -size, size/10, -9*size/10);

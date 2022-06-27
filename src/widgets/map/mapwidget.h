@@ -15,6 +15,7 @@
 #include "lock_button.h"
 #include "papget.h"
 #include "windindicator.h"
+#include "gvf_trajectory.h"
 
 class ACItemManager;
 class ItemEditStateMachine;
@@ -113,6 +114,7 @@ private:
 
     QMap<QString, MapItem*> shapes;
     QMap<QString, MapItem*> quivers;
+    QMap<QString, GVF_trajectory*> gvf_trajectories;
     QMap<QString, std::pair<MapItem*, QTime>> intruders;
     QTimer* timer_intruders;
     MapItem* gcsItem;

@@ -30,6 +30,8 @@
 #include "arrow_item.h"
 #include "quiver_item.h"
 
+#include "gvf_traj_ellipse.h"
+
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     interaction_state(PMIS_OTHER), drawState(false), fp_edit_sm(nullptr), gcsItem(nullptr),
@@ -150,6 +152,11 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
         });
 
     PprzDispatcher::get()->bind("GVF", this,
+        [=](QString sender, pprzlink::Message msg) {
+            onGVF(sender, msg);
+        });
+
+    PprzDispatcher::get()->bind("GVF_PARAMETRIC", this,
         [=](QString sender, pprzlink::Message msg) {
             onGVF(sender, msg);
         });
@@ -1113,16 +1120,16 @@ void MapWidget::onIntruder(QString sender, pprzlink::Message msg) {
 }
 
 void MapWidget::onQuiver(pprzlink::Message msg) {
-    QString id;
+    QString quiver_id;
     uint8_t status;
     int32_t lat, lon;
     int32_t vlat, vlon;
 
 
-    msg.getField("id", id);
+    msg.getField("id", quiver_id);
     msg.getField("status", status);
 
-    if(id == "clean") {
+    if(quiver_id == "clean") {
         for (MapItem* quiver : quivers){
             removeItem(quiver);
         }
@@ -1130,9 +1137,9 @@ void MapWidget::onQuiver(pprzlink::Message msg) {
         return;
     }
 
-    if(quivers.contains(id)) {
-        removeItem(quivers[id]);
-        quivers.remove(id);
+    if(quivers.contains(quiver_id)) {
+        removeItem(quivers[quiver_id]);
+        quivers.remove(quiver_id);
     }
 
     if(status == 1) { //deletion, return now.
@@ -1147,10 +1154,10 @@ void MapWidget::onQuiver(pprzlink::Message msg) {
     auto pos = Point2DLatLon(lat/1e7, lon/1e7);
     auto vpos = Point2DLatLon(vlat/1e7, vlon/1e7);
 
-    auto quiver = new QuiverItem(pos, vpos);
+    auto quiver = new QuiverItem(pos, vpos, quiver_id);
     addItem(quiver);
 
-    quivers[id] = quiver;
+    quivers[quiver_id] = quiver;
 }
 
 
@@ -1185,57 +1192,103 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     // CONSEGUIDO: Conocer la posición wgs84 del AC indicado.
     // CONSEGUIDO: Calcular la posición ltp del AC indicado.
     // CONSEGUIDO: Extraer todos los tados necesarios usando el Ivy bus.
+    // TODO: Ya tenemos todos los datos necesarios, ahora queda crear pasar por un switch que seleccione la 
+    //       GVF_trajectory que hay que crear y pintar.
+    // TODO: Crear todas las trayectorias (tienen que llevar un campo vertorial asociado).
+    
+    if(!AircraftManager::get()->aircraftExists(sender)) {
+        qDebug() << "GVF: AC with id" << sender << "do not exists.";
+        return;
+    }
 
-    qDebug() << sender;
+    uint8_t ac_id = sender.toInt();
+
+    if(gvf_trajectories.contains(sender)) {
+        // TODO: decir a la clase que elimine todos los elementos gráficos!!
+        removeItem(gvf_trajectories[sender]->getVField());
+        gvf_trajectories.remove(sender);
+    }
+
+    // Requesting WGS84 AC and origin coordinates  
+    auto latlon0 = Point2DLatLon(0,0);
+    auto latlon = Point2DLatLon(0,0);
 
     auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(sender);
     auto origin  = ac->getFlightPlan()->getOrigin();
     auto flight_param_msg = ac->getStatus()->getMessage("FLIGHT_PARAM");
 
-    if(origin && flight_param_msg) {
+    if(origin) {
     double lat0 = origin->getLat();
     double lon0 = origin->getLon();
-    auto latlon0 = Point2DLatLon(lat0, lon0);
+    latlon0 = Point2DLatLon(lat0, lon0);
+    } else {
+        qDebug() << "GVF: Can't read INS_REF/NAVIGATION_REF of AC" << ac_id << ".";
+        return;
+    }
 
+    if(flight_param_msg) {
     double lat,lon;
     flight_param_msg->getField("lat" ,lat);
     flight_param_msg->getField("long",lon);
-    auto latlon = Point2DLatLon(lat,lon);
+    latlon = Point2DLatLon(lat,lon);
+    } else {
+        qDebug() << "GVF: Can't read FLIGHT_PARAM of AC" << ac_id << ".";
+        return;
+    }
 
-    // qDebug() << " - ON_GVF - ";  
-    // qDebug() << sender;
-    // qDebug() << "lat0: " << lat0 << "   lon0: " << lon0;
-    // qDebug() << "lat: "  << lat  << "   lon: "  << lon;
+    qDebug() << " - ON_GVF - ";  
+    qDebug() << ac_id;
+    // qDebug() << "lat0: " << latlon0.lat << "   lon0: " << latlon0.lon;
+    // qDebug() << "lat: "  << latlon.lat  << "   lon: "  << latlon.lon;
 
     // CoordinatesTransform::get()->ltp_to_wgs84(Point2DLatLon origin, double x, double y)
     // CoordinatesTransform::get()->wgs84_to_ltp(Point2DLatLon origin, Point2DLatLon geo, double& x, double& y)
 
+    // Getting AC LTP position from WGS84 AC and origin coordinates  
     auto ac_pos = QPointF(0,0);
     CoordinatesTransform::get()->wgs84_to_ltp(latlon0, latlon, ac_pos.rx(), ac_pos.ry());
     // qDebug() << "px: "  << ac_pos.x() << "   py: "  << ac_pos.y();
 
+    // Common parser definitions
     uint8_t traj;
-    float error, ke;
     QList<float> param;
     int8_t direction;
+    GVF_trajectory* gvf_traj;
     
-    msg.getField("error", error);
-    msg.getField("traj", traj);
-    msg.getField("s", direction);
-    msg.getField("ke", ke);
-    msg.getField("p", param);
+    // GVF message parser
+    if(msg.getDefinition().getName() == "GVF") {
+        float error, ke;
+        
+        msg.getField("error", error);
+        msg.getField("traj", traj);
+        msg.getField("s", direction);
+        msg.getField("ke", ke);
+        msg.getField("p", param);
 
-    // for (int i=0; i<param.size(); i++) {
-    //     qDebug() << i << ": " << param[i];
-    // }
+        switch(traj)
+        {   
+            case 0: {// Straight line
+                break;
+            }
+            case 1: { // Ellipse
+                gvf_traj = new GVF_traj_ellipse(ac_id, ac_pos, latlon0, param, direction, ke);
+                gvf_trajectories[sender] = gvf_traj;
+                addItem(gvf_traj->getVField());
+                break;
+            }
+            case 2: { // Sin
+                break;
+            }
+            default:
+                qDebug() << "GVF: GVF message parse received an unknown trajectory id.";
+                return;
+        }
+    }
 
-    // TODO: Ya tenemos todos los datos necesarios, ahora queda crear pasar por un switch que seleccione la 
-    //       GVF_trajectory que hay que crear y pintar.
-    // TODO: Crear todas las trayectorias (tienen que llevar un campo vertorial asociado).
-
-    } else {
-    qDebug() << "Can't read FLIGHT_PARAM and/or INS_REF/NAVIGATION_REF of AC " << sender;
-    return;
+    // GVF_PARAMETRIC message parser (TODO)
+    if (msg.getDefinition().getName() == "GVF_PARAMETRIC") {
+        qDebug() << "GVF: GVF_PARAMETRIC trajectories are not yet implemented in PprzGCS.";
+        return;
     }
 }
 
