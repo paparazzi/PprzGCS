@@ -1,7 +1,7 @@
 #ifndef GVF_TRAJECTORY_H
 #define GVF_TRAJECTORY_H
 
-#include "point2dlatlon.h"
+#include "coordinatestransform.h"
 #include "AircraftManager.h"
 #include "quiver_item.h"
 #include "path_item.h"
@@ -17,12 +17,12 @@ constexpr float DEFAULT_AREA = 1000;
 class GVF_trajectory
 {
 public:
-    GVF_trajectory(uint8_t id, QPointF pos, Point2DLatLon origin);
+    GVF_trajectory(QString id, QPointF pos, Point2DLatLon origin);
 
     QList<QPointF> meshGrid(float area = DEFAULT_AREA, int xpoints_num = QUIVERS_NUMBER, int ypoints_num = QUIVERS_NUMBER);
 
     void createTrajItem(QList<QPointF> points);
-    void createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints);
+    void createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float bound_area);
 
     QuiverItem* getVField();
     PathItem* getTraj();
@@ -30,7 +30,7 @@ public:
     void delete_waypoints();
     
 protected:
-    uint8_t ac_id;
+    QString ac_id;
     Point2DLatLon ltp_origin;
     QPointF ac_pos;
     QPointF xy_off;

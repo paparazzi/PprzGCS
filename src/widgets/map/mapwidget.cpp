@@ -1187,21 +1187,19 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     //       dicho AC que permite activar o no el campo vectorial y las trayectorias. Gautier ya hace
     //       algo así con la lista desplegable de botones !!!
 
-    // TODO: Cada trayectoria y campo tiene que ir ligado a un AC_ID (SI O SI!!)
+    // CONSEGUIDO: Cada trayectoria y campo tiene que ir ligado a un AC_ID (SI O SI!!)
     // CONSEGUIDO: Conocer origen wgs84.
     // CONSEGUIDO: Conocer la posición wgs84 del AC indicado.
     // CONSEGUIDO: Calcular la posición ltp del AC indicado.
     // CONSEGUIDO: Extraer todos los tados necesarios usando el Ivy bus.
-    // TODO: Ya tenemos todos los datos necesarios, ahora queda crear pasar por un switch que seleccione la 
-    //       GVF_trajectory que hay que crear y pintar.
-    // TODO: Crear todas las trayectorias (tienen que llevar un campo vertorial asociado).
+    // CONSEGUIDO: Ya tenemos todos los datos necesarios, ahora queda crear pasar por un switch que seleccione la 
+    //             GVF_trajectory que hay que crear y pintar.
+    // CONSEGUIDO: Crear todas las trayectorias (tienen que llevar un campo vertorial asociado).
     
     if(!AircraftManager::get()->aircraftExists(sender)) {
         qDebug() << "GVF: AC with id" << sender << "do not exists.";
         return;
     }
-
-    uint8_t ac_id = sender.toInt();
 
     if(gvf_trajectories.contains(sender)) {
         removeItem(gvf_trajectories[sender]->getVField());
@@ -1219,11 +1217,9 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     auto flight_param_msg = ac->getStatus()->getMessage("FLIGHT_PARAM");
 
     if(origin) {
-    double lat0 = origin->getLat();
-    double lon0 = origin->getLon();
-    latlon0 = Point2DLatLon(lat0, lon0);
+    latlon0 = Point2DLatLon(origin->getLat(), origin->getLon());
     } else {
-        qDebug() << "GVF: Can't read INS_REF/NAVIGATION_REF of AC" << ac_id << ".";
+        qDebug() << "GVF: Can't get origin waypoint from AC " << sender;
         return;
     }
 
@@ -1233,7 +1229,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     flight_param_msg->getField("long",lon);
     latlon = Point2DLatLon(lat,lon);
     } else {
-        qDebug() << "GVF: Can't read FLIGHT_PARAM of AC" << ac_id << ".";
+        qDebug() << "GVF: Can't read FLIGHT_PARAM of AC" << sender;
         return;
     }
 
@@ -1243,14 +1239,14 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
 
     // Common parser definitions
     uint8_t traj;
-    QList<float> param;
+    QList<float> param = {0.0};
     int8_t direction;
     GVF_trajectory* gvf_traj;
     
     // GVF message parser
     if(msg.getDefinition().getName() == "GVF") {
         float error, ke;
-        
+
         msg.getField("error", error);
         msg.getField("traj", traj);
         msg.getField("s", direction);
@@ -1263,7 +1259,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
                 break;
             }
             case 1: { // Ellipse
-                gvf_traj = new GVF_traj_ellipse(ac_id, ac_pos, latlon0, param, direction, ke);
+                gvf_traj = new GVF_traj_ellipse(sender, ac_pos, latlon0, param, direction, ke);
                 addItem(gvf_traj->getVField());
                 addItem(gvf_traj->getTraj());
                 gvf_trajectories[sender] = gvf_traj;

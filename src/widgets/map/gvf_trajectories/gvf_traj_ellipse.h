@@ -7,7 +7,7 @@ class GVF_traj_ellipse : public GVF_trajectory
 {
 
 public:
-    GVF_traj_ellipse(uint8_t id, QPointF pos, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke);
+    GVF_traj_ellipse(QString id, QPointF pos, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke);
 
 private:
     float a;

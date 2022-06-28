@@ -1,10 +1,10 @@
 #include "graphics_quiver.h"
+#include <QDebug>
 
-GraphicsQuiver::GraphicsQuiver(double size, PprzPalette palette, QPen pen, QObject *parent) : 
+GraphicsQuiver::GraphicsQuiver(PprzPalette palette, float width, QObject *parent) : 
     GraphicsObject(palette, parent),
     QGraphicsItem (),
-    size(size),
-    pen(pen)
+    width(width*10)
 {
 
 }
@@ -18,16 +18,22 @@ void GraphicsQuiver::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
 {
     (void)option;
     (void)widget;
-    painter->setPen(pen);
-
-    painter->drawLine(0, 0, 0, -size);
+    painter->setPen(QPen(palette.getVariant(current_color),width));
+    painter->drawLine(0, 0, 0, -size + size/40);
 
     painter->drawLine(0, -size, -size/10, -9*size/10);
     painter->drawLine(0, -size, size/10, -9*size/10);
-    
-    painter->setRenderHint(QPainter::Antialiasing);
 }
 
 void GraphicsQuiver::changeFocus() {
 
+    if(isHighlighted()) {
+        current_color = COLOR_IDLE;     
+        //setVisible(true);
+    } else {
+        current_color = COLOR_UNFOCUSED;
+        //setVisible(false);
+    }
+
+    update();
 }

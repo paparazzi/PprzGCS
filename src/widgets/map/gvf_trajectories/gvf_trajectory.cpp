@@ -1,8 +1,7 @@
 #include "gvf_trajectory.h"
 #include "mapwidget.h"
-#include "gcs_utils.h"
 
-GVF_trajectory::GVF_trajectory(uint8_t id, QPointF pos, Point2DLatLon origin)
+GVF_trajectory::GVF_trajectory(QString id, QPointF pos, Point2DLatLon origin)
 {
     ac_id = id;
     ac_pos = pos;
@@ -32,7 +31,8 @@ QuiverItem* GVF_trajectory::getVField() {
     return vector_field;
 }
 
-void GVF_trajectory::delete_waypoints() { // We have to delete this objetcs!!
+// We have to delete previous waypoints if we don't want to cause memory overflow!!
+void GVF_trajectory::delete_waypoints() { 
     foreach (WaypointItem* wp, traj_waypoints) {
         assert(wp != nullptr);
         delete wp;
@@ -41,35 +41,43 @@ void GVF_trajectory::delete_waypoints() { // We have to delete this objetcs!!
 
 void GVF_trajectory::createTrajItem(QList<QPointF> points) // TODO
 {
-    //auto color = AircraftManager::get()->getAircraft(QString::number(ac_id))->getColor();
+    //auto color = AircraftManager::get()->getAircraft(ac_id)->getColor();
     auto color = Qt::green;
 
-    traj_item = new PathItem(QString::number(ac_id), color);
-    traj_item->setClosedPath(true);
+    traj_item = new PathItem(ac_id, color);
+    //traj_item->setClosedPath(true);
     //traj_item->setZValues(z, z);
 
     for(auto point: points) {
-        auto pos = CoordinatesTransform::get()->ltp_to_wgs84(ltp_origin, point.x(), point.y());
-        auto wp =  new WaypointItem(pos, QString::number(ac_id), color); 
+        auto pos = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, point.x(), point.y());
+        auto wp =  new WaypointItem(pos, ac_id, color); 
         wp->setStyle(GraphicsObject::Style::CURRENT_NAV);
         traj_item->addPoint(wp);
         traj_waypoints.append(wp);
     }
 
-    traj_item->setText("AC " + QString::number(ac_id) + " GVF");
+    traj_item->setText("AC " + ac_id + " GVF");
 }
 
-void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints) 
-{
+void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float bound_area) 
+{   
     QList<Point2DLatLon> pos;
     QList<Point2DLatLon> vpos;
 
+    float scale = sqrt(150/bound_area); // arrows scaling based on the trajectory bounding area
     for (int i=0; i<points.size(); i++) {
-        pos.append(CoordinatesTransform::get()->ltp_to_wgs84(ltp_origin, points[i].x(), points[i].y()));
-        vpos.append(CoordinatesTransform::get()->ltp_to_wgs84(pos[i], vpoints[i].x(), vpoints[i].y()));
+        float vx = vpoints[i].x();
+        float vy = vpoints[i].y();
+
+        float renorm = sqrt(pow(vx,2) + pow(vy,2))*scale;
+        vx = vx/renorm;
+        vy = vy/renorm;
+
+        pos.append(CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, points[i].x(), points[i].y()));
+        vpos.append(CoordinatesTransform::get()->ltp_to_wgs84(pos[i], vx, vy));
     }
     
-    //auto color = AircraftManager::get()->getAircraft(QString::number(ac_id))->getColor();
+    //auto color = AircraftManager::get()->getAircraft(ac_id)->getColor();
     auto color = Qt::red;
-    vector_field = new QuiverItem(pos, vpos, QString::number(ac_id), QPen(color, 0.5));
+    vector_field = new QuiverItem(pos, vpos, ac_id, color, 0.5);
 }

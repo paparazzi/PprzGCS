@@ -8,18 +8,18 @@ class QuiverItem : public MapItem
 {
     Q_OBJECT
 public:
-    QuiverItem(Point2DLatLon pos, Point2DLatLon vpos, QString id, QPen pen = QPen(Qt::red, 3), double neutral_scale_zoom = 15, QObject *parent = nullptr);
-    QuiverItem(QList<Point2DLatLon> pos, QList<Point2DLatLon> vpos, QString id, QPen pen = QPen(Qt::red, 3), double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    QuiverItem(Point2DLatLon pos, Point2DLatLon vpos, QString id, QColor = Qt::red, float width = 3, double neutral_scale_zoom = 15, QObject *parent = nullptr);
+    QuiverItem(QList<Point2DLatLon> pos, QList<Point2DLatLon> vpos, QString id, QColor = Qt::red, float width = 3, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     virtual void addToMap(MapWidget* map) override;
     virtual void updateGraphics(MapWidget* map, uint32_t update_event) override;
     virtual void removeFromScene(MapWidget* map) override;
-    virtual void setForbidHighlight(bool fh) override;
+    virtual void setHighlighted(bool sh);
+    virtual void setForbidHighlight(bool fh);
     virtual void setEditable(bool ed) override;
     virtual void updateZValue() override;
 
 private:
     QList<GraphicsQuiver*> graphics_quiver_l;
-    QPen graphics_pen;
 
     QList<Point2DLatLon> latlon_l;
     QList<Point2DLatLon> vlatlon_l;

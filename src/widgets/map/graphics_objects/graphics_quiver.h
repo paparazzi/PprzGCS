@@ -3,26 +3,29 @@
 
 #include <QGraphicsItem>
 #include <QPainter>
-#include <QPen>
 #include "graphics_object.h"
+
+#define COLOR_IDLE 0
+#define COLOR_UNFOCUSED 1
 
 class GraphicsQuiver : public GraphicsObject, public QGraphicsItem
 {
     Q_OBJECT
     Q_INTERFACES(QGraphicsItem)
 public:
-    explicit GraphicsQuiver(double size, PprzPalette palette, QPen pen, QObject *parent = nullptr);
+    explicit GraphicsQuiver(PprzPalette palette, float width, QObject *parent = nullptr);
 
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-    double size;
+    float size = 100;
 
 protected:
     virtual void changeFocus() override;
 
 private:
-    QPen pen;
+    float width;
+    uint8_t current_color = COLOR_IDLE;
 };
 
 #endif // GRAPHICSQUIVER_H
