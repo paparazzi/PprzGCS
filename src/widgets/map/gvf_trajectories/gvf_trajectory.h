@@ -2,7 +2,9 @@
 #define GVF_TRAJECTORY_H
 
 #include "point2dlatlon.h"
+#include "AircraftManager.h"
 #include "quiver_item.h"
+#include "path_item.h"
 #include <math.h>
 #include <QPointF>
 #include <QList>
@@ -23,6 +25,10 @@ public:
     void createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints);
 
     QuiverItem* getVField();
+    PathItem* getTraj();
+
+    void delete_waypoints();
+    
 protected:
     uint8_t ac_id;
     Point2DLatLon ltp_origin;
@@ -35,6 +41,8 @@ protected:
 
 private:
     QuiverItem* vector_field;
+    PathItem* traj_item;
+    QList<WaypointItem*> traj_waypoints;
 
 };
 

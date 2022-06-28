@@ -2,8 +2,8 @@
 #include "mapwidget.h"
 
 // TODO: Se introduzca un Point2DLatLon o un QList<Point2DLatLon> (dos constructores distintos) se debe de generar una
-QuiverItem::QuiverItem(Point2DLatLon pos, Point2DLatLon vpos, QString id, double neutral_scale_zoom, QObject *parent) :
-    MapItem(id, PprzPalette(Qt::red), neutral_scale_zoom, parent)
+QuiverItem::QuiverItem(Point2DLatLon pos, Point2DLatLon vpos, QString id, QPen pen, double neutral_scale_zoom, QObject *parent) :
+    MapItem(id, PprzPalette(pen.color()), neutral_scale_zoom, parent)
 {
     auto settings = getAppSettings();
 
@@ -13,7 +13,7 @@ QuiverItem::QuiverItem(Point2DLatLon pos, Point2DLatLon vpos, QString id, double
 
     double distance, azimut;
     CoordinatesTransform::get()->distance_azimut(pos, vpos, distance, azimut);
-    auto graphics_quiver = new GraphicsQuiver(distance, palette, this);
+    auto graphics_quiver = new GraphicsQuiver(distance, palette, QPen(Qt::red, 3), this);
     graphics_quiver->setZValue(z_value);
 
     graphics_quiver_l.append(graphics_quiver);
@@ -25,8 +25,8 @@ QuiverItem::QuiverItem(Point2DLatLon pos, Point2DLatLon vpos, QString id, double
     setZoomFactor(1.1);
 }
 
-QuiverItem::QuiverItem(QList<Point2DLatLon> pos, QList<Point2DLatLon> vpos, QString ac, double neutral_scale_zoom, QObject *parent) :
-    MapItem(ac, PprzPalette(Qt::red), neutral_scale_zoom, parent)
+QuiverItem::QuiverItem(QList<Point2DLatLon> pos, QList<Point2DLatLon> vpos, QString id, QPen pen, double neutral_scale_zoom, QObject *parent) :
+    MapItem(id, PprzPalette(pen.color()), neutral_scale_zoom, parent)
 {
     auto settings = getAppSettings();
 
@@ -37,7 +37,7 @@ QuiverItem::QuiverItem(QList<Point2DLatLon> pos, QList<Point2DLatLon> vpos, QStr
     for (int i=0; i<pos.size(); i++) {
         double distance, azimut;
         CoordinatesTransform::get()->distance_azimut(pos[i], vpos[i], distance, azimut);
-        auto graphics_quiver = new GraphicsQuiver(distance, palette, this);
+        auto graphics_quiver = new GraphicsQuiver(distance, palette, pen, this);
         graphics_quiver->setZValue(z_value);
 
         graphics_quiver_l.append(graphics_quiver);

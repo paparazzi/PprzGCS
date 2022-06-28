@@ -1204,8 +1204,9 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     uint8_t ac_id = sender.toInt();
 
     if(gvf_trajectories.contains(sender)) {
-        // TODO: decir a la clase que elimine todos los elementos gráficos!!
         removeItem(gvf_trajectories[sender]->getVField());
+        removeItem(gvf_trajectories[sender]->getTraj());
+        gvf_trajectories[sender]->delete_waypoints();
         gvf_trajectories.remove(sender);
     }
 
@@ -1236,18 +1237,9 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         return;
     }
 
-    qDebug() << " - ON_GVF - ";  
-    qDebug() << ac_id;
-    // qDebug() << "lat0: " << latlon0.lat << "   lon0: " << latlon0.lon;
-    // qDebug() << "lat: "  << latlon.lat  << "   lon: "  << latlon.lon;
-
-    // CoordinatesTransform::get()->ltp_to_wgs84(Point2DLatLon origin, double x, double y)
-    // CoordinatesTransform::get()->wgs84_to_ltp(Point2DLatLon origin, Point2DLatLon geo, double& x, double& y)
-
     // Getting AC LTP position from WGS84 AC and origin coordinates  
     auto ac_pos = QPointF(0,0);
     CoordinatesTransform::get()->wgs84_to_ltp(latlon0, latlon, ac_pos.rx(), ac_pos.ry());
-    // qDebug() << "px: "  << ac_pos.x() << "   py: "  << ac_pos.y();
 
     // Common parser definitions
     uint8_t traj;
@@ -1272,8 +1264,9 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
             }
             case 1: { // Ellipse
                 gvf_traj = new GVF_traj_ellipse(ac_id, ac_pos, latlon0, param, direction, ke);
-                gvf_trajectories[sender] = gvf_traj;
                 addItem(gvf_traj->getVField());
+                addItem(gvf_traj->getTraj());
+                gvf_trajectories[sender] = gvf_traj;
                 break;
             }
             case 2: { // Sin

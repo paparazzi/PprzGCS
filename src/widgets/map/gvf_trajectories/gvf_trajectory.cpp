@@ -24,36 +24,39 @@ QList<QPointF> GVF_trajectory::meshGrid(float area, int xpoints_num, int ypoints
     return grid;
 }
 
+PathItem* GVF_trajectory::getTraj() {
+    return traj_item;
+}
+
 QuiverItem* GVF_trajectory::getVField() {
     return vector_field;
 }
 
+void GVF_trajectory::delete_waypoints() { // We have to delete this objetcs!!
+    foreach (WaypointItem* wp, traj_waypoints) {
+        assert(wp != nullptr);
+        delete wp;
+    }
+}
+
 void GVF_trajectory::createTrajItem(QList<QPointF> points) // TODO
 {
-    (void)points;
-    //     auto pi = new PathItem("__NO_AC__", palette);
-    //     if(shape == 1) {    // Polygon
-    //         pi->setFilled(true);
-    //         pi->setClosedPath(true);
-    //     }
-    //     pi->setZValues(z, z);
-    //     for(auto pos: points) {
-    //         auto wi = new WaypointItem(pos, "__NO_AC__", palette);
-    //         //wcenter->setEditable(false);
-    //         //wcenter->setZValues(z, z);
-    //         addItem(wi);
-    //         wi->setStyle(GraphicsObject::Style::CURRENT_NAV);
-    //         pi->addPoint(wi);
-    //     }
-    //     pi->setText(text);
-    //     addItem(pi);
-    //     item = pi;
+    //auto color = AircraftManager::get()->getAircraft(QString::number(ac_id))->getColor();
+    auto color = Qt::green;
 
-    // }
+    traj_item = new PathItem(QString::number(ac_id), color);
+    traj_item->setClosedPath(true);
+    //traj_item->setZValues(z, z);
 
-    // if(item != nullptr && !shape_id.isNull()) {
-    //     shapes[shape_id] = item;
-    // }
+    for(auto point: points) {
+        auto pos = CoordinatesTransform::get()->ltp_to_wgs84(ltp_origin, point.x(), point.y());
+        auto wp =  new WaypointItem(pos, QString::number(ac_id), color); 
+        wp->setStyle(GraphicsObject::Style::CURRENT_NAV);
+        traj_item->addPoint(wp);
+        traj_waypoints.append(wp);
+    }
+
+    traj_item->setText("AC " + QString::number(ac_id) + " GVF");
 }
 
 void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints) 
@@ -65,6 +68,8 @@ void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoi
         pos.append(CoordinatesTransform::get()->ltp_to_wgs84(ltp_origin, points[i].x(), points[i].y()));
         vpos.append(CoordinatesTransform::get()->ltp_to_wgs84(pos[i], vpoints[i].x(), vpoints[i].y()));
     }
-
-    vector_field = new QuiverItem(pos, vpos,  QString::number(ac_id));
+    
+    //auto color = AircraftManager::get()->getAircraft(QString::number(ac_id))->getColor();
+    auto color = Qt::red;
+    vector_field = new QuiverItem(pos, vpos, QString::number(ac_id), QPen(color, 0.5));
 }

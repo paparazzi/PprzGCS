@@ -1,9 +1,10 @@
 #include "graphics_quiver.h"
 
-GraphicsQuiver::GraphicsQuiver(double size, PprzPalette palette, QObject *parent) : 
+GraphicsQuiver::GraphicsQuiver(double size, PprzPalette palette, QPen pen, QObject *parent) : 
     GraphicsObject(palette, parent),
     QGraphicsItem (),
-    size(size)
+    size(size),
+    pen(pen)
 {
 
 }
@@ -17,7 +18,7 @@ void GraphicsQuiver::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
 {
     (void)option;
     (void)widget;
-    painter->setPen(QPen(Qt::red, 0.5));
+    painter->setPen(pen);
 
     painter->drawLine(0, 0, 0, -size);
 

@@ -15,6 +15,9 @@ private:
     float alpha;
     int8_t s;
     float ke;
+
+    void param_points();
+    void vector_field();
 };
 
 #endif // GVF_TRAJ_ELLIPSE_H

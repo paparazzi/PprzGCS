@@ -10,11 +10,29 @@ GVF_traj_ellipse::GVF_traj_ellipse(uint8_t id, QPointF pos, Point2DLatLon origin
     s = _s;
     ke = _ke;
 
-    qDebug() << "a:" << a << " b:" << b << " alpha:" << alpha << " s:" << s << " ke:" << ke;
+    param_points();
+    vector_field();
+}
 
+void GVF_traj_ellipse::param_points() { // Rotated standard ellipse parametric representation
+    QList<QPointF> points;
+
+    float dt = 0.005*2*M_PI;
+    for (int i = 0; i <= 2*M_PI/dt + 1; i++) {
+        float x = xy_off.x() + a*cos(alpha)*cos(dt*i) - b*sin(alpha)*sin(i*dt);
+        float y = xy_off.y() + a*sin(alpha)*cos(dt*i) + b*cos(alpha)*sin(i*dt);
+        points.append(QPointF(x,y));
+    }
+
+    createTrajItem(points);
+}
+
+void GVF_traj_ellipse::vector_field() { // Ellipse GVF
     QList<QPointF> vxy_mesh; 
+
+    // TODO: El area y la cantidad de flechas se deben de ajustar al tamaño de la elipse!!
     xy_mesh = meshGrid(100000, 20, 20);
-    
+
     foreach (const QPointF &point, xy_mesh) {
         float xel = (point.x() - xy_off.x())*cos(alpha) - (point.y() - xy_off.y())*sin(alpha); 
         float yel = (point.x() - xy_off.x())*sin(alpha) + (point.y() - xy_off.y())*cos(alpha); 
@@ -30,10 +48,11 @@ GVF_traj_ellipse::GVF_traj_ellipse(uint8_t id, QPointF pos, Point2DLatLon origin
         float vx = tx -ke*e*nx;
         float vy = ty -ke*e*ny;
 
+        // TODO: La norma se debe de ajustar al tamaño de la elipse!!
         float norm = sqrt(pow(vx,2) + pow(vy,2))/12;
 
         vxy_mesh.append(QPointF(vx/norm, vy/norm));
     }
-    
+
     createVFieldItem(xy_mesh, vxy_mesh);
 }
