@@ -1,7 +1,7 @@
 #include "gvf_traj_ellipse.h"
 
-GVF_traj_ellipse::GVF_traj_ellipse(QString id, QPointF pos, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke) :
-    GVF_trajectory(id, pos, origin)
+GVF_traj_ellipse::GVF_traj_ellipse(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke) :
+    GVF_trajectory(id, origin)
 {   
     // Get the center of the ellipse 
     if (param.size()>5) { // gvf_ellipse_wp()
@@ -20,7 +20,6 @@ GVF_traj_ellipse::GVF_traj_ellipse(QString id, QPointF pos, Point2DLatLon origin
     b = param[3];
     alpha = param[4];
 
-
     //auto wgs84_xy_off = CoordinatesTransform::get()->relative_utm_to_wgs84(origin, xy_off.x(), xy_off.y());
     //CoordinatesTransform::get()->wgs84_to_relative_utm(origin, wgs84_xy_off, xy_off.rx(), xy_off.ry());
 
@@ -28,6 +27,7 @@ GVF_traj_ellipse::GVF_traj_ellipse(QString id, QPointF pos, Point2DLatLon origin
     vector_field();
 }
 
+/////////////// PRIVATE FUNCTIONS ///////////////
 // Rotated standard ellipse parametric representation
 void GVF_traj_ellipse::param_points() { 
     QList<QPointF> points;

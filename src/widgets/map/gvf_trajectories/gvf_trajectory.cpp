@@ -1,10 +1,8 @@
 #include "gvf_trajectory.h"
-#include "mapwidget.h"
 
-GVF_trajectory::GVF_trajectory(QString id, QPointF pos, Point2DLatLon origin)
+GVF_trajectory::GVF_trajectory(QString id, Point2DLatLon origin)
 {
     ac_id = id;
-    ac_pos = pos;
     ltp_origin = origin;
 }
 
@@ -51,7 +49,6 @@ void GVF_trajectory::createTrajItem(QList<QPointF> points) // TODO
     for(auto point: points) {
         auto pos = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, point.x(), point.y());
         auto wp =  new WaypointItem(pos, ac_id, color); 
-        wp->setStyle(GraphicsObject::Style::CURRENT_NAV);
         traj_item->addPoint(wp);
         traj_waypoints.append(wp);
     }

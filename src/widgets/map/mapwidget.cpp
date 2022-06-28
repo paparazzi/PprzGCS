@@ -1186,15 +1186,6 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     // TODO: La primera vez que se reciba un mensaje de GVF de un AC se debería genera un botón sobre 
     //       dicho AC que permite activar o no el campo vectorial y las trayectorias. Gautier ya hace
     //       algo así con la lista desplegable de botones !!!
-
-    // CONSEGUIDO: Cada trayectoria y campo tiene que ir ligado a un AC_ID (SI O SI!!)
-    // CONSEGUIDO: Conocer origen wgs84.
-    // CONSEGUIDO: Conocer la posición wgs84 del AC indicado.
-    // CONSEGUIDO: Calcular la posición ltp del AC indicado.
-    // CONSEGUIDO: Extraer todos los tados necesarios usando el Ivy bus.
-    // CONSEGUIDO: Ya tenemos todos los datos necesarios, ahora queda crear pasar por un switch que seleccione la 
-    //             GVF_trajectory que hay que crear y pintar.
-    // CONSEGUIDO: Crear todas las trayectorias (tienen que llevar un campo vertorial asociado).
     
     if(!AircraftManager::get()->aircraftExists(sender)) {
         qDebug() << "GVF: AC with id" << sender << "do not exists.";
@@ -1210,7 +1201,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
 
     // Requesting WGS84 AC and origin coordinates  
     auto latlon0 = Point2DLatLon(0,0);
-    auto latlon = Point2DLatLon(0,0);
+    //auto latlon = Point2DLatLon(0,0); // TODO: Eliminar estas líneas comentadas si no las uso luego!! 
 
     auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(sender);
     auto origin  = ac->getFlightPlan()->getOrigin();
@@ -1223,19 +1214,19 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         return;
     }
 
-    if(flight_param_msg) {
-    double lat,lon;
-    flight_param_msg->getField("lat" ,lat);
-    flight_param_msg->getField("long",lon);
-    latlon = Point2DLatLon(lat,lon);
-    } else {
-        qDebug() << "GVF: Can't read FLIGHT_PARAM of AC" << sender;
-        return;
-    }
+    // if(flight_param_msg) {
+    // double lat,lon;
+    // flight_param_msg->getField("lat" ,lat);
+    // flight_param_msg->getField("long",lon);
+    // latlon = Point2DLatLon(lat,lon);
+    // } else {
+    //     qDebug() << "GVF: Can't read FLIGHT_PARAM of AC" << sender;
+    //     return;
+    // }
 
     // Getting AC LTP position from WGS84 AC and origin coordinates  
-    auto ac_pos = QPointF(0,0);
-    CoordinatesTransform::get()->wgs84_to_ltp(latlon0, latlon, ac_pos.rx(), ac_pos.ry());
+    //auto ac_pos = QPointF(0,0);
+    //CoordinatesTransform::get()->wgs84_to_ltp(latlon0, ac_pos.rx(), ac_pos.ry());
 
     // Common parser definitions
     uint8_t traj;
@@ -1259,7 +1250,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
                 break;
             }
             case 1: { // Ellipse
-                gvf_traj = new GVF_traj_ellipse(sender, ac_pos, latlon0, param, direction, ke);
+                gvf_traj = new GVF_traj_ellipse(sender, latlon0, param, direction, ke);
                 addItem(gvf_traj->getVField());
                 addItem(gvf_traj->getTraj());
                 gvf_trajectories[sender] = gvf_traj;
@@ -1269,7 +1260,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
                 break;
             }
             default:
-                qDebug() << "GVF: GVF message parse received an unknown trajectory id.";
+                qDebug() << "GVF: GVF message parser received an unknown trajectory id.";
                 return;
         }
     }
@@ -1277,7 +1268,22 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     // GVF_PARAMETRIC message parser (TODO)
     if (msg.getDefinition().getName() == "GVF_PARAMETRIC") {
         qDebug() << "GVF: GVF_PARAMETRIC trajectories are not yet implemented in PprzGCS.";
-        return;
+
+        switch(traj)
+        {   
+            case 0: {// Trefoil 2D
+                break;
+            }
+            case 1: { // Ellipse 3D
+                break;
+            }
+            case 2: { // Lissajous 3D
+                break;
+            }
+            default:
+                qDebug() << "GVF: GVF message parser received an unknown trajectory id.";
+                return;
+        }
     }
 }
 
