@@ -1,7 +1,7 @@
 #include "gvf_traj_ellipse.h"
 
-GVF_traj_ellipse::GVF_traj_ellipse(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke) :
-    GVF_trajectory(id, origin)
+GVF_traj_ellipse::GVF_traj_ellipse(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QList<float> gvf_settings) :
+    GVF_trajectory(id, origin, gvf_settings)
 {   
     // Get the center of the ellipse 
     if (param.size()>5) { // gvf_ellipse_wp()

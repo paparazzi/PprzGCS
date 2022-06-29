@@ -28,8 +28,8 @@
 #include "windindicator.h"
 #include "intruder_item.h"
 #include "arrow_item.h"
-#include "quiver_item.h"
 
+#include "quiver_item.h"
 #include "gvf_traj_ellipse.h"
 
 
@@ -116,14 +116,22 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     connect(AircraftManager::get(), &AircraftManager::waypoint_changed, this, &MapWidget::onWaypointChanged);
     connect(AircraftManager::get(), &AircraftManager::waypoint_added, this, &MapWidget::onWaypointAdded);
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint_ui, this, &MapWidget::onMoveWaypointUi);
+    connect(DispatcherUi::get(), &DispatcherUi::gvf_settingUpdated, this,
+        [=](QString sender, bool traj_vis, bool field_vis) {
+            auto config = new QList<float>;
+            config->append((int)traj_vis);
+            config->append((int)field_vis);
+            gvf_trajectories_config[sender] = config;
+        });  
 
     connect(  DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &MapWidget::handleNewAC);
     connect(  DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &MapWidget::removeAC);
-    connect(  DispatcherUi::get(), &DispatcherUi::ac_selected, this, &MapWidget::changeCurrentAC);
+    connect(  DispatcherUi::get(), &DispatcherUi::ac_selected, this, &MapWidget::changeCurrentAC);  
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &MapWidget::updateAircraftItem);
     connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &MapWidget::updateTarget);
     connect(PprzDispatcher::get(), &PprzDispatcher::circle_status, this, &MapWidget::updateNavShape);
     connect(PprzDispatcher::get(), &PprzDispatcher::segment_status, this, &MapWidget::updateNavShape);
+
 
     shape_bind_id = PprzDispatcher::get()->bind("SHAPE", this,
         [=](QString sender, pprzlink::Message msg) {
@@ -1195,7 +1203,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     if(gvf_trajectories.contains(sender)) {
         removeItem(gvf_trajectories[sender]->getVField());
         removeItem(gvf_trajectories[sender]->getTraj());
-        gvf_trajectories[sender]->delete_waypoints();
+        gvf_trajectories[sender]->purge_trajectory();
         gvf_trajectories.remove(sender);
     }
 
@@ -1250,7 +1258,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
                 break;
             }
             case 1: { // Ellipse
-                gvf_traj = new GVF_traj_ellipse(sender, latlon0, param, direction, ke);
+                gvf_traj = new GVF_traj_ellipse(sender, latlon0, param, direction, ke, *gvf_trajectories_config[sender]);
                 addItem(gvf_traj->getVField());
                 addItem(gvf_traj->getTraj());
                 gvf_trajectories[sender] = gvf_traj;
@@ -1285,6 +1293,17 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
                 return;
         }
     }
+
+    // TODO: Create GVF widget and connect his signal
+    // auto gvf_widget = new GVFViewer(sender, this);
+
+    // auto window = pprzApp()->mainWindow();
+    // window->setupUi(100, 100, gvf_widget);
+    // installEventFilter(gvf_widget);
+
+    // connect(gvf_widget, &GVFViewer::changeGVFvisibility, this, [=](bool vis) {
+    //     qDebug() << "Visibility:" << vis;
+    // });
 }
 
 void MapWidget::setAcArrowSize(int s) {

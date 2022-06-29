@@ -30,6 +30,9 @@ signals:
     void showHiddenWaypoints(bool show);
     //void create_waypoint(Waypoint*);
 
+    // GVF viewer signals
+    void gvf_settingUpdated(QString ac_id, bool field_vis, bool traj_vis);
+
 public slots:
 
 private:

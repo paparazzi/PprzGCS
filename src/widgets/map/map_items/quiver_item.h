@@ -16,6 +16,7 @@ public:
     virtual void setHighlighted(bool sh);
     virtual void setForbidHighlight(bool fh);
     virtual void setEditable(bool ed) override;
+    virtual void setVisible(bool vis);
     virtual void updateZValue() override;
 
 private:

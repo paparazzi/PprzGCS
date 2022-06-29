@@ -103,6 +103,12 @@ void QuiverItem::setEditable(bool ed) {
     (void)ed;
 }
 
+void QuiverItem::setVisible(bool vis) {
+    foreach (GraphicsQuiver* graphics_quiver, graphics_quiver_l) {
+        graphics_quiver->setVisible(vis);
+    }
+}
+
 void QuiverItem::updateZValue() {
     foreach (GraphicsQuiver* graphics_quiver, graphics_quiver_l) {
         graphics_quiver->setZValue(z_value);

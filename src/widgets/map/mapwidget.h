@@ -15,7 +15,9 @@
 #include "lock_button.h"
 #include "papget.h"
 #include "windindicator.h"
+
 #include "gvf_trajectory.h"
+#include "gvf_viewer.h"
 
 class ACItemManager;
 class ItemEditStateMachine;
@@ -98,6 +100,7 @@ private:
     void handleNewAC(QString ac_id);
     void removeAC(QString ac_id);
     LayerCombo* makeLayerCombo();
+    void connectGVFViewer(GVFViewer* gvf_widget);
     void addWidget(QWidget* w, LockButton* button, WidgetContainer side);
     void setEditorMode();
     void registerWaypoint(WaypointItem* waypoint);
@@ -115,6 +118,7 @@ private:
     QMap<QString, MapItem*> shapes;
     QMap<QString, MapItem*> quivers;
     QMap<QString, GVF_trajectory*> gvf_trajectories;
+    QMap<QString, QList<float>*> gvf_trajectories_config;
     QMap<QString, std::pair<MapItem*, QTime>> intruders;
     QTimer* timer_intruders;
     MapItem* gcsItem;

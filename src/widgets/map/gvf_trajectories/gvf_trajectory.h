@@ -9,10 +9,11 @@
 constexpr int QUIVERS_NUMBER = 20;
 constexpr float DEFAULT_AREA = 1000;
 
-class GVF_trajectory
+class GVF_trajectory : public QObject
 {
+    Q_OBJECT
 public:
-    GVF_trajectory(QString id, Point2DLatLon origin);
+    GVF_trajectory(QString id, Point2DLatLon origin, QList<float> gvf_settings);
 
     QList<QPointF> meshGrid(float area = DEFAULT_AREA, int xpoints_num = QUIVERS_NUMBER, int ypoints_num = QUIVERS_NUMBER);
 
@@ -22,8 +23,10 @@ public:
     QuiverItem* getVField();
     PathItem* getTraj();
 
-    void delete_waypoints();
-    
+    void setVFiledVis(bool vis);
+
+    void purge_trajectory();
+        
 protected:
     QString ac_id;
     Point2DLatLon ltp_origin;
@@ -37,6 +40,9 @@ private:
     QuiverItem* vector_field;
     PathItem* traj_item;
     QList<WaypointItem*> traj_waypoints;
+
+    bool vector_field_vis;
+    bool traj_item_vis;
 
 };
 
