@@ -142,6 +142,8 @@ private:
 
     long shape_bind_id;
 
+    bool t = false;
+
     QMap<int, Point2DPseudoMercator> pms;
 
     int _ac_arrow_size;

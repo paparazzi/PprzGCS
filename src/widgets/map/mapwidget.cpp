@@ -30,6 +30,7 @@
 #include "arrow_item.h"
 
 #include "quiver_item.h"
+#include "gvf_traj_line.h"
 #include "gvf_traj_ellipse.h"
 
 
@@ -118,7 +119,10 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint_ui, this, &MapWidget::onMoveWaypointUi);
     connect(DispatcherUi::get(), &DispatcherUi::gvf_settingUpdated, this,
         [=](QString sender, bool traj_vis, bool field_vis) {
-            auto config = new QList<float>;
+            delete gvf_trajectories_config[sender];
+            gvf_trajectories_config.remove(sender);
+
+            auto config = new QList<float>; // Float buffer because we may need to receive numeric inputs in the future
             config->append((int)traj_vis);
             config->append((int)field_vis);
             gvf_trajectories_config[sender] = config;
@@ -1191,9 +1195,6 @@ void MapWidget::onGCSPos(pprzlink::Message msg) {
 }
 
 void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
-    // TODO: La primera vez que se reciba un mensaje de GVF de un AC se debería genera un botón sobre 
-    //       dicho AC que permite activar o no el campo vectorial y las trayectorias. Gautier ya hace
-    //       algo así con la lista desplegable de botones !!!
     
     if(!AircraftManager::get()->aircraftExists(sender)) {
         qDebug() << "GVF: AC with id" << sender << "do not exists.";
@@ -1201,15 +1202,17 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     }
 
     if(gvf_trajectories.contains(sender)) {
-        removeItem(gvf_trajectories[sender]->getVField());
         removeItem(gvf_trajectories[sender]->getTraj());
+        removeItem(gvf_trajectories[sender]->getVField());
+
         gvf_trajectories[sender]->purge_trajectory();
+        delete gvf_trajectories[sender];
+
         gvf_trajectories.remove(sender);
     }
-
-    // Requesting WGS84 AC and origin coordinates  
+    
+    // Requesting WGS84 origin coordinates  
     auto latlon0 = Point2DLatLon(0,0);
-    //auto latlon = Point2DLatLon(0,0); // TODO: Eliminar estas líneas comentadas si no las uso luego!! 
 
     auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(sender);
     auto origin  = ac->getFlightPlan()->getOrigin();
@@ -1221,20 +1224,6 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         qDebug() << "GVF: Can't get origin waypoint from AC " << sender;
         return;
     }
-
-    // if(flight_param_msg) {
-    // double lat,lon;
-    // flight_param_msg->getField("lat" ,lat);
-    // flight_param_msg->getField("long",lon);
-    // latlon = Point2DLatLon(lat,lon);
-    // } else {
-    //     qDebug() << "GVF: Can't read FLIGHT_PARAM of AC" << sender;
-    //     return;
-    // }
-
-    // Getting AC LTP position from WGS84 AC and origin coordinates  
-    //auto ac_pos = QPointF(0,0);
-    //CoordinatesTransform::get()->wgs84_to_ltp(latlon0, ac_pos.rx(), ac_pos.ry());
 
     // Common parser definitions
     uint8_t traj;
@@ -1252,15 +1241,34 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         msg.getField("ke", ke);
         msg.getField("p", param);
 
+        // TODO: Según las trayectorias se van actualizando empiezan a aparecer una gran cantidad de pérdidas de memoria.
+        //       Para solucionarlo voy a tener que reestructurar las clases: 
+        //          1. Revisar los objetos gvf_trajectory... Igual conviene olvidarme de esta estructura de clases??
+        //          2. Buscar la forma de generar únicamente un quiver y un path (+ waypoints) por AC, que no se borrer
+        //             y reconstruyan en cada iteración, así no los pierdo en memoria. (LO MÁS VIABLE)
+
+        // El problema persiste aun cuando no se están recibiendo mensajes GVF. Basta
+
+        // ---- MATERIAL INTERESANTE ----
+        // WaypointItem* wi = dynamic_cast<WaypointItem*>(map_item);
+        // if(wi != nullptr) {
+        //     registerWaypoint(wi);
+        // }
+        // ------------------------------
+
         switch(traj)
         {   
             case 0: {// Straight line
+                gvf_traj = new GVF_traj_line(sender, latlon0, param, direction, ke, *gvf_trajectories_config[sender]);
+                addItem(gvf_traj->getTraj());
+                addItem(gvf_traj->getVField());
+                gvf_trajectories[sender] = gvf_traj;
                 break;
             }
             case 1: { // Ellipse
                 gvf_traj = new GVF_traj_ellipse(sender, latlon0, param, direction, ke, *gvf_trajectories_config[sender]);
-                addItem(gvf_traj->getVField());
                 addItem(gvf_traj->getTraj());
+                addItem(gvf_traj->getVField());
                 gvf_trajectories[sender] = gvf_traj;
                 break;
             }
@@ -1274,7 +1282,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     }
 
     // GVF_PARAMETRIC message parser (TODO)
-    if (msg.getDefinition().getName() == "GVF_PARAMETRIC") {
+    else if (msg.getDefinition().getName() == "GVF_PARAMETRIC") {
         qDebug() << "GVF: GVF_PARAMETRIC trajectories are not yet implemented in PprzGCS.";
 
         switch(traj)
@@ -1292,18 +1300,10 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
                 qDebug() << "GVF: GVF message parser received an unknown trajectory id.";
                 return;
         }
+    } else {
+        return;
     }
 
-    // TODO: Create GVF widget and connect his signal
-    // auto gvf_widget = new GVFViewer(sender, this);
-
-    // auto window = pprzApp()->mainWindow();
-    // window->setupUi(100, 100, gvf_widget);
-    // installEventFilter(gvf_widget);
-
-    // connect(gvf_widget, &GVFViewer::changeGVFvisibility, this, [=](bool vis) {
-    //     qDebug() << "Visibility:" << vis;
-    // });
 }
 
 void MapWidget::setAcArrowSize(int s) {

@@ -14,11 +14,10 @@ class GVF_trajectory : public QObject
     Q_OBJECT
 public:
     GVF_trajectory(QString id, Point2DLatLon origin, QList<float> gvf_settings);
-
     QList<QPointF> meshGrid(float area = DEFAULT_AREA, int xpoints_num = QUIVERS_NUMBER, int ypoints_num = QUIVERS_NUMBER);
 
     void createTrajItem(QList<QPointF> points);
-    void createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float bound_area);
+    void createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float bound_area, float ref_area = 150);
 
     QuiverItem* getVField();
     PathItem* getTraj();
@@ -37,6 +36,8 @@ protected:
     QList<QPointF> vxy_mesh;  
 
 private:
+    QObject* child;
+
     QuiverItem* vector_field;
     PathItem* traj_item;
     QList<WaypointItem*> traj_waypoints;

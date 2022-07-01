@@ -20,14 +20,10 @@ GVF_traj_ellipse::GVF_traj_ellipse(QString id, Point2DLatLon origin, QList<float
     b = param[3];
     alpha = param[4];
 
-    //auto wgs84_xy_off = CoordinatesTransform::get()->relative_utm_to_wgs84(origin, xy_off.x(), xy_off.y());
-    //CoordinatesTransform::get()->wgs84_to_relative_utm(origin, wgs84_xy_off, xy_off.rx(), xy_off.ry());
-
     param_points();
     vector_field();
 }
 
-/////////////// PRIVATE FUNCTIONS ///////////////
 // Rotated standard ellipse parametric representation
 void GVF_traj_ellipse::param_points() { 
     QList<QPointF> points;
@@ -61,8 +57,8 @@ void GVF_traj_ellipse::vector_field() {
 
         float e = pow(xel/a,2) + pow(yel/b,2) - 1;
 
-        float vx = tx -ke*e*nx;
-        float vy = ty -ke*e*ny;
+        float vx = tx - ke*e*nx;
+        float vy = ty - ke*e*ny;
 
         float norm = sqrt(pow(vx,2) + pow(vy,2));
 

@@ -33,7 +33,8 @@ void GVF_trajectory::setVFiledVis(bool vis) {
 
 }
 
-// We have to disconnect from dispatcher and delete previous waypoints if we don't want to cause memory overflow!!
+// We have to disconnect from dispatcher and delete previous waypoints 
+// if we don't want to cause memory dump or memory overflow!!
 void GVF_trajectory::purge_trajectory() {
     disconnect(DispatcherUi::get(), &DispatcherUi::gvf_settingUpdated, this, 0); 
 
@@ -46,7 +47,6 @@ void GVF_trajectory::purge_trajectory() {
 // Create graphics object 
 void GVF_trajectory::createTrajItem(QList<QPointF> points) // TODO
 {
-    //auto color = AircraftManager::get()->getAircraft(ac_id)->getColor();
     auto color = Qt::green;
 
     traj_item = new PathItem(ac_id, color);
@@ -63,12 +63,14 @@ void GVF_trajectory::createTrajItem(QList<QPointF> points) // TODO
     //traj_item->setVisible(traj_item_vis); (TODO)
 }
 
-void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float bound_area) 
+void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float bound_area, float ref_area) 
 {   
     QList<Point2DLatLon> pos;
     QList<Point2DLatLon> vpos;
 
-    float scale = sqrt(150/bound_area); // arrows scaling based on the trajectory bounding area
+    // Arrows scaling based on the trajectory bounding area
+    float scale = sqrt(ref_area/bound_area); 
+
     for (int i=0; i<points.size(); i++) {
         float vx = vpoints[i].x();
         float vy = vpoints[i].y();
@@ -81,7 +83,6 @@ void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoi
         vpos.append(CoordinatesTransform::get()->ltp_to_wgs84(pos[i], vx, vy));
     }
     
-    //auto color = AircraftManager::get()->getAircraft(ac_id)->getColor();
     auto color = Qt::red;
     vector_field = new QuiverItem(pos, vpos, ac_id, color, 0.5);
     vector_field->setVisible(vector_field_vis);

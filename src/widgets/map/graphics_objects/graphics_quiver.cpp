@@ -4,7 +4,7 @@
 GraphicsQuiver::GraphicsQuiver(PprzPalette palette, float width, QObject *parent) : 
     GraphicsObject(palette, parent),
     QGraphicsItem (),
-    width(width*10)
+    width(width)
 {
 
 }

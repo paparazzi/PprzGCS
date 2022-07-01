@@ -18,7 +18,7 @@ public:
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-    float size = 100;
+    float size = 10;
 
 protected:
     virtual void changeFocus() override;
