@@ -7,7 +7,7 @@
                 <widget name="layers" icon="map_layers_normal.svg"/>
                 <widget name="commands" icon="nav.svg"/>
                 <widget name="gps_classic_viewer" icon="gps.svg"/>
-                <widget name="gvf_viewer" icon="icon.svg"/>
+                <widget name="gvf_viewer" icon="gvf.svg"/>
             </columnLeft>
             <columnRight>
                 <widget name="PFD" icon="pfd.svg"/>
