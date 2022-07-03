@@ -4,6 +4,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/gvf_trajectory.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gvf_traj_line.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gvf_traj_ellipse.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gvf_traj_sin.cpp
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})

@@ -3,9 +3,15 @@
 GVF_traj_ellipse::GVF_traj_ellipse(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QList<float> gvf_settings) :
     GVF_trajectory(id, origin, gvf_settings)
 {   
-    // Get the center of the ellipse 
+    // INIT
+    set_param(param, _s, _ke);
+    update_trajectory();
+}
+
+// Get all the necessary parameters to construct the ellipse trajectory
+void GVF_traj_ellipse::set_param(QList<float> param, int8_t _s, float _ke) {
     if (param.size()>5) { // gvf_ellipse_wp()
-        auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(id);
+        auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(ac_id);
         Waypoint::WpFrame frame = ac->getFlightPlan()->getFrame();
         ac->getFlightPlan()->getWaypoint((uint8_t)param[5])->getRelative(frame, xy_off.rx(), xy_off.ry());
 
@@ -13,15 +19,11 @@ GVF_traj_ellipse::GVF_traj_ellipse(QString id, Point2DLatLon origin, QList<float
         xy_off = QPointF(param[0], param[1]);
     }
 
-    // Get the rest of GVF ellipse trajectory parameters
     s = _s;
     ke = _ke;
     a = param[2];
     b = param[3];
     alpha = param[4];
-
-    param_points();
-    vector_field();
 }
 
 // Rotated standard ellipse parametric representation
@@ -30,8 +32,8 @@ void GVF_traj_ellipse::param_points() {
 
     float dt = 0.005*2*M_PI;
     for (int i = 0; i <= 2*M_PI/dt + 1; i++) {
-        float x = xy_off.x() + a*cos(alpha)*cos(dt*i) - b*sin(alpha)*sin(i*dt);
-        float y = xy_off.y() + a*sin(alpha)*cos(dt*i) + b*cos(alpha)*sin(i*dt);
+        float x = xy_off.x() + a*cos(-alpha)*cos(dt*i) - b*sin(-alpha)*sin(i*dt);
+        float y = xy_off.y() + a*sin(-alpha)*cos(dt*i) + b*cos(-alpha)*sin(i*dt);
         points.append(QPointF(x,y));
     }
 
@@ -43,7 +45,7 @@ void GVF_traj_ellipse::vector_field() {
     QList<QPointF> vxy_mesh; 
 
     float bound_area = 4*a*b; // to scale the arrows
-    xy_mesh = meshGrid(bound_area*4, 25, 25);
+    xy_mesh = meshGrid(bound_area*4, 24, 24);
 
     foreach (const QPointF &point, xy_mesh) {
         float xel = (point.x() - xy_off.x())*cos(alpha) - (point.y() - xy_off.y())*sin(alpha); 

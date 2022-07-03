@@ -32,6 +32,7 @@
 #include "quiver_item.h"
 #include "gvf_traj_line.h"
 #include "gvf_traj_ellipse.h"
+#include "gvf_traj_sin.h"
 
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
@@ -1209,6 +1210,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         delete gvf_trajectories[sender];
 
         gvf_trajectories.remove(sender);
+        ac_items_managers[sender]->setCurrentGVF(nullptr);
     }
     
     // Requesting WGS84 origin coordinates  
@@ -1241,15 +1243,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         msg.getField("ke", ke);
         msg.getField("p", param);
 
-        // TODO: Según las trayectorias se van actualizando empiezan a aparecer una gran cantidad de pérdidas de memoria.
-        //       Para solucionarlo voy a tener que reestructurar las clases: 
-        //          1. Revisar los objetos gvf_trajectory... Igual conviene olvidarme de esta estructura de clases??
-        //          2. Buscar la forma de generar únicamente un quiver y un path (+ waypoints) por AC, que no se borrer
-        //             y reconstruyan en cada iteración, así no los pierdo en memoria. (LO MÁS VIABLE)
-
-        // El problema persiste aun cuando no se están recibiendo mensajes GVF. Basta
-
-        // ---- MATERIAL INTERESANTE ----
+        // ---- MATERIAL INTERESANTE ---- 
         // WaypointItem* wi = dynamic_cast<WaypointItem*>(map_item);
         // if(wi != nullptr) {
         //     registerWaypoint(wi);
@@ -1258,21 +1252,16 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
 
         switch(traj)
         {   
-            case 0: {// Straight line
+            case 0: {// Straight line (TODO: Fix line_turn_wp1_wp2 in GVF guidance firmware)
                 gvf_traj = new GVF_traj_line(sender, latlon0, param, direction, ke, *gvf_trajectories_config[sender]);
-                addItem(gvf_traj->getTraj());
-                addItem(gvf_traj->getVField());
-                gvf_trajectories[sender] = gvf_traj;
                 break;
             }
             case 1: { // Ellipse
                 gvf_traj = new GVF_traj_ellipse(sender, latlon0, param, direction, ke, *gvf_trajectories_config[sender]);
-                addItem(gvf_traj->getTraj());
-                addItem(gvf_traj->getVField());
-                gvf_trajectories[sender] = gvf_traj;
                 break;
             }
             case 2: { // Sin
+                gvf_traj = new GVF_traj_sin(sender, latlon0, param, direction, ke, *gvf_trajectories_config[sender]);
                 break;
             }
             default:
@@ -1284,6 +1273,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     // GVF_PARAMETRIC message parser (TODO)
     else if (msg.getDefinition().getName() == "GVF_PARAMETRIC") {
         qDebug() << "GVF: GVF_PARAMETRIC trajectories are not yet implemented in PprzGCS.";
+        return; // TEMPORAL
 
         switch(traj)
         {   
@@ -1304,6 +1294,10 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         return;
     }
 
+    addItem(gvf_traj->getTraj());
+    addItem(gvf_traj->getVField());
+    ac_items_managers[sender]->setCurrentGVF(gvf_traj);
+    gvf_trajectories[sender] = gvf_traj;
 }
 
 void MapWidget::setAcArrowSize(int s) {

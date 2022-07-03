@@ -13,11 +13,7 @@ class GVF_trajectory : public QObject
 {
     Q_OBJECT
 public:
-    GVF_trajectory(QString id, Point2DLatLon origin, QList<float> gvf_settings);
-    QList<QPointF> meshGrid(float area = DEFAULT_AREA, int xpoints_num = QUIVERS_NUMBER, int ypoints_num = QUIVERS_NUMBER);
-
-    void createTrajItem(QList<QPointF> points);
-    void createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float bound_area, float ref_area = 150);
+    explicit GVF_trajectory(QString id, Point2DLatLon origin, QList<float> gvf_settings);
 
     QuiverItem* getVField();
     PathItem* getTraj();
@@ -25,7 +21,10 @@ public:
     void setVFiledVis(bool vis);
 
     void purge_trajectory();
-        
+    void update_trajectory();
+
+    virtual void set_param(QList<float> param, int8_t _s, float _ke) = 0;
+
 protected:
     QString ac_id;
     Point2DLatLon ltp_origin;
@@ -33,18 +32,24 @@ protected:
     QPointF traj_grad;
 
     QList<QPointF> xy_mesh;
-    QList<QPointF> vxy_mesh;  
+    QList<QPointF> vxy_mesh;
+
+    void createTrajItem(QList<QPointF> points);
+    void createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float bound_area, float ref_area = 150);
+    QList<QPointF> meshGrid(float area = DEFAULT_AREA, int xpoints_num = QUIVERS_NUMBER, int ypoints_num = QUIVERS_NUMBER);
+
+    virtual void param_points() = 0;
+    virtual void vector_field() = 0;
 
 private:
     QObject* child;
 
-    QuiverItem* vector_field;
+    QuiverItem* field_item;
     PathItem* traj_item;
     QList<WaypointItem*> traj_waypoints;
 
-    bool vector_field_vis;
+    bool field_item_vis;
     bool traj_item_vis;
-
 };
 
 #endif // GVF_TRAJECTORY_H

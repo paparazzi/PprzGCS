@@ -6,15 +6,15 @@ GVF_trajectory::GVF_trajectory(QString id, Point2DLatLon origin, QList<float> gv
     ac_id = id;
     ltp_origin = origin;
     traj_item_vis = (int)gvf_settings[0];
-    vector_field_vis = (int)gvf_settings[1];
+    field_item_vis = (int)gvf_settings[1];
 
     // If you're alive, please update your visibility when gvf_viewer request it 
     connect(DispatcherUi::get(), &DispatcherUi::gvf_settingUpdated, this,
         [=](QString sender, bool traj_vis, bool field_vis) {
             if(sender == ac_id) {
                 traj_item_vis = traj_vis;
-                vector_field_vis = field_vis;
-                setVFiledVis(vector_field_vis);
+                field_item_vis = field_vis;
+                setVFiledVis(field_item_vis);
             }
         });  
 }
@@ -24,12 +24,12 @@ PathItem* GVF_trajectory::getTraj() {
 }
 
 QuiverItem* GVF_trajectory::getVField() {
-    return vector_field;
+    return field_item;
 }
 
 void GVF_trajectory::setVFiledVis(bool vis) {
-    vector_field_vis = vis;
-    vector_field->setVisible(vector_field_vis);
+    field_item_vis = vis;
+    field_item->setVisible(field_item_vis);
 
 }
 
@@ -44,6 +44,13 @@ void GVF_trajectory::purge_trajectory() {
     }
 }
 
+// Regenerate the trajectory points and the vectory field
+void GVF_trajectory::update_trajectory() {
+    param_points();
+    vector_field();
+}
+
+/////////////// PRIVATE FUNCTIONS ///////////////
 // Create graphics object 
 void GVF_trajectory::createTrajItem(QList<QPointF> points) // TODO
 {
@@ -84,13 +91,11 @@ void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoi
     }
     
     auto color = Qt::red;
-    vector_field = new QuiverItem(pos, vpos, ac_id, color, 0.5);
-    vector_field->setVisible(vector_field_vis);
+    field_item = new QuiverItem(pos, vpos, ac_id, color, 0.5);
+    field_item->setVisible(field_item_vis);
 }
 
-
-
-/////////////// UTILITY FUNCTIONS ///////////////
+// Create the XY mesh to draw the vectory field
 QList<QPointF> GVF_trajectory::meshGrid(float area, int xpoints_num, int ypoints_num)
 {
     QList<QPointF> grid;

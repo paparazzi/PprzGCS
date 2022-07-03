@@ -8,6 +8,7 @@
 #include "mapwidget.h"
 #include "circle_item.h"
 #include "arrow_item.h"
+#include "gvf_trajectory.h"
 
 class ACItemManager: public QObject
 {
@@ -19,7 +20,7 @@ public:
     void addPathItem(PathItem*);
     void setCurrentNavShape(MapItem*);
     void setMaxDistCircle(CircleItem*);
-
+    void setCurrentGVF(GVF_trajectory*);
 
     QList<WaypointItem*> getWaypointsItems() {return waypointItems;}
     WaypointItem* getTarget() {return target;}
@@ -38,6 +39,7 @@ private:
     CircleItem* max_dist_circle;
     ArrowItem* arrow_item;
 
+    GVF_trajectory* gvf_trajectory;
 };
 
 #endif // ACITEMMANAGER_H

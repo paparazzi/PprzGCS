@@ -3,12 +3,18 @@
 GVF_traj_line::GVF_traj_line(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QList<float> gvf_settings) :
     GVF_trajectory(id, origin, gvf_settings)
 {   
-    // Get the two points of the line
+    // INIT
+    set_param(param, _s, _ke);
+    update_trajectory();
+}
+
+// Get all the necessary parameters to construct the line trajectory
+void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
     if (param.size()>3) { // gvf_line_wp()
         QPointF xy_wp1;
         QPointF xy_wp2; 
 
-        auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(id);
+        auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(ac_id);
         Waypoint::WpFrame frame = ac->getFlightPlan()->getFrame();
         ac->getFlightPlan()->getWaypoint((uint8_t)param[3])->getRelative(frame, xy_wp1.rx(), xy_wp1.ry());
         ac->getFlightPlan()->getWaypoint((uint8_t)param[4])->getRelative(frame, xy_wp2.rx(), xy_wp2.ry());
@@ -20,7 +26,7 @@ GVF_traj_line::GVF_traj_line(QString id, Point2DLatLon origin, QList<float> para
         dy = xy_wp2.y() - xy_wp1.y();
 
         course = atan2f(dx, dy);
-        xy_off = QPointF((xy_wp2.x() + xy_wp1.x())/2,(xy_wp2.y() + xy_wp1.y())/2);
+        xy_off = QPointF((xy_wp2.x() + xy_wp1.x())/2,(xy_wp2.y() + xy_wp1.y())/2); //TODO: Vectory field should follow the AC in "non limited" trajectories
 
     } else { // gvf_line_XY()
         a = param[0];
@@ -30,15 +36,11 @@ GVF_traj_line::GVF_traj_line(QString id, Point2DLatLon origin, QList<float> para
         dy = 200;
 
         course = param[2];
-        xy_off = QPointF(a,b);
+        xy_off = QPointF(a,b); //TODO: Vectory field should follow the AC in "non limited" trajectories
     }
 
-    // Get the rest of GVF line trajectory parameters
     s = _s;
     ke = _ke;
-
-    param_points();
-    vector_field();
 }
 
 // Line parametric representation
