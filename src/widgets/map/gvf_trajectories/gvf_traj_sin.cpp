@@ -35,7 +35,6 @@ void GVF_traj_sin::set_param(QList<float> param, int8_t _s, float _ke) {
             dy = 200;
 
             course = param[2];
-            qDebug() << "gvf_sin_wp_alpha()";
         }
 
     } else {// gvf_sin_XY_alpha()
@@ -46,7 +45,6 @@ void GVF_traj_sin::set_param(QList<float> param, int8_t _s, float _ke) {
         dy = 200;
 
         course = param[2];
-        qDebug() << "gvf_sin_XY_alpha()";
     }
 
     w   = param[3];
@@ -55,11 +53,11 @@ void GVF_traj_sin::set_param(QList<float> param, int8_t _s, float _ke) {
     s = _s;
     ke = _ke;
     
-    xy_off = QPointF(a,b); //TODO: Vectory field should follow the AC in "non limited" trajectories
+    xy_off = getACpos();
 }
 
 // Sin parametric representation
-void  GVF_traj_sin::param_points() { 
+void  GVF_traj_sin::genTraj() { 
     QList<QPointF> points;
 
     float dr = sqrt(pow(dx,2) + pow(dy,2));
@@ -77,7 +75,7 @@ void  GVF_traj_sin::param_points() {
 }
 
 // Sin GVF
-void GVF_traj_sin::vector_field() {
+void GVF_traj_sin::genVField() {
     QList<QPointF> vxy_mesh; 
     
     float bound_area = pow(dx,2) + pow(dy,2); // to scale the arrows

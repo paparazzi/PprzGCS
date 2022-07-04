@@ -26,7 +26,6 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
         dy = xy_wp2.y() - xy_wp1.y();
 
         course = atan2f(dx, dy);
-        xy_off = QPointF((xy_wp2.x() + xy_wp1.x())/2,(xy_wp2.y() + xy_wp1.y())/2); //TODO: Vectory field should follow the AC in "non limited" trajectories
 
     } else { // gvf_line_XY()
         a = param[0];
@@ -36,15 +35,16 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
         dy = 200;
 
         course = param[2];
-        xy_off = QPointF(a,b); //TODO: Vectory field should follow the AC in "non limited" trajectories
     }
 
     s = _s;
     ke = _ke;
+    
+    xy_off = getACpos();
 }
 
 // Line parametric representation
-void GVF_traj_line::param_points() { 
+void GVF_traj_line::genTraj() { 
     QList<QPointF> points;
 
     int dt = 1;
@@ -58,7 +58,7 @@ void GVF_traj_line::param_points() {
 }
 
 // Line GVF
-void GVF_traj_line::vector_field() {
+void GVF_traj_line::genVField() {
     QPointF xy_off;
     QList<QPointF> vxy_mesh; 
     

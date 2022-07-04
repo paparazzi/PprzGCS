@@ -12,8 +12,8 @@ public:
     virtual void set_param(QList<float> param, int8_t _s, float _ke) override;
 
 protected:
-    virtual void param_points() override;
-    virtual void vector_field() override;
+    virtual void genTraj() override;
+    virtual void genVField() override;
 
 private:
     float a;

@@ -27,7 +27,7 @@ void GVF_traj_ellipse::set_param(QList<float> param, int8_t _s, float _ke) {
 }
 
 // Rotated standard ellipse parametric representation
-void GVF_traj_ellipse::param_points() { 
+void GVF_traj_ellipse::genTraj() { 
     QList<QPointF> points;
 
     float dt = 0.005*2*M_PI;
@@ -41,7 +41,7 @@ void GVF_traj_ellipse::param_points() {
 }
 
 // Ellipse GVF
-void GVF_traj_ellipse::vector_field() { 
+void GVF_traj_ellipse::genVField() { 
     QList<QPointF> vxy_mesh; 
 
     float bound_area = 4*a*b; // to scale the arrows
