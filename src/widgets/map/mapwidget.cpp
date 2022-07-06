@@ -119,14 +119,9 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     connect(AircraftManager::get(), &AircraftManager::waypoint_added, this, &MapWidget::onWaypointAdded);
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint_ui, this, &MapWidget::onMoveWaypointUi);
     connect(DispatcherUi::get(), &DispatcherUi::gvf_settingUpdated, this,
-        [=](QString sender, bool traj_vis, bool field_vis) {
-            delete gvf_trajectories_config[sender];
+        [=](QString sender, QVector<int>* gvfViewer_config) {
             gvf_trajectories_config.remove(sender);
-
-            auto config = new QList<float>; // Float buffer because we may need to receive numeric inputs in the future
-            config->append((int)traj_vis);
-            config->append((int)field_vis);
-            gvf_trajectories_config[sender] = config;
+            gvf_trajectories_config[sender] = gvfViewer_config;
         });  
 
     connect(  DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &MapWidget::handleNewAC);
@@ -1253,15 +1248,15 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         switch(traj)
         {   
             case 0: {// Straight line (TODO: Fix line_turn_wp1_wp2 in GVF guidance firmware)
-                gvf_traj = new GVF_traj_line(sender, latlon0, param, direction, ke, *gvf_trajectories_config[sender]);
+                gvf_traj = new GVF_traj_line(sender, latlon0, param, direction, ke, gvf_trajectories_config[sender]);
                 break;
             }
             case 1: { // Ellipse
-                gvf_traj = new GVF_traj_ellipse(sender, latlon0, param, direction, ke, *gvf_trajectories_config[sender]);
+                gvf_traj = new GVF_traj_ellipse(sender, latlon0, param, direction, ke, gvf_trajectories_config[sender]);
                 break;
             }
             case 2: { // Sin
-                gvf_traj = new GVF_traj_sin(sender, latlon0, param, direction, ke, *gvf_trajectories_config[sender]);
+                gvf_traj = new GVF_traj_sin(sender, latlon0, param, direction, ke, gvf_trajectories_config[sender]);
                 break;
             }
             default:

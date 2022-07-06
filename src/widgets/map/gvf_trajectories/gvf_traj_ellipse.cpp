@@ -1,11 +1,12 @@
 #include "gvf_traj_ellipse.h"
 
-GVF_traj_ellipse::GVF_traj_ellipse(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QList<float> gvf_settings) :
+GVF_traj_ellipse::GVF_traj_ellipse(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings) :
     GVF_trajectory(id, origin, gvf_settings)
 {   
     // INIT
     set_param(param, _s, _ke);
     update_trajectory();
+    
 }
 
 // Get all the necessary parameters to construct the ellipse trajectory
@@ -44,8 +45,10 @@ void GVF_traj_ellipse::genTraj() {
 void GVF_traj_ellipse::genVField() { 
     QList<QPointF> vxy_mesh; 
 
-    float bound_area = 4*a*b; // to scale the arrows
-    xy_mesh = meshGrid(bound_area*4, 24, 24);
+    float bound_area = 8*a*b; // to scale the arrows
+
+    emit DispatcherUi::get()->gvf_defaultFieldSettings(ac_id, round(bound_area), 25, 25);
+    xy_mesh = meshGrid();
 
     foreach (const QPointF &point, xy_mesh) {
         float xel = (point.x() - xy_off.x())*cos(alpha) - (point.y() - xy_off.y())*sin(alpha); 
@@ -67,5 +70,5 @@ void GVF_traj_ellipse::genVField() {
         vxy_mesh.append(QPointF(vx/norm, vy/norm));
     }
 
-    createVFieldItem(xy_mesh, vxy_mesh, bound_area);
+    createVFieldItem(xy_mesh, vxy_mesh);
 }

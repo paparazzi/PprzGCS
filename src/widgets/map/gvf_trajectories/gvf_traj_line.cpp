@@ -1,6 +1,6 @@
 #include "gvf_traj_line.h"
 
-GVF_traj_line::GVF_traj_line(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QList<float> gvf_settings) :
+GVF_traj_line::GVF_traj_line(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings) :
     GVF_trajectory(id, origin, gvf_settings)
 {   
     // INIT
@@ -47,8 +47,10 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
 void GVF_traj_line::genTraj() { 
     QList<QPointF> points;
 
-    int dt = 1;
-    for (float t = 0; t <= sqrt(pow(dx,2) + pow(dy,2)) + dt/2; t+=dt) {
+    float dr = sqrt(pow(dx,2) + pow(dy,2));
+    
+    float dt = dr/100;
+    for (float t = 0; t <=  + dt/2; t+=dt) {
         float x = t*sin(course) + a;
         float y = t*cos(course) + b;
         points.append(QPointF(x,y));
@@ -63,7 +65,9 @@ void GVF_traj_line::genVField() {
     QList<QPointF> vxy_mesh; 
     
     float bound_area = pow(dx,2) + pow(dy,2); // to scale the arrows
-    xy_mesh = meshGrid(bound_area*2, 25, 25);
+
+    emit DispatcherUi::get()->gvf_defaultFieldSettings(ac_id, bound_area, 25, 25);
+    xy_mesh = meshGrid(); //4*bound_area TODO: Fix auto scale method
 
     foreach (const QPointF &point, xy_mesh) {
         double nx = -cos(course);
@@ -82,5 +86,5 @@ void GVF_traj_line::genVField() {
         vxy_mesh.append(QPointF(vx/norm, vy/norm));
     }
 
-    createVFieldItem(xy_mesh, vxy_mesh, bound_area, 500);
+    createVFieldItem(xy_mesh, vxy_mesh, 500);
 }

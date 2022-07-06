@@ -1,6 +1,6 @@
 #include "gvf_traj_sin.h"
 
-GVF_traj_sin::GVF_traj_sin(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QList<float> gvf_settings) :
+GVF_traj_sin::GVF_traj_sin(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings) :
     GVF_trajectory(id, origin, gvf_settings)
 {   
     // INIT
@@ -62,9 +62,9 @@ void  GVF_traj_sin::genTraj() {
 
     float dr = sqrt(pow(dx,2) + pow(dy,2));
 
-    int dt = 1;
+    float dt = dr/100;
     for (float xtr = -2*dr; xtr <= 2*dr + dt/2; xtr+=dt) {
-        float ytr = A*sin(w*xtr + off);
+        float ytr = A*sin(w*xtr - off);
 
         float x = - xtr*sin(course) + ytr*cos(course) + a;
         float y =   xtr*cos(course) + ytr*sin(course) + b;
@@ -79,7 +79,9 @@ void GVF_traj_sin::genVField() {
     QList<QPointF> vxy_mesh; 
     
     float bound_area = pow(dx,2) + pow(dy,2); // to scale the arrows
-    xy_mesh = meshGrid(bound_area*2, 25, 25);
+
+    emit DispatcherUi::get()->gvf_defaultFieldSettings(ac_id, bound_area, 25, 25);
+    xy_mesh = meshGrid(); //4*bound_area TODO: Fix auto scale method
 
     foreach (const QPointF &point, xy_mesh) {
         double xs =  (point.x() - a)*sin(course) - (point.y() - b)*cos(course);
@@ -103,5 +105,5 @@ void GVF_traj_sin::genVField() {
         vxy_mesh.append(QPointF(vx/norm, vy/norm));
     }
 
-    createVFieldItem(xy_mesh, vxy_mesh, bound_area, 500);
+    createVFieldItem(xy_mesh, vxy_mesh, 500);
 }

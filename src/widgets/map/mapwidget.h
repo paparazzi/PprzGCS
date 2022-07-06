@@ -118,7 +118,7 @@ private:
     QMap<QString, MapItem*> shapes;
     QMap<QString, MapItem*> quivers;
     QMap<QString, GVF_trajectory*> gvf_trajectories;
-    QMap<QString, QList<float>*> gvf_trajectories_config;
+    QMap<QString, QVector<int>*> gvf_trajectories_config;
     QMap<QString, std::pair<MapItem*, QTime>> intruders;
     QTimer* timer_intruders;
     MapItem* gcsItem;

@@ -3,17 +3,16 @@
 
 #include "coordinatestransform.h"
 #include "AircraftManager.h"
+#include "dispatcher_ui.h"
 #include "quiver_item.h"
 #include "path_item.h"
 
-const int QUIVERS_NUMBER = 20;
-const int DEFAULT_AREA = 1000;
 
 class GVF_trajectory : public QObject
 {
     Q_OBJECT
 public:
-    explicit GVF_trajectory(QString id, Point2DLatLon origin, QList<float> gvf_settings);
+    explicit GVF_trajectory(QString id, Point2DLatLon origin, QVector<int> *gvf_settings);
 
     QuiverItem* getVField();
     PathItem* getTraj();
@@ -35,15 +34,15 @@ protected:
     QList<QPointF> vxy_mesh;
 
     void createTrajItem(QList<QPointF> points);
-    void createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float bound_area, float ref_area = 150);
-    QList<QPointF> meshGrid(float area = 1000, int xpoints_num = 20, int ypoints_num = 20);
+    void createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float ref_area = 500);
+    QList<QPointF> meshGrid();
     QPointF getACpos();
 
     virtual void genTraj() = 0;
     virtual void genVField() = 0;
 
-    // GVF viewer config (TODO)
-    float field_area;
+    // GVF viewer config
+    int field_area;
     int field_xpts;
     int field_ypts;
     

@@ -1,27 +1,38 @@
 #include "gvf_trajectory.h"
-#include "dispatcher_ui.h"
 
-GVF_trajectory::GVF_trajectory(QString id, Point2DLatLon origin, QList<float> gvf_settings)
+GVF_trajectory::GVF_trajectory(QString id, Point2DLatLon origin, QVector<int> *gvf_settings)
 {
     ac_id = id;
     ltp_origin = origin;
-    traj_item_vis = (int)gvf_settings[0];
-    field_item_vis = (int)gvf_settings[1];
-    //field_area = gvf_settings[2]; // TODO: Incluir dentro de la widget
-    //field_xpts = (int)gvf_settings[3];
-    //field_ypts = (int)gvf_settings[4];  
 
-    // If you're alive, please update your settings and update when gvf_viewer request it 
+    auto gvfV_settings = *gvf_settings;
+
+    traj_item_vis  = gvfV_settings[0];
+    field_item_vis = gvfV_settings[1];
+    field_area = gvfV_settings[2];
+    field_xpts = gvfV_settings[3];
+    field_ypts = gvfV_settings[4];  
+
+    field_item = new QuiverItem(ac_id, Qt::red, 0.5, this);
+    traj_item = new PathItem(ac_id, Qt::green);
+
+    // If you're alive, please update your map items when gvf_viewer request it 
     connect(DispatcherUi::get(), &DispatcherUi::gvf_settingUpdated, this,
-        [=](QString sender, bool traj_vis, bool field_vis) {
+        [=](QString sender, QVector<int> *gvf_settings) {
             if(sender == ac_id) {
-                traj_item_vis = traj_vis;
-                field_item_vis = field_vis;
+                auto gvfV_settings = *gvf_settings;
+
+                traj_item_vis  = gvfV_settings[0];
+                field_item_vis = gvfV_settings[1];
+                field_area = gvfV_settings[2];
+                field_xpts = gvfV_settings[3];
+                field_ypts = gvfV_settings[4];  
+
                 setVFiledVis(field_item_vis);
             }
         });
 
-    // TODO: Cuando  
+   
 }
 
 PathItem* GVF_trajectory::getTraj() {
@@ -59,14 +70,9 @@ void GVF_trajectory::update_trajectory() {
 // Create graphics object 
 void GVF_trajectory::createTrajItem(QList<QPointF> points) // TODO
 {
-    auto color = Qt::green;
-
-    traj_item = new PathItem(ac_id, color);
-    //traj_item->setZValues(z, z);
-
     for(auto point: points) {
         auto pos = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, point.x(), point.y());
-        auto wp =  new WaypointItem(pos, ac_id, color); 
+        auto wp =  new WaypointItem(pos, ac_id, Qt::green); 
         traj_item->addPoint(wp);
         traj_waypoints.append(wp);
     }
@@ -75,13 +81,10 @@ void GVF_trajectory::createTrajItem(QList<QPointF> points) // TODO
     //traj_item->setVisible(traj_item_vis); //(TODO)
 }
 
-void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float bound_area, float ref_area) 
-{   
-    auto color = Qt::red;
-    field_item = new QuiverItem(ac_id, color, 0.5, this);
-
-    // Arrows scaling based on the trajectory bounding area
-    float scale = sqrt(ref_area/bound_area); 
+void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float ref_field_area) 
+{  
+    // Arrows scaling based on the trajectory bounding field_area
+    float scale = sqrt(ref_field_area/field_area); 
 
     for (int i=0; i<points.size(); i++) {
         float vx = vpoints[i].x();
@@ -103,14 +106,14 @@ void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoi
 }
 
 // Create the XY mesh to draw the vectory field
-QList<QPointF> GVF_trajectory::meshGrid(float area, int xpoints_num, int ypoints_num) //TODO: No va a necesitar parámetros, serán variables protegidas
+QList<QPointF> GVF_trajectory::meshGrid() 
 {
     QList<QPointF> grid;
-    
-    float dx = sqrt(area)/(xpoints_num - 1);
-    float dy = sqrt(area)/(ypoints_num - 1);
-    for(float x=xy_off.x() - 0.5*sqrt(area); x<=xy_off.x() + 0.5*sqrt(area) + dx/2; x+=dx) {
-        for(float y=xy_off.y() - 0.5*sqrt(area); y<=xy_off.y() + 0.5*sqrt(area) + dy/2; y+=dy) {
+
+    float dx = sqrt(field_area)/(field_xpts - 1);
+    float dy = sqrt(field_area)/(field_ypts - 1);
+    for(float x=xy_off.x() - 0.5*sqrt(field_area); x<=xy_off.x() + 0.5*sqrt(field_area) + dx/2; x+=dx) {
+        for(float y=xy_off.y() - 0.5*sqrt(field_area); y<=xy_off.y() + 0.5*sqrt(field_area) + dy/2; y+=dy) {
             grid.append(QPointF(x,y));
         }
     }
@@ -118,7 +121,7 @@ QList<QPointF> GVF_trajectory::meshGrid(float area, int xpoints_num, int ypoints
     return grid;
 }
 
-// Get AC position in LTP
+// Get AC position into the LTP
 QPointF GVF_trajectory::getACpos() {
     auto latlon = Point2DLatLon(0,0);
 

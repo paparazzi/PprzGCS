@@ -20,10 +20,10 @@ private:
     QVBoxLayout* main_layout;
     QVBoxLayout* settings_layout;
 
-    QPushButton* vis_button;
+    QVector<int> gvfV_config;
+    QVector<int> gvfV_defField_config;
 
-    bool field_vis;
-    bool traj_vis;
+    QString viewer_mode;
 };
 
 #endif // GVF_SETTINGS_H
