@@ -31,7 +31,8 @@ signals:
     //void create_waypoint(Waypoint*);
 
     // GVF viewer signals
-    void gvf_settingUpdated(QString ac_id, bool field_vis, bool traj_vis);
+    void gvf_settingUpdated(QString ac_id, QVector<int> *gvfViewer_config);
+    void gvf_defaultFieldSettings(QString ac_id, int area, int xpts, int ypts);
 
 public slots:
 

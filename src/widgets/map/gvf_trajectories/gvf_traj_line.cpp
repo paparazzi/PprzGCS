@@ -48,9 +48,9 @@ void GVF_traj_line::genTraj() {
     QList<QPointF> points;
 
     float dr = sqrt(pow(dx,2) + pow(dy,2));
-    
+
     float dt = dr/100;
-    for (float t = 0; t <=  + dt/2; t+=dt) {
+    for (float t = 0; t <= dr + dt/2; t+=dt) {
         float x = t*sin(course) + a;
         float y = t*cos(course) + b;
         points.append(QPointF(x,y));

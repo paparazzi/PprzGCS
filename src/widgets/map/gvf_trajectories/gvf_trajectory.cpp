@@ -139,7 +139,7 @@ QPointF GVF_trajectory::getACpos() {
     }
 
     QPointF ac_xy;
-    CoordinatesTransform::get()->wgs84_to_ltp(ltp_origin, latlon, ac_xy.rx(), ac_xy.ry());
+    CoordinatesTransform::get()->wgs84_to_relative_utm(ltp_origin, latlon, ac_xy.rx(), ac_xy.ry());
 
     return ac_xy;
 }   

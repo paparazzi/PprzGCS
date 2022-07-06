@@ -5,8 +5,8 @@
 
 GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac_id)
 {
-    main_layout = new QVBoxLayout(this);
-    settings_layout = new QVBoxLayout();
+    auto main_layout = new QVBoxLayout(this);
+    auto settings_layout = new QVBoxLayout();
     auto hspacer = new QSpacerItem(10,1);
 
     auto vis_layout = new QHBoxLayout();

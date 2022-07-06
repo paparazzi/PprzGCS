@@ -17,8 +17,6 @@ private:
     void init();
 
     QString ac_id;
-    QVBoxLayout* main_layout;
-    QVBoxLayout* settings_layout;
 
     QVector<int> gvfV_config;
     QVector<int> gvfV_defField_config;
