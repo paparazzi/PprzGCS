@@ -9,16 +9,18 @@ class GVF_traj_line : public GVF_trajectory
 public:
     explicit GVF_traj_line(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings);
 
-    virtual void set_param(QList<float> param, int8_t _s, float _ke) override;
-
 protected:
     virtual void genTraj() override;
     virtual void genVField() override;
 
 private:
+    void set_param(QList<float> param, int8_t _s, float _ke);
+    
     float a;
     float b;
     float course;
+    float d1 = 0;
+    float d2 = 0;
     
     int8_t s;
     double ke;

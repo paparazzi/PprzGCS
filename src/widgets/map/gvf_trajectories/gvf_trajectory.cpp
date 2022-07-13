@@ -13,8 +13,8 @@ GVF_trajectory::GVF_trajectory(QString id, Point2DLatLon origin, QVector<int> *g
     field_xpts = gvfV_settings[3];
     field_ypts = gvfV_settings[4];  
 
-    field_item = new QuiverItem(ac_id, Qt::red, 0.5, this);
     traj_item = new PathItem(ac_id, Qt::green);
+    field_item = new QuiverItem(ac_id, Qt::red, 0.5, this);
 
     // If you're alive, please update your map items when gvf_viewer request it 
     connect(DispatcherUi::get(), &DispatcherUi::gvf_settingUpdated, this,
@@ -83,8 +83,8 @@ void GVF_trajectory::createTrajItem(QList<QPointF> points) // TODO
 
 void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float ref_field_area) 
 {  
-    // Arrows scaling based on the trajectory bounding field_area
-    float scale = sqrt(ref_field_area/field_area); 
+    // Arrows scaling based on the trajectory bounding field area, xpts and ypts
+    float scale = sqrt(ref_field_area/field_area)*sqrt(field_xpts*field_ypts/pow(24,2)); 
 
     for (int i=0; i<points.size(); i++) {
         float vx = vpoints[i].x();

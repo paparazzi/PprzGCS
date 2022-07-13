@@ -3,14 +3,14 @@
 GVF_traj_line::GVF_traj_line(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings) :
     GVF_trajectory(id, origin, gvf_settings)
 {   
-    // INIT
     set_param(param, _s, _ke);
     update_trajectory();
 }
 
 // Get all the necessary parameters to construct the line trajectory
 void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
-    if (param.size()>3) { // gvf_line_wp()
+
+    if (param.size()>3) { // gvf_line_wp1_wp2()
         QPointF xy_wp1;
         QPointF xy_wp2; 
 
@@ -27,7 +27,7 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
 
         course = atan2f(dx, dy);
 
-    } else { // gvf_line_XY()
+    } else { // gvf_line_XY() TODO in firmware
         a = param[0];
         b = param[1];
 
@@ -40,17 +40,25 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
     s = _s;
     ke = _ke;
     
+    if (param[5]>=0 && param[6]>=0) { // gvf_segment_loop_XY1_XY2
+        d1 = param[5];
+        d2 = param[6];
+        if (abs(course) > M_PI/2) { //TODO: Better fix with course??
+            s *= -1;
+        }
+    }
+
     xy_off = getACpos();
 }
 
-// Line parametric representation
+// Line trajectory (parametric representation)
 void GVF_traj_line::genTraj() { 
     QList<QPointF> points;
 
     float dr = sqrt(pow(dx,2) + pow(dy,2));
 
     float dt = dr/100;
-    for (float t = 0; t <= dr + dt/2; t+=dt) {
+    for (float t = -d1; t <= dr + d2 + dt/2; t+=dt) {
         float x = t*sin(course) + a;
         float y = t*cos(course) + b;
         points.append(QPointF(x,y));
@@ -59,7 +67,7 @@ void GVF_traj_line::genTraj() {
     createTrajItem(points);
 }
 
-// Line GVF
+// Line GVF (implicit function)
 void GVF_traj_line::genVField() {
     QPointF xy_off;
     QList<QPointF> vxy_mesh; 

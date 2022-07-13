@@ -33,6 +33,9 @@
 #include "gvf_traj_line.h"
 #include "gvf_traj_ellipse.h"
 #include "gvf_traj_sin.h"
+#include "gvf_traj_trefoil.h"
+#include "gvf_traj_3D_ellipse.h"
+#include "gvf_traj_3D_lissajous.h"
 
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
@@ -143,11 +146,11 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
             onIntruder(sender, msg);
         });
 
-    PprzDispatcher::get()->bind("QUIVER", this,
-        [=](QString sender, pprzlink::Message msg) {
-            (void)sender;
-            onQuiver(msg);
-        });
+    // PprzDispatcher::get()->bind("QUIVER", this,
+    //     [=](QString sender, pprzlink::Message msg) {
+    //         (void)sender;
+    //         onQuiver(msg);
+    //     });
 
     PprzDispatcher::get()->bind("FLIGHT_PARAM", this,
         [=](QString sender, pprzlink::Message msg) {
@@ -1127,46 +1130,46 @@ void MapWidget::onIntruder(QString sender, pprzlink::Message msg) {
     intruders[id] = make_pair(itd, QTime::currentTime());
 }
 
-void MapWidget::onQuiver(pprzlink::Message msg) {
-    QString quiver_id;
-    uint8_t status;
-    int32_t lat, lon;
-    int32_t vlat, vlon;
+// void MapWidget::onQuiver(pprzlink::Message msg) {
+//     QString quiver_id;
+//     uint8_t status;
+//     int32_t lat, lon;
+//     int32_t vlat, vlon;
 
 
-    msg.getField("id", quiver_id);
-    msg.getField("status", status);
+//     msg.getField("id", quiver_id);
+//     msg.getField("status", status);
 
-    if(quiver_id == "clean") {
-        for (MapItem* quiver : quivers){
-            removeItem(quiver);
-        }
-        quivers.clear();
-        return;
-    }
+//     if(quiver_id == "clean") {
+//         for (MapItem* quiver : quivers){
+//             removeItem(quiver);
+//         }
+//         quivers.clear();
+//         return;
+//     }
 
-    if(quivers.contains(quiver_id)) {
-        removeItem(quivers[quiver_id]);
-        quivers.remove(quiver_id);
-    }
+//     if(quivers.contains(quiver_id)) {
+//         removeItem(quivers[quiver_id]);
+//         quivers.remove(quiver_id);
+//     }
 
-    if(status == 1) { //deletion, return now.
-        return;
-    }
+//     if(status == 1) { //deletion, return now.
+//         return;
+//     }
 
-    msg.getField("lat", lat);
-    msg.getField("lon", lon);
-    msg.getField("vlat", vlat);
-    msg.getField("vlon", vlon);
+//     msg.getField("lat", lat);
+//     msg.getField("lon", lon);
+//     msg.getField("vlat", vlat);
+//     msg.getField("vlon", vlon);
 
-    auto pos = Point2DLatLon(lat/1e7, lon/1e7);
-    auto vpos = Point2DLatLon(vlat/1e7, vlon/1e7);
+//     auto pos = Point2DLatLon(lat/1e7, lon/1e7);
+//     auto vpos = Point2DLatLon(vlat/1e7, vlon/1e7);
 
-    auto quiver = new QuiverItem(pos, vpos, quiver_id);
-    addItem(quiver);
+//     auto quiver = new QuiverItem(pos, vpos, quiver_id);
+//     addItem(quiver);
 
-    quivers[quiver_id] = quiver;
-}
+//     quivers[quiver_id] = quiver;
+// }
 
 
 void MapWidget::onGCSPos(pprzlink::Message msg) {
@@ -1267,22 +1270,31 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
 
     // GVF_PARAMETRIC message parser (TODO)
     else if (msg.getDefinition().getName() == "GVF_PARAMETRIC") {
-        qDebug() << "GVF: GVF_PARAMETRIC trajectories are not yet implemented in PprzGCS.";
-        return; // TEMPORAL
+        QList<float> phi = {0.0}; // Error signals
+        float wb;
+        
+        msg.getField("traj", traj);
+        msg.getField("s", direction);
+        msg.getField("w", wb);
+        msg.getField("p", param);
+        msg.getField("phi", phi);
 
         switch(traj)
         {   
             case 0: {// Trefoil 2D
+                gvf_traj = new GVF_traj_trefoil(sender, latlon0, param, direction, phi, gvf_trajectories_config[sender]);
                 break;
             }
             case 1: { // Ellipse 3D
+                gvf_traj = new GVF_traj_3D_ellipse(sender, latlon0, param, direction, phi, gvf_trajectories_config[sender]);
                 break;
             }
             case 2: { // Lissajous 3D
+                gvf_traj = new GVF_traj_3D_lissajous(sender, latlon0, param, direction, phi, gvf_trajectories_config[sender]);
                 break;
             }
             default:
-                qDebug() << "GVF: GVF message parser received an unknown trajectory id.";
+                qDebug() << "GVF: GVF_PARAMETRIC message parser received an unknown trajectory id.";
                 return;
         }
     } else {

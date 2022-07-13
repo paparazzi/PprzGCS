@@ -1,6 +1,7 @@
 #ifndef GVF_TRAJECTORY_H
 #define GVF_TRAJECTORY_H
 
+#include <QVector3D>
 #include "coordinatestransform.h"
 #include "AircraftManager.h"
 #include "dispatcher_ui.h"
@@ -21,8 +22,6 @@ public:
 
     void purge_trajectory();
     void update_trajectory();
-
-    virtual void set_param(QList<float> param, int8_t _s, float _ke) = 0;
 
 protected:
     QString ac_id;

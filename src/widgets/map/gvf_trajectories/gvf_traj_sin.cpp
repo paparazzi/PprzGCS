@@ -3,7 +3,6 @@
 GVF_traj_sin::GVF_traj_sin(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings) :
     GVF_trajectory(id, origin, gvf_settings)
 {   
-    // INIT
     set_param(param, _s, _ke);
     update_trajectory();
 }
@@ -30,14 +29,14 @@ void GVF_traj_sin::set_param(QList<float> param, int8_t _s, float _ke) {
 
             course = atan2f(dy, dx);
 
-        } else { // gvf_sin_wp_alpha()
+        } else { // gvf_sin_wp_alpha() TODO in firmware
             dx = 200;
             dy = 200;
 
             course = param[2];
         }
 
-    } else {// gvf_sin_XY_alpha()
+    } else {// gvf_sin_XY_alpha() TODO in firmware
         a = param[0];
         b = param[1];
 
@@ -52,11 +51,15 @@ void GVF_traj_sin::set_param(QList<float> param, int8_t _s, float _ke) {
     A   = param[5];
     s = _s;
     ke = _ke;
-    
+
+    if (abs(course) > M_PI/2) { //TODO: Better fix with course??
+        s *= -1;
+    }
+
     xy_off = getACpos();
 }
 
-// Sin parametric representation
+// Sin trajectory
 void  GVF_traj_sin::genTraj() { 
     QList<QPointF> points;
 

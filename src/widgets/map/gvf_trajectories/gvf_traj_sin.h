@@ -9,13 +9,13 @@ class GVF_traj_sin : public GVF_trajectory
 public:
     explicit GVF_traj_sin(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings);
 
-    virtual void set_param(QList<float> param, int8_t _s, float _ke) override;
-
 protected:
     virtual void genTraj() override;
     virtual void genVField() override;
 
 private:
+    void set_param(QList<float> param, int8_t _s, float _ke);
+    
     float a;
     float b;
     float course;
