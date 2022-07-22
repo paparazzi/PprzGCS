@@ -7,14 +7,14 @@ class GVF_traj_3D_lissajous : public GVF_trajectory
 {
     Q_OBJECT
 public:
-    explicit GVF_traj_3D_lissajous(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, QList<float> phi, QVector<int> *gvf_settings);
+    explicit GVF_traj_3D_lissajous(QString id, QList<float> param, int8_t _s, QList<float> phi, float _wb, QVector<int> *gvf_settings);
 
 protected:
     virtual void genTraj() override;
     virtual void genVField() override;
 
 private:
-    void set_param(QList<float> param, int8_t _s, QList<float> phi); // GVF PARAMETRIC
+    void set_param(QList<float> param, int8_t _s, QList<float> phi, float _wb); // GVF PARAMETRIC
 
     QVector3D off;
     QVector3D c;
@@ -25,6 +25,8 @@ private:
     int8_t s;
 
     QVector3D phi;
+
+    float wb;
 };
 
 #endif // GVF_TRAJ_3D_LISSAJOUS_H

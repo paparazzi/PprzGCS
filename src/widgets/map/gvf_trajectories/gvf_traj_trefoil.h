@@ -7,14 +7,15 @@ class GVF_traj_trefoil : public GVF_trajectory
 {
     Q_OBJECT
 public:
-    explicit GVF_traj_trefoil(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, QList<float> phi, QVector<int> *gvf_settings);
+    explicit GVF_traj_trefoil(QString id, QList<float> param, int8_t _s, QList<float> phi, float _wb, QVector<int> *gvf_settings);
 
 protected:
     virtual void genTraj() override;
     virtual void genVField() override;
 
 private:
-    void set_param(QList<float> param, int8_t _s, QList<float> phi); // GVF PARAMETRIC
+    void set_param(QList<float> param, int8_t _s, QList<float> phi, float _wb); // GVF PARAMETRIC
+    QPointF traj_point(float t);
 
     float w1;
     float w2;
@@ -26,6 +27,10 @@ private:
 
     float phi_x;
     float phi_y;
+
+    float wb;
+
+    float gcd(int a, int b);
 };
 
 #endif // GVF_TRAJ_TREFOIL_H

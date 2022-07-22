@@ -7,7 +7,7 @@ class GVF_traj_line : public GVF_trajectory
 {
     Q_OBJECT
 public:
-    explicit GVF_traj_line(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings);
+    explicit GVF_traj_line(QString id, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings);
 
 protected:
     virtual void genTraj() override;

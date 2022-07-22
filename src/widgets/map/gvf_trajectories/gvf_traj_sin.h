@@ -7,7 +7,7 @@ class GVF_traj_sin : public GVF_trajectory
 {
     Q_OBJECT
 public:
-    explicit GVF_traj_sin(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings);
+    explicit GVF_traj_sin(QString id, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings);
 
 protected:
     virtual void genTraj() override;

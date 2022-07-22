@@ -1,21 +1,20 @@
 #include "gvf_traj_ellipse.h"
 
-GVF_traj_ellipse::GVF_traj_ellipse(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings) :
-    GVF_trajectory(id, origin, gvf_settings)
+GVF_traj_ellipse::GVF_traj_ellipse(QString id, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings) :
+    GVF_trajectory(id, gvf_settings)
 {   
     set_param(param, _s, _ke);
-    update_trajectory();
+    generate_trajectory();
     
 }
 
-// Get all the necessary parameters to construct the ellipse trajectory
 void GVF_traj_ellipse::set_param(QList<float> param, int8_t _s, float _ke) {
     if (param.size()>5) { // gvf_ellipse_wp()
         auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(ac_id);
         Waypoint::WpFrame frame = ac->getFlightPlan()->getFrame();
         ac->getFlightPlan()->getWaypoint((uint8_t)param[5])->getRelative(frame, xy_off.rx(), xy_off.ry());
 
-    } else { // gvf_ellipse_XY() TODO in firmware
+    } else { // gvf_ellipse_XY()
         xy_off = QPointF(param[0], param[1]);
     }
 

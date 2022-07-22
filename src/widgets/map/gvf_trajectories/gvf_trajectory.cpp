@@ -1,9 +1,9 @@
 #include "gvf_trajectory.h"
 
-GVF_trajectory::GVF_trajectory(QString id, Point2DLatLon origin, QVector<int> *gvf_settings)
+GVF_trajectory::GVF_trajectory(QString id, QVector<int> *gvf_settings)
 {
     ac_id = id;
-    ltp_origin = origin;
+    update_origin();
 
     auto gvfV_settings = *gvf_settings;
 
@@ -31,8 +31,6 @@ GVF_trajectory::GVF_trajectory(QString id, Point2DLatLon origin, QVector<int> *g
                 setVFiledVis(field_item_vis);
             }
         });
-
-   
 }
 
 PathItem* GVF_trajectory::getTraj() {
@@ -60,10 +58,29 @@ void GVF_trajectory::purge_trajectory() {
     }
 }
 
-// Regenerate the trajectory points and the vectory field
-void GVF_trajectory::update_trajectory() {
+// Generate the trajectory points and the vector field
+void GVF_trajectory::generate_trajectory() {
     genTraj();
     genVField();
+}
+
+// Regenerate just the vector field with the new AC pos
+// (We have to make sure that quiver item has been removed from mapwidget)
+void GVF_trajectory::update_VField() {
+    field_item = new QuiverItem(ac_id, Qt::red, 0.5, this);
+    getACpos();
+    genVField();
+}
+
+void GVF_trajectory::update_origin() {
+    auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(ac_id);
+    auto origin = ac->getFlightPlan()->getOrigin();
+
+    if(origin) {
+    ltp_origin = Point2DLatLon(origin->getLat(), origin->getLon());
+    } else {
+        qDebug() << "GVF: Can't get origin waypoint from AC " << ac_id;
+    }
 }
 
 /////////////// PRIVATE FUNCTIONS ///////////////
@@ -105,7 +122,7 @@ void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoi
     field_item->setVisible(field_item_vis);
 }
 
-// Create the XY mesh to draw the vectory field
+// Create the XY mesh to draw the vector field
 QList<QPointF> GVF_trajectory::meshGrid() 
 {
     QList<QPointF> grid;

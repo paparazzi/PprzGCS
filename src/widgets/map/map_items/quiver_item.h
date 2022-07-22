@@ -22,6 +22,7 @@ public:
 
     void setVisible(bool vis);
     void addQuiver(Point2DLatLon pos, Point2DLatLon vpos);
+    void removeQuivers();
 
 private:
     float pen_width;

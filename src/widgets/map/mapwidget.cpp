@@ -146,12 +146,6 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
             onIntruder(sender, msg);
         });
 
-    // PprzDispatcher::get()->bind("QUIVER", this,
-    //     [=](QString sender, pprzlink::Message msg) {
-    //         (void)sender;
-    //         onQuiver(msg);
-    //     });
-
     PprzDispatcher::get()->bind("FLIGHT_PARAM", this,
         [=](QString sender, pprzlink::Message msg) {
             (void)sender;
@@ -159,6 +153,13 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
             msg.getField("ac_id", id);
             if(id == "GCS") {
                 onGCSPos(msg);
+            }
+
+            // Update gvf_trajectory vertor field
+            if(gvf_trajectories.contains(id)) {
+                removeItem(gvf_trajectories[id]->getVField());
+                gvf_trajectories[id]->update_VField();
+                addItem(gvf_trajectories[id]->getVField());
             }
         });
 
@@ -1130,48 +1131,6 @@ void MapWidget::onIntruder(QString sender, pprzlink::Message msg) {
     intruders[id] = make_pair(itd, QTime::currentTime());
 }
 
-// void MapWidget::onQuiver(pprzlink::Message msg) {
-//     QString quiver_id;
-//     uint8_t status;
-//     int32_t lat, lon;
-//     int32_t vlat, vlon;
-
-
-//     msg.getField("id", quiver_id);
-//     msg.getField("status", status);
-
-//     if(quiver_id == "clean") {
-//         for (MapItem* quiver : quivers){
-//             removeItem(quiver);
-//         }
-//         quivers.clear();
-//         return;
-//     }
-
-//     if(quivers.contains(quiver_id)) {
-//         removeItem(quivers[quiver_id]);
-//         quivers.remove(quiver_id);
-//     }
-
-//     if(status == 1) { //deletion, return now.
-//         return;
-//     }
-
-//     msg.getField("lat", lat);
-//     msg.getField("lon", lon);
-//     msg.getField("vlat", vlat);
-//     msg.getField("vlon", vlon);
-
-//     auto pos = Point2DLatLon(lat/1e7, lon/1e7);
-//     auto vpos = Point2DLatLon(vlat/1e7, vlon/1e7);
-
-//     auto quiver = new QuiverItem(pos, vpos, quiver_id);
-//     addItem(quiver);
-
-//     quivers[quiver_id] = quiver;
-// }
-
-
 void MapWidget::onGCSPos(pprzlink::Message msg) {
     if(gcsItem) {
         removeItem(gcsItem);
@@ -1193,6 +1152,16 @@ void MapWidget::onGCSPos(pprzlink::Message msg) {
     gcsItem = wcenter;
 }
 
+void MapWidget::setAcArrowSize(int s) {
+    _ac_arrow_size = s;
+    for(auto item_manager: ac_items_managers) {
+        auto arrow = item_manager->getArrowItem();
+        if(arrow) {
+            arrow->setProperty("size", s);
+        }
+    }
+}
+
 void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     
     if(!AircraftManager::get()->aircraftExists(sender)) {
@@ -1201,28 +1170,15 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     }
 
     if(gvf_trajectories.contains(sender)) {
+        //TODO: checksum... if it is the same trayectory do not delete the previous one
         removeItem(gvf_trajectories[sender]->getTraj());
         removeItem(gvf_trajectories[sender]->getVField());
 
         gvf_trajectories[sender]->purge_trajectory();
         delete gvf_trajectories[sender];
-
+        
         gvf_trajectories.remove(sender);
         ac_items_managers[sender]->setCurrentGVF(nullptr);
-    }
-    
-    // Requesting WGS84 origin coordinates  
-    auto latlon0 = Point2DLatLon(0,0);
-
-    auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(sender);
-    auto origin  = ac->getFlightPlan()->getOrigin();
-    auto flight_param_msg = ac->getStatus()->getMessage("FLIGHT_PARAM");
-
-    if(origin) {
-    latlon0 = Point2DLatLon(origin->getLat(), origin->getLon());
-    } else {
-        qDebug() << "GVF: Can't get origin waypoint from AC " << sender;
-        return;
     }
 
     // Common parser definitions
@@ -1250,16 +1206,16 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
 
         switch(traj)
         {   
-            case 0: {// Straight line (TODO: Fix line_turn_wp1_wp2 in GVF guidance firmware)
-                gvf_traj = new GVF_traj_line(sender, latlon0, param, direction, ke, gvf_trajectories_config[sender]);
+            case 0: {// Straight line
+                gvf_traj = new GVF_traj_line(sender, param, direction, ke, gvf_trajectories_config[sender]);
                 break;
             }
             case 1: { // Ellipse
-                gvf_traj = new GVF_traj_ellipse(sender, latlon0, param, direction, ke, gvf_trajectories_config[sender]);
+                gvf_traj = new GVF_traj_ellipse(sender, param, direction, ke, gvf_trajectories_config[sender]);
                 break;
             }
             case 2: { // Sin
-                gvf_traj = new GVF_traj_sin(sender, latlon0, param, direction, ke, gvf_trajectories_config[sender]);
+                gvf_traj = new GVF_traj_sin(sender, param, direction, ke, gvf_trajectories_config[sender]);
                 break;
             }
             default:
@@ -1268,7 +1224,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         }
     }
 
-    // GVF_PARAMETRIC message parser (TODO)
+    // GVF_PARAMETRIC
     else if (msg.getDefinition().getName() == "GVF_PARAMETRIC") {
         QList<float> phi = {0.0}; // Error signals
         float wb;
@@ -1282,15 +1238,15 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         switch(traj)
         {   
             case 0: {// Trefoil 2D
-                gvf_traj = new GVF_traj_trefoil(sender, latlon0, param, direction, phi, gvf_trajectories_config[sender]);
+                gvf_traj = new GVF_traj_trefoil(sender, param, direction, phi, wb, gvf_trajectories_config[sender]);
                 break;
             }
-            case 1: { // Ellipse 3D
-                gvf_traj = new GVF_traj_3D_ellipse(sender, latlon0, param, direction, phi, gvf_trajectories_config[sender]);
+            case 1: { // Ellipse 3D (TODO)
+                gvf_traj = new GVF_traj_3D_ellipse(sender, param, direction, phi, wb, gvf_trajectories_config[sender]);
                 break;
             }
-            case 2: { // Lissajous 3D
-                gvf_traj = new GVF_traj_3D_lissajous(sender, latlon0, param, direction, phi, gvf_trajectories_config[sender]);
+            case 2: { // Lissajous 3D (TODO)
+                gvf_traj = new GVF_traj_3D_lissajous(sender, param, direction, phi, wb, gvf_trajectories_config[sender]);
                 break;
             }
             default:
@@ -1306,14 +1262,3 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     ac_items_managers[sender]->setCurrentGVF(gvf_traj);
     gvf_trajectories[sender] = gvf_traj;
 }
-
-void MapWidget::setAcArrowSize(int s) {
-    _ac_arrow_size = s;
-    for(auto item_manager: ac_items_managers) {
-        auto arrow = item_manager->getArrowItem();
-        if(arrow) {
-            arrow->setProperty("size", s);
-        }
-    }
-}
-

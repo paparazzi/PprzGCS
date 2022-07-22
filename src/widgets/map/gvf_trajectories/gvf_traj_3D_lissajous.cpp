@@ -1,14 +1,14 @@
 #include "gvf_traj_3D_lissajous.h"
 
-GVF_traj_3D_lissajous::GVF_traj_3D_lissajous(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, QList<float> phi, QVector<int> *gvf_settings) :
-    GVF_trajectory(id, origin, gvf_settings)
+GVF_traj_3D_lissajous::GVF_traj_3D_lissajous(QString id, QList<float> param, int8_t _s, QList<float> phi, float _wb, QVector<int> *gvf_settings) :
+    GVF_trajectory(id, gvf_settings)
 {   
-    set_param(param, _s, phi);
-    update_trajectory();
+    set_param(param, _s, phi, _wb);
+    generate_trajectory();
     
 }
 
-void GVF_traj_3D_lissajous::set_param(QList<float> param, int8_t _s, QList<float> phi) {
+void GVF_traj_3D_lissajous::set_param(QList<float> param, int8_t _s, QList<float> phi, float _wb) {
 
 }
 

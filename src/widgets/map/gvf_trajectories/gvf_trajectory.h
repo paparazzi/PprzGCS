@@ -13,15 +13,18 @@ class GVF_trajectory : public QObject
 {
     Q_OBJECT
 public:
-    explicit GVF_trajectory(QString id, Point2DLatLon origin, QVector<int> *gvf_settings);
+    explicit GVF_trajectory(QString id, QVector<int> *gvf_settings);
 
+    Point2DLatLon getCarrot();
     QuiverItem* getVField();
     PathItem* getTraj();
 
     void setVFiledVis(bool vis);
 
     void purge_trajectory();
-    void update_trajectory();
+    void generate_trajectory();
+    void update_VField();
+    void update_origin();
 
 protected:
     QString ac_id;
@@ -31,7 +34,7 @@ protected:
 
     QList<QPointF> xy_mesh;
     QList<QPointF> vxy_mesh;
-
+    
     void createTrajItem(QList<QPointF> points);
     void createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float ref_area = 500);
     QList<QPointF> meshGrid();

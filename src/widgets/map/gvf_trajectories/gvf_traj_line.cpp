@@ -1,10 +1,10 @@
 #include "gvf_traj_line.h"
 
-GVF_traj_line::GVF_traj_line(QString id, Point2DLatLon origin, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings) :
-    GVF_trajectory(id, origin, gvf_settings)
+GVF_traj_line::GVF_traj_line(QString id, QList<float> param, int8_t _s, float _ke, QVector<int> *gvf_settings) :
+    GVF_trajectory(id, gvf_settings)
 {   
     set_param(param, _s, _ke);
-    update_trajectory();
+    generate_trajectory();
 }
 
 // Get all the necessary parameters to construct the line trajectory
@@ -27,7 +27,7 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
 
         course = atan2f(dx, dy);
 
-    } else { // gvf_line_XY() TODO in firmware
+    } else { // gvf_line_XY()
         a = param[0];
         b = param[1];
 
@@ -69,8 +69,8 @@ void GVF_traj_line::genTraj() {
 
 // Line GVF (implicit function)
 void GVF_traj_line::genVField() {
-    QPointF xy_off;
     QList<QPointF> vxy_mesh; 
+    xy_off = getACpos();
     
     float bound_area = pow(dx,2) + pow(dy,2); // to scale the arrows
 
