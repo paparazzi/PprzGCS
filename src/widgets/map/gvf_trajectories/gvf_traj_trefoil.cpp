@@ -38,7 +38,7 @@ void GVF_traj_trefoil::genVField() {
 }
 
 /////////////// PRIVATE FUNCTIONS ///////////////
-void GVF_traj_trefoil::set_param(QList<float> param, int8_t _s, QList<float> phi, float _wb) {
+void GVF_traj_trefoil::set_param(QList<float> param, int8_t _s, QList<float> _phi, float _wb) {
     if (param.size()>7) { // gvf_parametric_2D_trefoil_wp()
         auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(ac_id);
         Waypoint::WpFrame frame = ac->getFlightPlan()->getFrame();

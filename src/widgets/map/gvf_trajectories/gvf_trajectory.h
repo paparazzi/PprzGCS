@@ -36,6 +36,7 @@ protected:
     QList<QPointF> vxy_mesh;
     
     void createTrajItem(QList<QPointF> points);
+    void createTrajItem(QList<QPointF> xy_points, QList<float> z_points);
     void createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float ref_area = 500);
     QList<QPointF> meshGrid();
     QPointF getACpos();

@@ -85,12 +85,33 @@ void GVF_trajectory::update_origin() {
 
 /////////////// PRIVATE FUNCTIONS ///////////////
 // Create graphics object 
-void GVF_trajectory::createTrajItem(QList<QPointF> points) // TODO
+void GVF_trajectory::createTrajItem(QList<QPointF> points)
 {
     for(auto point: points) {
         auto pos = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, point.x(), point.y());
         auto wp =  new WaypointItem(pos, ac_id, Qt::green); 
         traj_item->addPoint(wp);
+        traj_waypoints.append(wp);
+    }
+
+    traj_item->setText("AC " + ac_id + " GVF");
+    //traj_item->setVisible(traj_item_vis); //(TODO)
+}
+
+void GVF_trajectory::createTrajItem(QList<QPointF> xy_points, QList<float> z_points)
+{
+    auto mm = minmax_element(z_points.begin(), z_points.end());
+    float zmin = *mm.first;
+    float zmax = *mm.second;
+    
+    for(int i = 0; i < xy_points.size(); i++) {
+        int g = round((z_points[i] - zmin)/(zmax - zmin) * 255);
+        int r = 255 - g;
+        auto traj_color = QColor(r,g,0);
+
+        auto pos = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, xy_points[i].x(), xy_points[i].y());
+        auto wp =  new WaypointItem(pos, ac_id, traj_color); 
+        traj_item->addPoint(wp, traj_color);
         traj_waypoints.append(wp);
     }
 

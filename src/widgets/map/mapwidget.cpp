@@ -1197,13 +1197,6 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         msg.getField("ke", ke);
         msg.getField("p", param);
 
-        // ---- MATERIAL INTERESANTE ---- 
-        // WaypointItem* wi = dynamic_cast<WaypointItem*>(map_item);
-        // if(wi != nullptr) {
-        //     registerWaypoint(wi);
-        // }
-        // ------------------------------
-
         switch(traj)
         {   
             case 0: {// Straight line

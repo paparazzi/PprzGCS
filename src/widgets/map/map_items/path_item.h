@@ -13,7 +13,7 @@ class PathItem : public MapItem
 public:
     explicit PathItem(QString ac_id, QColor color=QColor(), double neutral_scale_zoom = 15, QObject *parent = nullptr);
     explicit PathItem(QString ac_id, PprzPalette palette, double neutral_scale_zoom = 15, QObject *parent = nullptr);
-    void addPoint(WaypointItem* waypoint, bool own=false);
+    void addPoint(WaypointItem* waypoint, QColor pt_color=QColor(), bool own=false);
     void setClosedPath(bool closed);
     virtual void setHighlighted(bool h);
     virtual void setForbidHighlight(bool sh);

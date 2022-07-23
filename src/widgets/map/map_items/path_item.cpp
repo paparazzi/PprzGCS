@@ -40,13 +40,17 @@ PathItem::PathItem(QString ac_id, PprzPalette palette, double neutral_scale_zoom
     setZoomFactor(1.1);
 }
 
-void PathItem::addPoint(WaypointItem* wp, bool own) {
+void PathItem::addPoint(WaypointItem* wp, QColor pt_color, bool own) {
     assert(wp != nullptr);
     waypoints.append(wp);
     owned[wp] = own;
 
+    if(!pt_color.isValid()) {
+        pt_color = color;
+    } 
+
     if(waypoints.size() > 1){
-        GraphicsLine* line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), palette, line_width, this);
+        GraphicsLine* line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), pt_color, line_width, this);
         line->setIgnoreEvent(true);
 
         lines.append(line);

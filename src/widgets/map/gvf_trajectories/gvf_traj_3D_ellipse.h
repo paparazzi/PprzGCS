@@ -14,7 +14,8 @@ protected:
     virtual void genVField() override;
 
 private:
-    void set_param(QList<float> param, int8_t _s, QList<float> phi, float _wb); // GVF PARAMETRIC
+    void set_param(QList<float> param, int8_t _s, QList<float> _phi, float _wb); // GVF PARAMETRIC
+    QVector3D traj_point(float t);
 
     float r;
     float zl;
@@ -24,6 +25,8 @@ private:
     int8_t s;
 
     QVector3D phi;
+
+    float wb;
 };
 
 #endif // GVF_TRAJ_3D_ELLIPSE_H

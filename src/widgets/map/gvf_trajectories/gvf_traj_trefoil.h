@@ -14,7 +14,7 @@ protected:
     virtual void genVField() override;
 
 private:
-    void set_param(QList<float> param, int8_t _s, QList<float> phi, float _wb); // GVF PARAMETRIC
+    void set_param(QList<float> param, int8_t _s, QList<float> _phi, float _wb); // GVF PARAMETRIC
     QPointF traj_point(float t);
 
     float w1;
