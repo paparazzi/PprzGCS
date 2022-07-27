@@ -1,9 +1,9 @@
 #include "gvf_traj_3D_ellipse.h"
 
-GVF_traj_3D_ellipse::GVF_traj_3D_ellipse(QString id, QList<float> param, int8_t _s, QList<float> phi, float _wb, QVector<int> *gvf_settings) :
+GVF_traj_3D_ellipse::GVF_traj_3D_ellipse(QString id, QList<float> param, QList<float> _phi, QVector<int> *gvf_settings) :
     GVF_trajectory(id, gvf_settings)
 {   
-    set_param(param, _s, phi, _wb);
+    set_param(param, _phi);
     generate_trajectory();
     
 }
@@ -30,7 +30,7 @@ void GVF_traj_3D_ellipse::genVField() {
 }
 
 /////////////// PRIVATE FUNCTIONS ///////////////
-void GVF_traj_3D_ellipse::set_param(QList<float> param, int8_t _s, QList<float> _phi, float _wb) {
+void GVF_traj_3D_ellipse::set_param(QList<float> param, QList<float> _phi) {
 
     if (param.size()>6) { // gvf_parametric_3D_ellipse_wp()
         auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(ac_id);
@@ -46,7 +46,7 @@ void GVF_traj_3D_ellipse::set_param(QList<float> param, int8_t _s, QList<float> 
     zh = param[4];
     alpha = param[5];
 
-    phi = QVector3D(_phi[0], _phi[1], _phi[2]);
+    phi = QVector3D(_phi[0], _phi[1], _phi[2]); //TODO: Display error in GVF viewer??
 }
 
 QVector3D GVF_traj_3D_ellipse::traj_point(float t) {

@@ -1,9 +1,9 @@
 #include "gvf_traj_trefoil.h"
 
-GVF_traj_trefoil::GVF_traj_trefoil(QString id, QList<float> param, int8_t _s, QList<float> phi, float _wb, QVector<int> *gvf_settings) :
+GVF_traj_trefoil::GVF_traj_trefoil(QString id, QList<float> param, QList<float> _phi, QVector<int> *gvf_settings) :
     GVF_trajectory(id, gvf_settings)
 {   
-    set_param(param, _s, phi, _wb);
+    set_param(param, _phi);
     generate_trajectory();
 }
 
@@ -38,7 +38,7 @@ void GVF_traj_trefoil::genVField() {
 }
 
 /////////////// PRIVATE FUNCTIONS ///////////////
-void GVF_traj_trefoil::set_param(QList<float> param, int8_t _s, QList<float> _phi, float _wb) {
+void GVF_traj_trefoil::set_param(QList<float> param, QList<float> _phi) {
     if (param.size()>7) { // gvf_parametric_2D_trefoil_wp()
         auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(ac_id);
         Waypoint::WpFrame frame = ac->getFlightPlan()->getFrame();
@@ -54,8 +54,7 @@ void GVF_traj_trefoil::set_param(QList<float> param, int8_t _s, QList<float> _ph
     r = param[5];
     alpha = param[6]*M_PI/180;
 
-    s = _s;
-    wb = _wb;
+    phi = QPointF(_phi[0], _phi[1]); //TODO: Display error in GVF viewer??
 }
 
 QPointF GVF_traj_trefoil::traj_point(float t) {

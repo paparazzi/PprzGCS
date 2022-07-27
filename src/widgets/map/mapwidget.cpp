@@ -1231,15 +1231,15 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         switch(traj)
         {   
             case 0: {// Trefoil 2D
-                gvf_traj = new GVF_traj_trefoil(sender, param, direction, phi, wb, gvf_trajectories_config[sender]);
+                gvf_traj = new GVF_traj_trefoil(sender, param, phi, gvf_trajectories_config[sender]);
                 break;
             }
             case 1: { // Ellipse 3D (TODO)
-                gvf_traj = new GVF_traj_3D_ellipse(sender, param, direction, phi, wb, gvf_trajectories_config[sender]);
+                gvf_traj = new GVF_traj_3D_ellipse(sender, param, phi, gvf_trajectories_config[sender]);
                 break;
             }
             case 2: { // Lissajous 3D (TODO)
-                gvf_traj = new GVF_traj_3D_lissajous(sender, param, direction, phi, wb, gvf_trajectories_config[sender]);
+                gvf_traj = new GVF_traj_3D_lissajous(sender, param, phi, gvf_trajectories_config[sender]);
                 break;
             }
             default:

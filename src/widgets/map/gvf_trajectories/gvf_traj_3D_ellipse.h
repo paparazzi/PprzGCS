@@ -7,14 +7,14 @@ class GVF_traj_3D_ellipse : public GVF_trajectory
 {
     Q_OBJECT
 public:
-    explicit GVF_traj_3D_ellipse(QString id, QList<float> param, int8_t _s, QList<float> phi, float _wb, QVector<int> *gvf_settings);
+    explicit GVF_traj_3D_ellipse(QString id, QList<float> param, QList<float> _phi, QVector<int> *gvf_settings);
 
 protected:
     virtual void genTraj() override;
     virtual void genVField() override;
 
 private:
-    void set_param(QList<float> param, int8_t _s, QList<float> _phi, float _wb); // GVF PARAMETRIC
+    void set_param(QList<float> param, QList<float> _phi); // GVF PARAMETRIC
     QVector3D traj_point(float t);
 
     float r;
@@ -22,11 +22,7 @@ private:
     float zh;
     float alpha;
 
-    int8_t s;
-
     QVector3D phi;
-
-    float wb;
 };
 
 #endif // GVF_TRAJ_3D_ELLIPSE_H
