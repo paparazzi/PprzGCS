@@ -1220,11 +1220,11 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     // GVF_PARAMETRIC
     else if (msg.getDefinition().getName() == "GVF_PARAMETRIC") {
         QList<float> phi = {0.0}; // Error signals
-        float wb;
+        //float wb;
         
         msg.getField("traj", traj);
-        msg.getField("s", direction);
-        msg.getField("w", wb);
+        //msg.getField("s", direction);
+        //msg.getField("w", wb);
         msg.getField("p", param);
         msg.getField("phi", phi);
 

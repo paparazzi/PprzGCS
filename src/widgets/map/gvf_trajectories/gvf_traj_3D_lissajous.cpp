@@ -13,8 +13,9 @@ void GVF_traj_3D_lissajous::genTraj() {
     QList<QPointF> xy_points;
     QList<float> z_points;
 
-    float dt = 0.005*2*M_PI;
-    for (float t = 0; t <= 2*M_PI + dt/2; t+=dt) {
+    float max_t = 2*M_PI*2;
+    float dt = 0.001*2*M_PI;
+    for (float t = 0; t <= max_t + dt/2; t+=dt) {
         auto point = traj_point(t);
 
         xy_points.append(QPointF(point.x(),point.y()));
