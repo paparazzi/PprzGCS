@@ -5,7 +5,7 @@
 #include <QtWidgets>
 #include <QBoxLayout>
 #include <QMouseEvent>
-//#include "pprz_dispatcher.h"
+#include "colorbar.h"
 
 class GVFViewer : public QWidget
 {
@@ -19,7 +19,8 @@ private:
     QString ac_id;
 
     QVector<int> gvfV_config;
-    QVector<int> gvfV_defField_config;
+    QVector<int> gvfV_default_Vfield_config;
+    QVector<float> gvfV_parametric_config;
 
     QString viewer_mode;
 };

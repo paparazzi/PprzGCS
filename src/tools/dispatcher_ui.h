@@ -33,6 +33,7 @@ signals:
     // GVF viewer signals
     void gvf_settingUpdated(QString ac_id, QVector<int> *gvfViewer_config);
     void gvf_defaultFieldSettings(QString ac_id, int area, int xpts, int ypts);
+    void gvf_zlimits(QString ac_id, float minz, float maxz);
 
 public slots:
 

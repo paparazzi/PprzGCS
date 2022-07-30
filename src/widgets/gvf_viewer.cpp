@@ -8,7 +8,7 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
     auto main_layout = new QVBoxLayout(this);
     auto settings_layout = new QVBoxLayout();
     auto hspacer = new QSpacerItem(10,1);
-
+    
     auto vis_layout = new QHBoxLayout();
     auto vis_label= new QLabel("Vector Field", this);
     auto vis_button = new QPushButton(this);
@@ -53,12 +53,22 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
     ypts_layout->addItem(hspacer);
     ypts_layout->addWidget(ypts_spin);
 
+    auto vvspacer = new QSpacerItem(1,30);
+
+    auto alt_layout = new QVBoxLayout();
+    auto alt_label = new QLabel("GVF parametric alt (m)", this);
+    auto alt_bar = new ColorBar(20, this); //TODO
+    alt_layout->addWidget(alt_label, 0, Qt::AlignCenter);
+    alt_layout->addWidget(alt_bar);
+
     settings_layout->addItem(vis_layout);
     settings_layout->addItem(vspacer);
     settings_layout->addItem(mode_layout);
     settings_layout->addItem(area_layout);
     settings_layout->addItem(xpts_layout);
     settings_layout->addItem(ypts_layout);
+    settings_layout->addItem(vvspacer);
+    settings_layout->addItem(alt_layout);
     main_layout->addItem(settings_layout);
 
     init();
@@ -66,9 +76,9 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
     auto setViewerMode = [=](QString mode) {
         if(mode == "DEFAULT") {
             viewer_mode = "DEFAULT";
-            gvfV_config[2] = gvfV_defField_config[0];
-            gvfV_config[3] = gvfV_defField_config[1];
-            gvfV_config[4] = gvfV_defField_config[2];
+            gvfV_config[2] = gvfV_default_Vfield_config[0];
+            gvfV_config[3] = gvfV_default_Vfield_config[1];
+            gvfV_config[4] = gvfV_default_Vfield_config[2];
             emit DispatcherUi::get()->gvf_settingUpdated(ac_id, &gvfV_config);  
 
             area_spin->blockSignals(true);
@@ -98,10 +108,18 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
     connect(DispatcherUi::get(), &DispatcherUi::gvf_defaultFieldSettings, this,
             [=](QString sender, int area, int xpts, int ypts) {
                 if(sender == ac_id) {
-                    gvfV_defField_config[0] = area;
-                    gvfV_defField_config[1] = xpts;
-                    gvfV_defField_config[2] = ypts;
+                    gvfV_default_Vfield_config[0] = area;
+                    gvfV_default_Vfield_config[1] = xpts;
+                    gvfV_default_Vfield_config[2] = ypts;
                     setViewerMode(viewer_mode); // if DEFAULT then set def config
+                }
+            });
+
+    connect(DispatcherUi::get(), &DispatcherUi::gvf_zlimits, this,
+            [=](QString sender, float minz, float maxz) {
+                if(sender == ac_id) {
+                    alt_bar->set_zlimits(minz, maxz);
+                    alt_bar->repaint();
                 }
             });
 
@@ -153,11 +171,14 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
 void GVFViewer::init()
 {   
     gvfV_config = QVector<int>(5);
-    gvfV_defField_config = QVector<int>(3);
+    gvfV_default_Vfield_config = QVector<int>(3);
+    gvfV_parametric_config = QVector<float>(2);
 
     gvfV_config[0] = true; //traj_vis
     gvfV_config[1] = true; //field_vis
-    gvfV_defField_config[0] = 2000;  //field_area
-    gvfV_defField_config[1] = 24;    //field_xpoints
-    gvfV_defField_config[2] = 24;    //field_ypoints
+    gvfV_default_Vfield_config[0] = 2000; //field_area
+    gvfV_default_Vfield_config[1] = 24;   //field_xpoints
+    gvfV_default_Vfield_config[2] = 24;   //field_ypoints
+    gvfV_parametric_config[0] = 0; //minz
+    gvfV_parametric_config[1] = 0; //maxz
 }
