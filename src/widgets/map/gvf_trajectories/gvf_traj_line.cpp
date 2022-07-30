@@ -10,7 +10,19 @@ GVF_traj_line::GVF_traj_line(QString id, QList<float> param, int8_t _s, float _k
 // Get all the necessary parameters to construct the line trajectory
 void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
 
-    if (param.size()>3) { // gvf_line_wp1_wp2()
+    if(param.size()==6) { // gvf_line_XY1_XY2()
+        a = param[0];
+        b = param[1];
+
+        float a2 = param[3];
+        float b2 = param[4];
+
+        dx = a2 - a;
+        dy = b2 - b;
+
+        course = param[2];
+        qDebug() << "paso";
+    } else if (param.size()>3) { // gvf_line_wp1_wp2()
         QPointF xy_wp1;
         QPointF xy_wp2; 
 
@@ -35,6 +47,7 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
         dy = 200;
 
         course = param[2];
+        qDebug() << "paso222";
     }
 
     s = _s;
