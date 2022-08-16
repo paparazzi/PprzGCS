@@ -143,6 +143,7 @@ private:
     long shape_bind_id;
 
     bool t = false;
+    bool gvf_loaded = false;
 
     QMap<int, Point2DPseudoMercator> pms;
 

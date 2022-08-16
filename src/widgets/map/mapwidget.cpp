@@ -300,6 +300,9 @@ void MapWidget::configure(QDomElement ele) {
                 widget = makeLayerCombo();
             } else {
                 widget = makeWidget(this, container, name);
+                if(name == "gvf_viewer") {
+                    gvf_loaded = true;
+                }
             }
 
             auto conf = widget_ele.firstChildElement("configure");
@@ -1164,6 +1167,10 @@ void MapWidget::setAcArrowSize(int s) {
 
 void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     
+    if(!gvf_loaded) {
+        return;
+    }
+
     if(!AircraftManager::get()->aircraftExists(sender)) {
         qDebug() << "GVF: AC with id" << sender << "do not exists.";
         return;
