@@ -85,7 +85,7 @@ void GVF_traj_sin::genVField() {
     float bound_area = pow(dx,2) + pow(dy,2); // to scale the arrows
 
     emit DispatcherUi::get()->gvf_defaultFieldSettings(ac_id, bound_area, 25, 25);
-    xy_mesh = meshGrid(); //4*bound_area TODO: Fix auto scale method
+    xy_mesh = meshGrid();
 
     foreach (const QPointF &point, xy_mesh) {
         double xs =  (point.x() - a)*sin(course) - (point.y() - b)*cos(course);

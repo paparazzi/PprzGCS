@@ -1227,11 +1227,8 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     // GVF_PARAMETRIC
     else if (msg.getDefinition().getName() == "GVF_PARAMETRIC") {
         QList<float> phi = {0.0}; // Error signals
-        //float wb;
         
         msg.getField("traj", traj);
-        //msg.getField("s", direction);
-        //msg.getField("w", wb);
         msg.getField("p", param);
         msg.getField("phi", phi);
 
@@ -1241,11 +1238,11 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
                 gvf_traj = new GVF_traj_trefoil(sender, param, phi, gvf_trajectories_config[sender]);
                 break;
             }
-            case 1: { // Ellipse 3D (TODO)
+            case 1: { // Ellipse 3D
                 gvf_traj = new GVF_traj_3D_ellipse(sender, param, phi, gvf_trajectories_config[sender]);
                 break;
             }
-            case 2: { // Lissajous 3D (TODO)
+            case 2: { // Lissajous 3D
                 gvf_traj = new GVF_traj_3D_lissajous(sender, param, phi, gvf_trajectories_config[sender]);
                 break;
             }
