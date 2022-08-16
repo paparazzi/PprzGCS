@@ -105,13 +105,17 @@ void GVF_trajectory::createTrajItem(QList<QPointF> xy_points, QList<float> z_poi
     auto mm = minmax_element(z_points.begin(), z_points.end());
     float zmin = *mm.first;
     float zmax = *mm.second;
-
+    qDebug() << "zmin" << zmin << " zmax" << zmax;
     emit DispatcherUi::get()->gvf_zlimits(ac_id, zmin, zmax);
 
     for(int i = 0; i < xy_points.size(); i++) {
-        int g = round((z_points[i] - zmin)/(zmax - zmin) * 255);
-        int r = 255 - g;
-        auto traj_color = QColor(r,g,0);
+        auto traj_color = QColor(Qt::green);
+
+        if (!(zmax == zmin)) {
+            int g = round((z_points[i] - zmin)/(zmax - zmin) * 255);
+            int r = 255 - g;
+            traj_color.setRgb(r,g,0);
+        }
         
         auto pos = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, xy_points[i].x(), xy_points[i].y());
         auto wp =  new WaypointItem(pos, ac_id, traj_color); 

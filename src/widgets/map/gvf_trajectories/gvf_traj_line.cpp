@@ -21,7 +21,7 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
         dy = b2 - b;
 
         course = param[2];
-        qDebug() << "paso";
+
     } else if (param.size()>3) { // gvf_line_wp1_wp2()
         QPointF xy_wp1;
         QPointF xy_wp2; 
@@ -47,7 +47,6 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
         dy = 200;
 
         course = param[2];
-        qDebug() << "paso222";
     }
 
     s = _s;

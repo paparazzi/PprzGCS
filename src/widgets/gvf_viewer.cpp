@@ -57,7 +57,7 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
 
     auto alt_layout = new QVBoxLayout();
     auto alt_label = new QLabel("GVF parametric alt (m)", this);
-    auto alt_bar = new ColorBar(20, this); //TODO
+    auto alt_bar = new ColorBar(20, this); 
     alt_layout->addWidget(alt_label, 0, Qt::AlignCenter);
     alt_layout->addWidget(alt_bar);
 
