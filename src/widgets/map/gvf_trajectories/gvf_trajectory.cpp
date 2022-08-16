@@ -105,7 +105,6 @@ void GVF_trajectory::createTrajItem(QList<QPointF> xy_points, QList<float> z_poi
     auto mm = minmax_element(z_points.begin(), z_points.end());
     float zmin = *mm.first;
     float zmax = *mm.second;
-    qDebug() << "zmin" << zmin << " zmax" << zmax;
     emit DispatcherUi::get()->gvf_zlimits(ac_id, zmin, zmax);
 
     for(int i = 0; i < xy_points.size(); i++) {
