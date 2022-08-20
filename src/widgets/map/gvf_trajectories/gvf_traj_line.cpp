@@ -13,7 +13,8 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
     if(param.size()==6) { // gvf_line_XY1_XY2()
         a = param[0];
         b = param[1];
-
+        qDebug() << "gvf_line_XY1_XY2()";
+        qDebug() << param[0] << param[1] << param[2] << param[3] << param[4];
         float a2 = param[3];
         float b2 = param[4];
 
@@ -25,7 +26,7 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
     } else if (param.size()>3) { // gvf_line_wp1_wp2()
         QPointF xy_wp1;
         QPointF xy_wp2; 
-
+        qDebug() << "gvf_line_wp1_wp2()";
         auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(ac_id);
         Waypoint::WpFrame frame = ac->getFlightPlan()->getFrame();
         ac->getFlightPlan()->getWaypoint((uint8_t)param[3])->getRelative(frame, xy_wp1.rx(), xy_wp1.ry());
@@ -67,13 +68,15 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
 void GVF_traj_line::genTraj() { 
     QList<QPointF> points;
 
-    float dr = sqrt(pow(dx,2) + pow(dy,2));
+    if (dx + dy != 0) {
+        float dr = sqrt(pow(dx,2) + pow(dy,2));
 
-    float dt = dr/100;
-    for (float t = -d1; t <= dr + d2 + dt/2; t+=dt) {
-        float x = t*sin(course) + a;
-        float y = t*cos(course) + b;
-        points.append(QPointF(x,y));
+        float dt = dr/100;
+        for (float t = -d1; t <= dr + d2 + dt/2; t+=dt) {
+            float x = t*sin(course) + a;
+            float y = t*cos(course) + b;
+            points.append(QPointF(x,y));
+        }
     }
 
     createTrajItem(points);

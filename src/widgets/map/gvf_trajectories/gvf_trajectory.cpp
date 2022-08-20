@@ -142,7 +142,6 @@ void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoi
         
         auto pos_latlon  = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, points[i].x(), points[i].y());
         auto vpos_latlon = CoordinatesTransform::get()->relative_utm_to_wgs84(pos_latlon, vx, vy);
-        // AQUÍ ESTÁ EL PROBLEMA!!! (en meter el pos_latlon dentro de ltp_to_wgs84)
 
         field_item->addQuiver(pos_latlon, vpos_latlon);  
     }
