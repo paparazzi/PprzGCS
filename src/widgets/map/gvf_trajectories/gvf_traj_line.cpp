@@ -14,7 +14,6 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
         a = param[0];
         b = param[1];
 
-        qDebug() << param[0] << param[1] << param[2] << param[3] << param[4];
         float a2 = param[3];
         float b2 = param[4];
 
@@ -69,7 +68,6 @@ void GVF_traj_line::genTraj() {
     QList<QPointF> points;
 
     float dr = sqrt(pow(dx,2) + pow(dy,2));
-    qDebug() << dr;
 
     if (dr > 0) { 
         float dt = dr/100;
