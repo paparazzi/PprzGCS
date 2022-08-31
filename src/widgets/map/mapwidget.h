@@ -86,7 +86,6 @@ private slots:
     void onMoveWaypointUi(Waypoint* wp, QString ac_id);
     void onShape(QString sender, pprzlink::Message msg);
     void onIntruder(QString sender, pprzlink::Message msg);
-    // void onQuiver(pprzlink::Message msg);
     void onGCSPos(pprzlink::Message msg);
     void onGVF(QString sender, pprzlink::Message msg);
 
@@ -116,7 +115,6 @@ private:
     QList<Papget*> papgets;
 
     QMap<QString, MapItem*> shapes;
-    QMap<QString, MapItem*> quivers;
     QMap<QString, GVF_trajectory*> gvf_trajectories;
     QMap<QString, QVector<int>*> gvf_trajectories_config;
     QMap<QString, std::pair<MapItem*, QTime>> intruders;
@@ -142,7 +140,6 @@ private:
 
     long shape_bind_id;
 
-    bool t = false;
     bool gvf_loaded = false;
 
     QMap<int, Point2DPseudoMercator> pms;
