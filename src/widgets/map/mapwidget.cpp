@@ -1177,7 +1177,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     }
 
     if(gvf_trajectories.contains(sender)) {
-        //TODO: checksum... if it is the same trayectory do not delete the previous one
+        //TODO: checksum??... if it is the same trayectory do not delete the previous one
         removeItem(gvf_trajectories[sender]->getTraj());
         removeItem(gvf_trajectories[sender]->getVField());
 
@@ -1253,7 +1253,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     } else {
         return;
     }
-
+    
     addItem(gvf_traj->getTraj());
     addItem(gvf_traj->getVField());
     ac_items_managers[sender]->setCurrentGVF(gvf_traj);

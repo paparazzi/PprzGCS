@@ -22,13 +22,13 @@ GVF_trajectory::GVF_trajectory(QString id, QVector<int> *gvf_settings)
             if(sender == ac_id) {
                 auto gvfV_settings = *gvf_settings;
 
-                traj_item_vis  = gvfV_settings[0];
-                field_item_vis = gvfV_settings[1];
+                setTrajVis(gvfV_settings[0]);
+                setVFiledVis(gvfV_settings[1]);
                 field_area = gvfV_settings[2];
                 field_xpts = gvfV_settings[3];
                 field_ypts = gvfV_settings[4];  
 
-                setVFiledVis(field_item_vis);
+
             }
         });
 }
@@ -41,10 +41,20 @@ QuiverItem* GVF_trajectory::getVField() {
     return field_item;
 }
 
+void GVF_trajectory::setTrajVis(bool vis) {
+    traj_item_vis = vis;
+    traj_item->setVisible(traj_item_vis);
+    
+    if(vis) {
+        traj_item->setText("AC " + ac_id + " GVF");
+    } else {
+        traj_item->setText("");
+    }
+}
+
 void GVF_trajectory::setVFiledVis(bool vis) {
     field_item_vis = vis;
     field_item->setVisible(field_item_vis);
-
 }
 
 // We have to disconnect from dispatcher and delete previous waypoints 
@@ -84,7 +94,8 @@ void GVF_trajectory::update_origin() {
 }
 
 /////////////// PRIVATE FUNCTIONS ///////////////
-// Create graphics object 
+// - Create graphics object -
+// GVF classic trajectory
 void GVF_trajectory::createTrajItem(QList<QPointF> points)
 {   
     emit DispatcherUi::get()->gvf_zlimits(ac_id, 0, 0);
@@ -96,10 +107,10 @@ void GVF_trajectory::createTrajItem(QList<QPointF> points)
         traj_waypoints.append(wp);
     }
 
-    traj_item->setText("AC " + ac_id + " GVF");
-    //traj_item->setVisible(traj_item_vis); //(TODO)
+    setTrajVis(traj_item_vis);
 }
 
+// GVF parametric trajectory
 void GVF_trajectory::createTrajItem(QList<QPointF> xy_points, QList<float> z_points)
 {
     auto mm = minmax_element(z_points.begin(), z_points.end());
@@ -122,10 +133,10 @@ void GVF_trajectory::createTrajItem(QList<QPointF> xy_points, QList<float> z_poi
         traj_waypoints.append(wp);
     }
 
-    traj_item->setText("AC " + ac_id + " GVF");
-    //traj_item->setVisible(traj_item_vis); //(TODO)
+    setTrajVis(traj_item_vis);
 }
 
+// GVF vector field
 void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoints, float ref_field_area) 
 {  
     // Arrows scaling based on the trajectory bounding field area, xpts and ypts
@@ -146,10 +157,10 @@ void GVF_trajectory::createVFieldItem(QList<QPointF> points, QList<QPointF> vpoi
         field_item->addQuiver(pos_latlon, vpos_latlon);  
     }
 
-    field_item->setVisible(field_item_vis);
+    setVFiledVis(field_item_vis);
 }
 
-// Create the XY mesh to draw the vector field
+// - Create the XY mesh to draw the vector field -
 QList<QPointF> GVF_trajectory::meshGrid() 
 {
     QList<QPointF> grid;
@@ -165,7 +176,7 @@ QList<QPointF> GVF_trajectory::meshGrid()
     return grid;
 }
 
-// Get AC position into the LTP
+// - Get AC position into the LTP -
 QPointF GVF_trajectory::getACpos() {
     auto latlon = Point2DLatLon(0,0);
 

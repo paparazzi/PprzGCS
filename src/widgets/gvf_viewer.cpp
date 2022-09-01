@@ -9,13 +9,21 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
     auto settings_layout = new QVBoxLayout();
     auto hspacer = new QSpacerItem(10,1);
     
-    auto vis_layout = new QHBoxLayout();
-    auto vis_label= new QLabel("Vector Field", this);
-    auto vis_button = new QPushButton(this);
-    vis_button->setText(QString("ON"));
-    vis_layout->addWidget(vis_label);
-    vis_layout->addItem(hspacer);
-    vis_layout->addWidget(vis_button);
+    auto traj_vis_layout = new QHBoxLayout();
+    auto traj_vis_label= new QLabel("Trajectory", this);
+    auto traj_vis_button = new QPushButton(this);
+    traj_vis_button->setText(QString("ON"));
+    traj_vis_layout->addWidget(traj_vis_label);
+    traj_vis_layout->addItem(hspacer);
+    traj_vis_layout->addWidget(traj_vis_button);
+
+    auto field_vis_layout = new QHBoxLayout();
+    auto field_vis_label= new QLabel("Vector Field", this);
+    auto field_vis_button = new QPushButton(this);
+    field_vis_button->setText(QString("ON"));
+    field_vis_layout->addWidget(field_vis_label);
+    field_vis_layout->addItem(hspacer);
+    field_vis_layout->addWidget(field_vis_button);
 
     auto vspacer = new QSpacerItem(1,10);
 
@@ -61,7 +69,8 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
     alt_layout->addWidget(alt_label, 0, Qt::AlignCenter);
     alt_layout->addWidget(alt_bar);
 
-    settings_layout->addItem(vis_layout);
+    settings_layout->addItem(traj_vis_layout);
+    settings_layout->addItem(field_vis_layout);
     settings_layout->addItem(vspacer);
     settings_layout->addItem(mode_layout);
     settings_layout->addItem(area_layout);
@@ -135,16 +144,31 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
     );  
 
     connect(
-        vis_button, &QPushButton::clicked, this,
+        traj_vis_button, &QPushButton::clicked, this,
         [=]() {
-            if (vis_button->text() == "ON") {
+            if (traj_vis_button->text() == "ON") {
+                gvfV_config[0] = false;
+                emit DispatcherUi::get()->gvf_settingUpdated(ac_id, &gvfV_config);
+                traj_vis_button->setText(QString("OFF"));
+            } else {
+                gvfV_config[0] = true;
+                emit DispatcherUi::get()->gvf_settingUpdated(ac_id, &gvfV_config);
+                traj_vis_button->setText(QString("ON"));
+            }
+        }
+    );
+
+    connect(
+        field_vis_button, &QPushButton::clicked, this,
+        [=]() {
+            if (field_vis_button->text() == "ON") {
                 gvfV_config[1] = false;
                 emit DispatcherUi::get()->gvf_settingUpdated(ac_id, &gvfV_config);
-                vis_button->setText(QString("OFF"));
+                field_vis_button->setText(QString("OFF"));
             } else {
                 gvfV_config[1] = true;
                 emit DispatcherUi::get()->gvf_settingUpdated(ac_id, &gvfV_config);
-                vis_button->setText(QString("ON"));
+                field_vis_button->setText(QString("ON"));
             }
         }
     );

@@ -20,6 +20,7 @@ public:
     PathItem* getTraj();
 
     void setVFiledVis(bool vis);
+    void setTrajVis(bool vis);
 
     void purge_trajectory();
     void generate_trajectory();
@@ -57,8 +58,6 @@ private:
     // GVF viewer config
     bool field_item_vis;
     bool traj_item_vis;
-
-
 };
 
 #endif // GVF_TRAJECTORY_H

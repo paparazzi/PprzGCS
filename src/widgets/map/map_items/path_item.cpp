@@ -236,6 +236,20 @@ void PathItem::removeFromScene(MapWidget* map) {
 
 }
 
+void PathItem::setVisible(bool vis) {
+    for(auto l:lines) {
+        l->setVisible(vis);
+    }
+
+    if(closing_line) {
+        closing_line->setVisible(vis);
+    }
+
+    if(polygon) {
+        polygon->setVisible(vis);
+    }
+}
+
 //void PathItem::setLastLineIgnoreEvents(bool ignore) {
 //    if(lines.length() > 0) {
 //        lines.last()->setIgnoreEvent(ignore);
