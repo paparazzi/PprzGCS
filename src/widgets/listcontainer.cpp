@@ -84,6 +84,10 @@ void ListContainer::handleNewAC(QString ac_id) {
                 alt_widget->move(p);
                 alt_widget->show();
             });
+        connect(select_ac_button, &QObject::destroyed, action_button,
+                [=]() {
+            action_button->deleteLater();
+        });
     }
 
     grid_layout->addWidget(header, row, 0);
@@ -101,6 +105,11 @@ void ListContainer::removeAC(QString ac_id) {
     grid_layout->removeWidget(widgets[ac_id]);
     widgets[ac_id]->deleteLater();
     widgets.remove(ac_id);
+
+    if(alt_widgets.contains(ac_id)) {
+        alt_widgets[ac_id]->deleteLater();
+        alt_widgets.remove(ac_id);
+    }
 
     auto rect = std::find(buttons.begin(), buttons.end(), ac_id);
     if(rect != buttons.end()) {
