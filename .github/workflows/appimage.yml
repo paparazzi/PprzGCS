@@ -43,7 +43,7 @@ jobs:
           cmake --install build.appimage/pprzgcs
 
       - name: Build AppImage
-        uses: AppImageCrafters/build-appimage-action@master
+        uses: paparazzi/build-appimage@master
         env:
           UPDATE_INFO: gh-releases-zsync|Fabien-B|PprzGCS|latest|*x86_64.AppImage.zsync
         with:
