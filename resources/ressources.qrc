@@ -49,5 +49,8 @@
         <file>pictures/stage_time.svg</file>
         <file>pictures/block_time.svg</file>
         <file>pictures/link_warning.svg</file>
+        <file>pictures/pfd_rover_yaw.svg</file>
+        <file>pictures/pfd_rover_pitch.svg</file>
+        <file>pictures/pfd_rover_roll.svg</file>
     </qresource>
 </RCC>

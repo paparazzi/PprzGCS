@@ -29,6 +29,10 @@ Pfd::Pfd(QWidget *parent) : QWidget(parent), current_ac(""), border_stroke(6)
     pix_roll_rotorcraft = QPixmap(":/pictures/pfd_aircraft_roll_rotorcraft.svg");
     pix_pitch_rotorcraft = QPixmap(":/pictures/pfd_aircraft_pitch_rotorcraft.svg");
     pix_yaw_rotorcraft = QPixmap(":/pictures/pfd_aircraft_yaw_rotorcraft.svg");
+
+    pix_roll_rover = QPixmap(":/pictures/pfd_rover_roll.svg");
+    pix_pitch_rover = QPixmap(":/pictures/pfd_rover_pitch.svg");
+    pix_yaw_rover = QPixmap(":/pictures/pfd_rover_yaw.svg");
 }
 
 void Pfd::resizeEvent(QResizeEvent *event) {
@@ -298,6 +302,15 @@ QPixmap* Pfd::getIcon(Axis axis) {
             return &pix_pitch_rotorcraft;
         case YAW:
             return &pix_yaw_rotorcraft;
+        }
+    } else if(firmware == "rover") {
+        switch (axis) {
+        case ROLL:
+            return &pix_roll_rover;
+        case PITCH:
+            return &pix_pitch_rover;
+        case YAW:
+            return &pix_yaw_rover;
         }
     } else {
         throw runtime_error("[PFD] firmware not supported yet!");

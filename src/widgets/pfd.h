@@ -70,6 +70,10 @@ private:
     QPixmap pix_pitch_rotorcraft;
     QPixmap pix_yaw_rotorcraft;
 
+    QPixmap pix_roll_rover;
+    QPixmap pix_pitch_rover;
+    QPixmap pix_yaw_rover;
+
     int border_stroke;
 
 };
