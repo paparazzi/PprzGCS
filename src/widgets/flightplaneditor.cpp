@@ -561,8 +561,8 @@ void FlightPlanEditor::openAttributesContextMenu(QPoint pos) {
                     auto wp = waypoints[node_item];
                     auto lat = wp->getLat();
                     auto lon = wp->getLon();
-                    xmlSetProp(node, BAD_CAST "lat", BAD_CAST QString::number(lat).toStdString().c_str());
-                    xmlSetProp(node, BAD_CAST "lon", BAD_CAST QString::number(lon).toStdString().c_str());
+                    xmlSetProp(node, BAD_CAST "lat", BAD_CAST QString::number(lat, 'f', 7).toStdString().c_str());
+                    xmlSetProp(node, BAD_CAST "lon", BAD_CAST QString::number(lon, 'f', 7).toStdString().c_str());
                     onItemClicked(node_item, 1);
                 });
             } else if(xmlGetProp(node, BAD_CAST "lat")) {
