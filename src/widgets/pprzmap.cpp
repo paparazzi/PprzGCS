@@ -42,10 +42,30 @@ PprzMap::PprzMap(QWidget *parent) :
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &PprzMap::changeCurrentAC);
     connect(ui->map, &MapWidget::mouseMoved, this, &PprzMap::handleMouseMove);
 
+    connect(AircraftManager::get(), &AircraftManager::waypoint_changed, this,
+            [=](Waypoint* wp, QString ac_id) {
+        (void)wp;
+        if(current_ac == ac_id) {
+            if(combo_indexes.contains(wp)) {
+                ui->reference_combobox->setItemText(combo_indexes[wp], wp->getName());
+            }
+        }
+    });
+    connect(AircraftManager::get(), &AircraftManager::waypoint_added, this,
+            [=](Waypoint* wp, QString ac_id) {
+        (void)wp;
+        if(current_ac == ac_id) {
+            changeCurrentAC(ac_id);
+        }
+    });
+
 }
 
 void PprzMap::changeCurrentAC(QString id) {
     if(AircraftManager::get()->aircraftExists(id)) {
+
+        QString current_txt= ui->reference_combobox->currentText();
+
         current_ac = id;
         auto waypoints = AircraftManager::get()->getAircraft(id)->getFlightPlan()->getWaypoints();
 
@@ -53,13 +73,17 @@ void PprzMap::changeCurrentAC(QString id) {
         while(ui->reference_combobox->count() > 2) {
             ui->reference_combobox->removeItem(2);
         }
+        combo_indexes.clear();
 
         for(auto &wp: waypoints) {
             auto wp_name = wp->getName();
             if(wp_name[0] != '_') {
                 ui->reference_combobox->addItem(wp_name);
+                combo_indexes[wp] = ui->reference_combobox->count()-1;
             }
         }
+
+        ui->reference_combobox->setCurrentText(current_txt);
     }
 }
 

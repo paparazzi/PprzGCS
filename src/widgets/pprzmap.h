@@ -44,6 +44,7 @@ private slots:
 private:
     void setEditorMode();
     Ui::PprzMap *ui;
+    QMap<Waypoint*, int> combo_indexes;
 
     QString current_ac;
 
