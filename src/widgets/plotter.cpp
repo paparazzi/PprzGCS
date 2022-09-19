@@ -115,6 +115,7 @@ void Plotter::addGraph(QString name, GraphWidget::Params p) {
 void Plotter::removeGraph(QString name) {
     if(graphs.contains(name)) {
         PprzDispatcher::get()->unBind(bids[name]);
+        bids.remove(name);
         auto graph = graphs[name];
         graphs.remove(name);
         graph->deleteLater();
@@ -214,6 +215,10 @@ void Plotter::handleMsg(QString name, QString sender, pprzlink::Message msg) {
     auto def = name.split(":");
     auto msg_class = def[0];
     auto field = def[2];
+
+    if(!graphs.contains(name)) {
+        return;
+    }
 
     if(msg_class == "ground") {
         QString id;
