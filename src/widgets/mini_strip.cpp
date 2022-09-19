@@ -485,9 +485,9 @@ void MiniStrip::updateData() {
     double alt_display = alt_mode ? agl: alt;
     double diff_alt = alt - target_alt;
     QString alt_str = QString("%1m | %2%3 m")
-            .arg(alt_display, 0, 'f', 0)
+            .arg(alt_display, 3, 'f', 0)
             .arg(diff_alt >= 0 ? "+": "")
-            .arg(diff_alt, 0, 'f', abs(diff_alt) > 10 ? 0: 1);
+            .arg(diff_alt, 3, 'f', abs(diff_alt) > 10 ? 0: 1);
     alt_label->setText(alt_str);
 
     // speed
