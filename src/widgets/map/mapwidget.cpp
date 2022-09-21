@@ -511,6 +511,7 @@ void MapWidget::rotateMap(double rot) {
     centerOn(center);
     updateGraphics(UpdateEvent::MAP_ROTATED);
     wind_indicator->setCompass(getRotation());
+    emit DispatcherUi::get()->mapRotated(getRotation());
 }
 
 

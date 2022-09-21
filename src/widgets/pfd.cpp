@@ -13,9 +13,10 @@
 #include <QPainterPath>
 
 
-Pfd::Pfd(QWidget *parent) : QWidget(parent), current_ac(""), border_stroke(6)
+Pfd::Pfd(QWidget *parent) : QWidget(parent), rotation(0), current_ac(""), border_stroke(6)
 {
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &Pfd::changeCurrentAC);
+    connect(DispatcherUi::get(), &DispatcherUi::mapRotated, this, &Pfd::setRotation);
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &Pfd::updateEulers);
     places[0] = ROLL;
     places[1] = PITCH;
@@ -183,6 +184,7 @@ void Pfd::paintYaw(QRect rect, QPointF center, QColor ac_color, float yaw) {
     painter.setBrush(QBrush(QColor(Qt::black)));
     painter.drawEllipse(rect);
 
+    painter.rotate(rotation);
     QRect rect_rose = QRect(rect.left() + border_stroke, rect.top() + border_stroke, rect.width()-2*border_stroke, rect.height()-2*border_stroke);
     QPixmap rose(":/pictures/wind_rose.svg");
     painter.drawPixmap(rect_rose, rose);
@@ -228,6 +230,11 @@ void Pfd::changeCurrentAC(QString id) {
         current_ac = id;
         update();
     }
+}
+
+void Pfd::setRotation(double rot) {
+    rotation = rot;
+    update();
 }
 
 void Pfd::updateEulers(pprzlink::Message msg) {

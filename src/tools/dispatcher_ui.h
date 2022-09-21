@@ -28,6 +28,7 @@ signals:
     void move_waypoint_ui(Waypoint*, QString ac_id);   //wp moved from UI
     void settingUpdated(QString ac_id, Setting*, float value);
     void showHiddenWaypoints(bool show);
+    void mapRotated(double);    // map view rotation in degrees
     //void create_waypoint(Waypoint*);
 
 public slots:

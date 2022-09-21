@@ -168,6 +168,9 @@ void Map2D::keyPressEvent(QKeyEvent *event) {
     }
 }
 
+/*
+ * return current map rotation in degrees
+ */
 double Map2D::getRotation() {
     auto tr = transform();
     double c = tr.m11();

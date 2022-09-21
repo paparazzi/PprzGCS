@@ -49,6 +49,7 @@ private:
 
     void changeCurrentAC(QString id);
     void updateEulers(pprzlink::Message msg);
+    void setRotation(double rot);
 
     QRect placeRect(int i);
     QPointF placeCenter(int i);
@@ -58,6 +59,7 @@ private:
 
     Axis places[3];
     std::map<QString, struct Eulers> eulers;
+    double rotation;
 
     QString current_ac;
 
