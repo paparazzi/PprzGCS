@@ -51,12 +51,14 @@ void GVF_traj_line::set_param(QList<float> param, int8_t _s, float _ke) {
 
     s = _s;
     ke = _ke;
-    
-    if (param[5]>=0 && param[6]>=0) { // gvf_segment_loop_XY1_XY2
-        d1 = param[5];
-        d2 = param[6];
-        if (abs(course) > M_PI/2) { //TODO: Better fix with course??
-            s *= -1;
+
+    if (param.size() >= 7) { // avoid out of bounds error
+        if (param[5]>=0 && param[6]>=0) { // gvf_segment_loop_XY1_XY2
+            d1 = param[5];
+            d2 = param[6];
+            if (abs(course) > M_PI/2) { //TODO: Better fix with course??
+                s *= -1;
+            }
         }
     }
 
