@@ -43,6 +43,8 @@ void ACItemManager::removeItems(MapWidget* map) {
         map->removeItem(gvf_trajectory->getTraj());
         map->removeItem(gvf_trajectory->getVField());
         gvf_trajectory->purge_trajectory();
+
+        delete gvf_trajectory;
         gvf_trajectory = nullptr;
     }
 

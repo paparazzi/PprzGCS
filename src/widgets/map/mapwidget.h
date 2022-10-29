@@ -99,7 +99,6 @@ private:
     void handleNewAC(QString ac_id);
     void removeAC(QString ac_id);
     LayerCombo* makeLayerCombo();
-    void connectGVFViewer(GVFViewer* gvf_widget);
     void addWidget(QWidget* w, LockButton* button, WidgetContainer side);
     void setEditorMode();
     void registerWaypoint(WaypointItem* waypoint);

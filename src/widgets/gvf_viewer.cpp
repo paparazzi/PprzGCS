@@ -1,85 +1,65 @@
 #include "gvf_viewer.h"
 #include "dispatcher_ui.h"
 
-// So far this widget looks soo basic but we'll add more GVF setting/info here in a next future :)
-
 GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac_id)
-{
-    auto main_layout = new QVBoxLayout(this);
-    auto settings_layout = new QVBoxLayout();
-    auto hspacer = new QSpacerItem(10,1);
+{   
+    auto grid_layout = new QGridLayout(this);
     
-    auto traj_vis_layout = new QHBoxLayout();
+    // Widgets/items definitions
     auto traj_vis_label= new QLabel("Trajectory", this);
     auto traj_vis_button = new QPushButton(this);
     traj_vis_button->setText(QString("ON"));
-    traj_vis_layout->addWidget(traj_vis_label);
-    traj_vis_layout->addItem(hspacer);
-    traj_vis_layout->addWidget(traj_vis_button);
 
-    auto field_vis_layout = new QHBoxLayout();
     auto field_vis_label= new QLabel("Vector Field", this);
     auto field_vis_button = new QPushButton(this);
     field_vis_button->setText(QString("ON"));
-    field_vis_layout->addWidget(field_vis_label);
-    field_vis_layout->addItem(hspacer);
-    field_vis_layout->addWidget(field_vis_button);
 
-    auto vspacer = new QSpacerItem(1,10);
+    auto vspacer1 = new QSpacerItem(1,10);
 
-    auto mode_layout = new QHBoxLayout();
     auto mode_button = new QPushButton("DEFAULT", this);
-    mode_layout->addWidget(mode_button);
     
-    auto area_layout = new QHBoxLayout();
     auto area_label = new QLabel("Field area", this);
     auto area_spin = new QSpinBox(this); // TODO: Maybe double for small areas??
     area_spin->setMinimum(1);
     area_spin->setMaximum(2147483647);
     area_spin->setValue(2000);
-    area_layout->addWidget(area_label);
-    area_layout->addItem(hspacer);
-    area_layout->addWidget(area_spin);
 
-    auto xpts_layout = new QHBoxLayout();
     auto xpts_label = new QLabel("Field Xpts", this);
     auto xpts_spin = new QSpinBox(this);
     xpts_spin->setMinimum(1);
     xpts_spin->setMaximum(100);
     xpts_spin->setValue(24);
-    xpts_layout->addWidget(xpts_label);
-    xpts_layout->addItem(hspacer);
-    xpts_layout->addWidget(xpts_spin);
 
-    auto ypts_layout = new QHBoxLayout();
     auto ypts_label = new QLabel("Field Ypts", this);
     auto ypts_spin = new QSpinBox(this);
     ypts_spin->setMinimum(1);
     ypts_spin->setMaximum(100);
     ypts_spin->setValue(24);
-    ypts_layout->addWidget(ypts_label);
-    ypts_layout->addItem(hspacer);
-    ypts_layout->addWidget(ypts_spin);
 
-    auto vvspacer = new QSpacerItem(1,30);
+    auto vspacer2 = new QSpacerItem(1,10);
 
-    auto alt_layout = new QVBoxLayout();
     auto alt_label = new QLabel("GVF parametric alt (m)", this);
     auto alt_bar = new ColorBar(20, this); 
-    alt_layout->addWidget(alt_label, 0, Qt::AlignCenter);
-    alt_layout->addWidget(alt_bar);
 
-    settings_layout->addItem(traj_vis_layout);
-    settings_layout->addItem(field_vis_layout);
-    settings_layout->addItem(vspacer);
-    settings_layout->addItem(mode_layout);
-    settings_layout->addItem(area_layout);
-    settings_layout->addItem(xpts_layout);
-    settings_layout->addItem(ypts_layout);
-    settings_layout->addItem(vvspacer);
-    settings_layout->addItem(alt_layout);
-    main_layout->addItem(settings_layout);
+    // Layout construction
+    grid_layout->addWidget(traj_vis_label,   0, 0);
+    grid_layout->addWidget(field_vis_label,  1, 0);
+    grid_layout->addItem(vspacer1,            2, 0, 1, -1);
+    grid_layout->addWidget(mode_button,      3, 0, 1, -1);
+    grid_layout->addWidget(area_label,       4, 0);
+    grid_layout->addWidget(xpts_label,       5, 0);
+    grid_layout->addWidget(ypts_label,       6, 0);
+    grid_layout->addItem(vspacer2,           7, 0, 1, -1);
+    grid_layout->addWidget(alt_label,        8, 0, 1, -1, Qt::AlignCenter);
+    grid_layout->addWidget(alt_bar,          9, 0, 1, -1);
 
+    grid_layout->addWidget(traj_vis_button,  0, 2);
+    grid_layout->addWidget(field_vis_button, 1, 2);
+    grid_layout->addWidget(area_spin,        4, 2);
+    grid_layout->addWidget(xpts_spin,        5, 2);
+    grid_layout->addWidget(ypts_spin,        6, 2);
+
+    // GVF Viewer init
     init();
 
     auto setViewerMode = [=](QString mode) {
@@ -109,11 +89,11 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
         mode_button->setText(viewer_mode);
         area_spin->setSingleStep(gvfV_config[2]/10);
     };
-
+    
     setViewerMode("DEFAULT");
     emit DispatcherUi::get()->gvf_settingUpdated(ac_id, &gvfV_config);
 
-
+    // Building signals-slots connections
     connect(DispatcherUi::get(), &DispatcherUi::gvf_defaultFieldSettings, this,
             [=](QString sender, int area, int xpts, int ypts) {
                 if(sender == ac_id) {

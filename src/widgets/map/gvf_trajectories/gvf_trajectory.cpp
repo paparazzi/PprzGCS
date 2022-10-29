@@ -26,9 +26,7 @@ GVF_trajectory::GVF_trajectory(QString id, QVector<int> *gvf_settings)
                 setVFiledVis(gvfV_settings[1]);
                 field_area = gvfV_settings[2];
                 field_xpts = gvfV_settings[3];
-                field_ypts = gvfV_settings[4];  
-
-
+                field_ypts = gvfV_settings[4];
             }
         });
 }

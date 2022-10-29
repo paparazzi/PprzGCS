@@ -766,6 +766,10 @@ void MapWidget::removeAC(QString ac_id) {
     ac_items_managers[ac_id]->removeItems(this);
     ac_items_managers[ac_id]->deleteLater();
     ac_items_managers.remove(ac_id);
+
+    if(gvf_loaded) {
+        gvf_trajectories.remove(ac_id);
+    }
 }
 
 void MapWidget::onWaypointChanged(Waypoint* wp, QString ac_id) {
