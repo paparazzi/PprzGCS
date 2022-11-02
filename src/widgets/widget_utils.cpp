@@ -14,12 +14,13 @@
 #include "plotter.h"
 #include "link_status.h"
 #include "tuple_helpers.h"
+#include "gvf_viewer.h"
 
 using ac_widgets_list = std::tuple<
     SettingsViewer, MiniStrip,
     Commands, FlightPlanViewerV2,
     GPSClassicViewer, FlightPlanEditor,
-    Plotter, LinkStatus
+    Plotter, LinkStatus, GVFViewer
 >;
 using simple_widgets_list = std::tuple<PprzMap, Pfd>;
 using containers_list = std::tuple<StackContainer, ListContainer>;
@@ -33,6 +34,7 @@ std::map<QString, size_t> AC_WIDGETS_MAP = {
     {"flight_plan_editor", tuple_element_index_v<FlightPlanEditor, ac_widgets_list>},
     {"plotter", tuple_element_index_v<Plotter, ac_widgets_list>},
     {"link_status", tuple_element_index_v<LinkStatus, ac_widgets_list>},
+    {"gvf_viewer", tuple_element_index_v<GVFViewer, ac_widgets_list>},
 };
 
 

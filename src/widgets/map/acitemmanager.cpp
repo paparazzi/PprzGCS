@@ -3,7 +3,7 @@
 ACItemManager::ACItemManager(QString ac_id, WaypointItem* target, AircraftItem* aircraft_item, ArrowItem* arrow, QObject* parent):
     QObject(parent),
     ac_id(ac_id), target(target), aircraft_item(aircraft_item),
-    current_nav_shape(nullptr), max_dist_circle(nullptr), arrow_item(arrow)
+    current_nav_shape(nullptr), max_dist_circle(nullptr), arrow_item(arrow), gvf_trajectory(nullptr)
 {
 
 }
@@ -14,6 +14,10 @@ void ACItemManager::addWaypointItem(WaypointItem* wi) {
 
 void ACItemManager::addPathItem(PathItem* pi) {
     pathItems.append(pi);
+}
+
+void ACItemManager::setCurrentGVF(GVF_trajectory* gvf_traj) {
+    gvf_trajectory = gvf_traj;
 }
 
 void ACItemManager::setCurrentNavShape(MapItem* mi) {
@@ -34,6 +38,15 @@ void ACItemManager::removeItems(MapWidget* map) {
         map->removeItem(wi);
     }
     waypointItems.clear();
+
+    if(gvf_trajectory) {
+        map->removeItem(gvf_trajectory->getTraj());
+        map->removeItem(gvf_trajectory->getVField());
+        gvf_trajectory->purge_trajectory();
+
+        delete gvf_trajectory;
+        gvf_trajectory = nullptr;
+    }
 
     if(target) {
         map->removeItem(target);

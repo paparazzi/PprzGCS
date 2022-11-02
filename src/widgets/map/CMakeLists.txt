@@ -18,6 +18,7 @@ set(SOURCE
 add_subdirectory(map_items)
 add_subdirectory(graphics_objects)
 add_subdirectory(fpedit_statemachines)
+add_subdirectory(gvf_trajectories)
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 

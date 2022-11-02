@@ -40,13 +40,17 @@ PathItem::PathItem(QString ac_id, PprzPalette palette, double neutral_scale_zoom
     setZoomFactor(1.1);
 }
 
-void PathItem::addPoint(WaypointItem* wp, bool own) {
+void PathItem::addPoint(WaypointItem* wp, QColor line_color, bool own) {
     assert(wp != nullptr);
     waypoints.append(wp);
     owned[wp] = own;
 
+    if(!line_color.isValid()) {
+        line_color = color;
+    } 
+
     if(waypoints.size() > 1){
-        GraphicsLine* line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), palette, line_width, this);
+        GraphicsLine* line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), line_color, line_width, this);
         line->setIgnoreEvent(true);
 
         lines.append(line);
@@ -230,6 +234,20 @@ void PathItem::removeFromScene(MapWidget* map) {
     waypoints.clear();
     owned.clear();
 
+}
+
+void PathItem::setVisible(bool vis) {
+    for(auto l:lines) {
+        l->setVisible(vis);
+    }
+
+    if(closing_line) {
+        closing_line->setVisible(vis);
+    }
+
+    if(polygon) {
+        polygon->setVisible(vis);
+    }
 }
 
 //void PathItem::setLastLineIgnoreEvents(bool ignore) {

@@ -16,6 +16,9 @@
 #include "papget.h"
 #include "windindicator.h"
 
+#include "gvf_trajectory.h"
+#include "gvf_viewer.h"
+
 class ACItemManager;
 class ItemEditStateMachine;
 class MapItem;
@@ -84,6 +87,7 @@ private slots:
     void onShape(QString sender, pprzlink::Message msg);
     void onIntruder(QString sender, pprzlink::Message msg);
     void onGCSPos(pprzlink::Message msg);
+    void onGVF(QString sender, pprzlink::Message msg);
 
 private:
 
@@ -110,6 +114,8 @@ private:
     QList<Papget*> papgets;
 
     QMap<QString, MapItem*> shapes;
+    QMap<QString, GVF_trajectory*> gvf_trajectories;
+    QMap<QString, QVector<int>*> gvf_trajectories_config;
     QMap<QString, std::pair<MapItem*, QTime>> intruders;
     QTimer* timer_intruders;
     MapItem* gcsItem;
@@ -132,6 +138,8 @@ private:
     int pan_mouse_mask;
 
     long shape_bind_id;
+
+    bool gvf_loaded = false;
 
     QMap<int, Point2DPseudoMercator> pms;
 

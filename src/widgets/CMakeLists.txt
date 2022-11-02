@@ -20,6 +20,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/plotter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/windindicator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/link_status.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gvf_viewer.cpp
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})

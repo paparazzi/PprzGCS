@@ -29,6 +29,14 @@
 #include "intruder_item.h"
 #include "arrow_item.h"
 
+#include "quiver_item.h"
+#include "gvf_traj_line.h"
+#include "gvf_traj_ellipse.h"
+#include "gvf_traj_sin.h"
+#include "gvf_traj_trefoil.h"
+#include "gvf_traj_3D_ellipse.h"
+#include "gvf_traj_3D_lissajous.h"
+
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     interaction_state(PMIS_OTHER), drawState(false), fp_edit_sm(nullptr), gcsItem(nullptr),
@@ -113,14 +121,20 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     connect(AircraftManager::get(), &AircraftManager::waypoint_changed, this, &MapWidget::onWaypointChanged);
     connect(AircraftManager::get(), &AircraftManager::waypoint_added, this, &MapWidget::onWaypointAdded);
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint_ui, this, &MapWidget::onMoveWaypointUi);
+    connect(DispatcherUi::get(), &DispatcherUi::gvf_settingUpdated, this,
+        [=](QString sender, QVector<int>* gvfViewer_config) {
+            gvf_trajectories_config.remove(sender);
+            gvf_trajectories_config[sender] = gvfViewer_config;
+        });  
 
     connect(  DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &MapWidget::handleNewAC);
     connect(  DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &MapWidget::removeAC);
-    connect(  DispatcherUi::get(), &DispatcherUi::ac_selected, this, &MapWidget::changeCurrentAC);
+    connect(  DispatcherUi::get(), &DispatcherUi::ac_selected, this, &MapWidget::changeCurrentAC);  
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &MapWidget::updateAircraftItem);
     connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &MapWidget::updateTarget);
     connect(PprzDispatcher::get(), &PprzDispatcher::circle_status, this, &MapWidget::updateNavShape);
     connect(PprzDispatcher::get(), &PprzDispatcher::segment_status, this, &MapWidget::updateNavShape);
+
 
     shape_bind_id = PprzDispatcher::get()->bind("SHAPE", this,
         [=](QString sender, pprzlink::Message msg) {
@@ -133,15 +147,31 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
         });
 
     PprzDispatcher::get()->bind("FLIGHT_PARAM", this,
-            [=](QString sender, pprzlink::Message msg) {
-                (void)sender;
-                QString id;
-                msg.getField("ac_id", id);
-                if(id == "GCS") {
-                    onGCSPos(msg);
-                }
-            });
+        [=](QString sender, pprzlink::Message msg) {
+            (void)sender;
+            QString id;
+            msg.getField("ac_id", id);
+            if(id == "GCS") {
+                onGCSPos(msg);
+            }
 
+            // Update gvf_trajectory vertor field
+            if(gvf_trajectories.contains(id)) {
+                removeItem(gvf_trajectories[id]->getVField());
+                gvf_trajectories[id]->update_VField();
+                addItem(gvf_trajectories[id]->getVField());
+            }
+        });
+
+    PprzDispatcher::get()->bind("GVF", this,
+        [=](QString sender, pprzlink::Message msg) {
+            onGVF(sender, msg);
+        });
+
+    PprzDispatcher::get()->bind("GVF_PARAMETRIC", this,
+        [=](QString sender, pprzlink::Message msg) {
+            onGVF(sender, msg);
+        });
 
     setAcceptDrops(true);
 }
@@ -270,6 +300,9 @@ void MapWidget::configure(QDomElement ele) {
                 widget = makeLayerCombo();
             } else {
                 widget = makeWidget(this, container, name);
+                if(name == "gvf_viewer") {
+                    gvf_loaded = true;
+                }
             }
 
             auto conf = widget_ele.firstChildElement("configure");
@@ -734,6 +767,10 @@ void MapWidget::removeAC(QString ac_id) {
     ac_items_managers[ac_id]->removeItems(this);
     ac_items_managers[ac_id]->deleteLater();
     ac_items_managers.remove(ac_id);
+
+    if(gvf_loaded) {
+        gvf_trajectories.remove(ac_id);
+    }
 }
 
 void MapWidget::onWaypointChanged(Waypoint* wp, QString ac_id) {
@@ -1102,7 +1139,6 @@ void MapWidget::onIntruder(QString sender, pprzlink::Message msg) {
     intruders[id] = make_pair(itd, QTime::currentTime());
 }
 
-
 void MapWidget::onGCSPos(pprzlink::Message msg) {
     if(gcsItem) {
         removeItem(gcsItem);
@@ -1134,3 +1170,97 @@ void MapWidget::setAcArrowSize(int s) {
     }
 }
 
+void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
+    
+    if(!gvf_loaded) {
+        return;
+    }
+
+    if(!AircraftManager::get()->aircraftExists(sender)) {
+        qDebug() << "GVF: AC with id" << sender << "do not exists.";
+        return;
+    }
+
+    if(gvf_trajectories.contains(sender)) {
+        //TODO: checksum??... if it is the same trayectory do not delete the previous one
+        removeItem(gvf_trajectories[sender]->getTraj());
+        removeItem(gvf_trajectories[sender]->getVField());
+
+        gvf_trajectories[sender]->purge_trajectory();
+        delete gvf_trajectories[sender];
+        
+        gvf_trajectories.remove(sender);
+        ac_items_managers[sender]->setCurrentGVF(nullptr);
+    }
+
+    // Common parser definitions
+    uint8_t traj;
+    QList<float> param = {0.0};
+    int8_t direction;
+    GVF_trajectory* gvf_traj;
+    
+    // GVF message parser
+    if(msg.getDefinition().getName() == "GVF") {
+        float error, ke;
+
+        msg.getField("error", error);
+        msg.getField("traj", traj);
+        msg.getField("s", direction);
+        msg.getField("ke", ke);
+        msg.getField("p", param);
+
+        switch(traj)
+        {   
+            case 0: {// Straight line
+                gvf_traj = new GVF_traj_line(sender, param, direction, ke, gvf_trajectories_config[sender]);
+                break;
+            }
+            case 1: { // Ellipse
+                gvf_traj = new GVF_traj_ellipse(sender, param, direction, ke, gvf_trajectories_config[sender]);
+                break;
+            }
+            case 2: { // Sin
+                gvf_traj = new GVF_traj_sin(sender, param, direction, ke, gvf_trajectories_config[sender]);
+                break;
+            }
+            default:
+                qDebug() << "GVF: GVF message parser received an unknown trajectory id.";
+                return;
+        }
+    }
+
+    // GVF_PARAMETRIC
+    else if (msg.getDefinition().getName() == "GVF_PARAMETRIC") {
+        QList<float> phi = {0.0}; // Error signals
+        
+        msg.getField("traj", traj);
+        msg.getField("p", param);
+        msg.getField("phi", phi);
+
+        switch(traj)
+        {   
+            case 0: {// Trefoil 2D
+                gvf_traj = new GVF_traj_trefoil(sender, param, phi, gvf_trajectories_config[sender]);
+                break;
+            }
+            case 1: { // Ellipse 3D
+                gvf_traj = new GVF_traj_3D_ellipse(sender, param, phi, gvf_trajectories_config[sender]);
+                break;
+            }
+            case 2: { // Lissajous 3D
+                gvf_traj = new GVF_traj_3D_lissajous(sender, param, phi, gvf_trajectories_config[sender]);
+                break;
+            }
+            default:
+                qDebug() << "GVF: GVF_PARAMETRIC message parser received an unknown trajectory id.";
+                return;
+        }
+    } else {
+        return;
+    }
+    
+    addItem(gvf_traj->getTraj());
+    addItem(gvf_traj->getVField());
+    ac_items_managers[sender]->setCurrentGVF(gvf_traj);
+    gvf_trajectories[sender] = gvf_traj;
+}

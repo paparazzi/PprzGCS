@@ -13,7 +13,7 @@ class PathItem : public MapItem
 public:
     explicit PathItem(QString ac_id, QColor color=QColor(), double neutral_scale_zoom = 15, QObject *parent = nullptr);
     explicit PathItem(QString ac_id, PprzPalette palette, double neutral_scale_zoom = 15, QObject *parent = nullptr);
-    void addPoint(WaypointItem* waypoint, bool own=false);
+    void addPoint(WaypointItem* waypoint, QColor line_color=QColor(), bool own=false);
     void setClosedPath(bool closed);
     virtual void setHighlighted(bool h);
     virtual void setForbidHighlight(bool sh);
@@ -22,6 +22,7 @@ public:
     virtual void updateGraphics(MapWidget* map, uint32_t update_event);
     virtual void removeFromScene(MapWidget* map);
     virtual void addToMap(MapWidget* mw);
+    virtual void setVisible(bool vis) ;
     void setText(QString text) {graphics_text->setPlainText(text);}
     WaypointItem* getLastWaypoint() {return waypoints.last();}
     QList<WaypointItem*> getWaypoints() {return waypoints;}
