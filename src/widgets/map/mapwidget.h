@@ -113,7 +113,7 @@ private:
     QList<MapItem*> _items;
     QList<Papget*> papgets;
 
-    QMap<QString, MapItem*> shapes;
+    QMap<uint8_t, MapItem*> shapes;
     QMap<QString, GVF_trajectory*> gvf_trajectories;
     QMap<QString, QVector<int>*> gvf_trajectories_config;
     QMap<QString, std::pair<MapItem*, QTime>> intruders;

@@ -978,23 +978,11 @@ void MapWidget::onShape(QString sender, pprzlink::Message msg) {
     (void)sender;
     /////////////////////////////////////////////////////////
     /// Get shape_id and status: create/delete
-    uint8_t id;
+    uint8_t shape_id;
     uint8_t shape, status;
-    msg.getField("id", id);
+    msg.getField("id", shape_id);
     msg.getField("shape", shape);
     msg.getField("status", status);
-
-    QString shape_id;
-    if(shape == 0) { //Circle
-        shape_id = "Circle_" + QString::number(id);
-    } else if(shape == 1) {
-        shape_id = "Polygon_" + QString::number(id);
-    } else if(shape == 2) {
-        shape_id = "Line_" + QString::number(id);
-    } else {
-        qDebug() << "Unknow shape.";
-        return;
-    }
 
     /// in all cases: delete the shape. Then re-create it if it was just an update
     if(shapes.contains(shape_id)) {
@@ -1103,7 +1091,7 @@ void MapWidget::onShape(QString sender, pprzlink::Message msg) {
 
     }
 
-    if(item != nullptr && !shape_id.isNull()) {
+    if(item != nullptr) {
         shapes[shape_id] = item;
     }
 
