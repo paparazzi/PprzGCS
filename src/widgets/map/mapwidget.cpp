@@ -1060,7 +1060,6 @@ void MapWidget::onShape(QString sender, pprzlink::Message msg) {
         ci->setZValues(z, z);
         ci->setScalable(false);
         ci->setEditable(false);
-        ci->setOwnCenter(true);
         ci->setFilled(true);
         ci->setText(text);
         addItem(ci);
@@ -1077,13 +1076,13 @@ void MapWidget::onShape(QString sender, pprzlink::Message msg) {
             pi->setClosedPath(true);
         }
         pi->setZValues(z, z);
-        for(auto pos: points) {
+        for(auto &pos: points) {
             auto wi = new WaypointItem(pos, "__NO_AC__", palette);
             //wcenter->setEditable(false);
             //wcenter->setZValues(z, z);
             addItem(wi);
             wi->setStyle(GraphicsObject::Style::CURRENT_NAV);
-            pi->addPoint(wi);
+            pi->addPoint(wi, QColor(), true);
         }
         pi->setText(text);
         addItem(pi);
