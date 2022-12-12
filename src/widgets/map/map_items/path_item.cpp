@@ -70,8 +70,6 @@ void PathItem::setClosedPath(bool closed) {
     if(closed) {
         if(!closing_line) {
             // add closing line
-            qDebug() << "add closing line";
-
             closing_line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), palette, line_width, this);
             closing_line->setIgnoreEvent(true);
             to_be_added.append(closing_line);
