@@ -435,6 +435,15 @@ void MapWidget::mousePressEvent(QMouseEvent *event) {
         pan_state = PAN_PRESSED;
         lastPos = event->pos();
     }
+    else if(event->buttons() & Qt::RightButton){
+        QMenu contextMenu("map context menu", this);
+        QAction clear_shape_action("Clear Shapes", this);
+        connect(&clear_shape_action, &QAction::triggered, this, [=](){
+            clearShapes();
+        });
+        contextMenu.addAction(&clear_shape_action);
+        contextMenu.exec(mapToGlobal(event->pos()));
+    }
 }
 
 void MapWidget::mouseMoveEvent(QMouseEvent *event) {
@@ -1094,6 +1103,13 @@ void MapWidget::onShape(QString sender, pprzlink::Message msg) {
         shapes[shape_id] = item;
     }
 
+}
+
+void MapWidget::clearShapes() {
+    for(auto shape_item: shapes) {
+        removeItem(shape_item);
+    }
+    shapes.clear();
 }
 
 void MapWidget::onIntruder(QString sender, pprzlink::Message msg) {

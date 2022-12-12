@@ -85,6 +85,7 @@ private slots:
     void updateNavShape(pprzlink::Message msg);
     void onMoveWaypointUi(Waypoint* wp, QString ac_id);
     void onShape(QString sender, pprzlink::Message msg);
+    void clearShapes();
     void onIntruder(QString sender, pprzlink::Message msg);
     void onGCSPos(pprzlink::Message msg);
     void onGVF(QString sender, pprzlink::Message msg);
