@@ -28,6 +28,7 @@
 #include "windindicator.h"
 #include "intruder_item.h"
 #include "arrow_item.h"
+#include "pprzmain.h"
 
 #include "quiver_item.h"
 #include "gvf_traj_line.h"
@@ -174,6 +175,17 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
         });
 
     setAcceptDrops(true);
+
+    // Add menu to app menu bar.
+    connect(pprzApp()->mainWindow(), &PprzMain::ready, this, [=](){
+        QMenu* mapMenu = new QMenu("Map", pprzApp()->mainWindow());
+        auto clear_shapes = mapMenu->addAction("Clear Shapes");
+        connect(clear_shapes, &QAction::triggered, this, [=](){
+            clearShapes();
+        });
+
+        pprzApp()->mainWindow()->menuBar()->addMenu(mapMenu);
+    });
 }
 
 

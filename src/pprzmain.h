@@ -24,6 +24,9 @@ public:
 
     void setServerStatus(bool active);
 
+signals:
+    void ready();
+
 
 private:
     void newAC(QString ac_id);
@@ -32,7 +35,7 @@ private:
 
     void populate_menu();
 
-    QMenuBar *menuBar;
+    QMenuBar *menu_bar;
     QToolBar *mainToolBar;
     QStatusBar *statusBar;
 

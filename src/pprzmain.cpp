@@ -23,10 +23,10 @@ PprzMain::PprzMain(QWidget *parent) :
 void PprzMain::setupUi(int width, int height, QWidget* centralWidget) {
     centralWidget->setParent(this);
     resize(width, height);
-    menuBar = new QMenuBar(this);
-    menuBar->setObjectName(QString::fromUtf8("menuBar"));
-    menuBar->setGeometry(QRect(0, 0, 555, 22));
-    setMenuBar(menuBar);
+    menu_bar = new QMenuBar(this);
+    menu_bar->setObjectName(QString::fromUtf8("menuBar"));
+    menu_bar->setGeometry(QRect(0, 0, 555, 22));
+    setMenuBar(menu_bar);
     mainToolBar = new QToolBar(this);
     mainToolBar->setObjectName(QString::fromUtf8("mainToolBar"));
     addToolBar(Qt::TopToolBarArea, mainToolBar);
@@ -45,6 +45,8 @@ void PprzMain::setupUi(int width, int height, QWidget* centralWidget) {
 
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &PprzMain::newAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &PprzMain::removeAC);
+
+    emit ready();
 }
 
 void PprzMain::setServerStatus(bool active) {
@@ -59,7 +61,7 @@ void PprzMain::setServerStatus(bool active) {
 
 void PprzMain::populate_menu() {
 
-    auto file_menu = menuBar->addMenu("&File");
+    auto file_menu = menu_bar->addMenu("&File");
 
     auto user_dir = file_menu->addAction("Open user directory");
     connect(user_dir, &QAction::triggered, [=](){
@@ -127,7 +129,7 @@ void PprzMain::populate_menu() {
     connect(quit, &QAction::triggered, qApp, QApplication::quit);
 
 
-    aircraftsTopMenu = menuBar->addMenu("&Aircrafts");
+    aircraftsTopMenu = menu_bar->addMenu("&Aircrafts");
 
     aircraftsTopMenu->addAction("Update", PprzDispatcher::get(), &PprzDispatcher::requestAircrafts);
     auto show_hidden_wp_action = aircraftsTopMenu->addAction("Show hidden waypoints");
@@ -137,7 +139,7 @@ void PprzMain::populate_menu() {
         emit DispatcherUi::get()->showHiddenWaypoints(show);
     });
 
-    auto help_menu = menuBar->addMenu("&Help");
+    auto help_menu = menu_bar->addMenu("&Help");
     auto about = help_menu->addAction("&About");
 
     QString about_txt =  QString(
