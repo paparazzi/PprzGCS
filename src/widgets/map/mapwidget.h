@@ -146,6 +146,9 @@ private:
 
     int _ac_arrow_size;
 
+    QMenu* mapMenu;
+    QMenu* menu_clear_track;
+
 };
 
 #endif // MAPWIDGET_H

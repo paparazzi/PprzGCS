@@ -178,11 +178,14 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
 
     // Add menu to app menu bar.
     connect(pprzApp()->mainWindow(), &PprzMain::ready, this, [=](){
-        QMenu* mapMenu = new QMenu("Map", pprzApp()->mainWindow());
+        mapMenu = new QMenu("Map", pprzApp()->mainWindow());
         auto clear_shapes = mapMenu->addAction("Clear Shapes");
         connect(clear_shapes, &QAction::triggered, this, [=](){
             clearShapes();
         });
+
+        menu_clear_track = new QMenu("Clear Track", mapMenu);
+        mapMenu->addMenu(menu_clear_track);
 
         pprzApp()->mainWindow()->menuBar()->addMenu(mapMenu);
     });
@@ -448,13 +451,7 @@ void MapWidget::mousePressEvent(QMouseEvent *event) {
         lastPos = event->pos();
     }
     else if(event->buttons() & Qt::RightButton){
-        QMenu contextMenu("map context menu", this);
-        QAction clear_shape_action("Clear Shapes", this);
-        connect(&clear_shape_action, &QAction::triggered, this, [=](){
-            clearShapes();
-        });
-        contextMenu.addAction(&clear_shape_action);
-        contextMenu.exec(mapToGlobal(event->pos()));
+        mapMenu->exec(mapToGlobal(event->pos()));
     }
 }
 
@@ -748,6 +745,13 @@ void MapWidget::handleNewAC(QString ac_id) {
 
         //create the ACItemManager for this aircraft
         item_manager = new ACItemManager(ac_id, target, aircraft_item, arrow, this);
+
+        auto clear_track = new QAction(ac->name(), ac);
+        connect(clear_track, &QAction::triggered, aircraft_item, [=](){
+            aircraft_item->clearTrack();
+        });
+        menu_clear_track->addAction(clear_track);
+
     } else {
         //create the ACItemManager for this fake aircraft (flightplan only)
         item_manager = new ACItemManager(ac_id, nullptr, nullptr, nullptr, this);
