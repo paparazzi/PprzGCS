@@ -10,7 +10,7 @@
 
 AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, neutral_scale_zoom, parent),
-    latlon(pt), heading(0.), last_chunk_index(0)
+    latlon(pt), heading(0.)
 {
     auto settings = getAppSettings();
 
@@ -32,12 +32,6 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
     alarms->addToGroup(bat_alarm);
     alarms->addToGroup(link_alarm);
 
-    for(int i=0; i<settings.value("map/aircraft/track_max_chunk").toInt(); i++) {
-        auto gt = new GraphicsTrack(palette);
-        graphics_tracks.append(gt);
-        QList<Point2DLatLon> l;
-        track_chuncks.append(l);
-    }
     auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(ac_id);
     auto watcher = ac->getStatus()->getWatcher();
     connect(watcher, &AircraftWatcher::bat_status, this, &AircraftItem::handle_bat_alarm);
@@ -47,11 +41,6 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
 }
 
 void AircraftItem::addToMap(MapWidget* map) {
-
-    for(auto gt: graphics_tracks) {
-        map->scene()->addItem(gt);
-    }
-
     map->scene()->addItem(graphics_aircraft);
     map->scene()->addItem(graphics_text);
     map->scene()->addItem(alarms);
@@ -77,12 +66,24 @@ void AircraftItem::updateGraphics(MapWidget* map, uint32_t update_event) {
         alarms->setPos(scene_pos + rot.map(s*QPointF(-alarms->boundingRect().width()/2, -dh)));
         alarms->setRotation(-r);
 
-        for(int i = 0; i<track_chuncks.size(); i++) {
-            QPolygonF scenePoints;
-            for(auto pt: track_chuncks[i]) {
-                scenePoints.append(scenePoint(pt, zoomLevel(map->zoom()), map->tileSize()));
+        for(auto &line: graphics_lines) {
+            map->scene()->removeItem(line);
+            delete line;
+        }
+        graphics_lines.clear();
+
+        if(track_points.size() > 2) {
+            auto settings = getAppSettings();
+            double z_tracks = settings.value("map/z_values/aircraft").toDouble();
+            for(int i=0; i<track_points.size()-1; i++) {
+                auto pta = scenePoint(track_points[i], zoomLevel(map->zoom()), map->tileSize());
+                auto ptb = scenePoint(track_points[i+1], zoomLevel(map->zoom()), map->tileSize());
+                auto line = new GraphicsLine(pta, ptb, palette, 1);
+                graphics_lines.append(line);
+                line->setZValue(z_tracks);
+                map->scene()->addItem(line);
             }
-            graphics_tracks[i]->setPoints(scenePoints);
+
         }
     }
 }
@@ -90,30 +91,17 @@ void AircraftItem::updateGraphics(MapWidget* map, uint32_t update_event) {
 void AircraftItem::setPosition(Point2DLatLon pt) {
     latlon = pt;
     auto settings = getAppSettings();
-    track_chuncks[last_chunk_index].append(pt);
 
-    if(track_chuncks[last_chunk_index].size() >= settings.value("map/aircraft/track_chunk_size").toInt()) {
-        last_chunk_index = (last_chunk_index + 1) % track_chuncks.size();
-        assert(track_chuncks[last_chunk_index].size() == 0 || track_chuncks[last_chunk_index].size() == 1);
-        if(!track_chuncks[last_chunk_index].isEmpty()) {
-            track_chuncks[last_chunk_index].clear();
-        }
-        track_chuncks[last_chunk_index].append(pt);
-    }
-
-    int first_chunk_index = (last_chunk_index + 1) % track_chuncks.size();
-    if(!track_chuncks[first_chunk_index].isEmpty()) {
-        track_chuncks[first_chunk_index].removeFirst();
+    track_points.append(pt);
+    if(track_points.size() > settings.value("map/aircraft/track_size").toInt()) {
+        track_points.removeFirst();
     }
 
     emit itemChanged();
 }
 
 void AircraftItem::clearTrack() {
-    for(auto tc : track_chuncks) {
-        tc.clear();
-        last_chunk_index = 0;
-    }
+    track_points.clear();
     emit itemChanged();
 }
 
@@ -125,8 +113,8 @@ void AircraftItem::setHeading(double h) {
 void AircraftItem::setHighlighted(bool h) {
     MapItem::setHighlighted(h);
     graphics_aircraft->setHighlighted(h);
-    for(auto gt: graphics_tracks) {
-        gt->setHighlighted(h);
+    for(auto &line: graphics_lines) {
+        line->setHighlighted(h);
     }
     if(h) {
         graphics_text->setDefaultTextColor(color_idle);
@@ -143,8 +131,8 @@ void AircraftItem::updateZValue() {
     graphics_text->setZValue(z_value);
     alarms->setZValue(z_value);
     double z_tracks = settings.value("map/z_values/aircraft").toDouble();
-    for(auto gt: graphics_tracks) {
-        gt->setZValue(z_tracks);
+    for(auto &line: graphics_lines) {
+        line->setZValue(z_tracks);
     }
 }
 
@@ -157,11 +145,13 @@ void AircraftItem::removeFromScene(MapWidget* map) {
     map->scene()->removeItem(graphics_aircraft);
     map->scene()->removeItem(graphics_text);
     map->scene()->removeItem(alarms);
-    for(auto gt: graphics_tracks) {
-        map->scene()->removeItem(gt);
-        delete gt;
+
+    for(auto &line: graphics_lines) {
+        map->scene()->removeItem(line);
+        delete line;
     }
-    graphics_tracks.clear();
+    graphics_lines.clear();
+
     delete graphics_aircraft;
     delete graphics_text;
     delete alarms;

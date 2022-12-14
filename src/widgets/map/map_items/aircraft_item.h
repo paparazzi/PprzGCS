@@ -5,7 +5,7 @@
 #include "graphics_aircraft.h"
 #include "graphics_text.h"
 #include "QGraphicsTextItem"
-#include "graphics_track.h"
+#include "graphics_line.h"
 #include "graphics_icon.h"
 #include "aircraft_watcher.h"
 #include "graphics_group.h"
@@ -46,14 +46,12 @@ private:
 
     Point2DLatLon latlon;
     double heading;
-    QList<GraphicsTrack*> graphics_tracks;
+    QList<GraphicsLine*> graphics_lines;
 
     QColor color_idle;
     QColor color_unfocused;
 
-    QList<QList<Point2DLatLon>> track_chuncks;
-
-    int last_chunk_index;
+    QList<Point2DLatLon> track_points;
 };
 
 #endif // AIRCRAFT_ITEM_H
