@@ -71,6 +71,7 @@ void set_app_settings() {
     default_setting("map/tiles_path", appConfig()->value("USER_DATA_PATH").toString() + "/map");
 
     default_setting("map/aircraft/track_size", 20);
+    default_setting("map/aircraft/track_width", 1);
 
     default_setting("aircraft_default_color", "red");
 
@@ -120,6 +121,8 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     cb = addSetting("Aircraft Size", "map/aircraft/size", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
     cb = addSetting("Track size", "map/aircraft/track_size", w_map, l_map, row, Type::INT);
+    callbacks.append(cb);
+    cb = addSetting("Track width", "map/aircraft/track_width", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
     tabWidget->addTab(w_map, "Map");
 

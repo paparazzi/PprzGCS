@@ -75,10 +75,11 @@ void AircraftItem::updateGraphics(MapWidget* map, uint32_t update_event) {
         if(track_points.size() > 2) {
             auto settings = getAppSettings();
             double z_tracks = settings.value("map/z_values/aircraft").toDouble();
+            int track_width = settings.value("map/aircraft/track_width").toInt();
             for(int i=0; i<track_points.size()-1; i++) {
                 auto pta = scenePoint(track_points[i], zoomLevel(map->zoom()), map->tileSize());
                 auto ptb = scenePoint(track_points[i+1], zoomLevel(map->zoom()), map->tileSize());
-                auto line = new GraphicsLine(pta, ptb, palette, 1);
+                auto line = new GraphicsLine(pta, ptb, palette, track_width);
                 graphics_lines.append(line);
                 line->setZValue(z_tracks);
                 map->scene()->addItem(line);
