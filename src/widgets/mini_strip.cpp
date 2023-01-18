@@ -410,8 +410,8 @@ void MiniStrip::updateData() {
     // batterie
     if(bat_nb_cells != 0) {
         bat_label->setText(QString("%1 V/c").arg(bat/bat_nb_cells, 5, 'f', 2));
-        bat_label->setToolTip(QString("%1 V/c").arg(bat, 5, 'f', 2));
-        bat_icon->setToolTip(QString("%1 V/c").arg(bat, 5, 'f', 2));
+        bat_label->setToolTip(QString("%1 V").arg(bat, 5, 'f', 2));
+        bat_icon->setToolTip(QString("%1 V").arg(bat, 5, 'f', 2));
     } else {
         bat_label->setText(QString("%1 V").arg(bat, 5, 'f', 2));
     }
