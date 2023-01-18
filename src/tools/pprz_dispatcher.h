@@ -78,7 +78,6 @@ private:
 
     QString pprzlink_id;
 
-    bool first_msg;
     bool started;
     bool silent_mode;
 

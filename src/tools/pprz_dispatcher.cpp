@@ -13,7 +13,7 @@ using namespace std;
 
 Q_DECLARE_METATYPE(pprzlink::Message)
 
-PprzDispatcher::PprzDispatcher(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox), first_msg(false), started(false), silent_mode(false)
+PprzDispatcher::PprzDispatcher(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox), started(false), silent_mode(false)
 {
 
 }
@@ -71,15 +71,6 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
             msg.getField("ac_id", id);
 
             if(AircraftManager::get()->aircraftExists(id)) {
-                // If the dying AC is the currently selected one, try to select an other.
-                if(DispatcherUi::get()->getSelectedAcId() == id) {
-                    for(auto ac: AircraftManager::get()->getAircrafts()) {
-                        if(ac->getId() != id) {
-                            emit(DispatcherUi::get()->ac_selected(ac->getId()));
-                            break;
-                        }
-                    }
-                }
                 AircraftManager::get()->removeAircraft(id);
             }
         }
@@ -150,8 +141,7 @@ void PprzDispatcher::bindDeftoSignal(QString const &name, sig_ptr_t sig) {
             msg.getField("ac_id", id);
 
             if(AircraftManager::get()->aircraftExists(id)) {
-                if(!first_msg) {
-                    first_msg = true;
+                if(DispatcherUi::get()->getSelectedAcId() == "") {
                     emit(DispatcherUi::get()->ac_selected(QString(id)));
                 }
                 emit((this->*sig)(msg));
