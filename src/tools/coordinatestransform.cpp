@@ -167,6 +167,22 @@ void CoordinatesTransform::distance_azimut(Point2DLatLon pt1, Point2DLatLon pt2,
     }
 }
 
+void CoordinatesTransform::add_projector(QString name, QString source, QString target) {
+    const std::lock_guard<std::recursive_mutex> lock(mtx);
+    if(!projectors.contains(name)) {
+        auto proj = proj_create_crs_to_crs (pj_context, source.toStdString().c_str(), target.toStdString().c_str(), nullptr);
+        projectors[name] = proj;
+    }
+}
+
+PJ_COORD CoordinatesTransform::apply_transfrom(QString name, PJ_COORD coord_in, PJ_DIRECTION direction) {
+    if(projectors.contains(name)) {
+        return proj_trans (projectors[name], direction, coord_in);
+    } else {
+        return proj_coord(0,0,0,0);
+    }
+}
+
 //////////// private functions ////////////
 
 QString CoordinatesTransform::utm_epsg(double lat, double lon) {

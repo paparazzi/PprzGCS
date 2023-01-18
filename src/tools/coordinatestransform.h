@@ -42,6 +42,10 @@ public:
 
     void distance_azimut(Point2DLatLon pt1, Point2DLatLon pt2, double& distance, double& azimut);
 
+    void add_projector(QString name, QString source, QString target);
+
+    PJ_COORD apply_transfrom(QString name, PJ_COORD in, PJ_DIRECTION direction=PJ_FWD);
+
 
 private:
     static QString utm_epsg(double lat, double lon);
