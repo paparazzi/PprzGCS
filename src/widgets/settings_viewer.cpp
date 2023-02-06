@@ -266,7 +266,6 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     hlay->addWidget(reset_btn);
 
     connect(value_btn, &QPushButton::clicked, this, [=]() {
-        qDebug() << "setting " << setting->getNo() << " of AC " << ac_id << " clicked !";
         value_btn->setText("?");
         pprzlink::Message getSetting(PprzDispatcher::get()->getDict()->getDefinition("GET_DL_SETTING"));
         getSetting.addField("ac_id", ac_id);

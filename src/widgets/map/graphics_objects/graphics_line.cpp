@@ -42,7 +42,6 @@ void GraphicsLine::paint(QPainter *painter, const QStyleOptionGraphicsItem *opti
     QPointF topLeft = QPointF(qMin(A.x(), B.x()), qMin(A.y(), B.y()));
     QPointF bottomRight = QPointF(qMax(A.x(), B.x()), qMin(A.y(), B.y()));
     last_bounding_rect = QRectF(topLeft, bottomRight);
-    //qDebug() << "paint!";
 }
 
 QPainterPath GraphicsLine::shape() const {
@@ -73,7 +72,6 @@ void GraphicsLine::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         return;
     }
     GraphicsObject::mousePressEvent(event);
-    qDebug() << "Line PRESSED !";
 }
 
 void GraphicsLine::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
@@ -81,7 +79,6 @@ void GraphicsLine::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
         event->ignore();
         return;
     }
-    qDebug() << "Line MOVED !";
 }
 
 void GraphicsLine::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
@@ -90,7 +87,6 @@ void GraphicsLine::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         return;
     }
     (void)event;
-    qDebug() << "Line RELEASE !";
 }
 
 void GraphicsLine::setLine(QPointF a, QPointF b) {

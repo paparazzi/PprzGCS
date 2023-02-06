@@ -167,29 +167,24 @@ void Commands::addSpecialCommands(QGridLayout* glay) {
           float altShiftPlusPlus = ac->getAirframe()->getAltShiftPlusPlus();
 
           addCommandButton(glay, "up.png", 1, 1, [=]() mutable {
-                qDebug() << target_alt;
                 ac->setSetting(set, target_alt + altShiftPlus);
             }, QString("+%1").arg(altShiftPlus, 0, 'f', 1));
 
             addCommandButton(glay, "down.png", 1, 2, [=]() mutable {
-                qDebug() << target_alt;
                 ac->setSetting(set, target_alt + altShiftMinus);
             }, QString("%1").arg(altShiftMinus, 0, 'f', 1));
 
             addCommandButton(glay, "upup.png", 1, 3, [=]() mutable {
-                qDebug() << target_alt;
                 ac->setSetting(set, target_alt + altShiftPlusPlus);
             }, QString("+%1").arg(altShiftPlusPlus, 0, 'f', 1));
         }
 
         if(set->getName() == "inc. shift") {
             addCommandButton(glay, "left.png", 2, 1, [=]() mutable {
-                qDebug() << "current value: " << set->getUserValue() << "  (-5)";
                 ac->setSetting(set, -5);
             }, "-5");
 
             addCommandButton(glay, "recenter.png", 2, 2, [=]() mutable {
-                qDebug() << "current value: " << set->getUserValue() << "  recenter";
                 ac->setSetting(set, 0);
             }, "0");
 

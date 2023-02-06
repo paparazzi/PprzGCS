@@ -67,10 +67,6 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
         grid_layout->setRowStretch(row, 0);
 
         block_labels.append(lbl);
-
-        connect(go_button, &QToolButton::clicked, [=]() {
-            qDebug() << "go to " << name;
-        });
     }
 
     if(block_labels.size() > 0) {
@@ -107,8 +103,6 @@ void FlightPlanViewerV2::handleNavStatus() {
 }
 
 void FlightPlanViewerV2::updateNavStatus(uint8_t cur_block, uint8_t cur_stage) {
-    //qDebug() << ac_id << "current block: " << cur_block << "  " << cur_stage;
-
     if(cur_block != current_block || cur_stage != current_stage) {
         //reset idle state
         block_labels[current_block]->setStyleSheet(labels_stylesheet);
