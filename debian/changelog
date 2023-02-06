@@ -1,3 +1,18 @@
+pprzgcs (1.0.9ubuntu1~ubuntu20.04) focal; urgency=medium
+
+  * v1.0.9
+
+  PFD: match map rotation
+  ListContainer popup : fit in the current screen
+  Add GVFViewer widget
+  Add map menu to the menubar, and a map context menu.
+  some bug fixes
+  PDF: support rover
+  map: add alarms
+  map: add arrow for drone outside the view
+
+ -- Fabien Bonneval <fabien.bonneval@gmail.com>  Mon, 06 Feb 2023 14:41:14 +0100
+
 pprzgcs (1.0.7.3ubuntu3) jammy; urgency=medium
 
   * update for jammy

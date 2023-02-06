@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.0.9
++ PFD: match map rotation
++ ListContainer popup : fit in the current screen
++ Add GVFViewer widget
++ Add map menu to the menubar, and a map context menu.
++ some bug fixes
+
+## v1.0.8
++ PDF: support rover
++ map: add alarms
++ map: add arrow for drone outside the view
+
+## v1.0.7
++ MiniStrip: AUTO2 button
++ flight plan parsing: handle bad DTD path
++ build system: make speech optional
+
 ## v1.0.6
 + Add GCS position
 + Fix flightplan editor bug
