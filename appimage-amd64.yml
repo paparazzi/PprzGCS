@@ -26,6 +26,8 @@ AppDir:
       - sourceline: deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ focal-updates main restricted universe multiverse
       - sourceline: deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ focal-backports main restricted universe multiverse
         key_url: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32
+      - sourceline: deb [arch=amd64] http://ppa.launchpad.net/paparazzi-uav/ppa/ubuntu focal main
+        key_url: https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2D1C7EFC8697E423B273E69A167EF7F402599182
     include:
       # Required Qt packages.
       - libqt5gui5
@@ -38,6 +40,7 @@ AppDir:
       - libsqlite3-0
       - libproj15
       - libzip5
+      - ivy-qt
     exclude:
       - "*dbgsym*"
       - gnupg
