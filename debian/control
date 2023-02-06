@@ -10,7 +10,7 @@ Rules-Requires-Root: binary-targets
 
 
 Package: pprzgcs
-Architecture: amd64
+Architecture: any
 Section: devel
 Priority: optional
 Depends: ${shlibs:Depends}, ${misc:Depends}, ivy-qt, appmenu-gtk3-module
