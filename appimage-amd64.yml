@@ -40,6 +40,7 @@ AppDir:
       - libsqlite3-0
       - libproj15
       - libzip5
+      - libxml2
       - ivy-qt
     exclude:
       - "*dbgsym*"
