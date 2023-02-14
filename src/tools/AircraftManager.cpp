@@ -30,6 +30,18 @@ Aircraft* AircraftManager::getAircraft(QString id) {
     }
 }
 
+Aircraft* AircraftManager::getAircraftByName(QString name) {
+    (void)name;
+    auto af = std::find_if(aircrafts.begin(), aircrafts.end(),
+        [=](Aircraft* ac){
+            return ac->name() == name;
+        });
+    if(af == aircrafts.end()) {
+        throw runtime_error("No such aircraft!");
+    }
+    return af.value();
+}
+
 QList<Aircraft*> AircraftManager::getAircrafts() {
     return aircrafts.values();
 }

@@ -15,6 +15,7 @@
 #include "link_status.h"
 #include "tuple_helpers.h"
 #include "gvf_viewer.h"
+#include "chat.h"
 
 using ac_widgets_list = std::tuple<
     SettingsViewer, MiniStrip,
@@ -22,7 +23,7 @@ using ac_widgets_list = std::tuple<
     GPSClassicViewer, FlightPlanEditor,
     Plotter, LinkStatus, GVFViewer
 >;
-using simple_widgets_list = std::tuple<PprzMap, Pfd>;
+using simple_widgets_list = std::tuple<PprzMap, Pfd, Chat>;
 using containers_list = std::tuple<StackContainer, ListContainer>;
 
 std::map<QString, size_t> AC_WIDGETS_MAP = {
@@ -41,6 +42,7 @@ std::map<QString, size_t> AC_WIDGETS_MAP = {
 std::map<QString, size_t> SIMPLE_WIDGETS_MAP = {
     {"map2d", tuple_element_index_v<PprzMap, simple_widgets_list>},
     {"PFD", tuple_element_index_v<Pfd, simple_widgets_list>},
+    {"chat", tuple_element_index_v<Chat, simple_widgets_list>},
 };
 
 

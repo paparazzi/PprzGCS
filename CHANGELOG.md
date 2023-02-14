@@ -1,5 +1,8 @@
 # Changelog
 
+## NEXT
++ Add Chat widget for `INFO_MSG`
+
 ## v1.0.9
 + PFD: match map rotation
 + ListContainer popup : fit in the current screen

@@ -81,6 +81,7 @@ public:
     }
 
     Aircraft* getAircraft(QString id);
+    Aircraft* getAircraftByName(QString name);
     QList<Aircraft*> getAircrafts();
     void newAircraftConfig(pprzlink::Message msg);
     bool aircraftExists(QString id);

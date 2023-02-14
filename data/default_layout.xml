@@ -5,8 +5,9 @@
           <configure>
             <columnLeft>
                 <widget name="layers" icon="map_layers_normal.svg"/>
-                <widget name="commands" icon="nav.svg"/>
+                <widget name="flightplan" icon="flight_plan.svg"/>
                 <widget name="gps_classic_viewer" icon="gps.svg"/>
+                <widget name="chat" icon="chat.svg"/>
             </columnLeft>
             <columnRight>
                 <widget name="PFD" icon="pfd.svg"/>
