@@ -54,6 +54,11 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     columnRight = new QVBoxLayout();
     buttonsRightLayout = new QVBoxLayout();
 
+    columnLeft->setAlignment(Qt::AlignTop);
+    columnRight->setAlignment(Qt::AlignTop);
+    buttonsLeftLayout->setAlignment(Qt::AlignTop);
+    buttonsRightLayout->setAlignment(Qt::AlignTop);
+
     horizontalLayout->addItem(buttonsLeftLayout);
     horizontalLayout->addItem(columnLeft);
     horizontalLayout->addStretch(1);
@@ -61,11 +66,6 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     rightLayout->addItem(h_right);
     h_right->addItem(columnRight);
     h_right->addItem(buttonsRightLayout);
-
-    buttonsLeftLayout->addStretch(1);
-    buttonsRightLayout->addStretch(1);
-    columnLeft->addStretch(1);
-    columnRight->addStretch(1);
 
     setDragMode(QGraphicsView::NoDrag);
     setMouseLoadTileMask(Qt::MiddleButton | Qt::LeftButton);
@@ -270,13 +270,13 @@ LayerCombo* MapWidget::makeLayerCombo() {
 void MapWidget::addWidget(QWidget* widget, LockButton* button, WidgetContainer side) {
     QList<LockButton*>* buttons;
     if(side == WIDGETS_LEFT) {
-        columnLeft->insertWidget(columnLeft->count() - 1, widget);
-        buttonsLeftLayout->insertWidget(buttonsLeftLayout->count()-1, button);
+        columnLeft->addWidget(widget);
+        buttonsLeftLayout->addWidget(button);
         button->setActiveSide(false);
         buttons = &buttonsLeft;
     } else  {
-        columnRight->insertWidget(columnRight->count() - 1, widget, 0, Qt::AlignRight);
-        buttonsRightLayout->insertWidget(buttonsRightLayout->count()-1, button, 0, Qt::AlignRight);
+        columnRight->addWidget(widget);
+        buttonsRightLayout->addWidget(button);
         button->setActiveSide(true);
         buttons = &buttonsRight;
         columnRight->setAlignment(widget, Qt::AlignRight);
