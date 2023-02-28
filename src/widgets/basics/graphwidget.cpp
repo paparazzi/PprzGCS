@@ -11,6 +11,7 @@ GraphWidget::GraphWidget(QWidget *parent) : QWidget(parent),
 }
 
 void GraphWidget::pushData(double d) {
+    d *= params.scale;
     // remove old data
     auto now = QTime::currentTime();
     while(!data.isEmpty() && data.first().time.msecsTo(now) > history) {

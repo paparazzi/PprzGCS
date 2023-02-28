@@ -17,6 +17,7 @@ public:
         double max;
         double min;
         bool autoscale;
+        double scale;
     };
 
     explicit GraphWidget(QWidget *parent = nullptr);

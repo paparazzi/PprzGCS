@@ -67,11 +67,16 @@ void Plotter::configure(QDomElement c) {
         auto name = node.attribute("name", "");
         auto def = name.split(":");
 
-        if(def.size() != 3) {
+        if(def.size() != 4) {
             continue;
         }
 
-        GraphWidget::Params p = {100, 0, true};
+        bool okDouble = false;
+        double scale = def[3].toDouble(&okDouble);
+        if(!okDouble) {
+            continue;
+        }
+        GraphWidget::Params p = {100, 0, true, scale};
 
         if(node.hasAttribute("min")) {
             p.min = node.attribute("min").toDouble();
@@ -159,7 +164,8 @@ void Plotter::onOpenContextMenu() {
             auto f_action = msg_menu->addAction(f.getName());
             connect(f_action, &QAction::triggered, this, [=]() {
                 auto name = "ground:" +  def.getName() + ":" + f.getName();
-                addGraph(name, {100, 0, true});
+                // FIXME scale at 1.0 ???
+                addGraph(name, {100, 0, true, 1.0});
                 changeGraph(name);
             });
         }
@@ -176,6 +182,7 @@ void Plotter::dragEnterEvent(QDragEnterEvent *event) {
     if (event->mimeData()->hasFormat("text/plain")) {
         event->acceptProposedAction();
     }
+    event->accept();
 }
 
 void Plotter::dragMoveEvent(QDragMoveEvent *event) {
@@ -191,7 +198,7 @@ void Plotter::dropEvent(QDropEvent *event) {
     QString text = event->mimeData()->text();
     QStringList args = text.split(QString(":"));
 
-    QRegularExpression pprz_msg_re("^(\\w+):(\\w+):(\\w+):(\\w+):.*$");
+    QRegularExpression pprz_msg_re("^(\\w+):(\\w+):(\\w+):(\\w+):(.*)$");
     QRegularExpressionMatch pprz_msg_match = pprz_msg_re.match(text);
 
     if(pprz_msg_match.hasMatch()) {
@@ -200,11 +207,12 @@ void Plotter::dropEvent(QDropEvent *event) {
         QString msg_class = pprz_msg_match.captured(2);
         QString msg_name = pprz_msg_match.captured(3);
         QString field = pprz_msg_match.captured(4);
+        double scale = pprz_msg_match.captured(5).toDouble();
 
         if(id == ac_id) {
             //qDebug() << id << msg_class << msg_name << field;;
             auto name = QString("%1:%2:%3").arg(msg_class, msg_name, field);
-            addGraph(name, {100, 0, true});
+            addGraph(name, {100, 0, true, scale});
             changeGraph(name);
         }
     }
