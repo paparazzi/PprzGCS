@@ -17,6 +17,7 @@ public:
         QString ac_id;
         QString msg_name;
         QString field;
+        double scale;
     };
 
     enum Style {
@@ -88,6 +89,8 @@ private:
     QPoint pos_view;
     QPointF pressPos;
     MoveState move_state;
+
+    double data_scale;
 
     struct Params params;
 

@@ -19,6 +19,7 @@ Papget::Papget(struct DataDef datadef, QPoint pos_view, QObject *parent) : QObje
     auto ac = AircraftManager::get()->getAircraft(datadef.ac_id);
     params.color = ac->getColor();
     params.fontSize = settings.value("map/items_font").toInt();
+    data_scale = datadef.scale;
 
     bindRet = PprzDispatcher::get()->bind(datadef.msg_name,
         [=](QString sender, pprzlink::Message msg) {
@@ -180,11 +181,11 @@ void Papget::paint_text(QPainter *painter, const QStyleOptionGraphicsItem *optio
 
     QString text;
     if(type == U32) {
-        text = QString::number(val_u32);
+        text = QString::number(data_scale*val_u32);
     } else if(type == I32) {
-        text = QString::number(val_32);
+        text = QString::number(data_scale*val_32);
     } else if(type == FLOAT) {
-        text = QString::number(val_float);
+        text = QString::number(data_scale*val_float);
     } else if(type == STR) {
         text = QString(val_str);
     } else if(type == CHAR) {

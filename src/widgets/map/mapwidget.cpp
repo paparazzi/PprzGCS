@@ -649,12 +649,15 @@ void MapWidget::wheelEvent(QWheelEvent* event) {
 }
 
 void MapWidget::dragEnterEvent(QDragEnterEvent *event) {
+    Map2D::dragEnterEvent(event);
     if (event->mimeData()->hasFormat("text/plain")) {
         event->acceptProposedAction();
     }
+    event->accept();
 }
 
 void MapWidget::dragMoveEvent(QDragMoveEvent *event) {
+    Map2D::dragMoveEvent(event);
     event->accept();
 }
 
@@ -672,7 +675,7 @@ void MapWidget::dropEvent(QDropEvent *event) {
     QRegularExpression geo_re("^geo:(\\d+\\.\\d+),(-?\\d+\\.\\d+)(?:,-?\\d+\\.?\\d*)?(?:\\?z=(\\d+))?$");
     QRegularExpressionMatch geo_match = geo_re.match(text);
 
-    QRegularExpression pprz_msg_re("^(\\w+):(\\w+):(\\w+):(\\w+):.*$");
+    QRegularExpression pprz_msg_re("^(\\w+):(\\w+):(\\w+):(\\w+):(.*)$");
     QRegularExpressionMatch pprz_msg_match = pprz_msg_re.match(text);
 
     if (geo_match.hasMatch()) {
@@ -692,11 +695,13 @@ void MapWidget::dropEvent(QDropEvent *event) {
         // QString msg_class = pprz_msg_match.captured(2);
         QString msg_name = pprz_msg_match.captured(3);
         QString field = pprz_msg_match.captured(4);
+        double scale = pprz_msg_match.captured(5).toDouble();
 
         struct Papget::DataDef datadef = {
             ac_id,
             msg_name,
             field,
+            scale,
         };
 
         Papget* papget = new Papget(datadef, event->pos());
