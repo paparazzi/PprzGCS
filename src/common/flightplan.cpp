@@ -1,10 +1,7 @@
 #include "flightplan.h"
-#include "iostream"
 #include "gcs_utils.h"
-
 #include <clocale>
-#include "coordinatestransform.h"
-#include "AircraftManager.h"
+#include <QDebug>
 
 using namespace std;
 
@@ -128,9 +125,9 @@ void FlightPlan::parse_sectors(QDomElement secs) {
             sectors.push_back(sec);
         } else if (ele.tagName() == "kml") {
             //It's a KML!
-            throw std::runtime_error("Sector from KML not implemented!");
+            qDebug() << "Sector from KML not implemented!";
         } else {
-            throw std::runtime_error("");
+            qDebug() << QString("Unknown tag \"%1\", not implemented!").arg(ele.tagName());
         }
     }
 }
