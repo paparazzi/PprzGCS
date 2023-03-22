@@ -39,6 +39,7 @@ message("PPRZGCS_VERSION set to ${PPRZGCS_VERSION}")
 add_definitions(-DPPRZGCS_VERSION="${PPRZGCS_VERSION}")
 
 option(SPEECH "Enable speech" ON)
+option(GRPC "Enable GRPC" OFF)
 
 find_package(IvyQt REQUIRED)
 find_package(pprzlinkQt REQUIRED)
@@ -52,6 +53,19 @@ else()
     find_package(Qt5 5.12 REQUIRED COMPONENTS Widgets Xml Network Svg  REQUIRED)
 endif()
 
+
+if(${GRPC})
+    message("GRPC ENABLED !")
+    add_definitions(-DGRPC_ENABLED)
+    set(PPRZGCS_GRPC_PREFIX ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME})
+    add_subdirectory(protos)
+    include_directories("${CMAKE_CURRENT_BINARY_DIR}/protos")
+else()
+    message("GRPC DISABLED !")
+endif()
+
+
+
 set(SOURCE
     ${SOURCE}
     resources/ressources.qrc
@@ -64,7 +78,16 @@ include_directories(
     ${LIBXML2_INCLUDE_DIR}
 )
 
+
+
 add_executable(${PROJECT_NAME} ${SOURCE})
+
+if(${GRPC})
+    add_dependencies(
+        ${PROJECT_NAME}
+        proto_py
+    )
+endif()
 
 target_link_libraries(${PROJECT_NAME}
     Qt5::Widgets
@@ -77,6 +100,10 @@ target_link_libraries(${PROJECT_NAME}
     zip
     pprzlinkQt
     IvyQt
+    $<$<BOOL:${GRPC}>:PprzgcsGRCP>
+    $<$<BOOL:${GRPC}>:${_PROTOBUF_LIBPROTOBUF}>
+    $<$<BOOL:${GRPC}>:${_GRPC_GRPCPP}>
+    $<$<BOOL:${GRPC}>:${_REFLECTION}>
 )
 
 install(TARGETS ${PROJECT_NAME})

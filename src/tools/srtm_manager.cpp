@@ -50,8 +50,10 @@ QList<QString> SRTMManager::get_tile_names(double _lat_min, double _lat_max, dou
     int lon_min = static_cast<int>(floor(_lon_min));
     int lon_max = static_cast<int>(ceil(_lon_max));
 
-    assert(lat_min < lat_max);
-    assert(lon_min < lon_max);
+    if(lat_min > lat_max || lon_min > lon_max) {
+        qCritical() << "invalid range";
+        return QList<QString>();
+    }
 
     QList<QString> names;
 
@@ -106,7 +108,7 @@ optional<int> SRTMManager::get_elevation(double lat, double lon) {
     return static_cast<int>(ele);
 }
 
-void SRTMManager::load_tiles(QList<QString> names) {
+void SRTMManager::load_tiles(QList<QString> names, bool local_only) {
 
     // load all tiles that are on the disk
     QList<QString> tiles_dl;
@@ -117,7 +119,7 @@ void SRTMManager::load_tiles(QList<QString> names) {
     }
 
     // open the dialog for the tiles to be downloaded
-    if(tiles_dl.size() > 0) {
+    if(tiles_dl.size() > 0 && !local_only) {
         auto dialog = new SRTMDialog(tiles_dl);
 
         connect(dialog, &SRTMDialog::tilesConfirmed, this, [=](QList<QString> tiles_confirmed) {

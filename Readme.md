@@ -98,6 +98,12 @@ You should now be able to launch it from the Paparazzi center.
 If you want to run it from the terminal, set the `PAPARAZZI_HOME` and the `PAPARAZZI_SRC` environment variables to your paparazzi path, then just run `./build/pprzgcs/pprzgcs`
 
 
+#### gRPC
+
+Add `-DCMAKE_PREFIX_PATH=<path/to/gRPC> -DGRPC=ON` to build with gRPC.
+
+See instructions to buils gRPC from source here: [https://grpc.io/docs/languages/cpp/quickstart/].
+
 #### Mac
 
 PprzGCS have been successfully built for Mac, although is not officially supported. You are on you own ;-)

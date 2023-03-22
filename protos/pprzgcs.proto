@@ -1,0 +1,100 @@
+// Copyright 2015 gRPC authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+//option java_multiple_files = true;
+//option java_package = "io.grpc.examples.helloworld";
+//option java_outer_classname = "HelloWorldProto";
+//option objc_class_prefix = "HLW";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
+
+package pprzgcs;
+
+// service definition.
+service GCSService {
+  // load STRM tiles
+  rpc LoadSRTM (SRTMRequest) returns (SRTMReply) {}
+  // center map on AC or position
+  rpc CenterOn (CenterOnRequest) returns (CenterOnResponse) {}
+
+  rpc SetWidgetProperty(WidgetProperty) returns (google.protobuf.Empty) {}
+}
+
+message Aircraft {
+  int32 ac_id = 1;
+  string ac_name = 2;
+}
+
+message Coordinate {
+  string CRS = 1;
+  double lat = 2;
+  double lon = 3;
+  double x   = 4;
+  double y   = 5;
+}
+
+// request empty for now, might add something in the future
+message SRTMRequest {
+
+}
+// reply empty for now, might add something in the future
+message SRTMReply {
+
+}
+
+
+message CenterOnRequest {
+  oneof center {
+    Aircraft aircraft = 1;
+    Coordinate coordinate = 2;
+  }
+}
+
+message CenterOnResponse {
+  enum CenterSatus {
+    CENTER_OK = 0;
+    CENTER_FAILED = 1;
+  }
+  CenterSatus status = 1;
+  string msg = 2;
+}
+
+message WidgetProperty {
+  message Property {
+    string property_name = 1;
+    google.protobuf.Any value = 2;
+  }
+  string widget_name = 1;
+  oneof prop {
+    Property property = 2;
+    bool visible = 3;
+  }
+}
+
+
+
+// move to a dedicated file
+message String {
+  string value = 1;
+}
+
+message Color {
+  int32 red = 1;
+  int32 green = 2;
+  int32 blue = 3;
+  int32 alpha = 4;
+}

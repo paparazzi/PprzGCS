@@ -10,6 +10,9 @@
 #include "point2dpseudomercator.h"
 #include <QSet>
 #include "gcs_utils.h"
+#if GRPC_ENABLED
+#include "grpcconnector.h"
+#endif
 
 PprzMap::PprzMap(QWidget *parent) :
     QWidget(parent),
@@ -18,7 +21,7 @@ PprzMap::PprzMap(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(ui->srtm_button, &QPushButton::clicked, [=]() {
+    auto dl_strm = [=](bool local_only) {
 
         QSet<QString> tiles;
 
@@ -35,9 +38,14 @@ PprzMap::PprzMap(QWidget *parent) :
         auto tile_names = SRTMManager::get()->get_tile_names(se.lat(), nw.lat(), nw.lon(), se.lon());
         tiles.unite(tile_names.toSet());
 
-        SRTMManager::get()->load_tiles(tiles.toList());
+        SRTMManager::get()->load_tiles(tiles.toList(), local_only);
 
-    });
+    };
+
+    connect(ui->srtm_button, &QPushButton::clicked, [=]() {dl_strm(false);});
+#if GRPC_ENABLED
+    connect(GRPCConnector::get(), &GRPCConnector::dl_srtm, [=]() {dl_strm(true);});
+#endif
 
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &PprzMap::changeCurrentAC);
     connect(ui->map, &MapWidget::mouseMoved, this, &PprzMap::handleMouseMove);

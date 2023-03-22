@@ -1,17 +1,23 @@
 
 set(SOURCE ${SOURCE})
 
-if(SPEECH)
-    list(APPEND SOURCE
-        ${CMAKE_CURRENT_SOURCE_DIR}/speaker.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/srtm_manager.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/coordinatestransform.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/dispatcher_ui.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/pprz_dispatcher.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/AircraftManager.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/units.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/watcher.cpp
-        )
+
+list(APPEND SOURCE
+    ${CMAKE_CURRENT_SOURCE_DIR}/srtm_manager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/coordinatestransform.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/dispatcher_ui.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/pprz_dispatcher.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/AircraftManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/units.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/watcher.cpp
+)
+
+if(${SPEECH})
+    list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/speaker.cpp)
+endif()
+
+if(${GRPC})
+    list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/grpcconnector.cpp)
 endif()
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})

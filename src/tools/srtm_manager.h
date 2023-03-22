@@ -25,7 +25,7 @@ public:
     }
 
     optional<int> get_elevation(double lat, double lon);
-    void load_tiles(QList<QString> names);
+    void load_tiles(QList<QString> names, bool local_only=false);
     int load_tile(QString name, bool dl);
     QList<QString> get_tile_names(double _lat_min, double _lat_max, double _lon_min, double _lon_max);
 

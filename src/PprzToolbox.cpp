@@ -10,6 +10,9 @@
 #if defined(SPEECH_ENABLED)
 #include "speaker.h"
 #endif
+#if GRPC_ENABLED
+#include "grpcconnector.h"
+#endif
 
 PprzToolbox::PprzToolbox(PprzApplication* app)
 {
@@ -23,6 +26,9 @@ PprzToolbox::PprzToolbox(PprzApplication* app)
 #if defined(SPEECH_ENABLED)
     _speaker              = new Speaker             (app, this);
 #endif
+#if GRPC_ENABLED
+    _connector            = new GRPCConnector       (app, this);
+#endif
 }
 
 void PprzToolbox::setChildToolboxes(void) {
@@ -35,6 +41,9 @@ void PprzToolbox::setChildToolboxes(void) {
     _watcher->setToolbox(this);
 #if defined(SPEECH_ENABLED)
     _speaker->setToolbox(this);
+#endif
+#if GRPC_ENABLED
+    _connector->setToolbox(this);
 #endif
 }
 

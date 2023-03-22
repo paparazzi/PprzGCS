@@ -15,6 +15,9 @@ class Watcher;
 #if defined(SPEECH_ENABLED)
 class Speaker;
 #endif
+#if GRPC_ENABLED
+class GRPCConnector;
+#endif
 
 class PprzToolbox : public QObject
 {
@@ -32,6 +35,9 @@ public:
 #if defined(SPEECH_ENABLED)
     Speaker*              speaker              () {return _speaker             ;}
 #endif
+#if GRPC_ENABLED
+    GRPCConnector*        connector            () {return _connector           ;}
+#endif
 
 private:
     void setChildToolboxes(void);
@@ -45,7 +51,9 @@ private:
 #if defined(SPEECH_ENABLED)
     Speaker* _speaker                           = nullptr;
 #endif
-
+#if GRPC_ENABLED
+    GRPCConnector*       _connector             = nullptr;
+#endif
     friend class PprzApplication;
 
 };
