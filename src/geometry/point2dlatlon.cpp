@@ -1,9 +1,5 @@
 #include "point2dlatlon.h"
-#include "point2dtile.h"
 #include "math.h"
-#include "maputils.h"
-
-#include "iostream"
 
 Point2DLatLon::Point2DLatLon() : latp(0), lonp(0)
 {

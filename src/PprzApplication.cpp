@@ -1,6 +1,7 @@
 #include "PprzApplication.h"
 #include "PprzToolbox.h"
 #include "pprzmain.h"
+#include "point2dlatlon.h"
 
 PprzApplication* PprzApplication::_app = nullptr;
 
@@ -10,6 +11,7 @@ PprzApplication::PprzApplication(int &argc, char **argv, int flags) : QApplicati
     _toolbox = new PprzToolbox(this);
     //_toolbox->setChildToolboxes();
     _mainWindow = new PprzMain();
+    qRegisterMetaType<Point2DLatLon>();
 }
 
 /// @brief Returns the PprzApplication object singleton.

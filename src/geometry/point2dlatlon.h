@@ -26,4 +26,6 @@ private:
     double lonp;
 };
 
+Q_DECLARE_METATYPE(Point2DLatLon)
+
 #endif // POINT2DLATLON_H
