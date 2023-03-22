@@ -29,6 +29,7 @@ signals:
     void settingUpdated(QString ac_id, Setting*, float value);
     void showHiddenWaypoints(bool show);
     void mapRotated(double);    // map view rotation in degrees
+    void centerMap(Point2DLatLon pos);
     //void create_waypoint(Waypoint*);
 
     // GVF viewer signals
