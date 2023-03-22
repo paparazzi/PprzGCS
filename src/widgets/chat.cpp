@@ -100,7 +100,7 @@ void Chat::onSend() {
     if(name == "All") {
         dest = "0xFF";
     } else {
-        dest = AircraftManager::get()->getAircraftByName(name)->getId();
+        dest = AircraftManager::get()->getAircraftByName(name).value()->getId();
     }
     dest += ":" + QString::number(fd);
 

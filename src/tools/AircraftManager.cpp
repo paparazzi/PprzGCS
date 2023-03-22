@@ -11,6 +11,7 @@
 #include <QSettings>
 #include "dispatcher_ui.h"
 #include "gcs_utils.h"
+#include <optional>
 
 AircraftManager::AircraftManager(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox)
 {
@@ -30,14 +31,14 @@ Aircraft* AircraftManager::getAircraft(QString id) {
     }
 }
 
-Aircraft* AircraftManager::getAircraftByName(QString name) {
+optional<Aircraft*> AircraftManager::getAircraftByName(QString name) {
     (void)name;
     auto af = std::find_if(aircrafts.begin(), aircrafts.end(),
         [=](Aircraft* ac){
             return ac->name() == name;
         });
     if(af == aircrafts.end()) {
-        throw runtime_error("No such aircraft!");
+        return nullopt;
     }
     return af.value();
 }
