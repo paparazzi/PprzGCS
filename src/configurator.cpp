@@ -6,13 +6,12 @@
 #include <QMainWindow>
 #include <iostream>
 #include "pprzmain.h"
-#include "pprzmap.h"
-#include "pfd.h"
 #include <QLabel>
 #include <iostream>
 #include "configurable.h"
 #include "widget_utils.h"
 #include "gcs_utils.h"
+#include "PprzApplication.h"
 #if defined(SPEECH_ENABLED)
 #include "speaker.h"
 #endif
@@ -25,7 +24,11 @@ Q_LOGGING_CATEGORY(LOG_CONFIG, "config")
 QWidget* rec_layout_build(QDomElement &ele, QSplitter* parent, int* size) {
     *size = ele.attribute("size", "10").toInt();
     if(ele.tagName() == "rows" or ele.tagName()=="columns") {
+        QString id  = ele.attribute("id" , "");
         QSplitter* splitter = new QSplitter(parent);
+        if(id != "") {
+            splitter->setObjectName(id);
+        }
         splitter->setChildrenCollapsible(false);
         if(ele.tagName()=="rows") {
             splitter->setOrientation(Qt::Vertical);
@@ -56,8 +59,10 @@ QWidget* rec_layout_build(QDomElement &ele, QSplitter* parent, int* size) {
         }
 
         QString alt = ele.attribute("alt", "");
+        QString id  = ele.attribute("id" , name);
 
         QWidget* widget = makeWidget(parent, container, name, alt);
+        widget->setObjectName(id);
 
         for(auto layout_ele=ele.firstChildElement(); !layout_ele.isNull(); layout_ele=layout_ele.nextSiblingElement()) {
             if(layout_ele.tagName() == "configure") {

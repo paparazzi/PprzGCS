@@ -309,12 +309,14 @@ void MapWidget::configure(QDomElement ele) {
             assert(widget_ele.tagName() == "widget");
             auto name = widget_ele.attribute("name");
             auto container = widget_ele.attribute("container", "stack");
+            auto id =widget_ele.attribute("id", name);
 
             QWidget* widget = nullptr;
             if(name == "layers") {
                 widget = makeLayerCombo();
             } else {
                 widget = makeWidget(this, container, name);
+                widget->setObjectName(id);
                 if(name == "gvf_viewer") {
                     gvf_loaded = true;
                 }
@@ -354,6 +356,7 @@ void MapWidget::configure(QDomElement ele) {
     }
 
     wind_indicator = new WindIndicator(this);
+    wind_indicator->setObjectName("wind_indicator");
     wind_indicator->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     rightLayout->addWidget(wind_indicator, 0, Qt::AlignRight);
 
