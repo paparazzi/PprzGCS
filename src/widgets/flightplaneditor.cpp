@@ -53,7 +53,9 @@ FlightPlanEditor::FlightPlanEditor(QString ac_id, QWidget *parent) : QWidget(par
 
         connect(ui->save_button, &QPushButton::clicked, this, [=]() {
             auto data = output();
-            auto out_path = QFileDialog::getSaveFileName(this, "save btu", config->getFlightPlanUri());
+            auto out_path = QUrl(config->getFlightPlanUri()).toLocalFile();
+            out_path = QFileDialog::getSaveFileName(this, "save btu", out_path);
+
             if(out_path != "") {
                 QFile out(out_path);
                 if(out.open(QIODevice::WriteOnly | QIODevice::Text)) {
