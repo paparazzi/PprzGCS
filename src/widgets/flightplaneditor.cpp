@@ -14,6 +14,10 @@ QString getProp(xmlNodePtr node, const QString& tag) {
     }
 }
 
+// function to respect indentation
+void xml_add_next_sibling(xmlNodePtr node, xmlNodePtr new_node);
+void xml_add_child(xmlNodePtr parent, xmlNodePtr new_node);
+
 FlightPlanEditor::FlightPlanEditor(QString ac_id, QWidget *parent) : QWidget(parent),
     ui(new Ui::FlightPlanEditor),
     ac_id(ac_id), doc(nullptr), dtd(nullptr), last_block(0), waypoints_item(nullptr), readOnly(false)
@@ -406,7 +410,7 @@ void FlightPlanEditor::openElementsContextMenu(QPoint pos) {
                         xmlSetProp(new_node, att.name, BAD_CAST "???");
                     }
                 }
-                xmlAddChild(node, new_node);
+                xml_add_child(node, new_node);
 
                 if(QString((char*)new_node->name) == "waypoint") {
                     xmlSetProp(new_node, BAD_CAST "x", BAD_CAST "12");
@@ -431,8 +435,7 @@ void FlightPlanEditor::openElementsContextMenu(QPoint pos) {
     auto copy_action = menu->addAction("Copy after");
     connect(copy_action, &QAction::triggered, this, [=]() {
         auto copy = xmlCopyNode(node, 1);
-        xmlAddNextSibling(node, copy);
-
+        xml_add_next_sibling(node, copy);
         if(QString((char*)copy->name) == "waypoint") {
             //If this is a waypoint, change its name and create the waypoint
             xmlSetProp(copy, BAD_CAST "name", BAD_CAST "???");
@@ -472,7 +475,8 @@ void FlightPlanEditor::openElementsContextMenu(QPoint pos) {
                             xmlSetProp(new_node, att.name, BAD_CAST "???");
                         }
                     }
-                    xmlAddNextSibling(node, new_node);
+
+                    xml_add_next_sibling(node, new_node);
 
                     if(QString((char*)new_node->name) == "waypoint") {
                         //If this is a waypoint, change its name and create the waypoint
@@ -704,7 +708,8 @@ void FlightPlanEditor::onWaypointAdded(Waypoint* wp, QString ac_id) {
             wp->getRelative(fp->getFrame(), x, y);
             xmlSetProp(new_node, BAD_CAST "x", BAD_CAST QString::number(x).toStdString().c_str());
             xmlSetProp(new_node, BAD_CAST "y", BAD_CAST QString::number(y).toStdString().c_str());
-            xmlAddChild(waypoints_node, new_node);
+
+            xml_add_child(waypoints_node, new_node);
             populate(new_node, waypoints_item);
         }
 
@@ -867,3 +872,45 @@ bool FlightPlanEditor::validate() {
     return valid ? true: false;
 }
 
+
+/**** add sibling and respect indentation  ****/
+void xml_add_next_sibling(xmlNodePtr node, xmlNodePtr new_node) {
+    xmlNodePtr lf;
+    if(node->prev && node->prev->type == XML_TEXT_NODE) {
+        lf = xmlCopyNode(node->prev, 1);
+    } else {
+        lf = xmlNewText(BAD_CAST "\n    ");
+    }
+
+    xmlAddNextSibling(node, new_node);
+    xmlAddPrevSibling(new_node, lf);
+
+}
+
+/**** add child and respect indentation  ****/
+void xml_add_child(xmlNodePtr parent, xmlNodePtr new_node) {
+    xmlNodePtr linefeed;
+    if(parent->children &&
+       parent->children->type == XML_TEXT_NODE &&
+       parent->children != parent->last) {
+        // copy the identation of the first waypoint
+        linefeed = xmlCopyNode(parent->children, 1);
+    } else {
+        // or just make 4 space ident if there is no identation
+        linefeed = xmlNewText(BAD_CAST "\n    ");
+    }
+
+
+    if(parent->last && parent->last->type == XML_TEXT_NODE) {
+        // replace the last identation by the new node,
+        xmlNodePtr last_lf = xmlReplaceNode(parent->last, linefeed);
+        // add the waypoint node,
+        xmlAddChild(parent, new_node);
+        // and add back the last identation
+        xmlAddChild(parent, last_lf);
+    } else {
+        // if it's not possible to be clever, just add the nodes
+        xmlAddChild(parent, linefeed);
+        xmlAddChild(parent, new_node);
+    }
+}
