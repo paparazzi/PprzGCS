@@ -43,7 +43,6 @@ protected:
 
 private:
     QList<WaypointItem*> waypoints;
-    QMap<WaypointItem*, bool> owned;
     QList<GraphicsLine*> lines;
     QList<QGraphicsItem*> to_be_added;
     QList<QGraphicsItem*> to_be_removed;

@@ -15,7 +15,7 @@ public:
     explicit CircleItem(WaypointItem* center, double radius, QString ac_id, PprzPalette palette, double neutral_scale_zoom = 15);
     WaypointItem* getCenter() { return center;}
     GraphicsCircle* getGraphicsCircle() {return circle;}
-    void setOwnCenter(bool own) {own_center = own;}
+    void setOwnCenter(bool own) { if(own) {center->setParent(this);} }
     void setScalable(bool scalable) {
         circle->setIgnoreEvent(!scalable);
     }
@@ -53,7 +53,6 @@ private:
     int stroke;
 
     bool highlighted;
-    bool own_center;
 };
 
 #endif // CIRCLEITEM_H

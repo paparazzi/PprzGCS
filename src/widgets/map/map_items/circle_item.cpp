@@ -12,14 +12,14 @@
 
 CircleItem::CircleItem(WaypointItem* center, double radius, QString ac_id, double neutral_scale_zoom):
   MapItem(ac_id, neutral_scale_zoom),
-  center(center), _radius(radius), own_center(false)
+  center(center), _radius(radius)
 {
     init(center);
 }
 
 CircleItem::CircleItem(WaypointItem* center, double radius, QString ac_id, PprzPalette palette, double neutral_scale_zoom):
   MapItem(ac_id, palette, neutral_scale_zoom),
-  center(center), _radius(radius), own_center(false)
+  center(center), _radius(radius)
 {
     init(center);
 }
@@ -141,7 +141,7 @@ void CircleItem::removeFromScene(MapWidget* map) {
     map->scene()->removeItem(graphics_text);
     delete circle;
     delete graphics_text;
-    if(own_center) {        // remove the waypoint only if it owns it.
+    if(center && center->parent() == this) {    // remove the waypoint only if it owns it.
         map->removeItem(center);
         center = nullptr;
     }

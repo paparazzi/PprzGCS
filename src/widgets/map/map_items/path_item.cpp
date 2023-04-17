@@ -43,7 +43,10 @@ PathItem::PathItem(QString ac_id, PprzPalette palette, double neutral_scale_zoom
 void PathItem::addPoint(WaypointItem* wp, QColor line_color, bool own) {
     assert(wp != nullptr);
     waypoints.append(wp);
-    owned[wp] = own;
+
+    if(own) {
+        wp->setParent(this);
+    }
 
     connect(
         wp, &WaypointItem::itemChanged, this,
@@ -224,13 +227,11 @@ void PathItem::removeFromScene(MapWidget* map) {
     }
 
     for(auto wp: waypoints) {
-        if(owned[wp]) {
+        if(wp->parent() == this) {
             map->removeItem(wp);
         }
     }
     waypoints.clear();
-    owned.clear();
-
 }
 
 void PathItem::setVisible(bool vis) {
@@ -263,9 +264,8 @@ void PathItem::removeLastWaypoint() {
     auto lastLine = lines.takeLast();
     to_be_removed.append(lastLine);
     auto wp = waypoints.takeLast();
-    if(owned[wp]) {
+    if(wp->parent() == this) {
         waypoints_to_remove.append(wp);
-        owned.remove(wp);
     }
 
     if(closing_line && waypoints.size() < 3) {
