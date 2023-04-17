@@ -45,6 +45,13 @@ void PathItem::addPoint(WaypointItem* wp, QColor line_color, bool own) {
     waypoints.append(wp);
     owned[wp] = own;
 
+    connect(
+        wp, &WaypointItem::itemChanged, this,
+        [=]() {
+            emit itemChanged();
+        }
+    );
+
     if(!line_color.isValid()) {
         line_color = color;
     } 
@@ -52,17 +59,9 @@ void PathItem::addPoint(WaypointItem* wp, QColor line_color, bool own) {
     if(waypoints.size() > 1){
         GraphicsLine* line = new GraphicsLine(QPointF(0, 0), QPointF(0, 0), line_color, line_width, this);
         line->setIgnoreEvent(true);
-
         lines.append(line);
         to_be_added.append(line);
         line->setZValue(z_value - 0.5);
-
-        connect(
-            wp, &WaypointItem::itemChanged, this,
-            [=]() {
-                emit itemChanged();
-            }
-        );
     }
 }
 
