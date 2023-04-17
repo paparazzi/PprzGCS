@@ -132,12 +132,6 @@ void PprzMain::populate_menu() {
     aircraftsTopMenu = menu_bar->addMenu("&Aircrafts");
 
     aircraftsTopMenu->addAction("Update", PprzDispatcher::get(), &PprzDispatcher::requestAircrafts);
-    auto show_hidden_wp_action = aircraftsTopMenu->addAction("Show hidden waypoints");
-    show_hidden_wp_action->setCheckable(true);
-
-    connect(show_hidden_wp_action, &QAction::toggled, [=](bool show) {
-        emit DispatcherUi::get()->showHiddenWaypoints(show);
-    });
 
     auto help_menu = menu_bar->addMenu("&Help");
     auto about = help_menu->addAction("&About");

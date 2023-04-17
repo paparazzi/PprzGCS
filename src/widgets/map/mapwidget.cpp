@@ -105,19 +105,20 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
         });
 
 
-    connect(DispatcherUi::get(), &DispatcherUi::showHiddenWaypoints, this, [=](bool state) {
-        for(auto &itemManager: ac_items_managers) {
-            for(auto &wpi: itemManager->getWaypointsItems()) {
-                if(state) {
-                    wpi->setStyle(GraphicsObject::Style::DEFAULT);
-                } else {
-                    if(wpi->getOriginalWaypoint()->getName().startsWith('_')) {
-                        wpi->setStyle(GraphicsPoint::Style::CURRENT_NAV);
-                    }
-                }
-            }
-        }
+    // Context menu
+    mapMenu = new QMenu("Map", pprzApp()->mainWindow());
+    show_hidden_wp_action = mapMenu->addAction("Show hidden waypoints");
+    show_hidden_wp_action->setCheckable(true);
+    connect(show_hidden_wp_action, &QAction::toggled, [=](bool show) {
+        setProperty("show_hidden_waypoints", show);
     });
+    auto clear_shapes = mapMenu->addAction("Clear Shapes");
+    connect(clear_shapes, &QAction::triggered, this, [=](){
+        clearShapes();
+    });
+    menu_clear_track = new QMenu("Clear Track", mapMenu);
+    mapMenu->addMenu(menu_clear_track);
+
 
     connect(AircraftManager::get(), &AircraftManager::waypoint_changed, this, &MapWidget::onWaypointChanged);
     connect(AircraftManager::get(), &AircraftManager::waypoint_added, this, &MapWidget::onWaypointAdded);
@@ -179,15 +180,6 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
 
     // Add menu to app menu bar.
     connect(pprzApp()->mainWindow(), &PprzMain::ready, this, [=](){
-        mapMenu = new QMenu("Map", pprzApp()->mainWindow());
-        auto clear_shapes = mapMenu->addAction("Clear Shapes");
-        connect(clear_shapes, &QAction::triggered, this, [=](){
-            clearShapes();
-        });
-
-        menu_clear_track = new QMenu("Clear Track", mapMenu);
-        mapMenu->addMenu(menu_clear_track);
-
         pprzApp()->mainWindow()->menuBar()->addMenu(mapMenu);
     });
 }
@@ -849,7 +841,7 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
         wpi->setAnimate(true);
     });
 
-    if(wp->getName().startsWith('_')) {
+    if(wp->getName().startsWith('_') && !show_hidden_wp_action->isChecked()) {
         wpi->setStyle(GraphicsPoint::Style::CURRENT_NAV);
     }
 
@@ -1291,4 +1283,21 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     addItem(gvf_traj->getVField());
     ac_items_managers[sender]->setCurrentGVF(gvf_traj);
     gvf_trajectories[sender] = gvf_traj;
+}
+
+void MapWidget::showHiddenWaypoints(bool state) {
+    show_hidden_wp_action->blockSignals(true);
+    show_hidden_wp_action->setChecked(state);
+    show_hidden_wp_action->blockSignals(false);
+    for(auto &itemManager: ac_items_managers) {
+        for(auto &wpi: itemManager->getWaypointsItems()) {
+            if(state) {
+                wpi->setStyle(GraphicsObject::Style::DEFAULT);
+            } else {
+                if(wpi->getOriginalWaypoint()->getName().startsWith('_')) {
+                    wpi->setStyle(GraphicsPoint::Style::CURRENT_NAV);
+                }
+            }
+        }
+    }
 }

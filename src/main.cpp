@@ -45,7 +45,12 @@ void launch_main_app() {
         layout_path = user_or_app_path(settings.value("APP_LAYOUT_FILE").toString());
         break;
     case FLIGHTPLAN_EDIT:
-        layout_path = user_or_app_path("fp_editor_layout.xml");
+        {
+            auto st = qApp->styleSheet();
+            st.append("MapWidget {qproperty-show_hidden_waypoints: true;}");
+            qApp->setStyleSheet(st);
+            layout_path = user_or_app_path("fp_editor_layout.xml");
+        }
         break;
     case CONFIGURE:
         break;

@@ -21,5 +21,6 @@ MiniStrip {
 MapWidget {
     qproperty-color_background: #404040;
     qproperty-ac_arrow_size: 50;
+    qproperty-show_hidden_waypoints: false;
 }
 
