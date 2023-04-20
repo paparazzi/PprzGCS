@@ -14,6 +14,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 # find library proj (from 20.04 packages) or PROJ4 (from source)
 find_library(PROJ proj)
 if(${PROJ} STREQUAL "PROJ-NOTFOUND")
@@ -44,15 +46,28 @@ option(GRPC "Enable GRPC" OFF)
 find_package(IvyQt REQUIRED)
 find_package(pprzlinkQt REQUIRED)
 
+# minumum required Qt components
+set(QT_COMPONENTS Widgets Xml Network Svg)
+
 if(SPEECH)
     message("SPEECH ENABLED !")
     add_definitions(-DSPEECH_ENABLED)
-    find_package(Qt5 5.12 REQUIRED COMPONENTS Widgets Xml Network Svg TextToSpeech REQUIRED)
+    list(APPEND QT_COMPONENTS TextToSpeech)
 else()
     message("SPEECH DISABLED !")
-    find_package(Qt5 5.12 REQUIRED COMPONENTS Widgets Xml Network Svg  REQUIRED)
 endif()
 
+
+if(DEFINED ENV{QT_DIR})
+    set(Qt5_DIR $ENV{QT_DIR})
+    set(Qt6_DIR $ENV{QT_DIR})
+endif()
+
+message("Qt required components: ${QT_COMPONENTS}")
+
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS ${QT_COMPONENTS})
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS ${QT_COMPONENTS})
+message("Using Qt ${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}: ${Qt5Core_DIR}")
 
 if(${GRPC})
     message("GRPC ENABLED !")

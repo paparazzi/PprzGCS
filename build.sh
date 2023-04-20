@@ -14,6 +14,8 @@ echo "install_prefix set to $install_prefix."
 # exit on error
 set -e
 
+#export QT_DIR="/path/to/Qt/5.12.5/gcc_64/lib/cmake/Qt5"
+
 export MAKEFLAGS=-j$(nproc)
 
 if [ $build_libs = "libs" ]
