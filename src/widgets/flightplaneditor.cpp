@@ -679,7 +679,7 @@ void FlightPlanEditor::onMoveWaypointUi(Waypoint* wp, QString acid) {
             }
             if(!readOnly) {
                 ui->tree->clearSelection();
-                ui->tree->setItemSelected(it.key(), true);
+                it.key()->setSelected(true);
             }
             if(ui->tree->selectedItems().size() > 0 && ui->tree->selectedItems().first() == it.key()) {
                 onItemClicked(it.key(), 1);
@@ -776,7 +776,7 @@ void FlightPlanEditor::onNavStatus() {
 
     applyRecursive(last, [=](QTreeWidgetItem* item){
         for(int i=0; i<item->columnCount(); ++i) {
-            item->setBackgroundColor(i, Qt::transparent);
+            item->setBackground(i, Qt::transparent);
         }
     });
 
@@ -800,7 +800,7 @@ void FlightPlanEditor::onNavStatus() {
             }
 
             for(int i=0; i<item->columnCount(); ++i) {
-                item->setBackgroundColor(i, color);
+                item->setBackground(i, color);
             }
         });
 

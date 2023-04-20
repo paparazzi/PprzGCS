@@ -18,7 +18,14 @@ public:
     qreal opacity() {return static_cast<qreal>(opacitySlider->value())/opacitySlider->maximum();}
     int zValue() {return z_value;}
     void setZValue(int z);
-    const QPixmap* pixmap() {return imageLabel->pixmap();}
+    QPixmap pixmap() {
+#if QT_VERSION_MAJOR == 5 && QT_VERSION_MINOR < 15
+        QPixmap p = *imageLabel->pixmap();
+#else
+        QPixmap p = imageLabel->pixmap(Qt::ReturnByValue);
+#endif
+        return p;
+    }
     QString name() {return _name;}
 
     bool operator <(const MapLayerControl& mlc) const

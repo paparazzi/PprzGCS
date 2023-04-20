@@ -152,7 +152,11 @@ void Map2D::wheelEvent(QWheelEvent* event) {
         new_zoom = _zoom - 0.5;
     }
     new_zoom = round(new_zoom*2)/2.0;
+#if QT_VERSION_MAJOR == 5 && QT_VERSION_MINOR < 15
     zoomCentered(new_zoom, event->pos());
+#else
+    zoomCentered(new_zoom, event->position().toPoint());
+#endif
     wheelAccumulator = 0;
 }
 

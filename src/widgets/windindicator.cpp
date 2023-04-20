@@ -74,7 +74,7 @@ void WindIndicator::paintEvent(QPaintEvent *event) {
         windsock.paint(&painter, r_ws, Qt::AlignCenter);
 
         // text
-        painter.resetMatrix();
+        painter.resetTransform();
         painter.setPen(m_pen_color);
         auto font = QFont();
         font.setBold(true);
@@ -144,7 +144,7 @@ void WindIndicator::mouseReleaseEvent(QMouseEvent *event) {
 }
 
 void WindIndicator::wheelEvent(QWheelEvent* event) {
-    double rot = compass + event->delta() / 10.0;
+    double rot = compass + event->angleDelta().y() / 10.0;
     emit requestRotation(rot);
 }
 

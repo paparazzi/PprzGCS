@@ -29,16 +29,25 @@ PprzMap::PprzMap(QWidget *parent) :
         for(auto ac: AircraftManager::get()->getAircrafts()) {
             auto [nw, se] = ac->getFlightPlan()->boundingBox();
             auto tile_names = SRTMManager::get()->get_tile_names(se.lat(), nw.lat(), nw.lon(), se.lon());
+#if QT_VERSION_MAJOR == 5 && QT_VERSION_MINOR < 15
             tiles.unite(tile_names.toSet());
+#else
+            auto tiles_set = QSet<QString>(tile_names.begin(), tile_names.end());
+            tiles.unite(tiles_set);
+#endif
         }
 
         // Download SRTM tile(s) for view footprint
         Point2DLatLon nw(0, 0), se(0, 0);
         ui->map->getViewPoints(nw, se);
         auto tile_names = SRTMManager::get()->get_tile_names(se.lat(), nw.lat(), nw.lon(), se.lon());
+#if QT_VERSION_MAJOR == 5 && QT_VERSION_MINOR < 15
         tiles.unite(tile_names.toSet());
-
-        SRTMManager::get()->load_tiles(tiles.toList(), local_only);
+#else
+        auto tiles_set = QSet<QString>(tile_names.begin(), tile_names.end());
+        tiles.unite(tiles_set);
+#endif
+        SRTMManager::get()->load_tiles(tiles.values(), local_only);
 
     };
 

@@ -44,9 +44,9 @@ void LayerCombo::mousePressEvent(QMouseEvent* e) {
             moved_layer_control = mlc;
             press_pos = e->pos();
 
-            QSize pSize = mlc->pixmap()->size();
+            QSize pSize = mlc->pixmap().size();
             QSize pixSize = QSize(pSize.width()/2, pSize.height()/2);
-            moved_thumbnail->setPixmap(mlc->pixmap()->scaled(pixSize));
+            moved_thumbnail->setPixmap(mlc->pixmap().scaled(pixSize));
             moved_thumbnail->raise();
 
             QPoint globalPos = mapToGlobal(e->pos());
@@ -61,7 +61,11 @@ void LayerCombo::mouseMoveEvent(QMouseEvent* e) {
     (void) e;
     if(moved_layer_control) {
         QPoint globalPos = mapToGlobal(e->pos());
+#if QT_VERSION_MAJOR == 5 && QT_VERSION_MINOR < 15
         QSize pixSize = moved_thumbnail->pixmap()->size();
+#else
+        QSize pixSize = moved_thumbnail->pixmap(Qt::ReturnByValue).size();
+#endif
         QPoint pos(globalPos.x()-pixSize.width()/2, globalPos.y()-pixSize.height()/2);
         moved_thumbnail->move(pos);
         int w_y = e->pos().y();

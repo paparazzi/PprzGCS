@@ -205,7 +205,11 @@ void GraphWidget::wheelEvent(QWheelEvent *event) {
 
     params.autoscale = false;
     emit autoscaleChanged(params.autoscale);
+#if QT_VERSION_MAJOR == 5 && QT_VERSION_MINOR < 15
     double val = val_of_y(event->y());
+#else
+    double val = val_of_y(event->position().y());
+#endif
     double s = wheelAccumulator < 0 ? 2: 1/2.0;
     params.max = val + (params.max-val)*s;
     params.min = val + (params.min-val)*s;
