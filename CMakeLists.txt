@@ -32,11 +32,12 @@ endif()
 message("DEFAULT_APP_DATA_PATH set to ${DEFAULT_APP_DATA_PATH}")
 add_definitions(-DDEFAULT_APP_DATA_PATH="${DEFAULT_APP_DATA_PATH}")
 
-if(NOT PPRZGCS_VERSION)
-    if ("${PPRZGCS_VERSION}" STREQUAL "")
-        set(PPRZGCS_VERSION "devel")
-    endif()
-endif()
+# Get current version
+execute_process(
+    COMMAND ${CMAKE_SOURCE_DIR}/pprzgcs_version.sh
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE PPRZGCS_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
 message("PPRZGCS_VERSION set to ${PPRZGCS_VERSION}")
 add_definitions(-DPPRZGCS_VERSION="${PPRZGCS_VERSION}")
 
