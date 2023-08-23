@@ -88,7 +88,9 @@ private slots:
     void onMoveWaypointUi(Waypoint* wp, QString ac_id);
     void onShape(QString sender, pprzlink::Message msg);
     void clearShapes();
+    void clearDcShots();
     void onIntruder(QString sender, pprzlink::Message msg);
+    void onDcShot(QString sender, pprzlink::Message msg);
     void onGCSPos(pprzlink::Message msg);
     void onGVF(QString sender, pprzlink::Message msg);
 
@@ -120,6 +122,7 @@ private:
     QMap<QString, GVF_trajectory*> gvf_trajectories;
     QMap<QString, QVector<int>*> gvf_trajectories_config;
     QMap<QString, std::pair<MapItem*, QTime>> intruders;
+    QList<WaypointItem*> dc_shots;
     QTimer* timer_intruders;
     MapItem* gcsItem;
 

@@ -116,6 +116,12 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     connect(clear_shapes, &QAction::triggered, this, [=](){
         clearShapes();
     });
+
+    auto clear_dcshots = mapMenu->addAction("Clear DCSHOTS");
+    connect(clear_dcshots, &QAction::triggered, this, [=](){
+        clearDcShots();
+    });
+
     menu_clear_track = new QMenu("Clear Track", mapMenu);
     mapMenu->addMenu(menu_clear_track);
 
@@ -147,6 +153,11 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     PprzDispatcher::get()->bind("INTRUDER", this,
         [=](QString sender, pprzlink::Message msg) {
             onIntruder(sender, msg);
+        });
+
+    PprzDispatcher::get()->bind("DC_SHOT", this,
+        [=](QString sender, pprzlink::Message msg) {
+            onDcShot(sender, msg);
         });
 
     PprzDispatcher::get()->bind("FLIGHT_PARAM", this,
@@ -1129,6 +1140,13 @@ void MapWidget::clearShapes() {
     shapes.clear();
 }
 
+void MapWidget::clearDcShots() {
+    for(auto dsw: dc_shots) {
+        removeItem(dsw);
+    }
+    dc_shots.clear();
+}
+
 void MapWidget::onIntruder(QString sender, pprzlink::Message msg) {
     (void)sender;
     QString id, name;
@@ -1157,6 +1175,24 @@ void MapWidget::onIntruder(QString sender, pprzlink::Message msg) {
     addItem(itd);
 
     intruders[id] = make_pair(itd, QTime::currentTime());
+}
+
+void MapWidget::onDcShot(QString sender, pprzlink::Message msg) {
+    (void)sender;
+    int16_t photo_nr;
+    int32_t lat, lon;   // alt;
+    msg.getField("photo_nr", photo_nr);
+    msg.getField("lat", lat);
+    msg.getField("lon", lon);
+
+    auto p = PprzPalette(QColor(Qt::yellow), QBrush(Qt::yellow));
+    auto dsw = new WaypointItem(Point2DLatLon(lat/1e7, lon/1e7),"__NO_AC__", p , 15, this);
+    dsw->setStyle(GraphicsObject::Style::DCSHOT);
+    dsw->setEditable(false);
+
+    addItem(dsw);
+
+    dc_shots.append(dsw);
 }
 
 void MapWidget::onGCSPos(pprzlink::Message msg) {

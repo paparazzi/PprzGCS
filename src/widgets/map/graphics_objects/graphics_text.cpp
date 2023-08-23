@@ -28,6 +28,9 @@ void GraphicsText::changeFocus() {
     case GCS:
         setVisible(false);
         break;
+    case DCSHOT:
+        setVisible(false);
+        break;
     }
 
     update();

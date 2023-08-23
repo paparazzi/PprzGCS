@@ -17,6 +17,7 @@ public:
         CURRENT_NAV,
         CARROT,
         GCS,
+        DCSHOT,
     };
 
     enum Animation {

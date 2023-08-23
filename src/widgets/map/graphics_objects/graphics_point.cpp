@@ -92,6 +92,11 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         painter->drawLine(-halfSize, 0, halfSize, 0);
         }
         break;
+    case DCSHOT: {
+        painter->setBrush(QBrush(palette.getVariant(current_color)));
+        painter->drawEllipse(QPoint(0, 0), halfSize/2, halfSize/2);
+        }
+        break;
     }
 
 }
