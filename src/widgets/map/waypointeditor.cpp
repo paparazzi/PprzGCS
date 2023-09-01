@@ -31,13 +31,13 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     auto latLay = new QHBoxLayout();
     auto axis1_label = new QLabel("lat", this);
     latLay->addWidget(axis1_label);
-    auto latEdit = new QLineEdit(QString::number(wi->waypoint()->getLat()), this);
+    auto latEdit = new QLineEdit(QString::number(wi->waypoint()->getLat(), 'f', 7), this);
     latLay->addWidget(latEdit);
 
     auto lonLay = new QHBoxLayout();
     auto axis2_label = new QLabel("lon", this);
     lonLay->addWidget(axis2_label);
-    auto lonEdit = new QLineEdit(QString::number(wi->waypoint()->getLon()), this);
+    auto lonEdit = new QLineEdit(QString::number(wi->waypoint()->getLon(), 'f', 7), this);
     lonLay->addWidget(lonEdit);
 
     auto altLay = new QHBoxLayout();
@@ -147,8 +147,8 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
         if(text == WGS84) {
             axis1_label->setText("lat");
             axis2_label->setText("lon");
-            latEdit->setText(QString::number(wi->waypoint()->getLat()));
-            lonEdit->setText(QString::number(wi->waypoint()->getLon()));
+            latEdit->setText(QString::number(wi->waypoint()->getLat(), 'f', 7));
+            lonEdit->setText(QString::number(wi->waypoint()->getLon(), 'f', 7));
         }
         else if(text == WGS84_SEXA) {
             axis1_label->setText("lat");
@@ -175,8 +175,8 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
                 CoordinatesTransform::get()->wgs84_to_relative_utm(wi->waypoint()->getOrigin(), wp, x0, y0);
                 CoordinatesTransform::get()->wgs84_to_relative_utm(wi->waypoint()->getOrigin(), wi->waypoint(), x, y);
             }
-            latEdit->setText(QString::number(x-x0));
-            lonEdit->setText(QString::number(y-y0));
+            latEdit->setText(QString::number(x-x0, 'f', 1));
+            lonEdit->setText(QString::number(y-y0,  'f', 1));
 
         }
     });
