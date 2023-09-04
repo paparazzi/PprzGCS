@@ -1,3 +1,15 @@
+pprzgcs (1.0.11ubuntu1) focal; urgency=medium
+  
+  * v1.0.11
+
+  Add Chat widget
+  Handle scale in plotter and papgets
+  show DC_SHOT markers
+  Fix coordinates precision in waypoint editor
+  various fixes...
+
+ -- Fabien Bonneval <fabien.bonneval@gmail.com>  Mon, 04 Sep 2023 17:33:51 +0200
+
 pprzgcs (1.0.9ubuntu1~ubuntu20.04) focal; urgency=medium
 
   * v1.0.9
