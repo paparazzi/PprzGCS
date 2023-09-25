@@ -29,8 +29,6 @@ private:
     float beta;
     int which_spline = 0;
     QPointF phi;
-
-    float gcd(int a, int b);
 };
 
 #endif // GVF_TRAJ_bezier_H
