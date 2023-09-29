@@ -27,7 +27,6 @@ private:
     float kx;
     float ky;
     float beta;
-    int which_spline = 0;
     QPointF phi;
 };
 

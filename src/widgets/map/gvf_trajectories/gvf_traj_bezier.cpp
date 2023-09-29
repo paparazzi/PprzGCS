@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Path to files where data is saved. Choose the path you like.
+const char x_val[]  = "/tmp/x_values.txt"; 
+const char y_val[]  = "/tmp/y_values.txt";
+const char ks_val[] = "/tmp/ks_values.txt";
+
 GVF_traj_bezier::GVF_traj_bezier(QString id, QList<float> param, QList<float> _phi, 
 				  float wb, QVector<int> *gvf_settings) :
     GVF_trajectory(id, gvf_settings)
@@ -11,18 +16,16 @@ GVF_traj_bezier::GVF_traj_bezier(QString id, QList<float> param, QList<float> _p
 }
 
 // 2D bezier trajectory (parametric representation)
-void GVF_traj_bezier::genTraj() { 
+void GVF_traj_bezier::genTraj() {
+ 
     QList<QPointF> points;
-    
-
     // 0 <= t <= n_segments of the spline 
-    float max_t = n_seg; 
-
+    float max_t = (n_seg > 0) ? n_seg : 4; 
     // 100 pts per each segment
-    float num_pts = max_t*100; 
-
+    float num_pts = n_seg*100; 
     float dt = max_t /num_pts;
-    for (float t = 0; t <= max_t + dt/2; t+=dt) {
+    
+    for (float t = 0; t <= max_t; t+=dt) {
         points.append(traj_point(t));
     }
     createTrajItem(points);
@@ -32,60 +35,68 @@ void GVF_traj_bezier::genTraj() {
 // 2D bezier GVF 
 void GVF_traj_bezier::genVField() { 
 
-
-    QList<QPointF> vxy_mesh; 
-
-    float xmin, xmax, ymin, ymax;
-    xmin = xx[0]; xmax = xx[0]; ymin = yy[0]; ymax = yy[0];
-    for(int k = 0; k < 3*n_seg + 1; k++)
-    {
-		xmax = (xx[k] > xmax) ? xx[k] : xmax;
-		xmin = (xx[k] < xmin) ? xx[k] : xmin;
-		ymax = (yy[k] > ymax) ? yy[k] : ymax;
-		ymin = (yy[k] < ymin) ? yy[k] : ymin;
-    }  
-    	
-    //float bound_area = 2*(xmax-xmin)*(ymax-ymin);
-    float bound_area = 5*(xmax-xmin)*(ymax-ymin);
-    
-    // 40x40 is the number of arrows in x and in y
-    emit DispatcherUi::get()->gvf_defaultFieldSettings(ac_id, round(bound_area), 40, 40);
-    xy_mesh = meshGrid();
-    
-    foreach (const QPointF &point, xy_mesh) {
+	FILE *file_x; FILE *file_y; FILE *file_ks; 
 	
-	float phix = point.x() - traj_point(w).x(); // Normal component
-	float phiy = point.y() - traj_point(w).y(); // Normal Component
-	float sigx = beta*traj_point_deriv(w).x(); // Tangential Component
-	float sigy = beta*traj_point_deriv(w).y(); // Tangential Component
-	float vx = sigx - kx*phix;
-	float vy = sigy - ky*phiy;
-    float norm = sqrt(pow(vx,2) + pow(vy,2));
-    vxy_mesh.append(QPointF(vx/norm, vy/norm));
+	// Only draw the file when data is available
+	int cont = 0;
+	if((file_x = fopen(x_val, "r")) != NULL){
+		cont++;
+		fclose(file_x);
+	}
+	if((file_y = fopen(y_val, "r")) != NULL){
+		cont++;
+		fclose(file_y);
+	}
+	if((file_ks = fopen(ks_val, "r")) != NULL){
+		cont++;
+		fclose(file_ks);
+	}
+	
+	if(cont == 3){
+		QList<QPointF> vxy_mesh; 
+		float xmin, xmax, ymin, ymax;
+		xmin = xx[0]; xmax = xx[0]; ymin = yy[0]; ymax = yy[0];
+		for(int k = 0; k < 3*n_seg + 1; k++)
+		{
+			xmax = (xx[k] > xmax) ? xx[k] : xmax;
+			xmin = (xx[k] < xmin) ? xx[k] : xmin;
+			ymax = (yy[k] > ymax) ? yy[k] : ymax;
+			ymin = (yy[k] < ymin) ? yy[k] : ymin;
+		}  
+		
+		float bound_area = 5*(xmax-xmin)*(ymax-ymin);
+		emit DispatcherUi::get()->gvf_defaultFieldSettings(ac_id, round(bound_area), 40, 40);
+		xy_mesh = meshGrid();
+		
+		foreach (const QPointF &point, xy_mesh) {
+		
+			float phix = point.x() - traj_point(w).x(); // Normal component
+			float phiy = point.y() - traj_point(w).y(); // Normal Component
+			float sigx = beta*traj_point_deriv(w).x(); // Tangential Component
+			float sigy = beta*traj_point_deriv(w).y(); // Tangential Component
+			float vx = sigx - kx*phix;
+			float vy = sigy - ky*phiy;
+			float norm = sqrt(pow(vx,2) + pow(vy,2));
+			norm = (norm > 0) ? norm : 1; // Avoid division by zero
+			vxy_mesh.append(QPointF(vx/norm, vy/norm));
+		
+		}
+		createVFieldItem(xy_mesh, vxy_mesh);
+	}
+	else{
+		fprintf(stderr,"Field cannot be created yet, waiting for complete data...\n");
+	}
     
-    }
-
-    createVFieldItem(xy_mesh, vxy_mesh);
 }
+
 
 /////////////// PRIVATE FUNCTIONS ///////////////
 void GVF_traj_bezier::set_param(QList<float> param, QList<float> _phi, float wb) {
-	  // gvf_parametric_2D_bezier_wp()
-	// Lest test writing on a file the parameters, and then take the information from that file... (.txt file)
-	// TODO: Remove files when the program ends...
-	// TODO: join in one file. x in first line, y in second line, ks in third line. getline (or seek \n)? And then the pointer is in the next line¿¿¿¿¿
 
-	// Number of P points (P \in R^2) : 3*N_SEGMENTS + 1
-	// param[0] = N_SEGMENTS
-	FILE *file_x; FILE *file_y; FILE *file_ks; //FILE *file;
-	// TODO (ing) = Use only one file
-	char x_val[]  = "/tmp/x_values.txt"; // ...
-	char y_val[]  = "/tmp/y_values.txt";
-	char ks_val[] = "/tmp/ks_values.txt";
-	//char file_val[] = "/tmp/bez_values.txt";
 
-	int k = 1;
-
+	FILE *file_x; FILE *file_y; FILE *file_ks; 
+	int k;
+	
 	// Write:
 	if(param[0] < 0){
 		n_seg = -(int)param[0];
@@ -138,16 +149,24 @@ void GVF_traj_bezier::set_param(QList<float> param, QList<float> _phi, float wb)
 		fscanf(file_ks, "%f", &beta);
 		fclose(file_ks);
 	}
+	
 	phi = QPointF(_phi[0], _phi[1]);   //TODO: Display error in GVF viewer??
-	w = wb/beta; 		       // gvf_parametric_w = wb/beta (wb = w*beta)
+	w = (beta > 0) ? wb/beta : wb; 	   // gvf_parametric_w = wb/beta (wb = w*beta)
 }
 
 QPointF GVF_traj_bezier::traj_point(float t) {
 
-    int k = (int)t; // It works like a floor .. t >= k
+	if(t < 0.0)
+		t = 0.0;
+	else if(t >= (3*n_seg + 1))
+		t = (float)(3*n_seg + 1);
+		
+    int k = (int)t;
+    
     /* Each Bézier spline must be evaluated between 0 and 1. 
     Remove integer part, get fractional 
-    Choose which spline (0<=t<=1 -> Spline1 (coefs 0-3), 
+    Choose which spline:
+    (0<=t<=1 -> Spline1 (coefs 0-3), 
     1<=t<=2 -> Spline2 (coefs 3-6) ... */
     t = t - k;      
     k = 3*k;        
@@ -160,10 +179,17 @@ QPointF GVF_traj_bezier::traj_point(float t) {
 
 QPointF GVF_traj_bezier::traj_point_deriv(float t) {
 
-    int k = (int)t; // It works like a floor .. t >= k
+	// Just in case w from telemetry is not between bounds
+	if(t < 0.0)
+		t = 0.0;
+	else if(t >= (3*n_seg + 1))
+		t = (float)(3*n_seg + 1);
+		
+    int k = (int)t; 
     /* Each Bézier spline must be evaluated between 0 and 1. 
     Remove integer part, get fractional 
-    Choose which spline (0<=t<=1 -> Spline1 (coefs 0-3), 
+    Choose which spline:
+    (0<=t<=1 -> Spline1 (coefs 0-3), 
     1<=t<=2 -> Spline2 (coefs 3-6) ... */
     t = t - k;      
     k = 3*k;        
