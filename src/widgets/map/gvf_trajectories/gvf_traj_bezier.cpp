@@ -64,8 +64,8 @@ void GVF_traj_bezier::genVField() {
 			ymin = (yy[k] < ymin) ? yy[k] : ymin;
 		}  
 		
-		float bound_area = 5*(xmax-xmin)*(ymax-ymin);
-		emit DispatcherUi::get()->gvf_defaultFieldSettings(ac_id, round(bound_area), 40, 40);
+		float bound_area = 20*(xmax-xmin)*(ymax-ymin);
+		emit DispatcherUi::get()->gvf_defaultFieldSettings(ac_id, round(bound_area), 60, 60);
 		xy_mesh = meshGrid();
 		
 		foreach (const QPointF &point, xy_mesh) {
@@ -171,7 +171,7 @@ QPointF GVF_traj_bezier::traj_point(float t) {
     t = t - k;      
     k = 3*k;        
     float x = xx[k]*(1-t)*(1-t)*(1-t) + 3*(1-t)*(1-t)*t*xx[k+1] + 
-    	      3*(1-t)*t*t*xx[k+2] + t*t*t*xx[k+3]; 
+    	      3*(1-t)*t*t*xx[k+2] + t*t*t*xx[k+3] + 0.19; 
     float y = yy[k]*(1-t)*(1-t)*(1-t) + 3*(1-t)*(1-t)*t*yy[k+1] + 
      	      3*(1-t)*t*t*yy[k+2] + t*t*t*yy[k+3];   
     return QPointF(x,y);
