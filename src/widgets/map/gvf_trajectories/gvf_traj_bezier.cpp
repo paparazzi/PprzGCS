@@ -3,9 +3,9 @@
 #include <stdlib.h>
 
 // Path to files where data is saved. Choose the path you like.
-const char x_val[]  = "/tmp/x_values.txt"; 
-const char y_val[]  = "/tmp/y_values.txt";
-const char ks_val[] = "/tmp/ks_values.txt";
+const char x_val[]  = "var/logs/gvf_parametric_curve_x_values.data"; 
+const char y_val[]  = "var/logs/gvf_parametric_curve_y_values.data";
+const char ks_val[] = "var/logs/gvf_parametric_curve_ctrl_values.data";
 
 GVF_traj_bezier::GVF_traj_bezier(QString id, QList<float> param, QList<float> _phi, 
 				  float wb, QVector<int> *gvf_settings) :
