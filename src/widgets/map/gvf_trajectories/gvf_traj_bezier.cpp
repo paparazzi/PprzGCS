@@ -156,6 +156,7 @@ void GVF_traj_bezier::set_param(QList<float> param, QList<float> _phi, float wb)
 
 QPointF GVF_traj_bezier::traj_point(float t) {
 
+  // Just in case w from telemetry is not between bounds
 	if(t < 0.0)
 		t = 0.0;
 	else if(t >= (3*n_seg + 1))
@@ -186,6 +187,7 @@ QPointF GVF_traj_bezier::traj_point_deriv(float t) {
 		t = (float)(3*n_seg + 1);
 		
     int k = (int)t; 
+    
     /* Each Bézier spline must be evaluated between 0 and 1. 
     Remove integer part, get fractional 
     Choose which spline:
