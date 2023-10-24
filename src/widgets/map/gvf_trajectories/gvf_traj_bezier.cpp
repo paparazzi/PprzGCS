@@ -172,7 +172,7 @@ QPointF GVF_traj_bezier::traj_point(float t) {
     t = t - k;      
     k = 3*k;        
     float x = xx[k]*(1-t)*(1-t)*(1-t) + 3*(1-t)*(1-t)*t*xx[k+1] + 
-    	      3*(1-t)*t*t*xx[k+2] + t*t*t*xx[k+3] + 0.19; 
+    	      3*(1-t)*t*t*xx[k+2] + t*t*t*xx[k+3]; 
     float y = yy[k]*(1-t)*(1-t)*(1-t) + 3*(1-t)*(1-t)*t*yy[k+1] + 
      	      3*(1-t)*t*t*yy[k+2] + t*t*t*yy[k+3];   
     return QPointF(x,y);
