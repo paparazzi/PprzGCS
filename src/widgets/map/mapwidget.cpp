@@ -37,6 +37,7 @@
 #include "gvf_traj_trefoil.h"
 #include "gvf_traj_3D_ellipse.h"
 #include "gvf_traj_3D_lissajous.h"
+#include "gvf_traj_bezier.h"
 
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
@@ -1251,6 +1252,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
 
     // Common parser definitions
     uint8_t traj;
+    float wb;
     QList<float> param = {0.0};
     int8_t direction;
     GVF_trajectory* gvf_traj;
@@ -1290,6 +1292,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         QList<float> phi = {0.0}; // Error signals
         
         msg.getField("traj", traj);
+        msg.getField("w", wb);
         msg.getField("p", param);
         msg.getField("phi", phi);
 
@@ -1305,6 +1308,10 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
             }
             case 2: { // Lissajous 3D
                 gvf_traj = new GVF_traj_3D_lissajous(sender, param, phi, gvf_trajectories_config[sender]);
+                break;
+            }
+            case 3: { // Bezier 2D
+                gvf_traj = new GVF_traj_bezier(sender, param, phi, wb, gvf_trajectories_config[sender]);
                 break;
             }
             default:
