@@ -23,9 +23,10 @@ private:
         DOUBLE,
         PATH_DIR,
         PATH_FILE,
+        STRING_COMBO,
     };
 
-    std::function<void()> addSetting(QString name, QString key, QWidget* w, QGridLayout* gl, int &row, Type type);
+    std::function<void()> addSetting(QString name, QString key, QWidget* w, QGridLayout* gl, int &row, Type type, QVariant data = QVariant());
 
     QList<std::function<void()>> callbacks;
 
