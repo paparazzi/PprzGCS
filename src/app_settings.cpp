@@ -138,7 +138,10 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     auto w_general = new QWidget(tabWidget);
     auto l_general = new QGridLayout(w_general);
     row = 0;
-    cb = addSetting("Layout", "APP_LAYOUT_FILE", w_general, l_general, row, Type::PATH_FILE);
+
+    auto user_layout_files = getLayoutFiles("USER_DATA_PATH");
+    auto app_layout_files = getLayoutFiles("APP_DATA_PATH");
+    cb = addSetting("Layout", "APP_LAYOUT_FILE", w_general, l_general, row, Type::STRING_COMBO, user_layout_files + app_layout_files);
     callbacks.append(cb);
     cb = addSetting("Style", "APP_STYLE_FILE", w_general, l_general, row, Type::PATH_FILE);
     callbacks.append(cb);

@@ -2,6 +2,7 @@
 #include <QDebug>
 #include <QRegExp>
 #include <QSettings>
+#include <QtXml>
 
 QString user_or_app_path(QString data_path) {
     auto path = appConfig()->value("USER_DATA_PATH").toString() + "/" + data_path;
@@ -80,4 +81,29 @@ void logDebug(QString log_class, QString msg, LogLevel level) {
         auto str = QString("[%1] %2").arg(log_class, msg);
         qDebug() << str;
     }
+}
+
+
+QStringList getLayoutFiles(QString location) {
+    auto path = appConfig()->value(location).toString();
+    if(path.isNull()) {
+        return QStringList();
+    }
+
+    QDir conf_dir(path);
+    auto xml_files = conf_dir.entryList({"*.xml"});
+    QStringList layout_files;
+    for(auto &fn:xml_files) {
+        QFile f(path + "/" + fn);
+        if(f.open(QIODevice::ReadOnly)) {
+            QDomDocument doc;
+            doc.setContent(&f);
+            auto ele = doc.firstChildElement( "gcsconf" );
+            if(!ele.isNull()) {
+                layout_files.append(fn);
+            }
+            f.close();
+        }
+    }
+    return layout_files;
 }

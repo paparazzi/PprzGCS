@@ -27,3 +27,4 @@ bool speech();
 void setSpeech(bool s);
 
 void logDebug(QString log_class, QString msg, LogLevel level = LogLevel::LOG_MID);
+QStringList getLayoutFiles(QString location);
