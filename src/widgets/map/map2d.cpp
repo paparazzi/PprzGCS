@@ -11,6 +11,7 @@
 #include "coordinatestransform.h"
 #include <QApplication>
 #include "gcs_utils.h"
+#include "globalconfig.h"
 
 Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     numericZoom(0.0), _zoom(5.0), tile_size(256), minZoom(0.0), maxZoom(25.0), wheelAccumulator(0),
@@ -19,8 +20,10 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     auto settings = getAppSettings();
     QString configFile = user_or_app_path("tile_sources.xml");
     auto configs = loadConfig(configFile);
+    QStringList tile_providers_names;
     for(auto c:configs) {
         auto providerName = c->name;
+        tile_providers_names.append(providerName);
         if(tile_providers.size() == 0) {
             // the tile size choosen will be the one of the first tile provider.
             tile_size = c->tileSize;
@@ -33,6 +36,7 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
         connect(tp, &TileProvider::displayTile, this, &Map2D::handleTile);
         tile_providers[providerName] = tp;
     }
+    GlobalConfig::get()->setValue("tile_providers_names", tile_providers_names);
 
     qreal maxxy = tile_size*pow(2, maxZoom);
     _scene = new MapScene(-maxxy, -maxxy, 2*tile_size*maxxy, 2*tile_size*maxxy, this);
