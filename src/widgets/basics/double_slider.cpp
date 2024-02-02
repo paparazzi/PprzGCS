@@ -3,6 +3,7 @@
 #include <QToolTip>
 #include <QWheelEvent>
 #include <QDebug>
+#include <math.h>
 
 DoubleSlider::DoubleSlider(Qt::Orientation orientation, QWidget *parent) : QSlider(orientation, parent)
 {
@@ -20,7 +21,7 @@ void DoubleSlider::setDoubleRange(double mi, double ma, double sp) {
     min = mi;
     max = ma;
     step = sp;
-    int nb_steps = (max - min) / step + 1;
+    int nb_steps = ceil((max - min) / step);
     setRange(0, nb_steps);
     if(nb_steps < 20) {
         setTickPosition(QSlider::TicksBelow);
