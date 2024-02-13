@@ -18,6 +18,7 @@ public:
         CARROT,
         GCS,
         DCSHOT,
+        CRASH,
     };
 
     enum Animation {

@@ -97,6 +97,13 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         painter->drawEllipse(QPoint(0, 0), halfSize/2, halfSize/2);
         }
         break;
+    case CRASH: {
+        // Draw a red cross with thickness 3
+        painter->setPen(QPen(QColor(255, 0, 0), 3));
+        painter->drawLine(QPoint(-halfSize/2, -halfSize/2), QPoint(halfSize/2, halfSize/2));
+        painter->drawLine(QPoint(-halfSize/2, halfSize/2), QPoint(halfSize/2, -halfSize/2));
+        }
+        break;
     }
 
 }

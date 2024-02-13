@@ -91,6 +91,7 @@ private slots:
     void clearDcShots();
     void onIntruder(QString sender, pprzlink::Message msg);
     void onDcShot(QString sender, pprzlink::Message msg);
+    void onROTORCRAFT_FP(QString sender, pprzlink::Message msg);
     void onGCSPos(pprzlink::Message msg);
     void onGVF(QString sender, pprzlink::Message msg);
 
@@ -125,6 +126,7 @@ private:
     QList<WaypointItem*> dc_shots;
     QTimer* timer_intruders;
     MapItem* gcsItem;
+    MapItem* crashItem;
 
     QHBoxLayout* horizontalLayout;
 

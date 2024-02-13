@@ -31,6 +31,9 @@ void GraphicsText::changeFocus() {
     case DCSHOT:
         setVisible(false);
         break;
+    case CRASH:
+        setVisible(false);
+        break;
     }
 
     update();
