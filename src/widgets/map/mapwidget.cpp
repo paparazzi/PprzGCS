@@ -29,6 +29,7 @@
 #include "intruder_item.h"
 #include "arrow_item.h"
 #include "pprzmain.h"
+#include "coordinatestransform.h"
 
 #include "quiver_item.h"
 #include "gvf_traj_line.h"
@@ -113,6 +114,13 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     connect(show_hidden_wp_action, &QAction::toggled, [=](bool show) {
         setProperty("show_hidden_waypoints", show);
     });
+
+    show_crash_prediction_action = mapMenu->addAction("Show crash prediction");
+    show_crash_prediction_action->setCheckable(true);
+    connect(show_crash_prediction_action, &QAction::toggled, [=](bool show) {
+        setProperty("show_crash_prediction", show);
+    });
+
     auto clear_shapes = mapMenu->addAction("Clear Shapes");
     connect(clear_shapes, &QAction::triggered, this, [=](){
         clearShapes();
@@ -134,11 +142,11 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
         [=](QString sender, QVector<int>* gvfViewer_config) {
             gvf_trajectories_config.remove(sender);
             gvf_trajectories_config[sender] = gvfViewer_config;
-        });  
+        });
 
     connect(  DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &MapWidget::handleNewAC);
     connect(  DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &MapWidget::removeAC);
-    connect(  DispatcherUi::get(), &DispatcherUi::ac_selected, this, &MapWidget::changeCurrentAC);  
+    connect(  DispatcherUi::get(), &DispatcherUi::ac_selected, this, &MapWidget::changeCurrentAC);
     connect(  DispatcherUi::get(), &DispatcherUi::centerMap, this, &MapWidget::centerLatLon);
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &MapWidget::updateAircraftItem);
     connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &MapWidget::updateTarget);
@@ -186,6 +194,11 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     PprzDispatcher::get()->bind("GVF_PARAMETRIC", this,
         [=](QString sender, pprzlink::Message msg) {
             onGVF(sender, msg);
+        });
+
+    PprzDispatcher::get()->bind("ROTORCRAFT_FP", this,
+        [=](QString sender, pprzlink::Message msg) {
+            onROTORCRAFT_FP(sender, msg);
         });
 
     setAcceptDrops(true);
@@ -747,6 +760,16 @@ void MapWidget::handleNewAC(QString ac_id) {
         double z_carrot = settings.value("map/z_values/carrot").toDouble();
         target->setZValues(z_carrot, z_carrot);
 
+        // create crash item at dummy position
+        auto crash_item = new WaypointItem(Point2DLatLon(0, 0), ac_id, 16);
+        crash_item->setStyle(GraphicsObject::Style::CRASH);
+        if(!show_crash_prediction_action->isChecked()) {
+            crash_item->setVisible(false);
+        } else {
+            crash_item->setVisible(true);
+        }
+        addItem(crash_item);
+
         ArrowItem* arrow = new ArrowItem(ac_id, 15, this);
         addItem(arrow);
         arrow->setProperty("size", _ac_arrow_size);
@@ -757,7 +780,7 @@ void MapWidget::handleNewAC(QString ac_id) {
         });
 
         //create the ACItemManager for this aircraft
-        item_manager = new ACItemManager(ac_id, target, aircraft_item, arrow, this);
+        item_manager = new ACItemManager(ac_id, target, aircraft_item, arrow, crash_item, this);
 
         auto clear_track = new QAction(ac->name(), ac);
         connect(clear_track, &QAction::triggered, aircraft_item, [=](){
@@ -767,7 +790,7 @@ void MapWidget::handleNewAC(QString ac_id) {
 
     } else {
         //create the ACItemManager for this fake aircraft (flightplan only)
-        item_manager = new ACItemManager(ac_id, nullptr, nullptr, nullptr, this);
+        item_manager = new ACItemManager(ac_id, nullptr, nullptr, nullptr, nullptr, this);
     }
 
     ac_items_managers[ac_id] = item_manager;
@@ -1196,6 +1219,47 @@ void MapWidget::onDcShot(QString sender, pprzlink::Message msg) {
     dc_shots.append(dsw);
 }
 
+void MapWidget::onROTORCRAFT_FP(QString sender, pprzlink::Message msg) {
+
+    int32_t east, north, up, vnorth, veast, vup;
+    msg.getField("east", east);
+    msg.getField("north", north);
+    msg.getField("up", up);
+    msg.getField("vnorth", vnorth);
+    msg.getField("veast", veast);
+    msg.getField("vup", vup);
+
+  if(AircraftManager::get()->aircraftExists(sender)) {
+    ac_items_managers[sender]->getCrashItem();
+
+    float g = -9.81f;
+
+    double vx = veast*0.00000190734;
+    double vy = vnorth*0.00000190734;
+    double vz = vup*0.00000190734;
+
+    double x = east*0.0039063;
+    double y = north*0.0039063;
+    double z = up*0.0039063;
+
+    double h = fabs(z); // Should be height above ground, make sure to initialize local frame on ground
+
+    // With h always larger than 0, the sqrt can never give nan
+    float time_fall = (-vz - sqrtf(vz*vz -2.f*h*g))/g;
+
+    double x_pos = x + time_fall*vx;
+    double y_pos = y + time_fall*vy;
+
+    auto ac = AircraftManager::get()->getAircraft(sender);
+    auto orig = ac->getFlightPlan()->getOrigin();
+    Point2DLatLon pos(orig);
+
+    Point2DLatLon markerpos = CoordinatesTransform::get()->ltp_to_wgs84(pos,x_pos,y_pos);
+
+    ac_items_managers[sender]->getCrashItem()->setPosition(markerpos);
+  }
+}
+
 void MapWidget::onGCSPos(pprzlink::Message msg) {
     if(gcsItem) {
         removeItem(gcsItem);
@@ -1228,7 +1292,7 @@ void MapWidget::setAcArrowSize(int s) {
 }
 
 void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
-    
+
     if(!gvf_loaded) {
         return;
     }
@@ -1245,7 +1309,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
 
         gvf_trajectories[sender]->purge_trajectory();
         delete gvf_trajectories[sender];
-        
+
         gvf_trajectories.remove(sender);
         ac_items_managers[sender]->setCurrentGVF(nullptr);
     }
@@ -1256,7 +1320,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     QList<float> param = {0.0};
     int8_t direction;
     GVF_trajectory* gvf_traj;
-    
+
     // GVF message parser
     if(msg.getDefinition().getName() == "GVF") {
         float error, ke;
@@ -1268,7 +1332,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
         msg.getField("p", param);
 
         switch(traj)
-        {   
+        {
             case 0: {// Straight line
                 gvf_traj = new GVF_traj_line(sender, param, direction, ke, gvf_trajectories_config[sender]);
                 break;
@@ -1290,14 +1354,14 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     // GVF_PARAMETRIC
     else if (msg.getDefinition().getName() == "GVF_PARAMETRIC") {
         QList<float> phi = {0.0}; // Error signals
-        
+
         msg.getField("traj", traj);
         msg.getField("w", wb);
         msg.getField("p", param);
         msg.getField("phi", phi);
 
         switch(traj)
-        {   
+        {
             case 0: {// Trefoil 2D
                 gvf_traj = new GVF_traj_trefoil(sender, param, phi, gvf_trajectories_config[sender]);
                 break;
@@ -1321,7 +1385,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     } else {
         return;
     }
-    
+
     addItem(gvf_traj->getTraj());
     addItem(gvf_traj->getVField());
     ac_items_managers[sender]->setCurrentGVF(gvf_traj);
@@ -1341,6 +1405,19 @@ void MapWidget::showHiddenWaypoints(bool state) {
                     wpi->setStyle(GraphicsPoint::Style::CURRENT_NAV);
                 }
             }
+        }
+    }
+}
+
+void MapWidget::showCrashPrediction(bool state) {
+    show_crash_prediction_action->blockSignals(true);
+    show_crash_prediction_action->setChecked(state);
+    show_crash_prediction_action->blockSignals(false);
+    for(auto &itemManager: ac_items_managers) {
+        if(state) {
+            itemManager->getCrashItem()->setVisible(true);
+        } else {
+            itemManager->getCrashItem()->setVisible(false);
         }
     }
 }
