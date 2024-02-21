@@ -764,9 +764,9 @@ void MapWidget::handleNewAC(QString ac_id) {
         auto crash_item = new WaypointItem(Point2DLatLon(0, 0), ac_id, 16);
         crash_item->setStyle(GraphicsObject::Style::CRASH);
         if(!show_crash_prediction_action->isChecked()) {
-            crash_item->setSize(0);
+            crash_item->setVisible(false);
         } else {
-            crash_item->setSize(5);
+            crash_item->setVisible(true);
         }
         addItem(crash_item);
 
@@ -1415,9 +1415,9 @@ void MapWidget::showCrashPrediction(bool state) {
     show_crash_prediction_action->blockSignals(false);
     for(auto &itemManager: ac_items_managers) {
         if(state) {
-            itemManager->getCrashItem()->setSize(5*2);
+            itemManager->getCrashItem()->setVisible(true);
         } else {
-            itemManager->getCrashItem()->setSize(0);
+            itemManager->getCrashItem()->setVisible(false);
         }
     }
 }
