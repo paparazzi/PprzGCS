@@ -42,7 +42,7 @@
 
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
-    interaction_state(PMIS_OTHER), drawState(false), fp_edit_sm(nullptr), gcsItem(nullptr),crashItem(nullptr),
+    interaction_state(PMIS_OTHER), drawState(false), fp_edit_sm(nullptr), gcsItem(nullptr),
     pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton),
     _ac_arrow_size(30)
 {
@@ -753,6 +753,11 @@ void MapWidget::handleNewAC(QString ac_id) {
         double z_carrot = settings.value("map/z_values/carrot").toDouble();
         target->setZValues(z_carrot, z_carrot);
 
+        // create crash item at dummy position
+        auto crash_item = new WaypointItem(Point2DLatLon(0, 0), ac_id, 16);
+        crash_item->setStyle(GraphicsObject::Style::CRASH);
+        addItem(crash_item);
+
         ArrowItem* arrow = new ArrowItem(ac_id, 15, this);
         addItem(arrow);
         arrow->setProperty("size", _ac_arrow_size);
@@ -763,7 +768,7 @@ void MapWidget::handleNewAC(QString ac_id) {
         });
 
         //create the ACItemManager for this aircraft
-        item_manager = new ACItemManager(ac_id, target, aircraft_item, arrow, this);
+        item_manager = new ACItemManager(ac_id, target, aircraft_item, arrow, crash_item, this);
 
         auto clear_track = new QAction(ac->name(), ac);
         connect(clear_track, &QAction::triggered, aircraft_item, [=](){
@@ -773,7 +778,7 @@ void MapWidget::handleNewAC(QString ac_id) {
 
     } else {
         //create the ACItemManager for this fake aircraft (flightplan only)
-        item_manager = new ACItemManager(ac_id, nullptr, nullptr, nullptr, this);
+        item_manager = new ACItemManager(ac_id, nullptr, nullptr, nullptr, nullptr, this);
     }
 
     ac_items_managers[ac_id] = item_manager;
@@ -1203,11 +1208,6 @@ void MapWidget::onDcShot(QString sender, pprzlink::Message msg) {
 }
 
 void MapWidget::onROTORCRAFT_FP(QString sender, pprzlink::Message msg) {
-    (void)sender;
-
-    if(crashItem) {
-        removeItem(crashItem);
-    }
 
     int32_t east, north, up, vnorth, veast, vup;
     msg.getField("east", east);
@@ -1217,7 +1217,8 @@ void MapWidget::onROTORCRAFT_FP(QString sender, pprzlink::Message msg) {
     msg.getField("veast", veast);
     msg.getField("vup", vup);
 
-  if(AircraftManager::get()->aircraftExists(current_ac)) {
+  if(AircraftManager::get()->aircraftExists(sender)) {
+    ac_items_managers[sender]->getCrashItem();
 
     float g = -9.81f;
 
@@ -1237,21 +1238,14 @@ void MapWidget::onROTORCRAFT_FP(QString sender, pprzlink::Message msg) {
     double x_pos = x + time_fall*vx;
     double y_pos = y + time_fall*vy;
 
-    auto ac = AircraftManager::get()->getAircraft(current_ac);
+    auto ac = AircraftManager::get()->getAircraft(sender);
     auto orig = ac->getFlightPlan()->getOrigin();
     Point2DLatLon pos(orig);
 
     Point2DLatLon markerpos = CoordinatesTransform::get()->ltp_to_wgs84(pos,x_pos,y_pos);
 
-    auto p = PprzPalette(QColor(Qt::yellow), QBrush(Qt::yellow));
-
-    auto crashpos = new WaypointItem(markerpos,"__NO_AC__", p , 15, this);
-    crashpos->setStyle(GraphicsObject::Style::CRASH);
-    crashpos->setEditable(false);
-    addItem(crashpos);
-
-    crashItem = crashpos;
-    }
+    ac_items_managers[sender]->getCrashItem()->setPosition(markerpos);
+  }
 }
 
 void MapWidget::onGCSPos(pprzlink::Message msg) {

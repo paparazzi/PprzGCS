@@ -126,7 +126,6 @@ private:
     QList<WaypointItem*> dc_shots;
     QTimer* timer_intruders;
     MapItem* gcsItem;
-    MapItem* crashItem;
 
     QHBoxLayout* horizontalLayout;
 

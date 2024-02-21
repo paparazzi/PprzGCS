@@ -1,8 +1,8 @@
 #include "acitemmanager.h"
 
-ACItemManager::ACItemManager(QString ac_id, WaypointItem* target, AircraftItem* aircraft_item, ArrowItem* arrow, QObject* parent):
+ACItemManager::ACItemManager(QString ac_id, WaypointItem* target, AircraftItem* aircraft_item, ArrowItem* arrow, WaypointItem* crash_item, QObject* parent):
     QObject(parent),
-    ac_id(ac_id), target(target), aircraft_item(aircraft_item),
+    ac_id(ac_id), target(target), aircraft_item(aircraft_item), crash_item(crash_item),
     current_nav_shape(nullptr), max_dist_circle(nullptr), arrow_item(arrow), gvf_trajectory(nullptr)
 {
 
@@ -71,5 +71,10 @@ void ACItemManager::removeItems(MapWidget* map) {
     if(max_dist_circle) {
         map->removeItem(max_dist_circle);
         max_dist_circle = nullptr;
+    }
+
+    if(crash_item) {
+        map->removeItem(crash_item);
+        crash_item = nullptr;
     }
 }

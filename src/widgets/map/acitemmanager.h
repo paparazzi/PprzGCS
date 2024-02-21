@@ -14,7 +14,7 @@ class ACItemManager: public QObject
 {
     Q_OBJECT
 public:
-    ACItemManager(QString ac_id, WaypointItem* target, AircraftItem* aircraft_item, ArrowItem* arrow_item, QObject* parent=nullptr);
+    ACItemManager(QString ac_id, WaypointItem* target, AircraftItem* aircraft_item, ArrowItem* arrow_item, WaypointItem* crash_item, QObject* parent=nullptr);
 
     void addWaypointItem(WaypointItem*);
     void addPathItem(PathItem*);
@@ -27,6 +27,7 @@ public:
     MapItem* getCurrentNavShape() {return current_nav_shape;}
     AircraftItem* getAircraftItem() {return aircraft_item;}
     ArrowItem* getArrowItem() {return arrow_item;}
+    WaypointItem* getCrashItem() {return crash_item;}
     void removeItems(MapWidget* map);
 
 private:
@@ -38,6 +39,7 @@ private:
     MapItem* current_nav_shape;
     CircleItem* max_dist_circle;
     ArrowItem* arrow_item;
+    WaypointItem* crash_item;
 
     GVF_trajectory* gvf_trajectory;
 };
