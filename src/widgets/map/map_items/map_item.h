@@ -47,6 +47,8 @@ public:
     double neutralScaleZoom() {return neutral_scale_zoom;}
     void setZoomFactor(double zf) {zoom_factor = zf;}
     virtual void updateZValue() = 0;
+    bool isVisible() {return visible;}
+    virtual void setVisible(bool visible) = 0;
     qreal zValue() {return z_value;}
     QString acId() {return ac_id;}
     void requestUpdate() {emit itemChanged();}
@@ -75,6 +77,7 @@ protected:
     double neutral_scale_zoom;
     qreal z_value;
     bool highlighted;
+    bool visible;
 
     qreal z_value_highlighted;
     qreal z_value_unhighlighted;

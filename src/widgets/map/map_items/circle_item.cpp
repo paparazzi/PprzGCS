@@ -114,6 +114,14 @@ void CircleItem::updateZValue() {
     graphics_text->setZValue(z_value + 0.5);
 }
 
+void CircleItem::setVisible(bool visible) {
+    circle->setVisible(visible);
+    graphics_text->setVisible(visible);
+    if(ownCenter()) {
+        center->setVisible(visible);
+    }
+}
+
 void CircleItem::updateGraphics(MapWidget* map, uint32_t update_event) {
     if(update_event & (UpdateEvent::ITEM_CHANGED | UpdateEvent::MAP_ZOOMED)) {
         double s = getScale(map->zoom(), map->scaleFactor());

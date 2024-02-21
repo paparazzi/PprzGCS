@@ -16,6 +16,7 @@ public:
     virtual void setForbidHighlight(bool fh) override;
     virtual void setEditable(bool ed) override;
     virtual void updateZValue() override;
+    virtual void setVisible(bool visible) override;
 
     void setPosition(Point2DLatLon pt);
     void setCourse(double c);

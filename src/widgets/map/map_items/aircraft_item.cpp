@@ -137,6 +137,15 @@ void AircraftItem::updateZValue() {
     }
 }
 
+void AircraftItem::setVisible(bool visible) {
+    graphics_aircraft->setVisible(visible);
+    graphics_text->setVisible(visible);
+    alarms->setVisible(visible);
+    for(auto &line: graphics_lines) {
+        line->setVisible(visible);
+    }
+}
+
 void AircraftItem::setForbidHighlight(bool fh) {
     graphics_aircraft->setForbidHighlight(fh);
 }

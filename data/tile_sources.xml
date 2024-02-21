@@ -1,5 +1,12 @@
 <sources>
 	<source
+		name="LubrizolPM5" dir="LubrizolPM5"
+		addr=""
+		zoomMin="0" zoomMax="18"
+		tileSize="256"
+		format=".png"
+	/>
+	<source
 		name="Voliere" dir="VOLIERE"
 		addr=""
 		zoomMin="15" zoomMax="25"

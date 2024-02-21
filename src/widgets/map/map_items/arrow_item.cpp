@@ -43,6 +43,10 @@ void ArrowItem::updateZValue() {
     scene_item->setZValue(z_value);
 }
 
+void ArrowItem::setVisible(bool visible) {
+    scene_item->setVisible(visible);
+}
+
 void ArrowItem::setForbidHighlight(bool fh) {
     (void)fh;
 }

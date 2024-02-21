@@ -25,6 +25,7 @@ public:
     virtual void addToMap(MapWidget* map);
     virtual void setHighlighted(bool h);
     virtual void updateZValue();
+    virtual void setVisible(bool visible);
     virtual void setForbidHighlight(bool fh);
     virtual void setEditable(bool ed);
     virtual void removeFromScene(MapWidget* map);

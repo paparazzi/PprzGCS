@@ -16,6 +16,7 @@ public:
     WaypointItem* getCenter() { return center;}
     GraphicsCircle* getGraphicsCircle() {return circle;}
     void setOwnCenter(bool own) { if(own) {center->setParent(this);} }
+    bool ownCenter() {return center->parent() == this;}
     void setScalable(bool scalable) {
         circle->setIgnoreEvent(!scalable);
     }
@@ -25,6 +26,7 @@ public:
     void setForbidHighlight(bool fh);
     virtual void setEditable(bool ed);
     virtual void updateZValue();
+    virtual void setVisible(bool visible);
     virtual void updateGraphics(MapWidget* map, uint32_t update_event);
     virtual void removeFromScene(MapWidget* map);
     void setText(QString text);

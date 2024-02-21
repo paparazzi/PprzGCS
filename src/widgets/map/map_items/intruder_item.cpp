@@ -76,3 +76,8 @@ void IntruderItem::updateZValue() {
     graphics_intruder->setZValue(z_value);
     graphics_text->setZValue(z_value);
 }
+
+void IntruderItem::setVisible(bool visible) {
+    graphics_intruder->setVisible(visible);
+    graphics_text->setVisible(visible);
+}

@@ -20,7 +20,7 @@ public:
     virtual void updateZValue() override;
     virtual void setEditable(bool ed) override;
 
-    void setVisible(bool vis);
+    virtual void setVisible(bool vis);
     void addQuiver(Point2DLatLon pos, Point2DLatLon vpos);
     void removeQuivers();
 

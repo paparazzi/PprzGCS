@@ -119,6 +119,11 @@ void WaypointItem::updateZValue() {
     graphics_text->setZValue(z_value);
 }
 
+void WaypointItem::setVisible(bool visible) {
+    point->setVisible(visible);
+    graphics_text->setVisible(visible);
+}
+
 void WaypointItem::updateGraphics(MapWidget* map, uint32_t update_event) {
     if(update_event & (UpdateEvent::ITEM_CHANGED | UpdateEvent::MAP_ZOOMED | UpdateEvent::MAP_ROTATED)) {
         QPointF scene_pos = scenePoint(Point2DLatLon(_waypoint), zoomLevel(map->zoom()), map->tileSize());

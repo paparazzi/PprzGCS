@@ -1,3 +1,4 @@
+#include "quiver_item.h"
 #include "gcs_utils.h"
 #include "mapwidget.h"
 

@@ -15,6 +15,7 @@ public:
 
     virtual void setHighlighted(bool h);
     virtual void updateZValue();
+    virtual void setVisible(bool visible);
     virtual void setForbidHighlight(bool fh);
     virtual void setEditable(bool ed){(void)ed;}
     virtual void removeFromScene(MapWidget* map);
