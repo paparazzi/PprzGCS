@@ -2,8 +2,8 @@
 
 ACItemManager::ACItemManager(QString ac_id, WaypointItem* target, AircraftItem* aircraft_item, ArrowItem* arrow, WaypointItem* crash_item, QObject* parent):
     QObject(parent),
-    ac_id(ac_id), target(target), aircraft_item(aircraft_item), crash_item(crash_item),
-    current_nav_shape(nullptr), max_dist_circle(nullptr), arrow_item(arrow), gvf_trajectory(nullptr)
+    ac_id(ac_id), target(target), aircraft_item(aircraft_item),
+    current_nav_shape(nullptr), max_dist_circle(nullptr), arrow_item(arrow), crash_item(crash_item), gvf_trajectory(nullptr)
 {
 
 }

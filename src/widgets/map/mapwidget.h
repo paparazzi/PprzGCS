@@ -42,6 +42,7 @@ class MapWidget : public Map2D, public Configurable
     Q_OBJECT
     Q_PROPERTY(int ac_arrow_size MEMBER _ac_arrow_size WRITE setAcArrowSize)
     Q_PROPERTY(bool show_hidden_waypoints WRITE showHiddenWaypoints)
+    Q_PROPERTY(bool show_crash_prediction WRITE showCrashPrediction)
 public:
     explicit MapWidget(QWidget *parent = nullptr);
 
@@ -61,6 +62,7 @@ public:
     void rotateMap(double rot);
     void setAcArrowSize(int s);
     void showHiddenWaypoints(bool state);
+    void showCrashPrediction(bool state);
 
 signals:
     void mouseMoved(QPointF scenePos);
@@ -155,6 +157,7 @@ private:
     QMenu* mapMenu;
     QMenu* menu_clear_track;
     QAction* show_hidden_wp_action;
+    QAction* show_crash_prediction_action;
 };
 
 #endif // MAPWIDGET_H

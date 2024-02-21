@@ -114,6 +114,13 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     connect(show_hidden_wp_action, &QAction::toggled, [=](bool show) {
         setProperty("show_hidden_waypoints", show);
     });
+
+    show_crash_prediction_action = mapMenu->addAction("Show crash prediction");
+    show_crash_prediction_action->setCheckable(true);
+    connect(show_crash_prediction_action, &QAction::toggled, [=](bool show) {
+        setProperty("show_crash_prediction", show);
+    });
+
     auto clear_shapes = mapMenu->addAction("Clear Shapes");
     connect(clear_shapes, &QAction::triggered, this, [=](){
         clearShapes();
@@ -756,6 +763,11 @@ void MapWidget::handleNewAC(QString ac_id) {
         // create crash item at dummy position
         auto crash_item = new WaypointItem(Point2DLatLon(0, 0), ac_id, 16);
         crash_item->setStyle(GraphicsObject::Style::CRASH);
+        if(!show_crash_prediction_action->isChecked()) {
+            crash_item->setSize(0);
+        } else {
+            crash_item->setSize(5);
+        }
         addItem(crash_item);
 
         ArrowItem* arrow = new ArrowItem(ac_id, 15, this);
@@ -1393,6 +1405,19 @@ void MapWidget::showHiddenWaypoints(bool state) {
                     wpi->setStyle(GraphicsPoint::Style::CURRENT_NAV);
                 }
             }
+        }
+    }
+}
+
+void MapWidget::showCrashPrediction(bool state) {
+    show_crash_prediction_action->blockSignals(true);
+    show_crash_prediction_action->setChecked(state);
+    show_crash_prediction_action->blockSignals(false);
+    for(auto &itemManager: ac_items_managers) {
+        if(state) {
+            itemManager->getCrashItem()->setSize(5*2);
+        } else {
+            itemManager->getCrashItem()->setSize(0);
         }
     }
 }
