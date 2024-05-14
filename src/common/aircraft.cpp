@@ -16,6 +16,10 @@ Aircraft::Aircraft(ConfigData* config, QObject* parent): QObject(parent),
     if(airframe->getIconName() != "") {
         icon = user_or_app_path("pictures/aircraft_icons/" + QString(airframe->getIconName()) + ".svg");
     }
+    checklist = airframe->getChecklistItems();
+    for(auto item: checklist) {
+        qDebug() << "Checklist item: " << item.name << " " << item.description << " " << item.type << " " << item.done;
+    }
     status = new AircraftStatus(ac_id, this);
     real = config->isReal();
 }

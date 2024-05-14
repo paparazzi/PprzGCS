@@ -149,3 +149,21 @@ std::optional<Param> Airframe::getDefine(QString def_name, QString section_name)
     }
     return std::nullopt;
 }
+
+QList<ChecklistItem> Airframe::getChecklistItems() {
+    QList<ChecklistItem> items;
+
+    for(auto section=doc.firstChildElement().firstChildElement("checklist");
+        !section.isNull();
+        section=section.nextSiblingElement("checklist")) {
+        for(auto item=section.firstChildElement("item");
+            !item.isNull();
+            item=item.nextSiblingElement("item")) {
+            auto name = item.attribute("name");
+            auto description = item.firstChild().nodeValue();
+            auto type = item.attribute("type", "checkbox");
+            items.append({name, description, type, false});
+        }
+    }
+    return items;
+}

@@ -47,6 +47,7 @@ private:
     SettingMenu* setting_menu;
     Airframe* airframe;
     ConfigData* config;
+    QList<ChecklistItem> checklist;
 
     Point2DLatLon position;
 
