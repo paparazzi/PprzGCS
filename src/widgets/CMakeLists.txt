@@ -23,6 +23,8 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/gvf_viewer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/chat.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/chat.ui
+    ${CMAKE_CURRENT_SOURCE_DIR}/checklist.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/checklist.ui
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})

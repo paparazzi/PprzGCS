@@ -15,7 +15,7 @@ struct ChecklistItem {
     QString name;
     QString description;
     QString type;
-    bool done;
+    QString value;
 };
 
 class Airframe: public QObject
@@ -35,7 +35,7 @@ public:
     void saveSettings(QString filename);
     void setParams(QMap<QString, QString> changed_params);
     QList<Param> getParams();
-    QList<ChecklistItem> getChecklistItems();
+    QList<ChecklistItem*> getChecklistItems();
 
 private:
     QString name;
