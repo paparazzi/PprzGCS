@@ -48,3 +48,15 @@ void Aircraft::setSetting(uint8_t setting_no, float value) {
         }
     }
 }
+
+bool Aircraft::checklistFinished() {
+    for(auto item: checklist) {
+        if(item->type == "checkbox" && item->value != "true") {
+            return false;
+        }
+        else if(item->type == "text" && item->value == "") {
+            return false;
+        }
+    }
+    return true;
+}

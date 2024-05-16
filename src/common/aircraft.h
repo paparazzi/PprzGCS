@@ -38,6 +38,7 @@ public:
     void setSetting(uint8_t setting_no, float value);
 
     bool isReal() {return real;}
+    bool checklistFinished();
 
 private:
     QString ac_id;

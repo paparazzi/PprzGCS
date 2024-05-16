@@ -13,7 +13,7 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
     QFrame(parent),
     ui(new Ui::Checklist)
 {
-    // Get the settings
+    // Get the global settings
     auto settings_path = appConfig()->value("SETTINGS_PATH").toString();
     QSettings settings(settings_path, QSettings::IniFormat);
     pprzlink_id = settings.value("pprzlink/id").toString();
@@ -21,7 +21,18 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
     // Setup the UI
     ui->setupUi(this);
 
-    QList<ChecklistItem*> checklist = AircraftManager::get()->getAircraft(ac_id)->getChecklist();
+    // Get the uav settings and find the PFC settings
+    auto ac = AircraftManager::get()->getAircraft(ac_id);
+    auto ac_settings = ac->getSettingMenu()->getAllSettings();
+    Setting* pfc_setting = nullptr;
+    for(auto setting: ac_settings) {
+        if(setting->getFullName() == "preflight_ground_done") {
+            pfc_setting = setting;
+        }
+    }
+
+    // Go through the checklist items and create the widget
+    QList<ChecklistItem*> checklist = ac->getChecklist();
     for(auto item: checklist) {
         if(item->type == "checkbox") {
             auto widget_item = new QCheckBox(item->description);
@@ -32,8 +43,12 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
 
             connect(widget_item, &QCheckBox::toggled, this, 
             [=](bool state) {
-                item->value = (state)? QString("true") : QString("false");
+                item->value = (state)? "true":"false";
                 sendMessage(ac_id, item);
+
+                if(pfc_setting != nullptr) {
+                    ac->setSetting(pfc_setting, ac->checklistFinished()? 1:0);
+                }
             });
         }
         else if(item->type == "text") {
@@ -44,10 +59,14 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
             widget_item->addWidget(widget_input);
             ui->verticalLayout->addLayout(widget_item);
 
-            connect(widget_input, &QLineEdit::returnPressed, this, 
+            connect(widget_input, &QLineEdit::editingFinished, this, 
             [=]() {
                 item->value = widget_input->text();
                 sendMessage(ac_id, item);
+
+                if(pfc_setting != nullptr) {
+                    ac->setSetting(pfc_setting, ac->checklistFinished()? 1:0);
+                }
             });
         }
     }
