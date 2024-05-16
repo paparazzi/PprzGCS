@@ -29,7 +29,7 @@
       </sizepolicy>
      </property>
      <property name="styleSheet">
-      <string notr="true">.QFrame{background-color: rgba(200,200,200,50); border-radius: 20px;}</string>
+      <string notr="true">.QFrame{background-color: rgba(200,200,200,50); border-radius: 15px;}</string>
      </property>
      <property name="frameShape">
       <enum>QFrame::Panel</enum>
@@ -42,20 +42,46 @@
        <enum>QLayout::SetDefaultConstraint</enum>
       </property>
       <item>
-       <widget class="QLabel" name="name_label">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+       <layout class="QHBoxLayout" name="title_bar">
+        <property name="sizeConstraint">
+        <enum>QLayout::SetDefaultConstraint</enum>
         </property>
-        <property name="text">
-         <string>name</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-        </property>
-       </widget>
+        <item>
+            <widget class="QLabel" name="time_label">
+                <property name="sizePolicy">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                  </sizepolicy>
+                </property>
+                <property name="styleSheet">
+                <string notr="true">color: grey;</string>
+                </property>
+                <property name="text">
+                <string>time</string>
+                </property>
+                <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                </property>
+            </widget>
+        </item>
+        <item>
+            <widget class="QLabel" name="name_label">
+                <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+                </sizepolicy>
+                </property>
+                <property name="text">
+                <string>name</string>
+                </property>
+                <property name="alignment">
+                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                </property>
+            </widget>
+        </item>
+       </layout>
       </item>
       <item>
        <widget class="QLabel" name="message_label">
