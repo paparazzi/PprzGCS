@@ -118,6 +118,16 @@ void Chat::onSend() {
 
 void Chat::addMessage(QString txt, QString source, QString dst, bool sent) {
     (void)dst;
+    // Check if it can be combined with the previous message
+    if(ui->scroll_widget->layout()->count() > 0) {
+        auto last = ui->scroll_widget->layout()->itemAt(ui->scroll_widget->layout()->count()-1);
+        auto cb = dynamic_cast<ChatBubble*>(last->widget());
+        if(cb != nullptr && cb->getSource() == source && cb->getDest() == dst && cb->getTime().secsTo(QTime::currentTime()) < 5){
+            cb->addText(txt);
+            return;
+        }
+    }
+
     auto cb = new ChatBubble(source, dst, txt, sent, this);
     ui->scroll_widget->layout()->addWidget(cb);
     ui->scroll_widget->installEventFilter(cb);

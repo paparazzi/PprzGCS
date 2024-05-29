@@ -16,6 +16,7 @@ Aircraft::Aircraft(ConfigData* config, QObject* parent): QObject(parent),
     if(airframe->getIconName() != "") {
         icon = user_or_app_path("pictures/aircraft_icons/" + QString(airframe->getIconName()) + ".svg");
     }
+    checklist = airframe->getChecklistItems();
     status = new AircraftStatus(ac_id, this);
     real = config->isReal();
 }
@@ -46,4 +47,16 @@ void Aircraft::setSetting(uint8_t setting_no, float value) {
             break;
         }
     }
+}
+
+bool Aircraft::checklistFinished() {
+    for(auto item: checklist) {
+        if(item->type == "checkbox" && item->value != "true") {
+            return false;
+        }
+        else if(item->type == "text" && item->value == "") {
+            return false;
+        }
+    }
+    return true;
 }

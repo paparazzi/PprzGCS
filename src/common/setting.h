@@ -34,6 +34,7 @@ public:
     QList<shared_ptr<StripButton>> getStripButtons() {return strip_buttons;}
     uint8_t getNo() {return setting_no;}
     QString getName() { if(shortname != "") { return shortname;} else {return var;}}
+    QString getFullName() {return var;}
     QList<QString>& getValues() {return values;}
     tuple<float, float, float> getBounds() {return make_tuple(min, max, step);}
     void setUserValue(float v) {

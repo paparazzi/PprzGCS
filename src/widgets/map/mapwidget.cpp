@@ -134,7 +134,103 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     menu_clear_track = new QMenu("Clear Track", mapMenu);
     mapMenu->addMenu(menu_clear_track);
 
+    // Shortkeys
+    auto rotate_map = new QAction(this);
+    rotate_map->setShortcut(Qt::Key_R);
+    connect(rotate_map, &QAction::triggered, this, [=](){
+        rotateMap(10);
+    });
+    this->addAction(rotate_map);
 
+    auto rotate_map_alt = new QAction(this);
+    rotate_map_alt->setShortcut(QKeySequence(Qt::Key_R | Qt::ALT));
+    connect(rotate_map_alt, &QAction::triggered, this, [=](){
+        rotateMap(-getRotation());
+    });
+    this->addAction(rotate_map_alt);
+
+    auto rotate_map_ctrl = new QAction(this);
+    rotate_map_ctrl->setShortcut(QKeySequence(Qt::Key_R | Qt::CTRL));
+    connect(rotate_map_ctrl, &QAction::triggered, this, [=](){
+        rotateMap(-10);
+    });
+    this->addAction(rotate_map_ctrl);
+
+    auto rotate_map_shift = new QAction(this);
+    rotate_map_shift->setShortcut(QKeySequence(Qt::Key_R + Qt::SHIFT));
+    connect(rotate_map_shift, &QAction::triggered, this, [=](){
+        rotateMap(5);
+    });
+    this->addAction(rotate_map_shift);
+
+    auto rotate_map_ctrl_shift = new QAction(this);
+    rotate_map_ctrl_shift->setShortcut(QKeySequence(Qt::Key_R + Qt::CTRL + Qt::SHIFT));
+    connect(rotate_map_ctrl_shift, &QAction::triggered, this, [=](){
+        rotateMap(-5);
+    });
+    this->addAction(rotate_map_ctrl_shift);
+
+    auto flight_plan_edit = new QAction(this);
+    flight_plan_edit->setShortcut(Qt::Key_Space);
+    connect(flight_plan_edit, &QAction::triggered, this, [=](){
+        interaction_state = PMIS_FLIGHT_PLAN_EDIT;
+        setEditorMode();
+        switch (drawState) {
+        default:
+            break;
+        }
+        drawState = (drawState + 1) % 3;
+    });
+    this->addAction(flight_plan_edit);
+
+    auto freeze = new QAction(this);
+    freeze->setShortcut(Qt::Key_F);
+    connect(freeze, &QAction::triggered, this, [=](){
+        interaction_state = PMIS_FROZEN;
+        setEditorMode();
+    });
+    this->addAction(freeze);
+
+    auto center = new QAction(this);
+    center->setShortcut(Qt::Key_C);
+    connect(center, &QAction::triggered, this, [=](){
+        if(AircraftManager::get()->aircraftExists(current_ac)) {
+            auto ac = AircraftManager::get()->getAircraft(current_ac);
+            auto orig = ac->getFlightPlan()->getOrigin();
+            Point2DLatLon pos(orig);
+            if(ac->isReal()) {
+                pos = ac->getPosition();
+            }
+            centerLatLon(pos);
+        }
+        itemsForbidHighlight(false);
+    });
+    this->addAction(center);
+
+    auto highlight = new QAction(this);
+    highlight->setShortcut(Qt::Key_H);
+    connect(highlight, &QAction::triggered, this, [=](){
+        itemsForbidHighlight(false);
+    });
+    this->addAction(highlight);
+
+    auto escape = new QAction(this);
+    escape->setShortcut(Qt::Key_Escape);
+    connect(escape, &QAction::triggered, this, [=](){
+        if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
+            MapItem* item = fp_edit_sm->update(FPEE_CANCEL, nullptr, nullptr, current_ac);
+            (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
+        }
+        setMouseTracking(false);
+        scene()->setShortcutItems(false);
+        interaction_state = PMIS_OTHER;
+        setEditorMode();
+        drawState = 0;
+        setCursor(Qt::ArrowCursor);
+    });
+    this->addAction(escape);
+
+    // Connect signals
     connect(AircraftManager::get(), &AircraftManager::waypoint_changed, this, &MapWidget::onWaypointChanged);
     connect(AircraftManager::get(), &AircraftManager::waypoint_added, this, &MapWidget::onWaypointAdded);
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint_ui, this, &MapWidget::onMoveWaypointUi);
@@ -517,64 +613,6 @@ void MapWidget::mouseReleaseEvent(QMouseEvent *event) {
         }
     }
     pan_state = PAN_IDLE;
-}
-
-
-void MapWidget::keyReleaseEvent(QKeyEvent *event) {
-    (void)event;
-    if(event->key() == Qt::Key_Space) {
-        interaction_state = PMIS_FLIGHT_PLAN_EDIT;
-        setEditorMode();
-        switch (drawState) {
-        default:
-            break;
-        }
-        drawState = (drawState + 1) % 3;
-    }
-    else if(event->key() == Qt::Key_Escape) {
-        if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
-            MapItem* item = fp_edit_sm->update(FPEE_CANCEL, nullptr, nullptr, current_ac);
-            (void)item; //put item in a list relative to the drone (in a drone FP, in a block)
-        }
-        setMouseTracking(false);
-        scene()->setShortcutItems(false);
-        interaction_state = PMIS_OTHER;
-        setEditorMode();
-        drawState = 0;
-        setCursor(Qt::ArrowCursor);
-    } else if(event->key() == Qt::Key_F) {
-        interaction_state = PMIS_FROZEN;
-        setEditorMode();
-    }
-    else if (event->key() == Qt::Key_H) {
-        itemsForbidHighlight(false);
-    }
-    else if (event->key() == Qt::Key_C) {
-        if(AircraftManager::get()->aircraftExists(current_ac)) {
-            auto ac = AircraftManager::get()->getAircraft(current_ac);
-            auto orig = ac->getFlightPlan()->getOrigin();
-            Point2DLatLon pos(orig);
-            if(ac->isReal()) {
-                pos = ac->getPosition();
-            }
-            centerLatLon(pos);
-        }
-        itemsForbidHighlight(false);
-    }
-    else if (event->key() == Qt::Key_R) {
-        double rotation = 10;
-        if(event->modifiers() & Qt::KeyboardModifier::AltModifier) {
-            rotation = -getRotation();
-        } else {
-            if(event->modifiers() & Qt::KeyboardModifier::ControlModifier) {
-                rotation = -rotation;
-            }
-            if(event->modifiers() & Qt::KeyboardModifier::ShiftModifier) {
-                rotation /= 2;
-            }
-        }
-        rotateMap(rotation);
-    }
 }
 
 void MapWidget::rotateMap(double rot) {

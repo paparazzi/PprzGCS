@@ -27,6 +27,7 @@ public:
     Airframe* getAirframe() {return airframe;}
     AircraftStatus* getStatus() {return status;}
     ConfigData* getConfig() {return config;}
+    QList<ChecklistItem*> getChecklist() {return checklist;}
     void setConfig(ConfigData* c) {config = c;}
 
     Point2DLatLon getPosition() {return position;}
@@ -37,6 +38,7 @@ public:
     void setSetting(uint8_t setting_no, float value);
 
     bool isReal() {return real;}
+    bool checklistFinished();
 
 private:
     QString ac_id;
@@ -47,6 +49,7 @@ private:
     SettingMenu* setting_menu;
     Airframe* airframe;
     ConfigData* config;
+    QList<ChecklistItem*> checklist;
 
     Point2DLatLon position;
 
