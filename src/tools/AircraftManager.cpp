@@ -183,9 +183,13 @@ void ConfigData::setData(QDomDocument* doc, QString uri) {
         auto netacc = new QNetworkAccessManager(this);
         connect(netacc, &QNetworkAccessManager::finished, this, [=](QNetworkReply* reply) {
             auto data = reply->readAll();
-            doc->setContent(data);
-            if(isComplete()) {
-                emit configReady(this);
+            if(reply->error() == QNetworkReply::NetworkError::NoError) {
+                doc->setContent(data);
+                if(isComplete()) {
+                    emit configReady(this);
+                }
+            } else {
+                qDebug() << "Error for" << uri << ":" << reply->error();
             }
             reply->deleteLater();
         });
