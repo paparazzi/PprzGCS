@@ -773,6 +773,9 @@ void FlightPlanEditor::onItemDoubleClicked(QTreeWidgetItem *item, int column) {
 
 void FlightPlanEditor::onNavStatus() {
     auto last = blocks[last_block];
+    if(last == nullptr) {
+        return;
+    }
 
     applyRecursive(last, [=](QTreeWidgetItem* item){
         for(int i=0; i<item->columnCount(); ++i) {
