@@ -1,7 +1,12 @@
 # Changelog
 
 ## NEXT
+
+## v1.0.13
 + Add Chat widget for `INFO_MSG`
++ support for GVF bezier curves
++ preflight checks
++ and much more...
 
 ## v1.0.9
 + PFD: match map rotation

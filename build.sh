@@ -37,7 +37,7 @@ fi
 
 if [ $build_app = "app" ]
 then
-    cmake -S . -B $WD/build/pprzgcs -DCMAKE_INSTALL_PREFIX="$install_prefix" -DDEFAULT_APP_DATA_PATH="$WD/data"
+    cmake -S . -B $WD/build/pprzgcs -DCMAKE_INSTALL_PREFIX="$install_prefix" -DDEFAULT_APP_DATA_PATH="$WD/data" -DCMAKE_BUILD_TYPE=RelWithDebInfo
     cmake --build $WD/build/pprzgcs
 fi
 

@@ -1,3 +1,12 @@
+pprzgcs (1.0.13) focal; urgency=medium
+
+  * GVF bezier curves
+  * crash site prediction
+  * preflight checks
+  * various fixes...
+
+ -- Fabien Bonneval <fabien.bonneval@gmail.com>  Mon, 03 Jun 2024 19:06:03 +0200
+
 pprzgcs (1.0.11ubuntu1) focal; urgency=medium
   
   * v1.0.11
