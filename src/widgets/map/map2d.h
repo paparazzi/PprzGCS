@@ -40,6 +40,8 @@ public:
     double scaleFactor() {return pow(2, _zoom - zoomLevel(_zoom));}
     void setMouseLoadTileMask(int mask) {mouse_load_tiles_mask = mask;}
 
+    Point2DLatLon getMouseCoords() { return mouse_coords;}
+
 signals:
     void backgroundChanged(QColor);
 
@@ -79,6 +81,8 @@ private:
     QMap<QString, TileProvider*> tile_providers;
 
     QColor m_color_background;
+
+    Point2DLatLon mouse_coords;
 };
 
 #endif // MAP2D_H

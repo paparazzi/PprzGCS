@@ -263,6 +263,11 @@ void Map2D::mouseMoveEvent(QMouseEvent *event) {
     if(event->buttons() & mouse_load_tiles_mask) {
         updateTiles();
     }
+    
+    QPointF scenePos = mapToScene(event->pos());
+    auto tp = tilePoint(scenePos, zoomLevel(zoom()), tileSize());
+    Point2DPseudoMercator ppm(tp);
+    mouse_coords = CoordinatesTransform::get()->pseudoMercator_to_WGS84(ppm);
 }
 
 void Map2D::updateTiles() {

@@ -109,6 +109,15 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
 
     // Context menu
     mapMenu = new QMenu("Map", pprzApp()->mainWindow());
+
+    auto copy_coordinates = mapMenu->addAction("Copy coordinates");
+    connect(copy_coordinates, &QAction::triggered, this, [=](){
+        auto mc = getMouseCoords();
+        auto clipboard = QApplication::clipboard();
+        auto mc_txt = QString("%1, %2").arg(mc.lat(), 0, 'f', 7).arg(mc.lon(), 0, 'f', 7);
+        clipboard->setText(mc_txt);
+    });
+
     show_hidden_wp_action = mapMenu->addAction("Show hidden waypoints");
     show_hidden_wp_action->setCheckable(true);
     connect(show_hidden_wp_action, &QAction::toggled, [=](bool show) {
