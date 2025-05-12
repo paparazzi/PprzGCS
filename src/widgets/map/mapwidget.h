@@ -19,6 +19,7 @@
 #include "gvf_trajectory.h"
 #include "gvf_viewer.h"
 
+
 class ACItemManager;
 class ItemEditStateMachine;
 class MapItem;
@@ -95,6 +96,7 @@ private slots:
     void onROTORCRAFT_FP(QString sender, pprzlink::Message msg);
     void onGCSPos(pprzlink::Message msg);
     void onGVF(QString sender, pprzlink::Message msg);
+    void onSLAM(QString sender, pprzlink::Message msg);
 
 private:
 

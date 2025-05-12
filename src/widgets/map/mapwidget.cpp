@@ -306,6 +306,11 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
             onROTORCRAFT_FP(sender, msg);
         });
 
+    PprzDispatcher::get()->bind("SLAM", this,
+        [=](QString sender, pprzlink::Message msg) {
+            onSLAM(sender, msg);
+        });
+
     setAcceptDrops(true);
 
     // Add menu to app menu bar.
@@ -1437,6 +1442,53 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     addItem(gvf_traj->getVField());
     ac_items_managers[sender]->setCurrentGVF(gvf_traj);
     gvf_trajectories[sender] = gvf_traj;
+}
+
+
+void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
+{
+    if(!AircraftManager::get()->aircraftExists(sender)) {
+        return;
+    }
+
+    QList<float> obstacle_rel;
+    msg.getField("obstacle", obstacle_rel);
+
+    if(obstacle_rel.size() >= 2) {
+        auto ac = AircraftManager::get()->getAircraft(sender);
+        auto origin = ac->getFlightPlan()->getOrigin();
+
+        if(!origin) return;
+        Point2DLatLon ltp_origin(origin->getLat(), origin->getLon());
+        Point2DLatLon wgs84_pos = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, obstacle_rel[0], obstacle_rel[1]);
+
+        // Properties of circle
+        // TODO: See the optimal colors and size
+        auto line = QColor(Qt::black);
+        auto fill = QColor(Qt::black);
+        fill.setAlpha(150);
+        auto palette = PprzPalette(line, fill);
+        float size = 0.1; // radio del obstáculo en metros
+
+        double z = getAppSettings().value("map/z_values/shapes").toDouble();
+
+        WaypointItem* center = new WaypointItem(wgs84_pos, "__NO_AC__", palette);
+        center->setStyle(GraphicsObject::Style::CURRENT_NAV);
+        addItem(center);
+
+        CircleItem* circle = new CircleItem(center, size, "__NO_AC__", palette);
+        circle->setOwnCenter(true);
+        circle->setZValues(z, z);
+        circle->setScalable(false);
+        circle->setEditable(false);
+        circle->setFilled(true);
+        addItem(circle);
+
+        center->setParent(circle); // para eliminar juntos
+
+        // Opcional: guardar si luego quieres eliminarlos tras un tiempo (NOT TESTED)
+        // obstacle_items[sender] = circle;
+    }
 }
 
 void MapWidget::showHiddenWaypoints(bool state) {
