@@ -40,6 +40,8 @@
 #include "gvf_traj_3D_lissajous.h"
 #include "gvf_traj_bezier.h"
 
+// #include "obstacle_item.h"
+
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     interaction_state(PMIS_OTHER), drawState(false), fp_edit_sm(nullptr), gcsItem(nullptr),
@@ -1447,9 +1449,13 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
 
 void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
 {
+
+    // Lista estática de obstáculos activos con timestamp
+    static QList<QPair<CircleItem*, QDateTime>> obstacles;
     if(!AircraftManager::get()->aircraftExists(sender)) {
         return;
     }
+
 
     QList<float> obstacle_rel;
     msg.getField("obstacle", obstacle_rel);
@@ -1486,8 +1492,33 @@ void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
 
         center->setParent(circle); // para eliminar juntos
 
-        // Opcional: guardar si luego quieres eliminarlos tras un tiempo (NOT TESTED)
-        // obstacle_items[sender] = circle;
+        const int MAX_OBSTACLES = 200;
+        if(obstacles.size() >= MAX_OBSTACLES) {
+            // Eliminar el más antiguo
+            auto old = obstacles.takeFirst();
+            removeItem(old.first);
+            delete old.first;
+        }
+
+        // Guardar el nuevo obstáculo con su tiempo de creación
+        obstacles.append({circle, QDateTime::currentDateTime()});
+
+        // Eliminar tras 30 segundos (not working)
+        // QTimer::singleShot(30000, this, [=]() {
+        //     auto sc = scene();
+        //     if(circle && sc && circle->getGraphicsCircle() && circle->getGraphicsCircle()->scene() == sc) {
+        //         sc->removeItem(circle->getGraphicsCircle());
+        //     }
+
+        //     delete circle;
+
+        //     for(int i = 0; i < obstacles.size(); ++i) {
+        //         if(obstacles[i].first == circle) {
+        //             obstacles.removeAt(i);
+        //             break;
+        //         }
+        //     }
+        // });
     }
 }
 
