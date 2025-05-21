@@ -674,8 +674,8 @@ void FlightPlanEditor::onMoveWaypointUi(Waypoint* wp, QString acid) {
             } else if(xmlGetProp(node, BAD_CAST "lat")  || xmlGetProp(node, BAD_CAST "lon")) {
                 auto lat = wp->getLat();
                 auto lon = wp->getLon();
-                xmlSetProp(node, BAD_CAST "lat", BAD_CAST QString::number(lat).toStdString().c_str());
-                xmlSetProp(node, BAD_CAST "lon", BAD_CAST QString::number(lon).toStdString().c_str());
+                xmlSetProp(node, BAD_CAST "lat", BAD_CAST QString::number(lat, 'f', 7).toStdString().c_str());
+                xmlSetProp(node, BAD_CAST "lon", BAD_CAST QString::number(lon, 'f', 7).toStdString().c_str());
             }
             if(!readOnly) {
                 ui->tree->clearSelection();
