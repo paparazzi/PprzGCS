@@ -8,11 +8,11 @@ on:
 jobs:
   build-appimage:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repository and submodules
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
           path: ./pprzgcs
@@ -48,7 +48,7 @@ jobs:
           UPDATE_INFO: gh-releases-zsync|Fabien-B|PprzGCS|latest|*x86_64.AppImage.zsync
         with:
           recipe: pprzgcs/appimage-amd64.yml
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
           name: AppImage_${{ env.PPRZGCS_VERSION }}
           path: './*.AppImage*'
