@@ -1456,9 +1456,10 @@ void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
         return;
     }
 
-
     QList<float> obstacle_rel;
+    uint8_t obstacle_type;
     msg.getField("obstacle", obstacle_rel);
+    msg.getField("obstacle_type", obstacle_type);
 
     if(obstacle_rel.size() >= 2) {
         auto ac = AircraftManager::get()->getAircraft(sender);
@@ -1470,8 +1471,14 @@ void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
 
         // Properties of circle
         // TODO: See the optimal colors and size
-        auto line = QColor(Qt::black);
-        auto fill = QColor(Qt::black);
+        QColor line = QColor(Qt::black);
+        QColor fill = QColor(Qt::black); // Known Obstacle
+        if (obstacle_type == 1){
+            fill = QColor(Qt::red);   // Unknown Obstacle
+            line = QColor(Qt::red);
+        }
+        // qDebug() << "Type" << obstacle_type;
+
         fill.setAlpha(150);
         auto palette = PprzPalette(line, fill);
         float size = 0.1; // radio del obstáculo en metros
