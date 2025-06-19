@@ -19,6 +19,9 @@
 #include "gvf_trajectory.h"
 #include "gvf_viewer.h"
 
+#include "grid_viewer.h"
+#include "grid_item.h"
+
 
 class ACItemManager;
 class ItemEditStateMachine;
@@ -97,6 +100,7 @@ private slots:
     void onGCSPos(pprzlink::Message msg);
     void onGVF(QString sender, pprzlink::Message msg);
     void onSLAM(QString sender, pprzlink::Message msg);
+    void onObstacleGrid(QString sender, pprzlink::Message msg);
 
 private:
 
@@ -159,6 +163,12 @@ private:
     QMenu* menu_clear_track;
     QAction* show_hidden_wp_action;
     QAction* show_crash_prediction_action;
+
+    QGraphicsPixmapItem* slam_grid_pixmap = nullptr;
+    GridItem* grid_item = nullptr;
+    ObstacleGridMap* obstacle_grid_map = nullptr;
+    QImage slam_grid_image;
+    bool slam_grid_visible = true;
 };
 
 #endif // MAPWIDGET_H

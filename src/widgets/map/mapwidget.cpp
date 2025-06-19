@@ -40,7 +40,7 @@
 #include "gvf_traj_3D_lissajous.h"
 #include "gvf_traj_bezier.h"
 
-// #include "obstacle_item.h"
+#include "map_items/grid_item.h"
 
 
 MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
@@ -245,6 +245,26 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     connect(AircraftManager::get(), &AircraftManager::waypoint_changed, this, &MapWidget::onWaypointChanged);
     connect(AircraftManager::get(), &AircraftManager::waypoint_added, this, &MapWidget::onWaypointAdded);
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint_ui, this, &MapWidget::onMoveWaypointUi);
+    // Not working
+    connect(DispatcherUi::get(), &DispatcherUi::slamGridVisibilityChanged, this,
+        [=](bool visible) {
+            if(slam_grid_pixmap) {
+                slam_grid_pixmap->setVisible(visible);
+            }
+        });
+
+    // Not working
+    // connect(DispatcherUi::get(), &DispatcherUi::obstacleVisibilityChanged, this,
+    //     [=](bool visible) {
+    //         for (auto item : qAsConst(_items)) {
+    //             auto circle = qobject_cast<CircleItem*>(item);
+    //             if (circle && circle->acId() == "__NO_AC__" && circle->getParent() == nullptr) {
+    //                 circle->setVisible(visible);
+    //                 if (circle->getCenter())
+    //                     circle->getCenter()->setVisible(visible);
+    //             }
+    //         }
+    //     });
     connect(DispatcherUi::get(), &DispatcherUi::gvf_settingUpdated, this,
         [=](QString sender, QVector<int>* gvfViewer_config) {
             gvf_trajectories_config.remove(sender);
@@ -311,6 +331,11 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     PprzDispatcher::get()->bind("SLAM", this,
         [=](QString sender, pprzlink::Message msg) {
             onSLAM(sender, msg);
+        });
+
+    PprzDispatcher::get()->bind("OBSTACLE_GRID", this,
+        [=](QString sender, pprzlink::Message msg) {
+            onObstacleGrid(sender, msg);
         });
 
     setAcceptDrops(true);
@@ -1446,7 +1471,6 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
     gvf_trajectories[sender] = gvf_traj;
 }
 
-
 void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
 {
 
@@ -1527,6 +1551,51 @@ void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
         //     }
         // });
     }
+}
+
+void MapWidget::onObstacleGrid(QString sender, pprzlink::Message msg) {
+
+    if(!AircraftManager::get()->aircraftExists(sender)) {
+        return;
+    }
+
+    auto ac = AircraftManager::get()->getAircraft(sender);
+    float cell_w, cell_h, xmin, xmax, ymin, ymax;
+    uint16_t row;
+    QList<uint8_t> columns;
+
+    msg.getField("cell_width", cell_w);
+    msg.getField("cell_height", cell_h);
+    msg.getField("xmin", xmin);
+    msg.getField("xmax", xmax);
+    msg.getField("ymin", ymin);
+    msg.getField("ymax", ymax);
+    msg.getField("row_number", row);
+    msg.getField("columns", columns);
+
+    int cols = columns.size();
+    int rows = qRound((ymax - ymin) / cell_h);
+
+    // TODO: Add a way to change grid size after created
+    if (!obstacle_grid_map) {
+        obstacle_grid_map = new ObstacleGridMap(rows, cols);
+    }
+    if (!grid_item) {
+        try {
+            grid_item = new GridItem(ac->getId(), xmin, ymin, cell_w, cell_h, rows, cols);
+            grid_item->setGridMap(obstacle_grid_map);
+            addItem(grid_item);
+        } catch (const std::exception& e) {
+            qCritical() << "Error al crear GridItem:" << e.what();
+        } catch (...) {
+            qCritical() << "Error desconocido al crear GridItem";
+        }
+    }
+
+    obstacle_grid_map->updateRow(row, columns);
+    grid_item->updateRow(row);
+    grid_item->updateGraphics(this, UpdateEvent::ITEM_CHANGED);
+
 }
 
 void MapWidget::showHiddenWaypoints(bool state) {
