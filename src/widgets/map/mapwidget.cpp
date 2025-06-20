@@ -245,26 +245,24 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     connect(AircraftManager::get(), &AircraftManager::waypoint_changed, this, &MapWidget::onWaypointChanged);
     connect(AircraftManager::get(), &AircraftManager::waypoint_added, this, &MapWidget::onWaypointAdded);
     connect(DispatcherUi::get(), &DispatcherUi::move_waypoint_ui, this, &MapWidget::onMoveWaypointUi);
-    // Not working
     connect(DispatcherUi::get(), &DispatcherUi::slamGridVisibilityChanged, this,
         [=](bool visible) {
-            if(slam_grid_pixmap) {
-                slam_grid_pixmap->setVisible(visible);
+            if(grid_item) {
+                grid_item->setVisible(visible);
+                
             }
         });
-
-    // Not working
-    // connect(DispatcherUi::get(), &DispatcherUi::obstacleVisibilityChanged, this,
-    //     [=](bool visible) {
-    //         for (auto item : qAsConst(_items)) {
-    //             auto circle = qobject_cast<CircleItem*>(item);
-    //             if (circle && circle->acId() == "__NO_AC__" && circle->getParent() == nullptr) {
-    //                 circle->setVisible(visible);
-    //                 if (circle->getCenter())
-    //                     circle->getCenter()->setVisible(visible);
-    //             }
-    //         }
-    //     });
+    connect(DispatcherUi::get(), &DispatcherUi::obstacleVisibilityChanged, this,
+        [=](bool visible) {
+            obstacles_visible = visible;
+            if(!visible) {
+                for(auto& pair : slam_obstacles) {
+                    removeItem(pair.first);
+                    delete pair.first;
+                }
+                slam_obstacles.clear();
+            }
+        });
     connect(DispatcherUi::get(), &DispatcherUi::gvf_settingUpdated, this,
         [=](QString sender, QVector<int>* gvfViewer_config) {
             gvf_trajectories_config.remove(sender);
@@ -1474,8 +1472,8 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
 void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
 {
 
-    // Lista estática de obstáculos activos con timestamp
-    static QList<QPair<CircleItem*, QDateTime>> obstacles;
+    if(!obstacles_visible) return; // Solo pinta si está visible
+
     if(!AircraftManager::get()->aircraftExists(sender)) {
         return;
     }
@@ -1524,15 +1522,14 @@ void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
         center->setParent(circle); // para eliminar juntos
 
         const int MAX_OBSTACLES = 200;
-        if(obstacles.size() >= MAX_OBSTACLES) {
-            // Eliminar el más antiguo
-            auto old = obstacles.takeFirst();
+        if(slam_obstacles.size() >= MAX_OBSTACLES) {
+            auto old = slam_obstacles.takeFirst();
             removeItem(old.first);
             delete old.first;
         }
 
         // Guardar el nuevo obstáculo con su tiempo de creación
-        obstacles.append({circle, QDateTime::currentDateTime()});
+        slam_obstacles.append({circle, QDateTime::currentDateTime()});
 
         // Eliminar tras 30 segundos (not working)
         // QTimer::singleShot(30000, this, [=]() {

@@ -42,7 +42,7 @@ void GridItem::updateGraphics(MapWidget* map, uint32_t update_event) {
             float rel_x = xmin + c * cell_w + cell_w/2;
             float rel_y = ymin + r * cell_h + cell_h/2;
 
-            // Esquina superior izquierda de la celda (en metros relativos)
+            // Esquina superior izquierda de la celda
             float rel_x1 = xmin + c * cell_w;
             float rel_y1 = ymin + r * cell_h;
 
@@ -50,25 +50,11 @@ void GridItem::updateGraphics(MapWidget* map, uint32_t update_event) {
             float rel_x2 = rel_x1 + cell_w;
             float rel_y2 = rel_y1 + cell_h;
 
-            // // Convierte a lat/lon
-            // Point2DLatLon cell_center = CoordinatesTransform::get()->relative_utm_to_wgs84(
-            //     ltp_origin, rel_x, rel_y);
-            
             // Convertir a lat/lon
             Point2DLatLon cell_center = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, rel_x, rel_y);
             Point2DLatLon corner1 = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, rel_x1, rel_y1);
             Point2DLatLon corner2 = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, rel_x2, rel_y2);
 
-
-            // // Convierte a escena
-            // QPointF scene_pos = scenePoint(cell_center, zoomLevel(map->zoom()), map->tileSize());
-
-            // // Tamaño fijo en píxeles (revisar)
-            // float pixel_size = 10; 
-
-            // // Coloca el rectángulo
-            // cells[r][c]->setRect(scene_pos.x() - pixel_size/2, scene_pos.y() - pixel_size/2, pixel_size, pixel_size);
-            
             // Convertir a escena
             QPointF scene_center = scenePoint(cell_center, zoomLevel(map->zoom()), map->tileSize());
             QPointF scene1 = scenePoint(corner1, zoomLevel(map->zoom()), map->tileSize());
@@ -96,6 +82,16 @@ void GridItem::updateGraphics(MapWidget* map, uint32_t update_event) {
         }
     }
 }
+
+
+void GridItem::setVisible(bool vis) {
+    for(auto& row : cells) {
+        for(auto* cell : row) {
+            cell->setVisible(vis);
+        }
+    }
+}
+
 
 void GridItem::removeFromScene(MapWidget* map) {
     for(auto& row : cells)

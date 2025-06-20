@@ -14,6 +14,7 @@ public:
     void updateGraphics(MapWidget* map, uint32_t update_event) override;
     void removeFromScene(MapWidget* map) override;
 
+    void setVisible(bool vis);
     void updateRow(int row);
 
     void setHighlighted(bool h) override;
