@@ -116,18 +116,6 @@ void GridItem::update_origin() {
     }
 }
 
-void GridItem::updateRow(int row) {
-    if(!grid_map) return;
-    for(int c = 0; c < cols; ++c) {
-        if(grid_map->value(row, c)) {
-            cells[row][c]->setBrush(QBrush(Qt::red));
-        } else {
-            cells[row][c]->setBrush(Qt::NoBrush);
-        }
-    }
-}
-
-
 void GridItem::setHighlighted(bool h) {
     MapItem::setHighlighted(h);
     // Puedes cambiar el color de las celdas si quieres destacar el grid

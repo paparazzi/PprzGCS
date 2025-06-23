@@ -15,6 +15,11 @@ public:
         }
     }
 
+    void updateCell(int row, int column, int8_t value) {
+        if(row < 0 || row >= rows) return;
+        data[row][column] = value;
+    }
+
     int rowCount() const { return rows; }
     int colCount() const { return cols; }
     int8_t value(int r, int c) const { return data[r][c]; }

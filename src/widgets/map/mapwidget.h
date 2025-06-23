@@ -102,6 +102,9 @@ private slots:
     void onGVF(QString sender, pprzlink::Message msg);
     void onSLAM(QString sender, pprzlink::Message msg);
     void onObstacleGrid(QString sender, pprzlink::Message msg);
+    void onGridInit(QString sender, pprzlink::Message msg);
+    void onGridChanges(QString sender, pprzlink::Message msg);
+
 
 private:
 

@@ -336,6 +336,16 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
             onObstacleGrid(sender, msg);
         });
 
+    PprzDispatcher::get()->bind("GRID_INIT", this,
+        [=](QString sender, pprzlink::Message msg) {
+            onGridInit(sender, msg);
+        });
+
+    PprzDispatcher::get()->bind("GRID_CHANGES", this,
+        [=](QString sender, pprzlink::Message msg) {
+            onGridChanges(sender, msg);
+        });
+
     setAcceptDrops(true);
 
     // Add menu to app menu bar.
@@ -1552,6 +1562,7 @@ void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
 
 void MapWidget::onObstacleGrid(QString sender, pprzlink::Message msg) {
 
+    // Este mensaje ya no se usa, mirar los dos siguientes
     if(!AircraftManager::get()->aircraftExists(sender)) {
         return;
     }
@@ -1590,8 +1601,67 @@ void MapWidget::onObstacleGrid(QString sender, pprzlink::Message msg) {
     }
 
     obstacle_grid_map->updateRow(row, columns);
-    grid_item->updateRow(row);
+    // grid_item->updateRow(row);
     grid_item->updateGraphics(this, UpdateEvent::ITEM_CHANGED);
+}
+
+void MapWidget::onGridInit(QString sender, pprzlink::Message msg) {
+
+    if(!AircraftManager::get()->aircraftExists(sender)) {
+        return;
+    }
+
+    auto ac = AircraftManager::get()->getAircraft(sender);
+    float cell_w, cell_h, xmin, xmax, ymin, ymax;
+
+    msg.getField("cell_width", cell_w);
+    msg.getField("cell_height", cell_h);
+    msg.getField("xmin", xmin);
+    msg.getField("xmax", xmax);
+    msg.getField("ymin", ymin);
+    msg.getField("ymax", ymax);
+
+    int cols = qRound((xmax - xmin) / cell_w);
+    int rows = qRound((ymax - ymin) / cell_h);
+
+    if (!obstacle_grid_map) {
+        obstacle_grid_map = new ObstacleGridMap(rows, cols);
+    }
+    if (!grid_item) {
+        try {
+            grid_item = new GridItem(ac->getId(), xmin, ymin, cell_w, cell_h, rows, cols);
+            grid_item->setGridMap(obstacle_grid_map);
+            addItem(grid_item);
+        } catch (const std::exception& e) {
+            qCritical() << "Error al crear GridItem:" << e.what();
+        } catch (...) {
+            qCritical() << "Error desconocido al crear GridItem";
+        }
+    }
+
+    grid_item->updateGraphics(this, UpdateEvent::ITEM_CHANGED);
+}
+
+void MapWidget::onGridChanges(QString sender, pprzlink::Message msg) {
+
+    if(!AircraftManager::get()->aircraftExists(sender)) {
+        return;
+    }
+
+    if (!grid_item || !obstacle_grid_map) {
+        return;
+    }
+
+    uint8_t row, column;
+    int8_t value;
+
+    msg.getField("row", row);
+    msg.getField("column", column);
+    msg.getField("value", value);
+
+    obstacle_grid_map->updateCell(row, column, value);
+    grid_item->updateGraphics(this, UpdateEvent::ITEM_CHANGED);
+
 
 }
 
