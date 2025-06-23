@@ -74,10 +74,14 @@ void GridItem::updateGraphics(MapWidget* map, uint32_t update_event) {
 
 
             // Color según valor
-            if(grid_map->value(r, c)) {
+            if((grid_map->value(r, c)) > 100) {
                 cells[r][c]->setBrush(QBrush(Qt::red));
-            } else {
+            }
+            else if((grid_map->value(r, c)) < -100) {
                 cells[r][c]->setBrush(QBrush(Qt::green));
+            } 
+            else {
+                cells[r][c]->setBrush(QBrush(Qt::gray));
             }
         }
     }

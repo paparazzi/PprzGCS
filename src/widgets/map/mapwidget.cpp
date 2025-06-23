@@ -1559,7 +1559,7 @@ void MapWidget::onObstacleGrid(QString sender, pprzlink::Message msg) {
     auto ac = AircraftManager::get()->getAircraft(sender);
     float cell_w, cell_h, xmin, xmax, ymin, ymax;
     uint16_t row;
-    QList<uint8_t> columns;
+    QList<int8_t> columns;
 
     msg.getField("cell_width", cell_w);
     msg.getField("cell_height", cell_h);
