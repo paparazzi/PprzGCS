@@ -34,56 +34,59 @@ void GridItem::addToMap(MapWidget* map) {
             map->scene()->addItem(cell);
 }
 
+
+// Update all the cells
 void GridItem::updateGraphics(MapWidget* map, uint32_t update_event) {
+    Q_UNUSED(update_event);
     if(!grid_map) return;
     for(int r = 0; r < rows; ++r) {
         for(int c = 0; c < cols; ++c) {
-            // Calcula el centro de la celda en coordenadas relativas
-            float rel_x = xmin + c * cell_w + cell_w/2;
-            float rel_y = ymin + r * cell_h + cell_h/2;
-
-            // Esquina superior izquierda de la celda
-            float rel_x1 = xmin + c * cell_w;
-            float rel_y1 = ymin + r * cell_h;
-
-            // Esquina inferior derecha
-            float rel_x2 = rel_x1 + cell_w;
-            float rel_y2 = rel_y1 + cell_h;
-
-            // Convertir a lat/lon
-            Point2DLatLon cell_center = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, rel_x, rel_y);
-            Point2DLatLon corner1 = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, rel_x1, rel_y1);
-            Point2DLatLon corner2 = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, rel_x2, rel_y2);
-
-            // Convertir a escena
-            QPointF scene_center = scenePoint(cell_center, zoomLevel(map->zoom()), map->tileSize());
-            QPointF scene1 = scenePoint(corner1, zoomLevel(map->zoom()), map->tileSize());
-            QPointF scene2 = scenePoint(corner2, zoomLevel(map->zoom()), map->tileSize());
-
-            // Calcular ancho y alto en píxeles
-            float width = std::abs(scene2.x() - scene1.x());
-            float height = std::abs(scene2.y() - scene1.y());
-            
-            // Colocar el rectángulo en la posición correcta
-            cells[r][c]->setRect(
-                scene_center.x() - width/2,
-                scene_center.y() - height/2,
-                width*0.95,
-                height*0.95
-            );
-
-
-            // Color según valor
-            if((grid_map->value(r, c)) > 100) {
-                cells[r][c]->setBrush(QBrush(Qt::red));
-            }
-            else if((grid_map->value(r, c)) < -100) {
-                cells[r][c]->setBrush(QBrush(Qt::green));
-            } 
-            else {
-                cells[r][c]->setBrush(QBrush(Qt::gray));
-            }
+            updateCell(map, 0, r, c);
         }
+    }
+}
+
+// Update just a cell
+void GridItem::updateCell(MapWidget* map, uint32_t update_event, int row, int col) {
+    Q_UNUSED(update_event);
+    if(!grid_map) return;
+    if(row < 0 || row >= rows || col < 0 || col >= cols) return;
+
+    // Calcula el centro y esquinas de la celda
+    float rel_x = xmin + col * cell_w + cell_w/2;
+    float rel_y = ymin + row * cell_h + cell_h/2;
+    float rel_x1 = xmin + col * cell_w;
+    float rel_y1 = ymin + row * cell_h;
+    float rel_x2 = rel_x1 + cell_w;
+    float rel_y2 = rel_y1 + cell_h;
+
+    Point2DLatLon cell_center = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, rel_x, rel_y);
+    Point2DLatLon corner1 = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, rel_x1, rel_y1);
+    Point2DLatLon corner2 = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, rel_x2, rel_y2);
+
+    // Convertir a escena
+    QPointF scene_center = scenePoint(cell_center, zoomLevel(map->zoom()), map->tileSize());
+    QPointF scene1 = scenePoint(corner1, zoomLevel(map->zoom()), map->tileSize());
+    QPointF scene2 = scenePoint(corner2, zoomLevel(map->zoom()), map->tileSize());
+
+    float width = std::abs(scene2.x() - scene1.x());
+    float height = std::abs(scene2.y() - scene1.y());
+
+    cells[row][col]->setRect(
+        scene_center.x() - width/2,
+        scene_center.y() - height/2,
+        width*0.95,
+        height*0.95
+    );
+
+    // Color según valor
+    int8_t val = grid_map->value(row, col);
+    if(val > 100) {
+        cells[row][col]->setBrush(QBrush(Qt::red));
+    } else if(val < -100) {
+        cells[row][col]->setBrush(QBrush(Qt::green));
+    } else {
+        cells[row][col]->setBrush(QBrush(Qt::gray));
     }
 }
 

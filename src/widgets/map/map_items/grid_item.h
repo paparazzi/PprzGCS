@@ -12,6 +12,7 @@ public:
     void setGridMap(ObstacleGridMap* map) { grid_map = map; }
     void addToMap(MapWidget* map) override;
     void updateGraphics(MapWidget* map, uint32_t update_event) override;
+    void updateCell(MapWidget* map, uint32_t update_event, int row, int col);
     void removeFromScene(MapWidget* map) override;
 
     void setVisible(bool vis);
