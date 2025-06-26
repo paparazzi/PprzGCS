@@ -331,11 +331,6 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
             onSLAM(sender, msg);
         });
 
-    PprzDispatcher::get()->bind("OBSTACLE_GRID", this,
-        [=](QString sender, pprzlink::Message msg) {
-            onObstacleGrid(sender, msg);
-        });
-
     PprzDispatcher::get()->bind("GRID_INIT", this,
         [=](QString sender, pprzlink::Message msg) {
             onGridInit(sender, msg);
@@ -1560,50 +1555,6 @@ void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
     }
 }
 
-void MapWidget::onObstacleGrid(QString sender, pprzlink::Message msg) {
-
-    // Este mensaje ya no se usa, mirar los dos siguientes
-    if(!AircraftManager::get()->aircraftExists(sender)) {
-        return;
-    }
-
-    auto ac = AircraftManager::get()->getAircraft(sender);
-    float cell_w, cell_h, xmin, xmax, ymin, ymax;
-    uint16_t row;
-    QList<int8_t> columns;
-
-    msg.getField("cell_width", cell_w);
-    msg.getField("cell_height", cell_h);
-    msg.getField("xmin", xmin);
-    msg.getField("xmax", xmax);
-    msg.getField("ymin", ymin);
-    msg.getField("ymax", ymax);
-    msg.getField("row_number", row);
-    msg.getField("columns", columns);
-
-    int cols = columns.size();
-    int rows = qRound((ymax - ymin) / cell_h);
-
-    // TODO: Add a way to change grid size after created
-    if (!obstacle_grid_map) {
-        obstacle_grid_map = new ObstacleGridMap(rows, cols);
-    }
-    if (!grid_item) {
-        try {
-            grid_item = new GridItem(ac->getId(), xmin, ymin, cell_w, cell_h, rows, cols);
-            grid_item->setGridMap(obstacle_grid_map);
-            addItem(grid_item);
-        } catch (const std::exception& e) {
-            qCritical() << "Error al crear GridItem:" << e.what();
-        } catch (...) {
-            qCritical() << "Error desconocido al crear GridItem";
-        }
-    }
-
-    obstacle_grid_map->updateRow(row, columns);
-    // grid_item->updateRow(row);
-    grid_item->updateGraphics(this, UpdateEvent::ITEM_CHANGED);
-}
 
 void MapWidget::onGridInit(QString sender, pprzlink::Message msg) {
 
@@ -1613,6 +1564,7 @@ void MapWidget::onGridInit(QString sender, pprzlink::Message msg) {
 
     auto ac = AircraftManager::get()->getAircraft(sender);
     float cell_w, cell_h, xmin, xmax, ymin, ymax;
+    int8_t lt;
 
     msg.getField("cell_width", cell_w);
     msg.getField("cell_height", cell_h);
@@ -1620,6 +1572,7 @@ void MapWidget::onGridInit(QString sender, pprzlink::Message msg) {
     msg.getField("xmax", xmax);
     msg.getField("ymin", ymin);
     msg.getField("ymax", ymax);
+    msg.getField("threshold", lt);
 
     int cols = qRound((xmax - xmin) / cell_w);
     int rows = qRound((ymax - ymin) / cell_h);
@@ -1629,7 +1582,7 @@ void MapWidget::onGridInit(QString sender, pprzlink::Message msg) {
     }
     if (!grid_item) {
         try {
-            grid_item = new GridItem(ac->getId(), xmin, ymin, cell_w, cell_h, rows, cols);
+            grid_item = new GridItem(ac->getId(), xmin, ymin, cell_w, cell_h, rows, cols, lt);
             grid_item->setGridMap(obstacle_grid_map);
             addItem(grid_item);
         } catch (const std::exception& e) {

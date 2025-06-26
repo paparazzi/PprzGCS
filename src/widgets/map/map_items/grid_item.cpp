@@ -4,9 +4,9 @@
 
 #include "mapwidget.h"
 
-GridItem::GridItem(QString id, float xmin, float ymin, float cell_w, float cell_h, int rows, int cols, QObject* parent)
+GridItem::GridItem(QString id, float xmin, float ymin, float cell_w, float cell_h, int rows, int cols, int lt, QObject* parent)
     : MapItem(id, 15, parent),
-      xmin(xmin), ymin(ymin), cell_w(cell_w), cell_h(cell_h), rows(rows), cols(cols), grid_map(nullptr)
+      xmin(xmin), ymin(ymin), cell_w(cell_w), cell_h(cell_h), rows(rows), cols(cols), lt(lt), grid_map(nullptr)
 {
     ac_id = id;
     update_origin();
@@ -81,9 +81,9 @@ void GridItem::updateCell(MapWidget* map, uint32_t update_event, int row, int co
 
     // Color según valor
     int8_t val = grid_map->value(row, col);
-    if(val > 100) {
+    if(val > lt) {
         cells[row][col]->setBrush(QBrush(Qt::red));
-    } else if(val < -100) {
+    } else if(val < -lt) {
         cells[row][col]->setBrush(QBrush(Qt::green));
     } else {
         cells[row][col]->setBrush(QBrush(Qt::gray));

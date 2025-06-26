@@ -7,7 +7,7 @@
 class GridItem : public MapItem {
     Q_OBJECT
 public:
-    GridItem(QString ac_id, float xmin, float ymin, float cell_w, float cell_h, int rows, int cols, QObject* parent = nullptr);
+    GridItem(QString ac_id, float xmin, float ymin, float cell_w, float cell_h, int rows, int cols, int lt, QObject* parent = nullptr);
 
     void setGridMap(ObstacleGridMap* map) { grid_map = map; }
     void addToMap(MapWidget* map) override;
@@ -31,7 +31,7 @@ protected:
 
 private:
     float xmin, ymin, cell_w, cell_h;
-    int rows, cols;
+    int rows, cols, lt;
     ObstacleGridMap* grid_map;
     QVector<QVector<QGraphicsRectItem*>> cells;
 };
