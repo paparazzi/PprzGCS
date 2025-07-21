@@ -11,7 +11,7 @@ GridViewer::GridViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(
     auto slam_button = new QPushButton("ON", this);
 
     auto obstacle_label = new QLabel("Obstacle Viewer", this);
-    auto obstacle_button = new QPushButton("ON", this);
+    auto obstacle_button = new QPushButton("OFF", this);
 
     grid_layout->addWidget(slam_label, 0, 0);
     grid_layout->addWidget(slam_button, 0, 1);

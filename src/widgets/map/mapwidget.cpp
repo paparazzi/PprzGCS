@@ -1089,7 +1089,6 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
 
 }
 
-
 void MapWidget::updateAircraftItem(pprzlink::Message msg) {
     QString ac_id;
     msg.getField("ac_id", ac_id);
@@ -1115,7 +1114,6 @@ void MapWidget::updateAircraftItem(pprzlink::Message msg) {
     }
 
 }
-
 
 void MapWidget::onShape(QString sender, pprzlink::Message msg) {
     (void)sender;
@@ -1554,7 +1552,6 @@ void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
         // });
     }
 }
-
 
 void MapWidget::onGridInit(QString sender, pprzlink::Message msg) {
 
