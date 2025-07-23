@@ -1,4 +1,1 @@
 #include "obstacle_grid.h"
-
-
-

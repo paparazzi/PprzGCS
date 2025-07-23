@@ -52,7 +52,7 @@ void GridItem::updateCell(MapWidget* map, uint32_t update_event, int row, int co
     if(!grid_map) return;
     if(row < 0 || row >= rows || col < 0 || col >= cols) return;
 
-    // Calcula el centro y esquinas de la celda
+    // Calculate the center and corners of the cell
     float rel_x = xmin + col * cell_w + cell_w/2;
     float rel_y = ymin + row * cell_h + cell_h/2;
     float rel_x1 = xmin + col * cell_w;
@@ -64,7 +64,7 @@ void GridItem::updateCell(MapWidget* map, uint32_t update_event, int row, int co
     Point2DLatLon corner1 = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, rel_x1, rel_y1);
     Point2DLatLon corner2 = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, rel_x2, rel_y2);
 
-    // Convertir a escena
+    // Convert to scene
     QPointF scene_center = scenePoint(cell_center, zoomLevel(map->zoom()), map->tileSize());
     QPointF scene1 = scenePoint(corner1, zoomLevel(map->zoom()), map->tileSize());
     QPointF scene2 = scenePoint(corner2, zoomLevel(map->zoom()), map->tileSize());
@@ -79,7 +79,7 @@ void GridItem::updateCell(MapWidget* map, uint32_t update_event, int row, int co
         height*0.95
     );
 
-    // Color según valor
+    // Color by value
     int8_t val = grid_map->value(row, col);
     if(val > lt) {
         cells[row][col]->setBrush(QBrush(Qt::red));
@@ -121,21 +121,21 @@ void GridItem::update_origin() {
 
 void GridItem::setHighlighted(bool h) {
     MapItem::setHighlighted(h);
-    // Puedes cambiar el color de las celdas si quieres destacar el grid
+    // You can change the color of the cells if you want to highlight the grid
 }
 
 void GridItem::setForbidHighlight(bool fh) {
-    // No se usa en GridItem, pero debe implementarse
+    // Not used in GridItem, but must be implemented
     (void)fh;
 }
 
 void GridItem::setEditable(bool ed) {
-    // No se usa en GridItem, pero debe implementarse
+    // Not used in GridItem, but must be implemented
     (void)ed;
 }
 
 void GridItem::updateZValue() {
-    // Actualiza el z-value de todas las celdas
+    // Update the z-value of all cells
     for (auto& row : cells)
         for (auto* cell : row)
             cell->setZValue(z_value);

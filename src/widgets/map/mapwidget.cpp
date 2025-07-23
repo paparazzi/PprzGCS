@@ -1475,7 +1475,7 @@ void MapWidget::onGVF(QString sender, pprzlink::Message msg) {
 void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
 {
 
-    if(!obstacles_visible) return; // Solo pinta si está visible
+    if(!obstacles_visible) return; // Only paints if visible
 
     if(!AircraftManager::get()->aircraftExists(sender)) {
         return;
@@ -1495,7 +1495,6 @@ void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
         Point2DLatLon wgs84_pos = CoordinatesTransform::get()->relative_utm_to_wgs84(ltp_origin, obstacle_rel[0], obstacle_rel[1]);
 
         // Properties of circle
-        // TODO: See the optimal colors and size
         QColor line = QColor(Qt::black);
         QColor fill = QColor(Qt::black); // Known Obstacle
         if (obstacle_type == 1){
@@ -1506,7 +1505,7 @@ void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
 
         fill.setAlpha(150);
         auto palette = PprzPalette(line, fill);
-        float size = 0.1; // radio del obstáculo en metros
+        float size = 0.1; // radius in meters
 
         double z = getAppSettings().value("map/z_values/shapes").toDouble();
 
@@ -1522,7 +1521,7 @@ void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
         circle->setFilled(true);
         addItem(circle);
 
-        center->setParent(circle); // para eliminar juntos
+        center->setParent(circle); // to delete together
 
         const int MAX_OBSTACLES = 200;
         if(slam_obstacles.size() >= MAX_OBSTACLES) {
@@ -1531,25 +1530,8 @@ void MapWidget::onSLAM(QString sender, pprzlink::Message msg)
             delete old.first;
         }
 
-        // Guardar el nuevo obstáculo con su tiempo de creación
+        // Save the new obstacle with its creation time
         slam_obstacles.append({circle, QDateTime::currentDateTime()});
-
-        // Eliminar tras 30 segundos (not working)
-        // QTimer::singleShot(30000, this, [=]() {
-        //     auto sc = scene();
-        //     if(circle && sc && circle->getGraphicsCircle() && circle->getGraphicsCircle()->scene() == sc) {
-        //         sc->removeItem(circle->getGraphicsCircle());
-        //     }
-
-        //     delete circle;
-
-        //     for(int i = 0; i < obstacles.size(); ++i) {
-        //         if(obstacles[i].first == circle) {
-        //             obstacles.removeAt(i);
-        //             break;
-        //         }
-        //     }
-        // });
     }
 }
 
@@ -1610,7 +1592,6 @@ void MapWidget::onGridChanges(QString sender, pprzlink::Message msg) {
     msg.getField("value", value);
 
     obstacle_grid_map->updateCell(row, column, value);
-    // grid_item->updateGraphics(this, UpdateEvent::ITEM_CHANGED);
     grid_item->updateCell(this, UpdateEvent::ITEM_CHANGED, row, column);
 
 
