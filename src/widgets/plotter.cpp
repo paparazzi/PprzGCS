@@ -127,7 +127,7 @@ void Plotter::removeGraph(QString name) {
         if(!graphs.isEmpty()) {
             changeGraph(graphs.firstKey());
         } else {
-            changeGraph(QString::Null());
+            changeGraph(QString());
         }
     }
 }

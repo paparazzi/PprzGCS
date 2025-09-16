@@ -139,9 +139,9 @@ QColor AircraftManager::parseColor(QString str) {
     auto settings = getAppSettings();
 
     if(str[0] == '#' && str.size() == 13) {
-        int r = str.midRef(1, 4).toInt(nullptr, 16) >> 8;
-        int g = str.midRef(5, 4).toInt(nullptr, 16) >> 8;
-        int b = str.midRef(9, 4).toInt(nullptr, 16) >> 8;
+        int r = QStringView(str).mid(1, 4).toInt(nullptr, 16) >> 8;
+        int g = QStringView(str).mid(5, 4).toInt(nullptr, 16) >> 8;
+        int b = QStringView(str).mid(9, 4).toInt(nullptr, 16) >> 8;
         color = QColor(r, g, b);
     } else {
         color = QColor(str);

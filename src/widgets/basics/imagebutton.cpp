@@ -1,5 +1,6 @@
 #include "imagebutton.h"
 #include <QEvent>
+#include <QEnterEvent>
 #include <QPainter>
 #include <QPaintEvent>
 #include <QPixmap>
@@ -17,7 +18,7 @@ ImageButton::ImageButton(QIcon normal, QSize size, bool mask, QWidget *parent) :
     }
 }
 
-void ImageButton::enterEvent(QEvent* e) {
+void ImageButton::enterEvent(QEnterEvent* e) {
     QPushButton::enterEvent( e );
     if(icon_hover.isNull()) {
         setIcon(icon_normal);
@@ -33,7 +34,7 @@ void ImageButton::leaveEvent(QEvent* e) {
 
 void ImageButton::mousePressEvent(QMouseEvent *e) {
     QPushButton::mousePressEvent(e);
-    QPushButton::enterEvent( e );
+    // QPushButton::enterEvent( e );
     if(icon_pressed.isNull()) {
         setIcon(icon_normal);
     } else {

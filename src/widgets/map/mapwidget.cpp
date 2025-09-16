@@ -166,14 +166,14 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     this->addAction(rotate_map_ctrl);
 
     auto rotate_map_shift = new QAction(this);
-    rotate_map_shift->setShortcut(QKeySequence(Qt::Key_R + Qt::SHIFT));
+    rotate_map_shift->setShortcut(QKeySequence(Qt::Key_R | Qt::SHIFT));
     connect(rotate_map_shift, &QAction::triggered, this, [=](){
         rotateMap(5);
     });
     this->addAction(rotate_map_shift);
 
     auto rotate_map_ctrl_shift = new QAction(this);
-    rotate_map_ctrl_shift->setShortcut(QKeySequence(Qt::Key_R + Qt::CTRL + Qt::SHIFT));
+    rotate_map_ctrl_shift->setShortcut(QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R));
     connect(rotate_map_ctrl_shift, &QAction::triggered, this, [=](){
         rotateMap(-5);
     });
