@@ -1565,9 +1565,9 @@ void MapWidget::onGridInit(QString sender, pprzlink::Message msg) {
             grid_item->setGridMap(obstacle_grid_map);
             addItem(grid_item);
         } catch (const std::exception& e) {
-            qCritical() << "Error al crear GridItem:" << e.what();
+            qCritical() << "Error creating GridItem:" << e.what();
         } catch (...) {
-            qCritical() << "Error desconocido al crear GridItem";
+            qCritical() << "Unknown Error creating GridItem";
         }
     }
 
