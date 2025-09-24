@@ -19,6 +19,11 @@
 #include "gvf_trajectory.h"
 #include "gvf_viewer.h"
 
+#include "grid_viewer.h"
+#include "grid_item.h"
+#include "circle_item.h"
+
+
 class ACItemManager;
 class ItemEditStateMachine;
 class MapItem;
@@ -95,6 +100,10 @@ private slots:
     void onROTORCRAFT_FP(QString sender, pprzlink::Message msg);
     void onGCSPos(pprzlink::Message msg);
     void onGVF(QString sender, pprzlink::Message msg);
+    void onSLAM(QString sender, pprzlink::Message msg);
+    void onGridInit(QString sender, pprzlink::Message msg);
+    void onGridChanges(QString sender, pprzlink::Message msg);
+
 
 private:
 
@@ -157,6 +166,14 @@ private:
     QMenu* menu_clear_track;
     QAction* show_hidden_wp_action;
     QAction* show_crash_prediction_action;
+
+    // Obstacles
+    GridItem* grid_item = nullptr;
+    ObstacleGridMap* obstacle_grid_map = nullptr;
+    QImage slam_grid_image;
+    bool slam_grid_visible = true;
+    bool obstacles_visible = false;
+    QList<QPair<CircleItem*, QDateTime>> slam_obstacles;
 };
 
 #endif // MAPWIDGET_H

@@ -20,6 +20,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/plotter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/windindicator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/link_status.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/grid_viewer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gvf_viewer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/chat.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/chat.ui
