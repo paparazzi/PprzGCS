@@ -197,9 +197,17 @@ long PprzDispatcher::bind(QString msg_name, pprzlink::messageCallback_t cb) {
 }
 
 long PprzDispatcher::bind(QString msg_name, QObject* context, pprzlink::messageCallback_t cb) {
-    long ret = link->BindMessage(dict->getDefinition(msg_name), context, cb);
-    _bindIds.append(ret);
-    return ret;
+    try
+    {
+         long ret = link->BindMessage(dict->getDefinition(msg_name), context, cb);
+        _bindIds.append(ret);
+        return ret;
+    }
+    catch(const pprzlink::no_such_message& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    return -1;
 }
 
 void PprzDispatcher::unBind(long bid) {
