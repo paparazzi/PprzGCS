@@ -66,7 +66,7 @@ endif()
 
 message("Qt required components: ${QT_COMPONENTS}")
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS ${QT_COMPONENTS})
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS ${QT_COMPONENTS})
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS ${QT_COMPONENTS})
 message("Using Qt ${QT_VERSION_MAJOR}.${QT_VERSION_MINOR}: ${Qt5Core_DIR}")
 
@@ -106,11 +106,11 @@ if(${GRPC})
 endif()
 
 target_link_libraries(${PROJECT_NAME}
-    Qt5::Widgets
-    Qt5::Xml
-    Qt5::Network
-    Qt5::Svg
-    $<$<BOOL:${SPEECH}>:Qt5::TextToSpeech>
+    Qt6::Widgets
+    Qt6::Xml
+    Qt6::Network
+    Qt6::Svg
+    $<$<BOOL:${SPEECH}>:Qt6::TextToSpeech>
     ${PROJ4_LIBRARIES}
     ${LIBXML2_LIBRARIES}
     zip

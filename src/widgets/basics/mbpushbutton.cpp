@@ -1,5 +1,6 @@
 #include "mbpushbutton.h"
 #include <QMouseEvent>
+#include <QEnterEvent>
 #include <QEvent>
 
 MbPushButton::MbPushButton(QWidget *parent) : QPushButton(parent)
@@ -28,7 +29,7 @@ void MbPushButton::mouseMoveEvent(QMouseEvent *e) {
     QPushButton::mouseMoveEvent(e);
 }
 
-void MbPushButton::enterEvent(QEvent *event) {
+void MbPushButton::enterEvent(QEnterEvent *event) {
     emit enter();
     QPushButton::enterEvent(event);
 }

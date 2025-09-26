@@ -31,7 +31,7 @@ public:
 
 protected:
     void paintEvent(QPaintEvent*) override;
-    void enterEvent(QEvent*) override;
+    void enterEvent(QEnterEvent*);
 
 private:
     qreal _opacity;

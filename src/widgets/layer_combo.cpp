@@ -92,10 +92,15 @@ void LayerCombo::mouseReleaseEvent(QMouseEvent* e) {
         int release_y = scroll_content->mapFrom(this, e->pos()).y();
         int old_z = moved_layer_control->zValue();
 
-        auto top_mlc = std::max_element(map_layer_controls.begin(), map_layer_controls.end(),
-                                     [](MapLayerControl* lmlc, MapLayerControl* rmlc) {
+        auto it = std::max_element(map_layer_controls.begin(), map_layer_controls.end(),
+                                   [](MapLayerControl* lmlc, MapLayerControl* rmlc) {
                                            return lmlc->zValue() < rmlc->zValue();
-                           }).i->t();
+                            });
+
+        MapLayerControl* top_mlc = nullptr;
+        if (it != map_layer_controls.end()) {
+            top_mlc = *it;
+        }
 
         map_layer_controls.removeAll(moved_layer_control);
 

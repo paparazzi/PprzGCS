@@ -1,6 +1,6 @@
 #include "gcs_utils.h"
 #include <QDebug>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QSettings>
 #include <QtXml>
 
@@ -27,13 +27,18 @@ double getFloatingField(pprzlink::Message &msg, const QString &field) {
 
 double parse_coordinate(QString str) {
     str = str.toUpper();
-    QRegExp decimal_rx("[+-]?([0-9]*[.])?[0-9]+");
-    QRegExp sexa_rx("([+-]?[0-9]+) ([0-9]+) ((?:[0-9]*[.])?[0-9]+) ?([NSEW]?)");
-    if(decimal_rx.exactMatch(str)) {
+
+    QRegularExpression decimal_rx(R"([+-]?([0-9]*[.])?[0-9]+)");
+    QRegularExpression sexa_rx(R"(([+-]?[0-9]+) ([0-9]+) ((?:[0-9]*[.])?[0-9]+) ?([NSEW]?))");
+
+    auto decimal_match = decimal_rx.match(str);
+    if(decimal_match.hasMatch() && decimal_match.capturedLength() == str.length()) {
         return str.toDouble();
-    }
-    else if(sexa_rx.exactMatch(str)) {
-        auto caps = sexa_rx.capturedTexts();
+    } 
+
+    auto sexa_match = sexa_rx.match(str);
+    if(sexa_match.hasMatch()) {
+        auto caps = sexa_match.capturedTexts();
         if(caps.length() == 5) {
             auto deg = caps[1].toInt();
             auto min = caps[2].toInt();
@@ -44,7 +49,7 @@ double parse_coordinate(QString str) {
                 min = -min;
                 sec = -sec;
             }
-            double coor = deg + min/60.0 + sec/3600.0;
+            double coor = deg + min / 60.0 + sec / 3600.0;
             return coor;
         }
     }
