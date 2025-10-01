@@ -83,13 +83,16 @@ void ListContainer::handleNewAC(QString ac_id) {
                 auto p = action_button->mapToGlobal(action_button->rect().bottomRight());
                 alt_widget->move(p);
                 alt_widget->show();
-                auto rect_screen = QApplication::desktop()->screenGeometry(action_button);
-                if(!rect_screen.contains(alt_widget->geometry())) {
-                    // the popup widget does not fit in the screen
-                    // move it to be contained in the current screen.
-                    auto dp = rect_screen.bottomRight() - alt_widget->geometry().bottomRight();
-                    dp = QPoint(min(0, dp.x()), min(0, dp.y()));
-                    alt_widget->move(p + dp);
+                auto screen = action_button->screen();
+                if (screen) {
+                    auto rect_screen = screen->geometry();
+                    if(!rect_screen.contains(alt_widget->geometry())) {
+                        // the popup widget does not fit in the screen
+                        // move it to be contained in the current screen.
+                        auto dp = rect_screen.bottomRight() - alt_widget->geometry().bottomRight();
+                        dp = QPoint(min(0, dp.x()), min(0, dp.y()));
+                        alt_widget->move(p + dp);
+                    }
                 }
 
             });

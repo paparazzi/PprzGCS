@@ -1,4 +1,5 @@
 #include "switch.h"
+#include <QEnterEvent>
 
 Switch::Switch(QWidget *parent) : QAbstractButton(parent),
 _opacity(0.000),
@@ -45,7 +46,7 @@ void Switch::paintEvent(QPaintEvent *e) {
     }
 }
 
-void Switch::enterEvent(QEvent *e) {
+void Switch::enterEvent(QEnterEvent *e) {
     setCursor(Qt::PointingHandCursor);
     QAbstractButton::enterEvent(e);
 }

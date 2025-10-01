@@ -245,7 +245,7 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
         but->setIcon(style()->standardIcon(QStyle::SP_DirOpenIcon));
         gl->addWidget(but, r, 2);
         connect(but, &QToolButton::clicked, this, [=]() {
-            QFileInfo fi = (edit->text());
+            QFileInfo fi(edit->text());
             auto dir = QFileDialog::getOpenFileName(w, name, fi.absoluteDir().path());
             qDebug() << dir;
             if(dir != "") {

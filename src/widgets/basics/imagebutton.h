@@ -16,7 +16,7 @@ public:
     void setPressedIcon(QIcon ic) {icon_pressed = ic;}
 
 protected:
-    virtual void enterEvent(QEvent* e);
+    virtual void enterEvent(QEnterEvent* e);
     virtual void leaveEvent(QEvent* e);
     virtual void paintEvent(QPaintEvent* e);
     virtual void mousePressEvent(QMouseEvent *e);
