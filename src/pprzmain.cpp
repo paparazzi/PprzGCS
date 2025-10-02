@@ -152,7 +152,7 @@ void PprzMain::populate_menu() {
             "MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.</p>"
             "<h2>Third-party libraries</h2>"
             "<ul>"
-            "<li><a href=\"https://www.qt.io/\">Qt 5.12.5</a></li>"
+            "<li><a href=\"https://www.qt.io/\">Qt6</a></li>"
             "<li><a href=\"https://proj.org/\">Proj</a></li>"
             "<li><a %1 href=\"https://libzip.org/\">libzip</a></li>"
             "</ul>").arg(QCoreApplication::applicationVersion());

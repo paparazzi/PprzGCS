@@ -41,11 +41,10 @@ execute_process(
 message("PPRZGCS_VERSION set to ${PPRZGCS_VERSION}")
 add_definitions(-DPPRZGCS_VERSION="${PPRZGCS_VERSION}")
 
-option(SPEECH "Enable speech" ON)
+option(SPEECH "Enable speech" OFF)
 option(GRPC "Enable GRPC" OFF)
 
-find_package(IvyQt REQUIRED)
-find_package(pprzlinkQt REQUIRED)
+add_subdirectory(ext/pprzlinkQt ${CMAKE_BINARY_DIR}/pprzlinkqt)
 
 # minumum required Qt components
 set(QT_COMPONENTS Widgets Xml Network Svg)
@@ -115,7 +114,6 @@ target_link_libraries(${PROJECT_NAME}
     ${LIBXML2_LIBRARIES}
     zip
     pprzlinkQt
-    IvyQt
     $<$<BOOL:${GRPC}>:PprzgcsGRCP>
     $<$<BOOL:${GRPC}>:${_PROTOBUF_LIBPROTOBUF}>
     $<$<BOOL:${GRPC}>:${_GRPC_GRPCPP}>
