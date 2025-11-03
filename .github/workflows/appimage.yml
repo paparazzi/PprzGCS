@@ -27,17 +27,11 @@ jobs:
           echo "VERSION: ${{ env.PPRZGCS_VERSION }}"
         
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y libproj-dev libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev mesa-common-dev libglu1-mesa-dev cmake extra-cmake-modules
+        run: sudo apt-get update && sudo apt-get install -y libproj-dev libsqlite3-dev libzip-dev qt6-base-dev libqt6svg6-dev mesa-common-dev libglu1-mesa-dev cmake extra-cmake-modules
       
 
       - name: build
         run: |
-          cmake -S pprzgcs/ext/IvyQt -B build.appimage/ext/IvyQt -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=AppDir/usr
-          cmake --build build.appimage/ext/IvyQt -j$(nproc)
-          cmake --install build.appimage/ext/IvyQt
-          cmake -S pprzgcs/ext/pprzlinkQt -B build.appimage/ext/pprzlinkQt -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=AppDir/usr
-          cmake --build build.appimage/ext/pprzlinkQt -j$(nproc)
-          cmake --install build.appimage/ext/pprzlinkQt
           cmake -S pprzgcs -B build.appimage/pprzgcs -DCMAKE_INSTALL_PREFIX="AppDir/usr"
           cmake --build build.appimage/pprzgcs -j$(nproc)
           cmake --install build.appimage/pprzgcs
