@@ -32,20 +32,16 @@ jobs:
 
       - name: build
         run: |
-          cmake -S pprzgcs -B build.appimage/pprzgcs -DCMAKE_INSTALL_PREFIX="AppDir/usr"
-          cmake --build build.appimage/pprzgcs -j$(nproc)
-          cmake --install build.appimage/pprzgcs
-
-      - name: Build AppImage
-        uses: paparazzi/build-appimage@master
-        env:
-          UPDATE_INFO: gh-releases-zsync|Fabien-B|PprzGCS|latest|*x86_64.AppImage.zsync
-        with:
-          recipe: pprzgcs/appimage-amd64.yml
+          ./pprzgcs/make_appimage.sh $(pwd)/build_appimage $(pwd)/pprzgcs
       - uses: actions/upload-artifact@v4
         with:
           name: AppImage_${{ env.PPRZGCS_VERSION }}
-          path: './*.AppImage*'
+          path: 'build_appimage/PprzGCS*.AppImage*'
+
+      - name: rename AppImage
+        run: |
+          find . -iname "*appimage*"
+          mv ./build_appimage/PprzGCS-x86_64.AppImage PprzGCS_${{ env.PPRZGCS_VERSION }}-x86_64.AppImage
 
 
       - name: make release
@@ -54,6 +50,6 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
           files: |
-            *.AppImage
+            'PprzGCS_${{ env.PPRZGCS_VERSION }}-x86_64.AppImage'
 
 

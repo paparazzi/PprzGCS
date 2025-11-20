@@ -18,10 +18,6 @@
 #include "speaker.h"
 #endif
 
-#ifndef DEFAULT_APP_DATA_PATH
-#error "you need to define DEFAULT_APP_DATA_PATH!"
-#endif
-
 #ifndef PPRZGCS_VERSION
 #error "you need to define PPRZGCS_VERSION!"
 #endif
@@ -130,8 +126,9 @@ int main(int argc, char *argv[])
 
         auto data_path = QString(qgetenv("PPRZGCS_DATA_PATH"));
         if(data_path == "") {
-            data_path = DEFAULT_APP_DATA_PATH;
+            data_path = QCoreApplication::applicationDirPath() + "/../share/pprzgcs";
         }
+        qDebug() << "DATA_PATH: " << data_path;
         gconfig->setValue("APP_DATA_PATH", data_path);
 
         set_app_settings();

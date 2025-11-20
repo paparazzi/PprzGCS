@@ -26,12 +26,6 @@ endif()
 
 find_package(LibXml2 REQUIRED)
 
-if(NOT DEFAULT_APP_DATA_PATH)
-    set(DEFAULT_APP_DATA_PATH "/usr/${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME}")
-endif()
-message("DEFAULT_APP_DATA_PATH set to ${DEFAULT_APP_DATA_PATH}")
-add_definitions(-DDEFAULT_APP_DATA_PATH="${DEFAULT_APP_DATA_PATH}")
-
 # Get current version
 execute_process(
     COMMAND ${CMAKE_SOURCE_DIR}/pprzgcs_version.sh

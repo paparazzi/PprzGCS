@@ -679,12 +679,12 @@ bool MapWidget::viewportEvent(QEvent *event) {
         QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
 
         for(auto &touchPoint: touchPoints) {
-            if(touchPoint.state() == Qt::TouchPointPressed) {
-                auto scenePos = mapToScene(touchPoint.pos().toPoint());
+            if(touchPoint.state() == QEventPoint::State::Pressed) {
+                auto scenePos = mapToScene(touchPoint.position().toPoint());
                 auto tp = tilePoint(scenePos, zoomLevel(zoom()), tileSize());
                 pms[touchPoint.id()] = Point2DPseudoMercator(tp);
             }
-            else if(touchPoint.state() == Qt::TouchPointReleased && pms.contains(touchPoint.id())) {
+            else if(touchPoint.state() == QEventPoint::State::Released && pms.contains(touchPoint.id())) {
                 pms.remove(touchPoint.id());
             }
         }
@@ -703,7 +703,7 @@ bool MapWidget::viewportEvent(QEvent *event) {
                 return true;
             }
 
-            auto px_dist = QVector2D(tp1->pos() - tp0->pos()).length();
+            auto px_dist = QVector2D(tp1->position() - tp0->position()).length();
 
             for(int zo=0; zo<25; zo++) {
                 auto pt1 = scenePoint(pms[id0], zo, tileSize());
@@ -714,7 +714,7 @@ bool MapWidget::viewportEvent(QEvent *event) {
                     double s = px_dist/dist;
                     double new_zoom = zo + log2(s);
 
-                    auto center = (tp1->pos() + tp0->pos())/2;
+                    auto center = (tp1->position() + tp0->position())/2;
                     auto pmc = (pms[id0] + pms[id1])/2;
                     zoomCenteredScene(new_zoom, center.toPoint(), pmc);
                     updateGraphics(UpdateEvent::MAP_ZOOMED|UpdateEvent::MAP_MOVED|UpdateEvent::MAP_ROTATED);
@@ -722,10 +722,10 @@ bool MapWidget::viewportEvent(QEvent *event) {
                 }
             }
             return true;
-        } else if(touchPoints.count() == 1 && touchPoints.first().state() == Qt::TouchPointMoved) {
+        } else if(touchPoints.count() == 1 && touchPoints.first().state() == QEventPoint::State::Updated) {
             //Pan only
             auto pm = pms[touchPoints.first().id()];
-            auto pos = touchPoints.first().pos().toPoint();
+            auto pos = touchPoints.first().position().toPoint();
             zoomCenteredScene(zoom(), pos, pm);
             return true;
         }
@@ -807,7 +807,7 @@ void MapWidget::dropEvent(QDropEvent *event) {
             scale,
         };
 
-        Papget* papget = new Papget(datadef, event->pos());
+        Papget* papget = new Papget(datadef, event->position().toPoint());
         scene()->addItem(papget);
         papget->setZValue(1000);
         papgets.append(papget);

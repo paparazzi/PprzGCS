@@ -5,7 +5,6 @@
   <name>PprzGCS</name>
   <summary>Paparazzi UAV GCS</summary>
   <launchable type="desktop-id">org.paparazzi.pprzgcs.desktop</launchable>
-  <screenshots/>
   <project_group>Paparazzi UAV</project_group>
   <provides>
     <binary>pprzgcs</binary>
