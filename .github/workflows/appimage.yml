@@ -43,13 +43,9 @@ jobs:
           find . -iname "*appimage*"
           mv ./build_appimage/PprzGCS-x86_64.AppImage PprzGCS_${{ env.PPRZGCS_VERSION }}-x86_64.AppImage
 
-
-      - name: make release
-        uses: "marvinpinto/action-automatic-releases@latest"
+      - name: Release
+        uses: softprops/action-gh-release@v2
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          prerelease: false
-          files: |
-            'PprzGCS_${{ env.PPRZGCS_VERSION }}-x86_64.AppImage'
-
+          token: '${{ secrets.GITHUB_TOKEN }}'
+          files: 'PprzGCS_${{ env.PPRZGCS_VERSION }}-x86_64.AppImage'
 
