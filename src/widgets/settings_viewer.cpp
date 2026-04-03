@@ -33,6 +33,7 @@ SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent)
 
     scroll = new QScrollArea();
     scroll_content = new QStackedWidget();
+    scroll_content->setContentsMargins(0, 0, 20, 0);
 
     main_layout->addWidget(scroll);
     scroll->setWidget(scroll_content);

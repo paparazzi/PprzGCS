@@ -1,5 +1,5 @@
 <gcsconf>
-    <layout width="1000" height="800">
+    <layout width="1600" height="1000">
       <columns>
         <widget name="map2d" size="800">
           <configure>

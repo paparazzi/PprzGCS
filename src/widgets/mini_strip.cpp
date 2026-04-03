@@ -30,6 +30,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     ac_id(ac_id), icons_size(QSize(30, 30)), time_mode(TimeMode::FLIGHT_TIME),
     alt_mode(true), speed_mode(SpeedMode::GROUND_SPEED)
 {
+    setContentsMargins(0, 0, 20, 0);
     auto gl = new QGridLayout(this);
     auto ac = AircraftManager::get()->getAircraft(ac_id);
     auto ac_name = new QLabel(ac->name());

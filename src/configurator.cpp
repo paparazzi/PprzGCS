@@ -16,8 +16,8 @@
 #include "speaker.h"
 #endif
 
-static const char* DEFAULT_WIDTH = "1024";
-static const char* DEFAULT_HEIGHT = "600";
+static const char* DEFAULT_WIDTH = "1600";
+static const char* DEFAULT_HEIGHT = "800";
 
 Q_LOGGING_CATEGORY(LOG_CONFIG, "config")
 
