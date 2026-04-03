@@ -26,7 +26,6 @@ public:
     }
     void setOffset(int o) {
         _x = o;
-        update();
     }
 
 protected:
