@@ -345,7 +345,13 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
 
     // Add menu to app menu bar.
     connect(pprzApp()->mainWindow(), &PprzMain::ready, this, [=](){
-        pprzApp()->mainWindow()->menuBar()->addMenu(mapMenu);
+        auto actions = pprzApp()->mainWindow()->menuBar()->actions();
+        int index = actions.size()-1;
+        if(index < 0) {
+            pprzApp()->mainWindow()->menuBar()->addMenu(mapMenu);
+        } else {
+            pprzApp()->mainWindow()->menuBar()->insertMenu(actions[index], mapMenu);
+        }
     });
 }
 
