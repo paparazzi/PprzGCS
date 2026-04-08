@@ -1,7 +1,7 @@
 #!/bin/sh
 
 
-DEFAULT_VERSION="v1.0.13"
+DEFAULT_VERSION="v1.2.0"
 
 if test -d .git -o -f .git
 then
