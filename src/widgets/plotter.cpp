@@ -19,7 +19,7 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
 
     autoscale_checkbox = new QCheckBox("autoscale", this);
     top_lay->addWidget(autoscale_checkbox);
-    connect(autoscale_checkbox, &QCheckBox::stateChanged, this, [=](int state) {
+    connect(autoscale_checkbox, &QCheckBox::stateChanged, this, [=,this](int state) {
         if(graphs.contains(current_name)) {
             auto p = graphs[current_name]->getParams();
             p.autoscale = state;
@@ -31,7 +31,7 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
     top_lay->addWidget(history_spinbox);
     history_spinbox->setRange(1, 999);
     history_spinbox->setToolTip("history (s)");
-    connect(history_spinbox, qOverload<int>(&QSpinBox::valueChanged), this, [=](int value) {
+    connect(history_spinbox, qOverload<int>(&QSpinBox::valueChanged), this, [=,this](int value) {
         if(graphs.contains(current_name)) {
             graphs[current_name]->setHistory(value * 1000);
         }
@@ -51,7 +51,7 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
     lay->setStretch(1, 1);
 
     connect(var_button, &QToolButton::clicked, this, &Plotter::onOpenContextMenu);
-    connect(close_button, &QToolButton::clicked, this, [=]() {removeGraph(current_name);});
+    connect(close_button, &QToolButton::clicked, this, [=,this]() {removeGraph(current_name);});
 
 
     setAcceptDrops(true);
@@ -98,7 +98,7 @@ void Plotter::addGraph(QString name, GraphWidget::Params p) {
     auto def = name.split(":");
 
     bids[name] = PprzDispatcher::get()->bind(def[1], this,
-        [=](QString sender, pprzlink::Message msg){
+        [=,this](QString sender, pprzlink::Message msg){
             handleMsg(name, sender, msg);
         });
 
@@ -108,7 +108,7 @@ void Plotter::addGraph(QString name, GraphWidget::Params p) {
         current_name = name;
     }
 
-    connect(graph, &GraphWidget::autoscaleChanged, this, [=](bool a){
+    connect(graph, &GraphWidget::autoscaleChanged, this, [=,this](bool a){
         if(graph == graphs[current_name]) {
             autoscale_checkbox->setChecked(a);
         }
@@ -149,7 +149,7 @@ void Plotter::onOpenContextMenu() {
 
     for(auto gr=graphs.begin(); gr!=graphs.end(); ++gr) {
         auto action = menu->addAction(gr.key());
-        connect(action, &QAction::triggered, this, [=]() {
+        connect(action, &QAction::triggered, this, [=,this]() {
             changeGraph(gr.key());
         });
     }
@@ -162,7 +162,7 @@ void Plotter::onOpenContextMenu() {
         for(size_t i=0; i < def.getNbFields(); ++i) {
             auto f = def.getField(static_cast<int>(i));
             auto f_action = msg_menu->addAction(f.getName());
-            connect(f_action, &QAction::triggered, this, [=]() {
+            connect(f_action, &QAction::triggered, this, [=,this]() {
                 auto name = "ground:" +  def.getName() + ":" + f.getName();
                 // FIXME scale at 1.0 ???
                 addGraph(name, {100, 0, true, 1.0});

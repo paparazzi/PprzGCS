@@ -45,7 +45,7 @@ ChatBubble::ChatBubble(QString source, QString dest, QString msg, bool sent, QWi
     }
 
     // delay set max width to wait for the widget to be shown.
-    QTimer::singleShot(20, this, [=](){
+    QTimer::singleShot(20, this, [=,this](){
             auto width = size().width() * 0.95;
             ui->frame->setMaximumWidth(width);
     });

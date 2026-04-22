@@ -26,7 +26,7 @@ ListContainer::ListContainer(std::function<QWidget*(QString, QWidget*)> construc
 
     // FIXME: small hack to set minimum size of the scrollarea
     QTimer* t = new QTimer(this);
-    connect(t, &QTimer::timeout, this, [=]() {
+    connect(t, &QTimer::timeout, this, [=,this]() {
         this->setMinimumWidth(grid_layout->sizeHint().width());
     });
     t->start(500);
@@ -79,7 +79,7 @@ void ListContainer::handleNewAC(QString ac_id) {
         alt_widget->setWindowFlags(Qt::FramelessWindowHint | Qt::Popup);
 
         connect(action_button, &QToolButton::clicked, this,
-            [=]() {
+            [=,this]() {
                 auto p = action_button->mapToGlobal(action_button->rect().bottomRight());
                 alt_widget->move(p);
                 alt_widget->show();
@@ -97,7 +97,7 @@ void ListContainer::handleNewAC(QString ac_id) {
 
             });
         connect(select_ac_button, &QObject::destroyed, action_button,
-                [=]() {
+                [=,this]() {
             action_button->deleteLater();
         });
     }
@@ -107,7 +107,7 @@ void ListContainer::handleNewAC(QString ac_id) {
     buttons[select_ac_button] = ac_id;
 
     connect(select_ac_button, &QToolButton::clicked, this,
-        [=]() {
+        [=,this]() {
             emit DispatcherUi::get()->ac_selected(ac_id);
         });
 

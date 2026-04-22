@@ -64,21 +64,21 @@ void PprzMain::populate_menu() {
     auto file_menu = menu_bar->addMenu("&File");
 
     auto user_dir = file_menu->addAction("Open user directory");
-    connect(user_dir, &QAction::triggered, [=](){
+    connect(user_dir, &QAction::triggered, [=,this](){
         auto settings = getAppSettings();
         QString path = QDir::toNativeSeparators(appConfig()->value("USER_DATA_PATH").toString());
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
 
     auto app_dir = file_menu->addAction("Open app directory");
-    connect(app_dir, &QAction::triggered, [=](){
+    connect(app_dir, &QAction::triggered, [=,this](){
         auto settings = getAppSettings();
         QString path = QDir::toNativeSeparators(appConfig()->value("APP_DATA_PATH").toString());
         QDesktopServices::openUrl(QUrl::fromLocalFile(path));
     });
 
     auto edit_settings = file_menu->addAction("Edit Settings");
-    connect(edit_settings, &QAction::triggered, [=](){
+    connect(edit_settings, &QAction::triggered, [=,this](){
         auto se = new SettingsEditor();
         se->open();
     });
@@ -96,7 +96,7 @@ void PprzMain::populate_menu() {
     map_track_ac->setChecked(false);
 
     auto open_flight_plan = file_menu->addAction("Open FlightPlans");
-    connect(open_flight_plan, &QAction::triggered, [=](){
+    connect(open_flight_plan, &QAction::triggered, [=,this](){
         auto settings = getAppSettings();
         auto pprz_home = appConfig()->value("PAPARAZZI_HOME").toString();
         auto files = QFileDialog::getOpenFileNames(this, "open fp", pprz_home + "/conf/flight_plans", "*.xml");
@@ -157,7 +157,7 @@ void PprzMain::populate_menu() {
             "<li><a %1 href=\"https://libzip.org/\">libzip</a></li>"
             "</ul>").arg(QCoreApplication::applicationVersion());
 
-    connect(about, &QAction::triggered, [=]() {
+    connect(about, &QAction::triggered, [=,this]() {
         QMessageBox::about(this,"About PprzGCS", about_txt);
 
     });

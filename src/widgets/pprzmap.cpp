@@ -21,7 +21,7 @@ PprzMap::PprzMap(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    auto dl_strm = [=](bool local_only) {
+    auto dl_strm = [=,this](bool local_only) {
 
         QSet<QString> tiles;
 
@@ -51,16 +51,16 @@ PprzMap::PprzMap(QWidget *parent) :
 
     };
 
-    connect(ui->srtm_button, &QPushButton::clicked, [=]() {dl_strm(false);});
+    connect(ui->srtm_button, &QPushButton::clicked, [=,this]() {dl_strm(false);});
 #if GRPC_ENABLED
-    connect(GRPCConnector::get(), &GRPCConnector::dl_srtm, [=]() {dl_strm(true);});
+    connect(GRPCConnector::get(), &GRPCConnector::dl_srtm, [=,this]() {dl_strm(true);});
 #endif
 
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &PprzMap::changeCurrentAC);
     connect(ui->map, &MapWidget::mouseMoved, this, &PprzMap::handleMouseMove);
 
     connect(AircraftManager::get(), &AircraftManager::waypoint_changed, this,
-            [=](Waypoint* wp, QString ac_id) {
+            [=,this](Waypoint* wp, QString ac_id) {
         (void)wp;
         if(current_ac == ac_id) {
             if(combo_indexes.contains(wp)) {
@@ -69,7 +69,7 @@ PprzMap::PprzMap(QWidget *parent) :
         }
     });
     connect(AircraftManager::get(), &AircraftManager::waypoint_added, this,
-            [=](Waypoint* wp, QString ac_id) {
+            [=,this](Waypoint* wp, QString ac_id) {
         (void)wp;
         if(current_ac == ac_id) {
             changeCurrentAC(ac_id);

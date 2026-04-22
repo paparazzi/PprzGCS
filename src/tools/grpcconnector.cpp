@@ -44,7 +44,7 @@ GRPCConnector::GRPCConnector(PprzApplication* app, PprzToolbox* toolbox) : PprzT
 void GRPCConnector::setToolbox(PprzToolbox* toolbox) {
     PprzTool::setToolbox(toolbox);
 
-    auto th = QThread::create([=] {
+    auto th = QThread::create([=,this] {
         this->runServer();
     });
     th->start();

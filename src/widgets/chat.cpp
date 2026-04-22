@@ -22,7 +22,7 @@ Chat::Chat(QWidget *parent) :
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this,  &Chat::onNewAircraft);
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &Chat::onAcDeleted);
 
-    PprzDispatcher::get()->bind("INFO_MSG", this, [=](QString sender, pprzlink::Message msg) {
+    PprzDispatcher::get()->bind("INFO_MSG", this, [=,this](QString sender, pprzlink::Message msg) {
         QByteArray ar;
         msg.getField("msg", ar);
         auto txt = QString(ar);
@@ -30,7 +30,7 @@ Chat::Chat(QWidget *parent) :
     });
 
     try {
-        PprzDispatcher::get()->bind("INFO_MSG_GROUND", this, [=](QString sender, pprzlink::Message msg) {
+        PprzDispatcher::get()->bind("INFO_MSG_GROUND", this, [=,this](QString sender, pprzlink::Message msg) {
             (void) sender;
             QString txt;
             QString source;
@@ -133,7 +133,7 @@ void Chat::addMessage(QString txt, QString source, QString dst, bool sent) {
     ui->scroll_widget->installEventFilter(cb);
 
     // delay scroll to bottom to wait for the x=widget to be repainted.
-    QTimer::singleShot(20, this, [=](){
+    QTimer::singleShot(20, this, [=,this](){
         ui->scrollArea->verticalScrollBar()->setSliderPosition(ui->scrollArea->verticalScrollBar()->maximum());
     });
 

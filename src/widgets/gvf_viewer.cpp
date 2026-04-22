@@ -62,7 +62,7 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
     // GVF Viewer init
     init();
 
-    auto setViewerMode = [=](QString mode) {
+    auto setViewerMode = [=,this](QString mode) {
         if(mode == "DEFAULT") {
             viewer_mode = "DEFAULT";
             gvfV_config[2] = gvfV_default_Vfield_config[0];
@@ -95,7 +95,7 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
 
     // Building signals-slots connections
     connect(DispatcherUi::get(), &DispatcherUi::gvf_defaultFieldSettings, this,
-            [=](QString sender, int area, int xpts, int ypts) {
+            [=,this](QString sender, int area, int xpts, int ypts) {
                 if(sender == ac_id) {
                     gvfV_default_Vfield_config[0] = area;
                     gvfV_default_Vfield_config[1] = xpts;
@@ -105,7 +105,7 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
             });
 
     connect(DispatcherUi::get(), &DispatcherUi::gvf_zlimits, this,
-            [=](QString sender, float minz, float maxz) {
+            [=,this](QString sender, float minz, float maxz) {
                 if(sender == ac_id) {
                     alt_bar->set_zlimits(minz, maxz);
                     alt_bar->repaint();
@@ -114,7 +114,7 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
 
     connect(
         mode_button, &QPushButton::clicked, this,
-        [=]() {
+        [=,this]() {
             if (mode_button->text() == "DEFAULT") {
                 setViewerMode("CUSTOM");
             } else {
@@ -125,7 +125,7 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
 
     connect(
         traj_vis_button, &QPushButton::clicked, this,
-        [=]() {
+        [=,this]() {
             if (traj_vis_button->text() == "ON") {
                 gvfV_config[0] = false;
                 emit DispatcherUi::get()->gvf_settingUpdated(ac_id, &gvfV_config);
@@ -140,7 +140,7 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
 
     connect(
         field_vis_button, &QPushButton::clicked, this,
-        [=]() {
+        [=,this]() {
             if (field_vis_button->text() == "ON") {
                 gvfV_config[1] = false;
                 emit DispatcherUi::get()->gvf_settingUpdated(ac_id, &gvfV_config);
@@ -154,19 +154,19 @@ GVFViewer::GVFViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(ac
     );
 
     connect(area_spin, qOverload<int>(&QSpinBox::valueChanged), this,
-        [=](int value){
+        [=,this](int value){
             gvfV_config[2] = value;
             setViewerMode("CUSTOM");
         });
 
     connect(xpts_spin, qOverload<int>(&QSpinBox::valueChanged), this,
-        [=](int value){
+        [=,this](int value){
             gvfV_config[3] = value;
             setViewerMode("CUSTOM");
         });
 
     connect(ypts_spin, qOverload<int>(&QSpinBox::valueChanged), this,
-        [=](int value){
+        [=,this](int value){
             gvfV_config[4] = value; 
             setViewerMode("CUSTOM");
         });

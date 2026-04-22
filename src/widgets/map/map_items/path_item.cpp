@@ -50,7 +50,7 @@ void PathItem::addPoint(WaypointItem* wp, QColor line_color, bool own) {
 
     connect(
         wp, &WaypointItem::itemChanged, this,
-        [=]() {
+        [=,this]() {
             emit itemChanged();
         }
     );

@@ -79,7 +79,7 @@ Finally, you can bind a callback to any message with the PprzDispatcher's ``bind
 .. code-block:: cpp
 
     pprzApp()->toolbox()->pprzDispatcher()->bind("INTRUDER", this,
-            [=](QString sender, pprzlink::Message msg) {
+            [=,this](QString sender, pprzlink::Message msg) {
                 onIntruder(sender, msg);
             });
 

@@ -47,7 +47,7 @@ SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent)
     search_bar->setClearButtonEnabled(true);
     search_layout->addWidget(search_bar);
 
-    auto search_callback = [=](const QString str) {
+    auto search_callback = [=,this](const QString str) {
         if(str == "") {
             restore_searched_items();
             scroll_content->setCurrentIndex(last_widget_index);
@@ -66,7 +66,7 @@ SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent)
 
     connect(
         search_bar, &QLineEdit::returnPressed,
-        [=]() {
+        [=,this]() {
             auto str = search_bar->text();
             search_callback(str);
     }
@@ -109,7 +109,7 @@ void SettingsViewer::init(QString ac_id) {
 
     connect(
         button_home, &QToolButton::clicked, this,
-        [=]() {
+        [=,this]() {
             scroll_content->setCurrentIndex(widgets_indexes[settings]);
             path->setCurrentIndex(path_indexes[settings]);
             scroll->verticalScrollBar()->setValue(0);
@@ -119,7 +119,7 @@ void SettingsViewer::init(QString ac_id) {
 
     connect(
         button_save, &QToolButton::clicked, this,
-        [=]() {
+        [=,this]() {
             auto saver_dialog = new SettingSaver(ac_id, this);
             saver_dialog->open();
         }
@@ -150,7 +150,7 @@ void SettingsViewer::create_widgets(SettingMenu* setting_menu, QList<SettingMenu
 
             connect(
                 button, &QPushButton::clicked, this,
-                [=]() {
+                [=,this]() {
 
                     scroll_content->setCurrentIndex(widgets_indexes[setm]);
                     path->setCurrentIndex(path_indexes[setm]);
@@ -176,7 +176,7 @@ void SettingsViewer::create_widgets(SettingMenu* setting_menu, QList<SettingMenu
         create_widgets(sets, new_stack);
         connect(
             button, &QPushButton::clicked, this,
-            [=]() {
+            [=,this]() {
                 scroll_content->setCurrentIndex(widgets_indexes[sets]);
                 path->setCurrentIndex(path_indexes[sets]);
                 restore_searched_items();
@@ -266,7 +266,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     reset_btn->setToolTip("reset to initial");
     hlay->addWidget(reset_btn);
 
-    connect(value_btn, &QPushButton::clicked, this, [=]() {
+    connect(value_btn, &QPushButton::clicked, this, [=,this]() {
         value_btn->setText("?");
         pprzlink::Message getSetting(PprzDispatcher::get()->getDict()->getDefinition("GET_DL_SETTING"));
         getSetting.addField("ac_id", ac_id);
@@ -274,13 +274,13 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         PprzDispatcher::get()->sendMessage(getSetting);
     });
 
-    connect(undo_btn, &QToolButton::clicked, this, [=]() {
+    connect(undo_btn, &QToolButton::clicked, this, [=,this]() {
         auto prev = setting->getPreviousValue();
         AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, prev);
         setting->setUserValue(prev);
     });
 
-    connect(reset_btn, &QToolButton::clicked, this, [=]() {
+    connect(reset_btn, &QToolButton::clicked, this, [=,this]() {
         auto initial_value = setting->getInitialValue();
         if(initial_value.has_value()) {
             AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, initial_value.value());
@@ -306,7 +306,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
             value_btn->setText(combo->itemText(static_cast<int>(value)));
         };
 
-        connect(ok_btn, &QToolButton::clicked, this, [=]() {
+        connect(ok_btn, &QToolButton::clicked, this, [=,this]() {
             float value = static_cast<float>(combo->currentIndex());
             AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
             setting->setUserValue(value);
@@ -339,7 +339,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
             value_btn->setText(txt);
         };
 
-        connect(ok_btn, &QToolButton::clicked, this, [=, min=min, max=max]() {
+        connect(ok_btn, &QToolButton::clicked, this, [=, this, min=min, max=max]() {
             float value = sw->isChecked() ? max : min;
             AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
             setting->setUserValue(value);
@@ -353,7 +353,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         uniq_val->setAlignment(Qt::AlignCenter);
         vLay->addWidget(uniq_val);
 
-        connect(ok_btn, &QToolButton::clicked, this, [=]() {
+        connect(ok_btn, &QToolButton::clicked, this, [=,this]() {
             AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
             setting->setUserValue(value);
         });
@@ -377,12 +377,12 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
             precision = static_cast<int>(ceil(abs(log10(step))));
         }
         connect(slider, &DoubleSlider::doubleValueChanged,
-            [=](double value) {
+            [=,this](double value) {
                 la->setText(QString::number(value, 'f', precision));
             });
 
         connect(expert_button, &QToolButton::clicked,
-            [=]() {
+            [=,this]() {
                 raw_edit->setVisible(!raw_edit->isVisible());
                 if(raw_edit->isVisible()) {
                     expert_button->setIcon(QIcon(":/pictures/lock_warning.svg"));
@@ -392,7 +392,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
             });
 
         connect(raw_edit, &QLineEdit::returnPressed, this,
-            [=, min=min, max=max]() {
+            [=, this, min=min, max=max]() {
                 auto txt = raw_edit->text();
                 bool ok;
                 auto value = static_cast<float>(txt.toDouble(&ok));
@@ -409,7 +409,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
             });
 
         connect(raw_edit, &QLineEdit::textChanged,
-            [=]() {
+            [=,this]() {
                 raw_edit->setStyleSheet("QLineEdit{background-color: #ffffff;}");
             });
 
@@ -420,7 +420,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         vbox->addWidget(expert_button);
         vLay->addLayout(vbox);
 
-        connect(ok_btn, &QToolButton::clicked, this, [=]() {
+        connect(ok_btn, &QToolButton::clicked, this, [=,this]() {
             auto coef = setting->getAltUnitCoef();
             float value = static_cast<float>(slider->doubleValue()) / coef;
             AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
@@ -505,7 +505,7 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) : QDialog(parent),
     lay->addWidget(all_check);
 
 
-    connect(all_check, &QCheckBox::toggled, this, [=](bool state) {
+    connect(all_check, &QCheckBox::toggled, this, [=,this](bool state) {
         for(int i=0; i < tree->topLevelItemCount(); i++) {
             auto item = tree->topLevelItem(i);
             item->setCheckState(0, state ? Qt::Checked : Qt::Unchecked);
@@ -520,7 +520,7 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) : QDialog(parent),
     auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel, this);
     lay->addWidget(buttonBox);
 
-    connect(buttonBox->button(QDialogButtonBox::Save), &QPushButton::clicked, this, [=](){
+    connect(buttonBox->button(QDialogButtonBox::Save), &QPushButton::clicked, this, [=,this](){
         QMap<QString, QString> changed_params;
 
         for(int i=0; i < tree->topLevelItemCount(); i++) {
@@ -562,7 +562,7 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) : QDialog(parent),
 
     });
 
-    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=](){
+    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=,this](){
         reject();
     });
 }
