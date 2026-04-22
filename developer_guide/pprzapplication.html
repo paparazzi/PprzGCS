@@ -1,22 +1,25 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PprzApplication &mdash; PprzGCS  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
+  <title>PprzApplication &mdash; PprzGCS  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+      <script src="../_static/doctools.js?v=888ff710"></script>
+      <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Aircrafts" href="aircraft.html" />
+    <link rel="next" title="Settings and config" href="settings.html" />
     <link rel="prev" title="Arborescence" href="concepts.html" /> 
 </head>
 
@@ -25,14 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> PprzGCS
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            PprzGCS
           </a>
-              <div class="version">
-                master
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -47,6 +51,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#pprzmain">PprzMain</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings and config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="aircraft.html">Aircrafts</a></li>
 <li class="toctree-l2"><a class="reference internal" href="widgets.html">Widgets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="map.html">Map</a></li>
@@ -68,9 +73,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index_developer.html">Developer guide</a> &raquo;</li>
-      <li>PprzApplication</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index_developer.html">Developer guide</a></li>
+      <li class="breadcrumb-item active">PprzApplication</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/developer_guide/pprzapplication.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -80,13 +85,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="pprzapplication">
-<h1>PprzApplication<a class="headerlink" href="#pprzapplication" title="Permalink to this headline">¶</a></h1>
+  <section id="pprzapplication">
+<h1>PprzApplication<a class="headerlink" href="#pprzapplication" title="Permalink to this heading"></a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">PprzApplication</span></code> subclass <code class="docutils literal notranslate"><span class="pre">QApplication</span></code> to add two attributes: the toolbox and the main window.</p>
 <p>There should be only one instance of <code class="docutils literal notranslate"><span class="pre">PprzApplication</span></code>.</p>
 <p>Get the PprzApplication instance from anywhere with the <code class="docutils literal notranslate"><span class="pre">pprzApp()</span></code> function.</p>
-<div class="section" id="toolbox">
-<h2>Toolbox<a class="headerlink" href="#toolbox" title="Permalink to this headline">¶</a></h2>
+<section id="toolbox">
+<h2>Toolbox<a class="headerlink" href="#toolbox" title="Permalink to this heading"></a></h2>
 <p>The toolbox holds these tools:</p>
 <ul class="simple">
 <li><p><strong>AircraftManager</strong>: manage the list of aircrafts</p></li>
@@ -98,19 +103,19 @@
 <li><p><strong>Speaker</strong>: Handles text to speech.</p></li>
 </ul>
 <p>Get the tools from the toolbox getters, e.g. : <code class="docutils literal notranslate"><span class="pre">pprzApp()-&gt;toolbox()-&gt;aircraftManager()</span></code></p>
-</div>
-<div class="section" id="pprzmain">
-<h2>PprzMain<a class="headerlink" href="#pprzmain" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="pprzmain">
+<h2>PprzMain<a class="headerlink" href="#pprzmain" title="Permalink to this heading"></a></h2>
 <p>PprzMain is the main window of the application.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="concepts.html" class="btn btn-neutral float-left" title="Arborescence" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="aircraft.html" class="btn btn-neutral float-right" title="Aircrafts" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="settings.html" class="btn btn-neutral float-right" title="Settings and config" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

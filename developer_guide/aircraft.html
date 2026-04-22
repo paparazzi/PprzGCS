@@ -1,23 +1,26 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aircrafts &mdash; PprzGCS  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
+  <title>Aircrafts &mdash; PprzGCS  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+      <script src="../_static/doctools.js?v=888ff710"></script>
+      <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Widgets" href="widgets.html" />
-    <link rel="prev" title="PprzApplication" href="pprzapplication.html" /> 
+    <link rel="prev" title="Settings and config" href="settings.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -25,14 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> PprzGCS
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            PprzGCS
           </a>
-              <div class="version">
-                master
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -43,6 +47,7 @@
 <li class="toctree-l2"><a class="reference internal" href="how_to_build.html">How to build from sources</a></li>
 <li class="toctree-l2"><a class="reference internal" href="concepts.html">Arborescence</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pprzapplication.html">PprzApplication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="settings.html">Settings and config</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Aircrafts</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#aircraftmanager">AircraftManager</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#aircraft">Aircraft</a></li>
@@ -69,9 +74,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index_developer.html">Developer guide</a> &raquo;</li>
-      <li>Aircrafts</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index_developer.html">Developer guide</a></li>
+      <li class="breadcrumb-item active">Aircrafts</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/developer_guide/aircraft.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -81,15 +86,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="aircrafts">
-<h1>Aircrafts<a class="headerlink" href="#aircrafts" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="aircraftmanager">
-<h2>AircraftManager<a class="headerlink" href="#aircraftmanager" title="Permalink to this headline">¶</a></h2>
+  <section id="aircrafts">
+<h1>Aircrafts<a class="headerlink" href="#aircrafts" title="Permalink to this heading"></a></h1>
+<section id="aircraftmanager">
+<h2>AircraftManager<a class="headerlink" href="#aircraftmanager" title="Permalink to this heading"></a></h2>
 <p>Aircrafts are uniquely identified by  their ID.</p>
 <p>Get an aircraft with the <code class="docutils literal notranslate"><span class="pre">Aircraft*</span> <span class="pre">AircraftManager::getAircraft(QString</span> <span class="pre">id)</span></code> method.</p>
-</div>
-<div class="section" id="aircraft">
-<span id="id1"></span><h2>Aircraft<a class="headerlink" href="#aircraft" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="aircraft">
+<span id="id1"></span><h2>Aircraft<a class="headerlink" href="#aircraft" title="Permalink to this heading"></a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">Aircraft</span></code> class is central in PprzGCS. It holds all the data relative to a given aircraft:</p>
 <ul class="simple">
 <li><p>AC ID</p></li>
@@ -101,9 +106,9 @@
 <li><p>status</p></li>
 <li><p>config</p></li>
 </ul>
-</div>
-<div class="section" id="status">
-<h2>Status<a class="headerlink" href="#status" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="status">
+<h2>Status<a class="headerlink" href="#status" title="Permalink to this heading"></a></h2>
 <p>Get the status with the <code class="docutils literal notranslate"><span class="pre">Aircraft::getStatus()</span></code> method.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">AircraftStatus</span></code> class store some of the most used aircraft’s messages:</p>
 <ul class="simple">
@@ -120,14 +125,14 @@
 </ul>
 <p>Use the <code class="docutils literal notranslate"><span class="pre">getMessage(QString</span> <span class="pre">name)</span></code> method to get the last received message.</p>
 <p>This class also emit a signal for each of the above messages when a new one is received.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="pprzapplication.html" class="btn btn-neutral float-left" title="PprzApplication" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="settings.html" class="btn btn-neutral float-left" title="Settings and config" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="widgets.html" class="btn btn-neutral float-right" title="Widgets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

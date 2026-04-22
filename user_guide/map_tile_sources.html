@@ -1,18 +1,21 @@
+
+
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Map tile sources &mdash; PprzGCS  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/language_data.js"></script>
+  <title>Map tile sources &mdash; PprzGCS  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=b3ba4146"></script>
+      <script src="../_static/doctools.js?v=888ff710"></script>
+      <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -24,14 +27,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> PprzGCS
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            PprzGCS
           </a>
-              <div class="version">
-                master
-              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -64,9 +68,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="index_user.html">User guide</a> &raquo;</li>
-      <li>Map tile sources</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index_user.html">User guide</a></li>
+      <li class="breadcrumb-item active">Map tile sources</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/user_guide/map_tile_sources.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -76,12 +80,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="map-tile-sources">
-<h1>Map tile sources<a class="headerlink" href="#map-tile-sources" title="Permalink to this headline">¶</a></h1>
+  <section id="map-tile-sources">
+<h1>Map tile sources<a class="headerlink" href="#map-tile-sources" title="Permalink to this heading"></a></h1>
 <p>You can easily add or remove tile sources from the layer tab.
 It can be public tile sources or you can even generate your own tiles !</p>
-<div class="section" id="edit-tile-sources">
-<h2>Edit tile sources<a class="headerlink" href="#edit-tile-sources" title="Permalink to this headline">¶</a></h2>
+<section id="edit-tile-sources">
+<h2>Edit tile sources<a class="headerlink" href="#edit-tile-sources" title="Permalink to this heading"></a></h2>
 <p>You need to copy <code class="docutils literal notranslate"><span class="pre">tile_sources.xml</span></code> in your user directory, and edit this file.</p>
 <p>To do so, you can start PprzGCS, then go to <code class="docutils literal notranslate"><span class="pre">File-&gt;Open</span> <span class="pre">user</span> <span class="pre">directory</span></code> and <code class="docutils literal notranslate"><span class="pre">File-&gt;Open</span> <span class="pre">app</span> <span class="pre">directory</span></code>. Then just copy <code class="docutils literal notranslate"><span class="pre">tile_sources.xml</span></code> from the app directory to the user directory.</p>
 <div class="admonition note">
@@ -90,11 +94,11 @@ It can be public tile sources or you can even generate your own tiles !</p>
 </div>
 <p>A tile source is identified by an xml node of this form:</p>
 <div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;source</span>
-    <span class="na">name=</span><span class="s">&quot;OpenStreetMap&quot;</span> <span class="na">dir=</span><span class="s">&quot;OSM_CLASSIC&quot;</span>
-    <span class="na">addr=</span><span class="s">&quot;http://tile.openstreetmap.org/{z}/{x}/{y}.png&quot;</span>
-    <span class="na">zoomMin=</span><span class="s">&quot;0&quot;</span> <span class="na">zoomMax=</span><span class="s">&quot;19&quot;</span>
-    <span class="na">tileSize=</span><span class="s">&quot;256&quot;</span>
-    <span class="na">format=</span><span class="s">&quot;.png&quot;</span>
+<span class="w">    </span><span class="na">name=</span><span class="s">&quot;OpenStreetMap&quot;</span><span class="w"> </span><span class="na">dir=</span><span class="s">&quot;OSM_CLASSIC&quot;</span>
+<span class="w">    </span><span class="na">addr=</span><span class="s">&quot;http://tile.openstreetmap.org/{z}/{x}/{y}.png&quot;</span>
+<span class="w">    </span><span class="na">zoomMin=</span><span class="s">&quot;0&quot;</span><span class="w"> </span><span class="na">zoomMax=</span><span class="s">&quot;19&quot;</span>
+<span class="w">    </span><span class="na">tileSize=</span><span class="s">&quot;256&quot;</span>
+<span class="w">    </span><span class="na">format=</span><span class="s">&quot;.png&quot;</span>
 <span class="nt">/&gt;</span>
 </pre></div>
 </div>
@@ -119,9 +123,9 @@ It can be public tile sources or you can even generate your own tiles !</p>
 <p class="admonition-title">Note</p>
 <p>These directories will probably not exist the first time you add a layer, just create them !</p>
 </div>
-</div>
-<div class="section" id="make-your-own-tiles">
-<h2>Make your own tiles<a class="headerlink" href="#make-your-own-tiles" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="make-your-own-tiles">
+<h2>Make your own tiles<a class="headerlink" href="#make-your-own-tiles" title="Permalink to this heading"></a></h2>
 <p>You can make your own tiles with QGIS using the processing tool <code class="docutils literal notranslate"><span class="pre">Raster</span> <span class="pre">tools</span> <span class="pre">-&gt;</span> <span class="pre">Generate</span> <span class="pre">XYZ</span> <span class="pre">tiles</span> <span class="pre">(Directory)</span></code>.</p>
 <p>Lets do a rather complicated example: I want to make a map for local ENU/NED coordinates from an image.</p>
 <p>First, let create a georeferenced image:</p>
@@ -159,8 +163,8 @@ It can be public tile sources or you can even generate your own tiles !</p>
 <li><p>Add the source to the <code class="docutils literal notranslate"><span class="pre">tile_sources.xml</span></code> file, as described above.</p></li>
 <li><p>You’re done ! Open PprzGCS and enjoy !</p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
