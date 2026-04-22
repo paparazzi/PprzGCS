@@ -42,7 +42,7 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
             ui->verticalLayout->addWidget(widget_item);
 
             connect(widget_item, &QCheckBox::toggled, this, 
-            [=](bool state) {
+            [=,this](bool state) {
                 item->value = (state)? "true":"false";
                 sendMessage(ac_id, item);
 
@@ -60,7 +60,7 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
             ui->verticalLayout->addLayout(widget_item);
 
             connect(widget_input, &QLineEdit::editingFinished, this, 
-            [=]() {
+            [=,this]() {
                 item->value = widget_input->text();
                 sendMessage(ac_id, item);
 

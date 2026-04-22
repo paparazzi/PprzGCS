@@ -87,7 +87,6 @@ int main(int argc, char *argv[])
         parser.addVersionOption();
         parser.addOption({{"c", "configure"}, "Configure app settings."});
         parser.addOption({{"s", "silent"}, "Silent mode."});
-        parser.addOption({{"v", "verbose"}, "Verbose"});
         parser.addOption({{"f", "fpedit"}, "edit flight plan", "file"});
         parser.addOption({{"b", "bus"}, "Ivy bus", "bus"});
 #if defined(SPEECH_ENABLED)

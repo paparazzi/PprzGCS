@@ -18,7 +18,7 @@ GVF_trajectory::GVF_trajectory(QString id, QVector<int> *gvf_settings)
 
     // If you're alive, please update your map items when gvf_viewer request it 
     connect(DispatcherUi::get(), &DispatcherUi::gvf_settingUpdated, this,
-        [=](QString sender, QVector<int> *gvf_settings) {
+        [=,this](QString sender, QVector<int> *gvf_settings) {
             if(sender == ac_id) {
                 auto gvfV_settings = *gvf_settings;
 

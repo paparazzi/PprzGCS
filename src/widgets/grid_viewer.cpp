@@ -19,13 +19,13 @@ GridViewer::GridViewer(QString ac_id, QWidget *parent) : QWidget(parent), ac_id(
     grid_layout->addWidget(obstacle_label, 1, 0);
     grid_layout->addWidget(obstacle_button, 1, 1);
 
-    connect(slam_button, &QPushButton::clicked, this, [=]() {
+    connect(slam_button, &QPushButton::clicked, this, [=,this]() {
         bool visible = (slam_button->text() == "ON");
         slam_button->setText(visible ? "OFF" : "ON");
         emit DispatcherUi::get()->slamGridVisibilityChanged(!visible);
     });
 
-    connect(obstacle_button, &QPushButton::clicked, this, [=]() {
+    connect(obstacle_button, &QPushButton::clicked, this, [=,this]() {
         bool visible = (obstacle_button->text() == "ON");
         obstacle_button->setText(visible ? "OFF" : "ON");
         emit DispatcherUi::get()->obstacleVisibilityChanged(!visible);
