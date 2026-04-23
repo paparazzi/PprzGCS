@@ -1,18 +1,56 @@
 #include "mission_model.h"
 
+void MissionInfo::setupGotoButton(MissionModel *parent)
+{
+    QPushButton *goto_button = new QPushButton("GOTO", parent);
+    goto_button->setIcon(parent->style()->standardIcon(QStyle::SP_ArrowLeft));
+    goto_button->setToolTip("Set this mission as first");
+    goto_button->connect(goto_button, &QPushButton::clicked, [=, this]()
+    {
+        auto goto_definition = PprzDispatcher::get()->getDict()->getDefinition("GOTO_MISSION");
+        pprzlink::Message msg(goto_definition);
+        msg.addField("ac_id", parent->ac_id.toUInt());
+        msg.addField("mission_id", id);
+        PprzDispatcher::get()->sendMessage(msg);
+    });
+
+    parent->setItemWidget(main_item, 4, goto_button);
+}
+
+MissionInfo::MissionInfo(MissionModel *parent, uint8_t _id, uint8_t _rank)
+: id(_id), rank(_rank)
+{
+    main_item = new QTreeWidgetItem(parent);
+    main_item->setText(0, QString::number(rank));
+    main_item->setText(1, "UNKNOWN");
+    main_item->setText(2, QString::number(id));
+    main_item->setText(3, "--");
+    setupGotoButton(parent);
+}
+
+MissionInfo::MissionInfo(MissionModel *parent, uint8_t _id, uint8_t _rank, pprzlink::Message _mission_definition_message)
+: id(_id), rank(_rank), mission_definition_message(_mission_definition_message)
+{
+    main_item = new QTreeWidgetItem(parent);
+    main_item->setText(0, QString::number(rank));
+    main_item->setText(2, QString::number(id));
+    setMissionDefinitionMessage(_mission_definition_message);
+    setupGotoButton(parent);
+}
+
 MissionModel::MissionModel(QString ac_id, QWidget *parent) : QTreeWidget(parent), ac_id(ac_id)
 {
     auto charWidth = this->fontMetrics().averageCharWidth();
 
-    this->setColumnCount(4);
-    this->setHeaderLabels({"Index", "Name", "Id/Value", "Duration (s)"});
+    this->setColumnCount(5);
+    this->setHeaderLabels({"Rank", "Name", "Id/Value", "Time (s)", ""});
     this->resizeColumnToContents(0);
     this->setColumnWidth(1, charWidth * 18); // Set name column width to fit "MISSION_GOTO_WP_LLA" (trial and error guessed value)
-    this->setColumnWidth(2, charWidth * 20); // Set value column width
-    this->resizeColumnToContents(3); 
+    this->setColumnWidth(2, charWidth * 15); // Set value column width
+    this->resizeColumnToContents(3);
     this->sortItems(0, Qt::AscendingOrder);
 
-    PprzDispatcher::get()->bind("MISSION_STATUS", this, [=,this](QString sender, pprzlink::Message msg)
+    PprzDispatcher::get()->bind("MISSION_STATUS", this, [=, this](QString sender, pprzlink::Message msg)
     {
         if(sender == ac_id) 
         {
@@ -25,10 +63,10 @@ MissionModel::MissionModel(QString ac_id, QWidget *parent) : QTreeWidget(parent)
             this->updateActiveMissions(remaining_time, index_list);
         } });
 
-    for(auto& name : MISSION_MSG_NAMES)
+    for (auto &name : MISSION_MSG_NAMES)
     {
-        PprzDispatcher::get()->bind(name, this, [=,this]([[maybe_unused]] QString sender, pprzlink::Message msg)
-        {
+        PprzDispatcher::get()->bind(name, this, [=, this]([[maybe_unused]] QString sender, pprzlink::Message msg)
+                                    {
             uint8_t dest_id;
             msg.getField("ac_id", dest_id);
             if(QString::number(dest_id) == ac_id) 
@@ -48,8 +86,7 @@ MissionModel::MissionModel(QString ac_id, QWidget *parent) : QTreeWidget(parent)
                     this->addTopLevelItem(info->getMainItem());
                 }
                 active_missions.insert(mission_id);
-            } 
-        });
+            } });
     }
 }
 

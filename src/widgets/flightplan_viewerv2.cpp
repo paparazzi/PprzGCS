@@ -14,7 +14,7 @@ FlightPlanViewerV2::FlightPlanViewerV2(QString ac_id, QWidget *parent) : QTabWid
 {
     addTab(make_blocks_tab(), "Blocks");
     addTab(new FlightPlanEditor(ac_id, this), "Details");
-    addTab(new MissionModel(ac_id, this), "Missions");
+    addTab(new MissionWidget(ac_id, this), "Missions");
 
 
     connect(AircraftManager::get()->getAircraft(ac_id)->getStatus(),

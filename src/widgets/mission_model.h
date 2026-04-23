@@ -23,6 +23,31 @@ static const std::array<QString, 9> MISSION_MSG_NAMES = {
         "MISSION_CUSTOM"
     };
 
+class MissionInfo;
+
+class MissionModel : public QTreeWidget
+{
+    Q_OBJECT
+public:
+    QString ac_id;
+    explicit MissionModel(QString ac_id, QWidget *parent = nullptr);
+
+signals:
+
+public slots:
+
+private:
+    uint8_t active_missions_count = 0;
+
+    QString labels_stylesheet;
+
+    QSet<uint8_t> active_missions = QSet<uint8_t>(); // Set of active mission ids
+    QMap<uint8_t,MissionInfo*> missions = QMap<uint8_t,MissionInfo*>(); // Map from mission id to mission info
+
+    void updateActiveMissions(float remaining_time, const QList<uint8_t> &missions);
+    
+};
+
 class MissionInfo
 {
 private:
@@ -33,25 +58,14 @@ private:
 
     QTreeWidgetItem* main_item;
     QMap<QString, QTreeWidgetItem*> details = QMap<QString, QTreeWidgetItem*>();
+
+    void setupGotoButton(MissionModel* parent);
+
 public:
     // ----- Constructors -----
     MissionInfo() = delete;
-    MissionInfo(QTreeWidget* parent, uint8_t _id, uint8_t _rank) : id(_id), rank(_rank)
-    {
-        main_item = new QTreeWidgetItem(parent);
-        main_item->setText(0, QString::number(rank));
-        main_item->setText(1, "UNKNOWN");
-        main_item->setText(2, QString::number(id));
-        main_item->setText(3, "--");
-    }
-    MissionInfo(QTreeWidget* parent, uint8_t _id, uint8_t _rank, pprzlink::Message _mission_definition_message) :
-        id(_id), rank(_rank), mission_definition_message(_mission_definition_message)
-    {
-        main_item = new QTreeWidgetItem(parent);
-        main_item->setText(0, QString::number(rank));
-        main_item->setText(2, QString::number(id));
-        setMissionDefinitionMessage(_mission_definition_message);
-    }
+    MissionInfo(MissionModel* parent, uint8_t _id, uint8_t _rank);
+    MissionInfo(MissionModel* parent, uint8_t _id, uint8_t _rank, pprzlink::Message _mission_definition_message);
 
     // ----- Getters -----
     uint8_t getId() const { return id; }
@@ -129,27 +143,54 @@ public:
     }
 };
 
-class MissionModel : public QTreeWidget
+
+class MissionWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit MissionModel(QString ac_id, QWidget *parent = nullptr);
+    QString ac_id;
+    explicit MissionWidget(QString _ac_id, QWidget *parent = nullptr)
+    : QWidget(parent), ac_id(_ac_id)
+    {
+        layout = new QVBoxLayout(this);
+        layout->addWidget(buildNextMissionButton());
+        layout->addWidget(buildEndMissionButton());
 
-signals:
-
-public slots:
+        auto mission_model = new MissionModel(ac_id, this);
+        layout->addWidget(mission_model);
+        
+    }
 
 private:
-    QString ac_id;
-    uint8_t active_missions_count = 0;
+    QVBoxLayout *layout;
 
-    QString labels_stylesheet;
+    QPushButton * buildEndMissionButton()
+    {
+        auto button = new QPushButton("End Mission", this);
+        button->setIcon(this->style()->standardIcon(QStyle::SP_DialogCloseButton));
+        button->setToolTip("End all missions");
+        connect(button, &QPushButton::clicked, this, [=]()
+        {
+            pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("END_MISSION"));
+            msg.addField("ac_id", ac_id.toUInt());
+            PprzDispatcher::get()->sendMessage(msg);
+        });
+        return button;
+    }
 
-    QSet<uint8_t> active_missions = QSet<uint8_t>(); // Set of active mission ids
-    QMap<uint8_t,MissionInfo*> missions = QMap<uint8_t,MissionInfo*>(); // Map from mission id to mission info
-
-    void updateActiveMissions(float remaining_time, const QList<uint8_t> &missions);
-    
+    QPushButton * buildNextMissionButton()
+    {
+        auto button = new QPushButton("Next Mission", this);
+        button->setIcon(this->style()->standardIcon(QStyle::SP_ArrowRight));
+        button->setToolTip("Skip to next mission");
+        connect(button, &QPushButton::clicked, this, [=]()
+        {
+            pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("NEXT_MISSION"));
+            msg.addField("ac_id", ac_id.toUInt());
+            PprzDispatcher::get()->sendMessage(msg);
+        });
+        return button;
+    }
 };
 
 #endif // MISSION_MODEL_H
