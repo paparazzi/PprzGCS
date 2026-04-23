@@ -88,6 +88,9 @@ MissionModel::MissionModel(QString ac_id, QWidget *parent) : QTreeWidget(parent)
                 active_missions.insert(mission_id);
             } });
     }
+
+    PprzDispatcher::get()->bind("MISSION_UPDATE", this, [=,this]([[maybe_unused]] QString sender, pprzlink::Message msg)
+        {this->handleMissionUpdate(sender,msg);});
 }
 
 void MissionModel::updateActiveMissions(float remaining_time, const QList<uint8_t> &missions)
@@ -134,4 +137,27 @@ void MissionModel::updateActiveMissions(float remaining_time, const QList<uint8_
     active_missions_count = rank;
     this->sortItems(0, Qt::AscendingOrder);
     active_missions = new_active_missions;
+}
+
+void MissionModel::handleMissionUpdate([[maybe_unused]] QString sender, const pprzlink::Message &msg)
+{
+    uint8_t dest_id;
+    msg.getField("ac_id", dest_id);
+    if (QString::number(dest_id) == ac_id)
+    {
+        uint8_t mission_id;
+        msg.getField("index", mission_id);
+        if (!this->missions.contains(mission_id)) {return;} // Cannot update unknown mission
+
+        MissionInfo *info = this->missions[mission_id];
+        if (info->getType() != "MISSION_CUSTOM") {return;} // As of 2026-04-23, MISSION_UPDATE affects only the MISSION_CUSTOM type (and not the standard ones)
+        float duration;
+        msg.getField("duration", duration);
+        if (duration > -9.f) // For duration set to -9 in update, the duration should not be changed
+        {
+            info->setDuration(duration);
+        }
+
+        info->setFieldValueTxt("params",msg.getFieldAsStr("params"));
+    }
 }

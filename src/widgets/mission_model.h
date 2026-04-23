@@ -45,6 +45,7 @@ private:
     QMap<uint8_t,MissionInfo*> missions = QMap<uint8_t,MissionInfo*>(); // Map from mission id to mission info
 
     void updateActiveMissions(float remaining_time, const QList<uint8_t> &missions);
+    void handleMissionUpdate(QString sender, const pprzlink::Message &msg);
     
 };
 
@@ -73,6 +74,7 @@ public:
     optional<float> getDuration() const { return duration; }
     optional<pprzlink::Message> getMissionDefinitionMessage() const { return mission_definition_message; }
     bool isActive() const { return active; }
+    QString getType() const { return main_item->text(1);}
 
     QTreeWidgetItem* getMainItem() const
     {
@@ -133,6 +135,33 @@ public:
             field_item->setToolTip(2, _mission_definition_message.getFieldAsStr(i));
             details[field_name] = field_item;
         }
+    }
+
+    void setFieldValueTxt(QString field_name, QString txtValue)
+    {
+        if (field_name == "ac_id")
+        {
+            setId(field_name.toUInt());
+        }
+        else if (field_name == "duration")
+        {
+            setDuration(field_name.toFloat());
+        }
+        else if (field_name == "index")
+        {
+            setId(field_name.toUInt());
+        }
+        else if (details.contains(field_name))
+        {
+            QTreeWidgetItem* field_item = details[field_name];
+            field_item->setText(2,txtValue);
+        }
+        else
+        {
+            throw pprzlink::no_such_field("No field " + field_name + " in message " + getType());
+        }
+        
+        
     }
 
     void setActive(bool _active)
