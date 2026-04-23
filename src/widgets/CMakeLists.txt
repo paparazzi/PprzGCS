@@ -1,31 +1,32 @@
 
 set(SOURCE
     ${SOURCE}
-    ${CMAKE_CURRENT_SOURCE_DIR}/strip.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ac_selector.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/settings_viewer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/pprzmap.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/pfd.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/listcontainer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/mini_strip.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/flightplan_viewerv2.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/stackcontainer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/layer_combo.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/widget_utils.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/pprzmap.ui
-    ${CMAKE_CURRENT_SOURCE_DIR}/commands.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gps_classic_viewer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/flightplaneditor.ui
-    ${CMAKE_CURRENT_SOURCE_DIR}/flightplaneditor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/plotter.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/windindicator.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/link_status.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/grid_viewer.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/gvf_viewer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/chat.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/chat.ui
     ${CMAKE_CURRENT_SOURCE_DIR}/checklist.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/checklist.ui
+    ${CMAKE_CURRENT_SOURCE_DIR}/commands.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/flightplan_viewerv2.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/flightplaneditor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/flightplaneditor.ui
+    ${CMAKE_CURRENT_SOURCE_DIR}/gps_classic_viewer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/grid_viewer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/gvf_viewer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/layer_combo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/link_status.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/listcontainer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mini_strip.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/mission_model.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/pfd.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/plotter.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/pprzmap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/pprzmap.ui
+    ${CMAKE_CURRENT_SOURCE_DIR}/settings_viewer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/stackcontainer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/strip.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/widget_utils.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/windindicator.cpp
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})

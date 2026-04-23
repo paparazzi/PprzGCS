@@ -7,11 +7,15 @@
 #include "gcs_utils.h"
 #include "flightplaneditor.h"
 
+#include "mission_model.h"
+
 FlightPlanViewerV2::FlightPlanViewerV2(QString ac_id, QWidget *parent) : QTabWidget(parent),
     ac_id(ac_id), current_block(0), current_stage(0), labels_stylesheet("")
 {
     addTab(make_blocks_tab(), "Blocks");
     addTab(new FlightPlanEditor(ac_id, this), "Details");
+    addTab(new MissionWidget(ac_id, this), "Missions");
+
 
     connect(AircraftManager::get()->getAircraft(ac_id)->getStatus(),
             &AircraftStatus::nav_status, this, &FlightPlanViewerV2::handleNavStatus);
