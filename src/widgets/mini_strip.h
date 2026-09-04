@@ -91,8 +91,10 @@ private:
     QIcon link_lost;
 
     QLabel* gps_icon;
-    QIcon gps_ok;
     QIcon gps_lost;
+    QIcon gps_ok;
+    QIcon gps_dgps;
+    QIcon gps_rtk;
 
     QLabel* rc_icon;
     QIcon rc_ok;

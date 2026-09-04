@@ -38,6 +38,8 @@
         <file>pictures/throttle_on.svg</file>
         <file>pictures/gps_nok.svg</file>
         <file>pictures/gps_ok.svg</file>
+        <file>pictures/gps_dgps.svg</file>
+        <file>pictures/gps_rtk.svg</file>
         <file>pictures/rc_nok.svg</file>
         <file>pictures/rc_ok.svg</file>
         <file>pictures/imu_nok.svg</file>

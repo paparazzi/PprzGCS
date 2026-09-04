@@ -209,8 +209,10 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     misc_lay->addWidget(link_icon);
 
     gps_icon = new QLabel(this);
-    gps_ok = QIcon(":/pictures/gps_ok.svg");
     gps_lost = QIcon(":/pictures/gps_nok.svg");
+    gps_ok = QIcon(":/pictures/gps_ok.svg");
+    gps_dgps = QIcon(":/pictures/gps_dgps.svg");
+    gps_rtk = QIcon(":/pictures/gps_rtk.svg");
     gps_icon->setPixmap(gps_lost.pixmap(30,30));
     gps_icon->setToolTip("Gps");
     misc_lay->addWidget(gps_icon);
@@ -303,8 +305,12 @@ void MiniStrip::updateAp(QString ap_mode) {
 void MiniStrip::updateGps(QString gps_mode) {
     if(gps_mode == "NOFIX" || gps_mode == "NA" || gps_mode == "2D") {
         gps_icon->setPixmap(gps_lost.pixmap(30,30));
-    } else {
+    } else if(gps_mode == "3D" ) {
         gps_icon->setPixmap(gps_ok.pixmap(30,30));
+    } else if(gps_mode == "DGPS") {
+        gps_icon->setPixmap(gps_dgps.pixmap(30,30));
+    } else if(gps_mode == "RTK") {
+        gps_icon->setPixmap(gps_rtk.pixmap(30,30));
     }
     gps_icon->setToolTip("Gps " + QString(gps_mode));
 }
