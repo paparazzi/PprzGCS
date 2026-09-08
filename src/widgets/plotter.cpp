@@ -195,7 +195,7 @@ void Plotter::dragMoveEvent(QDragMoveEvent *event) {
  * Paparazzi messages : "<id>:<class>:<msg name>:<field>:<???>" ex: "2:telemetry:WP_MOVED:utm_north:1."
  */
 void Plotter::dropEvent(QDropEvent *event) {
-    QString text = event->mimeData()->text();
+    QString text = QString::fromUtf8(event->mimeData()->data("text/plain"));
     QStringList args = text.split(QString(":"));
 
     QRegularExpression pprz_msg_re("^(\\w+):(\\w+):(\\w+):(\\w+):(.*)$");
