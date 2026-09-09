@@ -198,7 +198,7 @@ private:
         auto button = new QPushButton("End Mission", this);
         button->setIcon(this->style()->standardIcon(QStyle::SP_DialogCloseButton));
         button->setToolTip("End all missions");
-        connect(button, &QPushButton::clicked, this, [=]()
+        connect(button, &QPushButton::clicked, this, [=, this]()
         {
             pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("END_MISSION"));
             msg.addField("ac_id", ac_id.toUInt());
@@ -212,7 +212,7 @@ private:
         auto button = new QPushButton("Next Mission", this);
         button->setIcon(this->style()->standardIcon(QStyle::SP_ArrowRight));
         button->setToolTip("Skip to next mission");
-        connect(button, &QPushButton::clicked, this, [=]()
+        connect(button, &QPushButton::clicked, this, [=, this]()
         {
             pprzlink::Message msg(PprzDispatcher::get()->getDict()->getDefinition("NEXT_MISSION"));
             msg.addField("ac_id", ac_id.toUInt());
