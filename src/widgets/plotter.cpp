@@ -76,7 +76,7 @@ void Plotter::configure(QDomElement c) {
         if(!okDouble) {
             continue;
         }
-        GraphWidget::Params p = {100, 0, true, scale};
+        GraphWidget::Params p = {100, 0, true, scale, -1};
 
         if(node.hasAttribute("min")) {
             p.min = node.attribute("min").toDouble();
@@ -99,7 +99,7 @@ void Plotter::addGraph(QString name, GraphWidget::Params p) {
 
     bids[name] = PprzDispatcher::get()->bind(def[1], this,
         [=,this](QString sender, pprzlink::Message msg){
-            handleMsg(name, sender, msg);
+            handleMsg(name, sender, msg, p.index);
         });
 
     graph->setParams(p);
@@ -165,7 +165,7 @@ void Plotter::onOpenContextMenu() {
             connect(f_action, &QAction::triggered, this, [=,this]() {
                 auto name = "ground:" +  def.getName() + ":" + f.getName();
                 // FIXME scale at 1.0 ???
-                addGraph(name, {100, 0, true, 1.0});
+                addGraph(name, {100, 0, true, 1.0, -1});
                 changeGraph(name);
             });
         }
@@ -198,7 +198,7 @@ void Plotter::dropEvent(QDropEvent *event) {
     QString text = QString::fromUtf8(event->mimeData()->data("text/plain"));
     QStringList args = text.split(QString(":"));
 
-    QRegularExpression pprz_msg_re("^(\\w+):(\\w+):(\\w+):(\\w+):(.*)$");
+    QRegularExpression pprz_msg_re("^(\\w+):(\\w+):(\\w+):(\\w+)(?:\\[(.*)\\])?:(.*)$");
     QRegularExpressionMatch pprz_msg_match = pprz_msg_re.match(text);
 
     if(pprz_msg_match.hasMatch()) {
@@ -207,19 +207,30 @@ void Plotter::dropEvent(QDropEvent *event) {
         QString msg_class = pprz_msg_match.captured(2);
         QString msg_name = pprz_msg_match.captured(3);
         QString field = pprz_msg_match.captured(4);
-        double scale = pprz_msg_match.captured(5).toDouble();
+        QString array = pprz_msg_match.captured(5);
+        double scale = pprz_msg_match.captured(6).toDouble();
+
+        int index_start = -1;
+        QRegularExpression array_re("^(\\d+)(?:-(\\d+))?$");
+        QRegularExpressionMatch array_match = array_re.match(array);
+        if(array_match.hasMatch()) {
+            index_start = array_match.captured(1).toInt();
+            if(!array_match.captured(2).isEmpty()) {
+                qInfo() << "Multiple items not handled at the moment!";
+            }
+        }
 
         if(id == ac_id) {
             //qDebug() << id << msg_class << msg_name << field;;
             auto name = QString("%1:%2:%3").arg(msg_class, msg_name, field);
-            addGraph(name, {100, 0, true, scale});
+            addGraph(name, {100, 0, true, scale, index_start});
             changeGraph(name);
         }
     }
 }
 
 
-void Plotter::handleMsg(QString name, QString sender, pprzlink::Message msg) {
+void Plotter::handleMsg(QString name, QString sender, pprzlink::Message msg, int index) {
     auto def = name.split(":");
     auto msg_class = def[0];
     auto field = def[2];
@@ -268,7 +279,25 @@ void Plotter::handleMsg(QString name, QString sender, pprzlink::Message msg) {
             qDebug() << "type not supported yet";
         }
     } else {
-        qDebug() << "arrays not supported yet";
+        if(bt == pprzlink::BaseType::FLOAT) {
+            feedGraphArray<float>(graphs[name], field, msg, index);
+        } else if(bt == pprzlink::BaseType::DOUBLE) {
+            feedGraphArray<double>(graphs[name], field, msg, index);
+        } else if(bt == pprzlink::BaseType::UINT8) {
+            feedGraphArray<uint8_t>(graphs[name], field, msg, index);
+        } else if(bt == pprzlink::BaseType::UINT16) {
+            feedGraphArray<uint16_t>(graphs[name], field, msg, index);
+        } else if(bt == pprzlink::BaseType::UINT32) {
+            feedGraphArray<uint32_t>(graphs[name], field, msg, index);
+        } else if(bt == pprzlink::BaseType::INT8) {
+            feedGraphArray<int8_t>(graphs[name], field, msg, index);
+        } else if(bt == pprzlink::BaseType::INT16) {
+            feedGraphArray<int16_t>(graphs[name], field, msg, index);
+        } else if(bt == pprzlink::BaseType::INT32) {
+            feedGraphArray<int32_t>(graphs[name], field, msg, index);
+        } else {
+            qDebug() << "type not supported yet";
+        }
     }
 }
 
@@ -279,3 +308,9 @@ void Plotter::feedGraph(GraphWidget* graph, QString field, pprzlink::Message msg
     graph->pushData(val);
 }
 
+template<typename T>
+void Plotter::feedGraphArray(GraphWidget* graph, QString field, pprzlink::Message msg, int index) {
+    std::vector<T> values;
+    msg.getField(field, values);
+    graph->pushData(values[index]);
+}

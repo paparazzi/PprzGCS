@@ -34,12 +34,15 @@ private:
 
 private slots:
     void onOpenContextMenu();
-    void handleMsg(QString name, QString sender, pprzlink::Message msg);
+    void handleMsg(QString name, QString sender, pprzlink::Message msg, int index=0);
 
 private:
 
     template<typename T>
     void feedGraph(GraphWidget* graph, QString field, pprzlink::Message msg);
+
+    template<typename T>
+    void feedGraphArray(GraphWidget* graph, QString field, pprzlink::Message msg, int index);
 
     QLabel* title;
     QStackedWidget* graph_stack;
