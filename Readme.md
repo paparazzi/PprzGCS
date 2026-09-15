@@ -1,7 +1,7 @@
 
 # Ground Control Station for Paparazzi UAV
 
-The new GCS for [Paparazzi UAV](http://wiki.paparazziuav.org/wiki/Main_Page) in C++/QT5!
+The new GCS for [Paparazzi UAV](http://wiki.paparazziuav.org/wiki/Main_Page) in C++/Qt6!
 
 ![GCS FP strip PFD](screenshots/screenshot.png)
 
@@ -28,7 +28,7 @@ If you don't launch it from the paparazzi center, set the `PAPARAZZI_HOME` and `
 
 ### Using the AppImage
 
-If you are not on Ubuntu 20.04 or later, or if you want the latest changes, the best is to use the AppImage.
+If you are not on Ubuntu 22.04 or later, or if you want the latest changes, the best is to use the AppImage.
 
 Get the [latest release](https://github.com/paparazzi/PprzGCS/releases/latest), and give the AppImage the execution rights, then launch it.
 
@@ -39,51 +39,34 @@ The developer version may have new features or bug fixes not landed in releases 
 
 ### Build from sources
 
-#### Ubuntu 20.04 prerequisite
-
-Install the dependencies: 
-
-`sudo apt install extra-cmake-modules libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev libproj-dev mesa-common-dev libglu1-mesa-dev`
-
-
-#### Ubuntu 18.04 prerequisite
-
-Install the dependencies:
-
-`sudo apt install extra-cmake-modules libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev`
-
-__QT5__
-
-Install [Qt5.12.0 or above](https://www.qt.io/download-open-source).
-
-Setup in your .bashrc the environnement variable Qt5_DIR for cmake to find Qt5:
-
-`export Qt5_DIR="/path/to/Qt/5.12.0/gcc_64/lib/cmake/Qt5"`
-
-
-__PROJ 6.3.1__
-
-From the PprzGCS root:
-
-_Hint: speed up build by running `export MAKEFLAGS=-j$(nproc)` before building._
+On Ubuntu 22.04 or 24.04:
 
 ```
-curl -L https://github.com/OSGeo/PROJ/releases/download/6.3.1/proj-6.3.1.tar.gz | tar -xz -C ext
-cmake -S ext/proj-6.3.1/ -B build/ext/proj -DPROJ_TESTS=OFF -DCMAKE_INSTALL_PREFIX=build/install
-cmake --build build/ext/proj
-cmake --install build/ext/proj
+git clone --recursive https://github.com/paparazzi/PprzGCS.git
+cd PprzGCS
+./build.sh
 ```
 
-### Common instructions
+`build.sh` first checks what the build needs: it fetches the submodules if they are missing, and
+offers to install the missing packages. The program is built in `build/pprzgcs`.
 
+The packages are installed by `install_deps.sh`, which can also be run alone:
 
-cd to the PprzGCS root, and get the submodules:
+| command | packages to |
+|---|---|
+| `./install_deps.sh` | build and run PprzGCS (`./build.sh`) |
+| `./install_deps.sh appimage` | also package the AppImage (`./make_appimage.sh`) |
+| `./install_deps.sh deb` | also package the `.deb` (`dpkg-buildpackage`) |
+| `./install_deps.sh --check` | only list the missing packages |
 
-`git submodule update --init --recursive`
+Other build options (`./build.sh --help`):
+- `./build.sh --debug`: a debug build (warnings are errors).
+- With a Qt from the [Qt installer](https://www.qt.io/download-open-source) instead of the system's:
+  `CMAKE_PREFIX_PATH=/path/to/Qt/6.x.y/gcc_64 ./build.sh` (the system packages are then not checked).
+- On other systems: install the equivalents of the packages listed in `install_deps.sh`, then
+  `./build.sh --skip-checks`.
 
-Then just run the build script: `./build.sh`
-
-To be able to run it from the paparazzi center, you need to add the `build/pprzgcs` directory to your *$PATH*. Adapt this command and add it to your .bashrc:
+To be able to run it from the paparazzi center, you need to add the `build` directory to your *$PATH*. Adapt this command and add it to your .bashrc:
 
 `export PATH="/path/to/PprzGCS/build:$PATH"`
 
@@ -94,7 +77,7 @@ If you want to run it from the terminal, set the `PAPARAZZI_HOME` and the `PAPAR
 
 #### gRPC
 
-Add `-DCMAKE_PREFIX_PATH=<path/to/gRPC> -DGRPC=ON` to build with gRPC.
+Add `-DCMAKE_PREFIX_PATH=<path/to/gRPC> -DGRPC=ON` to build with gRPC: `./build.sh -DCMAKE_PREFIX_PATH=<path/to/gRPC> -DGRPC=ON`.
 
 See instructions to buils gRPC from source here: [https://grpc.io/docs/languages/cpp/quickstart/].
 
