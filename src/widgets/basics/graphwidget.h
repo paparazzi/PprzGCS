@@ -18,6 +18,7 @@ public:
         double min;
         bool autoscale;
         double scale;
+        int index = -1; // element plotted of an array field, -1 for a scalar field
     };
 
     explicit GraphWidget(QWidget *parent = nullptr);

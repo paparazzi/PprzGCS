@@ -41,7 +41,7 @@ void Units::setToolbox(PprzToolbox* toolbox) {
 
         // auto _auto = unit.attribute("auto");
         auto coef = _coef.toDouble();
-        QPair key(from, to);
+        QPair<QString, QString> key(from, to);
         coefs[key] = coef;
     }
 
@@ -49,7 +49,7 @@ void Units::setToolbox(PprzToolbox* toolbox) {
 }
 
 std::optional<float> Units::getCoef(QString inputUnit, QString outputUnit) {
-    QPair key(inputUnit, outputUnit);
+    QPair<QString, QString> key(inputUnit, outputUnit);
     if(coefs.find(key) != coefs.end()) {
         return coefs[key];
     } else {
