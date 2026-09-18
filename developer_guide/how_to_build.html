@@ -45,13 +45,8 @@
               <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="index_developer.html">Developer guide</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">How to build from sources</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#ubuntu-20-04-and-above">Ubuntu 20.04 and above</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#ubuntu-18-04">Ubuntu 18.04</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#qt5">Qt5</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#dependencies">Dependencies</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#proj">PROJ</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#ubuntu-22-04-and-24-04">Ubuntu 22.04 and 24.04</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#other-systems-or-another-qt">Other systems, or another Qt</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#running-pprzgcs">Running PprzGCS</a></li>
 </ul>
 </li>
@@ -93,71 +88,49 @@
              
   <section id="how-to-build-from-sources">
 <h1>How to build from sources<a class="headerlink" href="#how-to-build-from-sources" title="Permalink to this heading"></a></h1>
-<p>First, get all submodules:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init<span class="w"> </span>--recursive
+<section id="ubuntu-22-04-and-24-04">
+<h2>Ubuntu 22.04 and 24.04<a class="headerlink" href="#ubuntu-22-04-and-24-04" title="Permalink to this heading"></a></h2>
+<p>Clone the repository with its submodules, and run the build script:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>--recursive<span class="w"> </span>https://github.com/paparazzi/PprzGCS.git
+<span class="nb">cd</span><span class="w"> </span>PprzGCS
+./build.sh
 </pre></div>
 </div>
-<section id="ubuntu-20-04-and-above">
-<h2>Ubuntu 20.04 and above<a class="headerlink" href="#ubuntu-20-04-and-above" title="Permalink to this heading"></a></h2>
-<p>Install the dependencies:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>extra-cmake-modules<span class="w"> </span>libsqlite3-dev<span class="w"> </span>libzip-dev<span class="w"> </span>qtbase5-dev<span class="w"> </span>libqt5svg5-dev<span class="w"> </span>libqt5texttospeech5-dev<span class="w"> </span>libproj-dev<span class="w"> </span>mesa-common-dev<span class="w"> </span>libglu1-mesa-dev
+<p><code class="docutils literal notranslate"><span class="pre">build.sh</span></code> first checks what the build needs: it fetches the submodules if they are missing, and
+offers to install the missing packages. The program is built in <code class="docutils literal notranslate"><span class="pre">build/pprzgcs</span></code>.</p>
+<p>The packages are installed by <code class="docutils literal notranslate"><span class="pre">install_deps.sh</span></code>, which can also be run alone:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./install_deps.sh<span class="w">            </span><span class="c1"># to build and run PprzGCS</span>
+./install_deps.sh<span class="w"> </span>appimage<span class="w">   </span><span class="c1"># also to package the AppImage</span>
+./install_deps.sh<span class="w"> </span>deb<span class="w">        </span><span class="c1"># also to package the .deb</span>
+./install_deps.sh<span class="w"> </span>--check<span class="w">    </span><span class="c1"># only list the missing packages</span>
 </pre></div>
 </div>
-<p>cd to the PprzGCS root, and build the needed libraries:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./build.sh<span class="w"> </span>libs
-</pre></div>
-</div>
-<p>Now you should be able to build the app with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./build.sh<span class="w"> </span>app
-</pre></div>
-</div>
+<p>Other build options (<code class="docutils literal notranslate"><span class="pre">./build.sh</span> <span class="pre">--help</span></code>):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">./build.sh</span> <span class="pre">--debug</span></code>: a debug build (warnings are errors).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">./build.sh</span> <span class="pre">-DGRPC=ON</span> <span class="pre">-DCMAKE_PREFIX_PATH=&lt;path/to/gRPC&gt;</span></code>: with gRPC.</p></li>
+</ul>
 </section>
-<section id="ubuntu-18-04">
-<h2>Ubuntu 18.04<a class="headerlink" href="#ubuntu-18-04" title="Permalink to this heading"></a></h2>
-<section id="qt5">
-<h3>Qt5<a class="headerlink" href="#qt5" title="Permalink to this heading"></a></h3>
-<p>First, you need to <a class="reference external" href="https://www.qt.io/download-open-source">install Qt5.12.0 or above.</a></p>
-<p>Setup in your <cite>.bashrc</cite> the environnement variable <cite>Qt5_DIR</cite> for cmake to find Qt5:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">Qt5_DIR</span><span class="o">=</span><span class="s2">&quot;/path/to/Qt/5.12.0/gcc_64/lib/cmake/Qt5&quot;</span>
+<section id="other-systems-or-another-qt">
+<h2>Other systems, or another Qt<a class="headerlink" href="#other-systems-or-another-qt" title="Permalink to this heading"></a></h2>
+<p>With a Qt from the <a class="reference external" href="https://www.qt.io/download-open-source">Qt installer</a> instead of the system’s,
+give its path to CMake (the system packages are then not checked):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">CMAKE_PREFIX_PATH</span><span class="o">=</span>/path/to/Qt/6.x.y/gcc_64<span class="w"> </span>./build.sh
 </pre></div>
 </div>
-</section>
-<section id="dependencies">
-<h3>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this heading"></a></h3>
-<p>Install the dependencies:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>extra-cmake-modules<span class="w"> </span>libsqlite3-dev<span class="w"> </span>libzip-dev<span class="w"> </span>mesa-common-dev<span class="w"> </span>libglu1-mesa-dev
+<p>On other systems, install the equivalents of the packages listed in <code class="docutils literal notranslate"><span class="pre">install_deps.sh</span></code>, then:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./build.sh<span class="w"> </span>--skip-checks
 </pre></div>
 </div>
-</section>
-<section id="proj">
-<h3>PROJ<a class="headerlink" href="#proj" title="Permalink to this heading"></a></h3>
-<p>Download and build proj (run these commands from the przGCS root directory):</p>
-<blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-L<span class="w"> </span>https://github.com/OSGeo/PROJ/releases/download/6.3.1/proj-6.3.1.tar.gz<span class="w"> </span><span class="p">|</span><span class="w"> </span>tar<span class="w"> </span>-xz<span class="w"> </span>-C<span class="w"> </span>ext
-cmake<span class="w"> </span>-S<span class="w"> </span>ext/proj-6.3.1/<span class="w"> </span>-B<span class="w"> </span>build/ext/proj<span class="w"> </span>-DPROJ_TESTS<span class="o">=</span>OFF<span class="w"> </span>-DCMAKE_INSTALL_PREFIX<span class="o">=</span>build/install
-cmake<span class="w"> </span>--build<span class="w"> </span>build/ext/proj
-cmake<span class="w"> </span>--install<span class="w"> </span>build/ext/proj
-</pre></div>
-</div>
-</div></blockquote>
-<p>cd to the PprzGCS root, and build the needed libraries:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./build.sh<span class="w"> </span>libs
-</pre></div>
-</div>
-<p>Now you should be able to build the app with:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./build.sh<span class="w"> </span>app
-</pre></div>
-</div>
-</section>
 </section>
 <section id="running-pprzgcs">
 <h2>Running PprzGCS<a class="headerlink" href="#running-pprzgcs" title="Permalink to this heading"></a></h2>
-<p>To be able to run it from the paparazzi center, you need to add the <code class="docutils literal notranslate"><span class="pre">build/pprzgcs</span></code> directory to your <code class="docutils literal notranslate"><span class="pre">$PATH</span></code>. Adapt this command and add it to your .bashrc:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/path/to/PprzGCS/build/pprzgcs:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
+<p>To be able to run it from the paparazzi center, you need to add the <code class="docutils literal notranslate"><span class="pre">build</span></code> directory to your <code class="docutils literal notranslate"><span class="pre">$PATH</span></code>. Adapt this command and add it to your .bashrc:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/path/to/PprzGCS/build:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
 </pre></div>
 </div>
 <p>You should now be able to launch it from the Paparazzi center.</p>
-<p>If you want to run it from the terminal, set the <code class="docutils literal notranslate"><span class="pre">PAPARAZZI_HOME</span></code> and the <code class="docutils literal notranslate"><span class="pre">PAPARAZZI_SRC</span></code> environment variables to your paparazzi path, then just run <code class="docutils literal notranslate"><span class="pre">./build/pprzgcs/pprzgcs</span></code></p>
+<p>If you want to run it from the terminal, set the <code class="docutils literal notranslate"><span class="pre">PAPARAZZI_HOME</span></code> and the <code class="docutils literal notranslate"><span class="pre">PAPARAZZI_SRC</span></code> environment variables to your paparazzi path, then just run <code class="docutils literal notranslate"><span class="pre">./build/pprzgcs</span></code></p>
 </section>
 </section>
 
