@@ -4,6 +4,7 @@ on:
   push:
       tags:
       - '**'
+  workflow_dispatch:  # builds the AppImage without releasing it
 
 jobs:
   build-appimage:
@@ -21,13 +22,13 @@ jobs:
         run: |
           export MAKEFLAGS=-j$(nproc)
           PPRZGCS_VERSION=$(echo "${{ github.ref }}" | sed 's/refs.tags.\(.*\)/\1/g' | sed 's/\//_/g')
-          PPRZGCS_VERSION="${PPRZGCS_VERSION:-$(git describe --tags)}"
+          PPRZGCS_VERSION="${PPRZGCS_VERSION:-$(git -C pprzgcs describe --tags --always)}"
           echo "VERSION: $PPRZGCS_VERSION"
           echo "PPRZGCS_VERSION=$PPRZGCS_VERSION" >> $GITHUB_ENV
           echo "VERSION: ${{ env.PPRZGCS_VERSION }}"
         
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y libproj-dev libsqlite3-dev libzip-dev qt6-base-dev libqt6svg6-dev mesa-common-dev libglu1-mesa-dev cmake extra-cmake-modules
+        run: ./pprzgcs/install_deps.sh --yes appimage
       
 
       - name: build
@@ -44,6 +45,7 @@ jobs:
           mv ./build_appimage/PprzGCS-x86_64.AppImage PprzGCS_${{ env.PPRZGCS_VERSION }}-x86_64.AppImage
 
       - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           token: '${{ secrets.GITHUB_TOKEN }}'

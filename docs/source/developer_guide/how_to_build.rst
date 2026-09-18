@@ -3,93 +3,60 @@
 How to build from sources
 =========================
 
-First, get all submodules:
-
-.. code-block:: bash
-
-    git submodule update --init --recursive
-
-Ubuntu 20.04 and above
+Ubuntu 22.04 and 24.04
 ______________________
- 
-Install the dependencies:
+
+Clone the repository with its submodules, and run the build script:
 
 .. code-block:: bash
 
-    sudo apt install extra-cmake-modules libsqlite3-dev libzip-dev qtbase5-dev libqt5svg5-dev libqt5texttospeech5-dev libproj-dev mesa-common-dev libglu1-mesa-dev
+    git clone --recursive https://github.com/paparazzi/PprzGCS.git
+    cd PprzGCS
+    ./build.sh
 
-cd to the PprzGCS root, and build the needed libraries:
+``build.sh`` first checks what the build needs: it fetches the submodules if they are missing, and
+offers to install the missing packages. The program is built in ``build/pprzgcs``.
 
-.. code-block:: bash
-
-    ./build.sh libs
-
-Now you should be able to build the app with:
-
-.. code-block:: bash
-
-    ./build.sh app
-
-
-Ubuntu 18.04
-____________
-
-Qt5
----
-
-First, you need to `install Qt5.12.0 or above. <https://www.qt.io/download-open-source>`_
-
-Setup in your `.bashrc` the environnement variable `Qt5_DIR` for cmake to find Qt5:
+The packages are installed by ``install_deps.sh``, which can also be run alone:
 
 .. code-block:: bash
 
-    export Qt5_DIR="/path/to/Qt/5.12.0/gcc_64/lib/cmake/Qt5"
+    ./install_deps.sh            # to build and run PprzGCS
+    ./install_deps.sh appimage   # also to package the AppImage
+    ./install_deps.sh deb        # also to package the .deb
+    ./install_deps.sh --check    # only list the missing packages
 
-Dependencies
-------------
+Other build options (``./build.sh --help``):
 
-Install the dependencies:
+- ``./build.sh --debug``: a debug build (warnings are errors).
+- ``./build.sh -DGRPC=ON -DCMAKE_PREFIX_PATH=<path/to/gRPC>``: with gRPC.
 
-.. code-block:: bash
+Other systems, or another Qt
+____________________________
 
-    sudo apt install extra-cmake-modules libsqlite3-dev libzip-dev mesa-common-dev libglu1-mesa-dev
-
-PROJ
-----
-
-Download and build proj (run these commands from the przGCS root directory):
-
-    .. code-block:: bash
-    
-        curl -L https://github.com/OSGeo/PROJ/releases/download/6.3.1/proj-6.3.1.tar.gz | tar -xz -C ext
-        cmake -S ext/proj-6.3.1/ -B build/ext/proj -DPROJ_TESTS=OFF -DCMAKE_INSTALL_PREFIX=build/install
-        cmake --build build/ext/proj
-        cmake --install build/ext/proj  
-
-cd to the PprzGCS root, and build the needed libraries:
+With a Qt from the `Qt installer <https://www.qt.io/download-open-source>`_ instead of the system's,
+give its path to CMake (the system packages are then not checked):
 
 .. code-block:: bash
 
-    ./build.sh libs
+    CMAKE_PREFIX_PATH=/path/to/Qt/6.x.y/gcc_64 ./build.sh
 
-Now you should be able to build the app with:
+On other systems, install the equivalents of the packages listed in ``install_deps.sh``, then:
 
 .. code-block:: bash
 
-    ./build.sh app
-    
+    ./build.sh --skip-checks
+
 Running PprzGCS
 _______________
 
 
-To be able to run it from the paparazzi center, you need to add the ``build/pprzgcs`` directory to your ``$PATH``. Adapt this command and add it to your .bashrc:
+To be able to run it from the paparazzi center, you need to add the ``build`` directory to your ``$PATH``. Adapt this command and add it to your .bashrc:
 
 .. code-block:: bash
 
-    export PATH="/path/to/PprzGCS/build/pprzgcs:$PATH"
+    export PATH="/path/to/PprzGCS/build:$PATH"
 
 You should now be able to launch it from the Paparazzi center.
 
-If you want to run it from the terminal, set the ``PAPARAZZI_HOME`` and the ``PAPARAZZI_SRC`` environment variables to your paparazzi path, then just run ``./build/pprzgcs/pprzgcs``
-
-
+If you want to run it from the terminal, set the ``PAPARAZZI_HOME`` and the ``PAPARAZZI_SRC`` environment variables to your paparazzi path, then just run ``./build/pprzgcs``

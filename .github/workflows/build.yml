@@ -1,0 +1,33 @@
+name: Build
+
+# builds PprzGCS as a developer does (./install_deps.sh, then ./build.sh) on the supported Ubuntu releases
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: ./install_deps.sh --yes
+
+      - name: Build
+        run: ./build.sh
+
+      - name: Run
+        run: QT_QPA_PLATFORM=offscreen ./build/pprzgcs --version

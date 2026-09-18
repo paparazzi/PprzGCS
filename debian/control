@@ -13,7 +13,7 @@ Package: pprzgcs
 Architecture: any
 Section: devel
 Priority: optional
-Depends: ${shlibs:Depends}, ${misc:Depends}, appmenu-gtk3-module
+Depends: ${shlibs:Depends}, ${misc:Depends}, appmenu-gtk3-module, qt6-qpa-plugins
 Homepage: https://paparazzi.github.io/PprzGCS/
 Description: Ground Control Station for PaparazziUAV
 
