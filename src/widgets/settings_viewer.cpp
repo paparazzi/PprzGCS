@@ -340,7 +340,8 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         };
 
         connect(ok_btn, &QToolButton::clicked, this, [=, this, min=min, max=max]() {
-            float value = sw->isChecked() ? max : min;
+            // min and max are in the displayed unit: sent in the aircraft's
+            float value = (sw->isChecked() ? max : min) / setting->getSendCoef();
             AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
             setting->setUserValue(value);
         });
@@ -354,8 +355,9 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         vLay->addWidget(uniq_val);
 
         connect(ok_btn, &QToolButton::clicked, this, [=,this]() {
-            AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
-            setting->setUserValue(value);
+            float raw = value / setting->getSendCoef();  // min is in the displayed unit
+            AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, raw);
+            setting->setUserValue(raw);
         });
 
     } else {
@@ -371,15 +373,20 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
 
         slider->setDoubleRange(min, max, step);
         QHBoxLayout* vbox = new QHBoxLayout();
-        QLabel* la = new QLabel(QString::number(min, 'f', 2));
+        // the slider, its label and the text box are in the displayed unit (min, max and step are)
+        QString unit = setting->getDisplayUnit();
+        QString unit_suffix = unit.isEmpty() ? QString() : " " + unit;
+        QLabel* la = new QLabel(QString::number(min, 'f', 2) + unit_suffix);
         int precision = 0;
         if(step < 1) {
             precision = static_cast<int>(ceil(abs(log10(step))));
         }
         connect(slider, &DoubleSlider::doubleValueChanged,
             [=,this](double value) {
-                la->setText(QString::number(value, 'f', precision));
+                la->setText(QString::number(value, 'f', precision) + unit_suffix);
             });
+        raw_edit->setPlaceholderText(unit.isEmpty() ? QString("value") : unit);
+        raw_edit->setToolTip(QString("Value in %1, sent on Enter").arg(unit.isEmpty() ? "the setting's unit" : unit));
 
         connect(expert_button, &QToolButton::clicked,
             [=,this]() {
@@ -402,7 +409,11 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
                     } else {
                         raw_edit->setStyleSheet("QLineEdit{background-color: #ffd088;}");
                     }
-                    AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
+                    // typed in the displayed unit, like the slider: sent in the aircraft's unit
+                    // (sending the typed number as is sent e.g. degrees as radians)
+                    float raw = value / setting->getSendCoef();
+                    AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, raw);
+                    setting->setUserValue(raw);
                 } else {
                     raw_edit->setStyleSheet("QLineEdit{background-color: #ff8888;}");
                 }
@@ -421,7 +432,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         vLay->addLayout(vbox);
 
         connect(ok_btn, &QToolButton::clicked, this, [=,this]() {
-            auto coef = setting->getAltUnitCoef();
+            auto coef = setting->getSendCoef();
             float value = static_cast<float>(slider->doubleValue()) / coef;
             AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
             setting->setUserValue(value);

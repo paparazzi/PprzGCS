@@ -55,6 +55,11 @@ public:
     void setInitialValue(float val) {initial_value = val;}
 
     float getAltUnitCoef(QString altUnit="");
+    /// coefficient from the aircraft's unit to the displayed one, never 0: a displayed value
+    /// (min, max, step and the widgets are in the displayed unit) is sent divided by it
+    float getSendCoef() { float coef = getAltUnitCoef(); return coef == 0 ? 1.f : coef; }
+    /// the unit the values are displayed and typed in: alt_unit, else unit
+    QString getDisplayUnit() { return alt_unit != "" ? alt_unit : unit; }
     QString getParam() {return param;}
 
     friend ostream& operator<<(ostream& os, const Setting& wp);
