@@ -256,6 +256,7 @@ void PprzDispatcher::updateSettings(pprzlink::Message msg) {
             double s = token.toDouble();
             assert(settings[i]->getNo() == static_cast<uint8_t>(i));
             float value = static_cast<float>(s);
+            settings[i]->setValue(value);
             emit DispatcherUi::get()->settingUpdated(ac_id, settings[i], value);
         }
         i++;
