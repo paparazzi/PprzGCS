@@ -27,6 +27,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/strip.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/widget_utils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/windindicator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/group_controller.cpp
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
