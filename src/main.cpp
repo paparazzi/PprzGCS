@@ -9,6 +9,7 @@
 #include "app_settings.h"
 #include "gcs_utils.h"
 #include <QSettings>
+#include <QFileInfo>
 #include "PprzApplication.h"
 #include "gcs_utils.h"
 #include "AircraftManager.h"
@@ -89,6 +90,8 @@ int main(int argc, char *argv[])
         parser.addOption({{"s", "silent"}, "Silent mode."});
         parser.addOption({{"f", "fpedit"}, "edit flight plan", "file"});
         parser.addOption({{"b", "bus"}, "Ivy bus", "bus"});
+        parser.addOption({{"g", "swarm-conf", "groups-conf"},
+                          "Swarm XML configuration file.", "file"});
 #if defined(SPEECH_ENABLED)
         parser.addOption({"speech", "Enable speech"});
 #endif
@@ -112,6 +115,13 @@ int main(int argc, char *argv[])
 
         if(parser.isSet("bus")) {
             appConfig()->setValue("IVY_BUS", parser.value("bus"));
+        }
+
+        if(parser.isSet("swarm-conf")) {
+            const QString swarmPath = parser.value("swarm-conf").trimmed();
+            appConfig()->setValue("SWARM_CONF_PATH",
+                                  swarmPath.isEmpty() ? QString()
+                                                      : QFileInfo(swarmPath).absoluteFilePath());
         }
 
         QString config_path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -153,4 +163,3 @@ int main(int argc, char *argv[])
     } while(return_code == PprzMain::EXIT_CODE_REBOOT);
     return return_code;
 }
-
