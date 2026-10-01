@@ -1,0 +1,25 @@
+<swarm>
+  <group name="swarm">
+    <status msg="ROTORCRAFT_STATUS.gps_status" operator="eq" name="GPS RTK" value="RTK"/>
+    <status msg="DATALINK_REPORT.uplink_lost_time" operator="lt" name="Uplink" value="5"/>
+    <status msg="TELEMETRY_STATUS.time_since_last_msg" operator="lt" name="Downlink" value="5"/>
+    <status var="autopilot.mode" name="NAV" value="Nav"/>
+    <status block="Holding point"/>
+
+    <action var="autopilot.kill_throttle" name="Kill"/>
+    <action var="gh_ref.max_speed" name="Max Speed"/>
+    <action var="nav.heading" name="Heading North" value="0"/>
+    <action var="nav.heading" name="Heading South" value="180"/>
+    <action block="Takeoff" name="Takeoff"/>
+    <action block="Land Here" name="Land Here"/>
+    <action block="Land" name="Land Home"/>
+  </group>
+  <group name="intrus">
+    <ac name="bebop_12"/>
+    <ac name="bebop_13"/>
+    <action block="Go p1" name="Attack"/>
+  </group>
+  <group name="All">
+    <action var="autopilot.kill_throttle" name="Kill" value="Kill"/>
+  </group>
+</swarm>
