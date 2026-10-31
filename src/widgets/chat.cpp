@@ -71,7 +71,7 @@ Chat::Chat(QWidget *parent) :
         ui->msg_lineedit->setPlaceholderText("Update paparazzi to send messages");
     }
 
-    // Notice for an aircraft reboot (the checklist widget resets the checklist)
+    // Notice for an aircraft reboot (PprzDispatcher reloads the aircraft)
     PprzDispatcher::get()->bind("AIRCRAFT_REBOOT", this, [=,this](QString sender, pprzlink::Message msg) {
         (void)sender;
         QString id, reason;
@@ -81,10 +81,8 @@ Chat::Chat(QWidget *parent) :
             return;
         }
         auto ac = AircraftManager::get()->getAircraft(id);
-        QString txt = "Rebooted (" + reason + ")";
-        if(!ac->getChecklist().isEmpty()) {
-            txt += ", checklist reset";
-        }
+        QString txt = "Rebooted (" + reason + "): waypoints";
+        txt += ac->getChecklist().isEmpty() ? " reset" : " and checklist reset";
         addMessage(txt, ac->name());
     });
 

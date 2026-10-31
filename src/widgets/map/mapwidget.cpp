@@ -919,6 +919,7 @@ void MapWidget::removeAC(QString ac_id) {
 
     if(gvf_loaded) {
         gvf_trajectories.remove(ac_id);
+        gvf_trajectories_config.remove(ac_id);
     }
 }
 

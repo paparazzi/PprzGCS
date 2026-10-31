@@ -173,16 +173,6 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
         }
     });
 
-    // The new log of a rebooted aircraft needs a new checklist (the chat shows a notice)
-    PprzDispatcher::get()->bind("AIRCRAFT_REBOOT", this, [=](QString sender, pprzlink::Message msg) {
-        (void)sender;
-        QString id;
-        msg.getField("ac_id", id);
-        if(id == ac_id) {
-            reset_checklist();
-        }
-    });
-
     setAutoFillBackground(true);
 }
 

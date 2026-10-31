@@ -5,6 +5,7 @@
 #include <QDebug>
 #include <PprzApplication.h>
 #include <QDateTime>
+#include <QTimer>
 #include "pprzmain.h"
 #include <QSettings>
 #include "gcs_utils.h"
@@ -76,6 +77,27 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
         }
     );
     _bindIds.append(bid);
+
+    // A rebooted aircraft is back at its initial state (flight plan, settings): reload it as
+    // for AIRCRAFT_DIE + NEW_AIRCRAFT. This also gives it a new checklist for the new log.
+    bind("AIRCRAFT_REBOOT", this,
+        [=,this](QString sender, pprzlink::Message msg) {
+            (void)sender;
+            QString id;
+            msg.getField("ac_id", id);
+            // after the other handlers of this message (e.g. the chat notice)
+            QTimer::singleShot(0, this, [=,this]() {
+                if(!AircraftManager::get()->aircraftExists(id)) {
+                    return;
+                }
+                if(DispatcherUi::get()->getSelectedAcId() == id) {
+                    AircraftManager::get()->selectWhenAdded(id);
+                }
+                AircraftManager::get()->removeAircraft(id);
+                requestConfig(id);
+            });
+        }
+    );
 
     bindDeftoSignal("AP_STATUS", &PprzDispatcher::ap_status);
     bindDeftoSignal("NAV_STATUS", &PprzDispatcher::nav_status);

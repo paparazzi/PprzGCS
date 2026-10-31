@@ -97,6 +97,9 @@ void AircraftManager::addAircraft(ConfigData* config) {
     aircrafts[config->getId()] = new Aircraft(config);
     aircrafts[config->getId()]->getStatus()->getWatcher()->init();
     emit DispatcherUi::get()->new_ac_config(config->getId());
+    if(select_when_added.remove(config->getId())) {
+        emit DispatcherUi::get()->ac_selected(config->getId());
+    }
 }
 
 void AircraftManager::addFPAircraft(QString ac_id, QString flightplan) {

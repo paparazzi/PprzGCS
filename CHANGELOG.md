@@ -2,7 +2,8 @@
 
 ## NEXT
 + Checklist: `optional`, `help` (tooltip) and `remember` attributes, `choice` items and a Reset button
-+ Checklist and chat: on `AIRCRAFT_REBOOT` the checklist is reset, with a notice in the chat
++ On `AIRCRAFT_REBOOT` the aircraft is reloaded (waypoints, settings, checklist), with a notice in the chat
++ Wind indicator and GVF config cleared on `AIRCRAFT_DIE`
 + Airframe: follow `<include>` for the checklist and defines (read-only)
 
 ## v1.0.13
