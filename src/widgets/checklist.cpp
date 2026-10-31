@@ -151,12 +151,8 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
         }
     }
 
-    connect(reset_button, &QPushButton::clicked, this, [=,this]() {
-        auto answer = QMessageBox::question(this, "Reset checklist",
-            "Clear the checklist of " + ac->name() + " for the next flight?");
-        if(answer != QMessageBox::Yes) {
-            return;
-        }
+    // Clear the checklist; remembered values stay filled in, and are logged again on completion
+    auto reset_checklist = [=]() {
         for(auto item: ac->getChecklist()) {
             item->value = (item->type == "checkbox") ? QString() : initial_value(item);
             item->logged = false;
@@ -166,6 +162,24 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
         }
         if(pfc_setting != nullptr) {
             ac->setSetting(pfc_setting, 0);
+        }
+    };
+
+    connect(reset_button, &QPushButton::clicked, this, [=,this]() {
+        auto answer = QMessageBox::question(this, "Reset checklist",
+            "Clear the checklist of " + ac->name() + " for the next flight?");
+        if(answer == QMessageBox::Yes) {
+            reset_checklist();
+        }
+    });
+
+    // The new log of a rebooted aircraft needs a new checklist (the chat shows a notice)
+    PprzDispatcher::get()->bind("AIRCRAFT_REBOOT", this, [=](QString sender, pprzlink::Message msg) {
+        (void)sender;
+        QString id;
+        msg.getField("ac_id", id);
+        if(id == ac_id) {
+            reset_checklist();
         }
     });
 

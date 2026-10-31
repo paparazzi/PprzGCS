@@ -70,6 +70,24 @@ Chat::Chat(QWidget *parent) :
         ui->name_combo->setDisabled(true);
         ui->msg_lineedit->setPlaceholderText("Update paparazzi to send messages");
     }
+
+    // Notice for an aircraft reboot (the checklist widget resets the checklist)
+    PprzDispatcher::get()->bind("AIRCRAFT_REBOOT", this, [=,this](QString sender, pprzlink::Message msg) {
+        (void)sender;
+        QString id, reason;
+        msg.getField("ac_id", id);
+        msg.getField("reason", reason);
+        if(!AircraftManager::get()->aircraftExists(id)) {
+            return;
+        }
+        auto ac = AircraftManager::get()->getAircraft(id);
+        QString txt = "Rebooted (" + reason + ")";
+        if(!ac->getChecklist().isEmpty()) {
+            txt += ", checklist reset";
+        }
+        addMessage(txt, ac->name());
+    });
+
     setAutoFillBackground(true);
 }
 
