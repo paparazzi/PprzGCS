@@ -12,7 +12,7 @@ Aircraft::Aircraft(ConfigData* config, QObject* parent): QObject(parent),
     QSettings app_settings(appConfig()->value("SETTINGS_PATH").toString(), QSettings::IniFormat);
     flight_plan = new FlightPlan(ac_id, config->getFlightPlan(), this);
     setting_menu = new SettingMenu(config->getSettings(), this);
-    airframe = new Airframe(config->getAirframe(), this);
+    airframe = new Airframe(config->getAirframe(), config->getAirframeIncludes(), this);
     if(airframe->getIconName() != "") {
         icon = user_or_app_path("pictures/aircraft_icons/" + QString(airframe->getIconName()) + ".svg");
     }
@@ -51,10 +51,15 @@ void Aircraft::setSetting(uint8_t setting_no, float value) {
 
 bool Aircraft::checklistFinished() {
     for(auto item: checklist) {
-        if(item->type == "checkbox" && item->value != "true") {
-            return false;
+        if(item->optional) {
+            continue;
         }
-        else if(item->type == "text" && item->value == "") {
+        if(item->type == "checkbox") {
+            if(item->value != "true") {
+                return false;
+            }
+        }
+        else if((item->type == "text" || item->type == "choice") && item->value == "") {
             return false;
         }
     }

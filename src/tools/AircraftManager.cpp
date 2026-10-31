@@ -161,7 +161,7 @@ ConfigData::ConfigData(QString ac_id, QString ac_name, QColor color, QObject* pa
 {
 }
 
-void ConfigData::setData(QDomDocument* doc, QString uri) {
+void ConfigData::fetch(QString uri, std::function<void(QByteArray)> callback, std::function<void()> on_error) {
     QString separator = "://";
     int sepi = uri.indexOf(separator);
 
@@ -172,24 +172,22 @@ void ConfigData::setData(QDomDocument* doc, QString uri) {
         }
         QFile f(path);
         if(!f.open(QIODevice::ReadOnly)) {
-            throw std::runtime_error("Error while loading flightplan file");
+            throw std::runtime_error("Error while loading file " + path.toStdString());
         }
-        doc->setContent(&f);
+        auto data = f.readAll();
         f.close();
-        if(isComplete()) {
-            emit configReady(this);
-        }
+        callback(data);
     } else if(uri.left(sepi) == "http") {
         auto netacc = new QNetworkAccessManager(this);
         connect(netacc, &QNetworkAccessManager::finished, this, [=,this](QNetworkReply* reply) {
             auto data = reply->readAll();
             if(reply->error() == QNetworkReply::NetworkError::NoError) {
-                doc->setContent(data);
-                if(isComplete()) {
-                    emit configReady(this);
-                }
+                callback(data);
             } else {
                 qDebug() << "Error for" << uri << ":" << reply->error();
+                if(on_error) {
+                    on_error();
+                }
             }
             reply->deleteLater();
         });
@@ -200,6 +198,69 @@ void ConfigData::setData(QDomDocument* doc, QString uri) {
     }
 }
 
+void ConfigData::checkComplete() {
+    if(isComplete() && !ready_sent) {
+        ready_sent = true;
+        emit configReady(this);
+    }
+}
+
+void ConfigData::setData(QDomDocument* doc, QString uri) {
+    fetch(uri, [=,this](QByteArray data) {
+        doc->setContent(data);
+        checkComplete();
+    });
+}
+
+/**
+ * Fetch the files of the top-level <include href="..."/> nodes of the airframe.
+ * As in Paparazzi, $AC_ID is replaced by the aircraft id, and a relative href is relative to
+ * PAPARAZZI_HOME: the airframe URI up to its "/conf/" (file://$PAPARAZZI_HOME/conf/... or
+ * http://server/conf/...).
+ */
+void ConfigData::loadAirframeIncludes() {
+    QStringList hrefs;
+    auto root = airframe.firstChildElement();
+    for(auto inc=root.firstChildElement("include"); !inc.isNull(); inc=inc.nextSiblingElement("include")) {
+        auto href = inc.attribute("href");
+        if(!href.isEmpty() && !hrefs.contains(href)) {
+            hrefs.append(href);
+        }
+    }
+
+    int conf_idx = uri_airframe.lastIndexOf("/conf/");
+    QString base = conf_idx >= 0 ? uri_airframe.left(conf_idx) : QString();
+    QString scheme = uri_airframe.left(uri_airframe.indexOf("://"));
+
+    // count them all first: a file is loaded synchronously
+    pending_includes += hrefs.size();
+    for(auto &href: hrefs) {
+        QString file = href;
+        file.replace("$AC_ID", ac_id);
+        QString uri;
+        if(file.startsWith("/")) {
+            uri = scheme == "file" ? "file://" + file : QUrl(uri_airframe).resolved(QUrl(file)).toString();
+        } else {
+            uri = base + "/" + file;
+        }
+        try {
+            fetch(uri, [=,this](QByteArray data) {
+                QDomDocument inc_doc;
+                inc_doc.setContent(data);
+                airframe_includes[href] = inc_doc;
+                pending_includes -= 1;
+                checkComplete();
+            }, [=,this]() {
+                pending_includes -= 1;
+                checkComplete();
+            });
+        } catch(std::runtime_error &e) {
+            qDebug() << "Airframe include" << uri << "not loaded:" << e.what();
+            pending_includes -= 1;
+        }
+    }
+}
+
 void ConfigData::setFlightPlan(QString uri) {
     uri_flight_plan = uri;
     setData(&flight_plan, uri);
@@ -207,7 +268,11 @@ void ConfigData::setFlightPlan(QString uri) {
 
 void ConfigData::setAirframe(QString uri) {
     uri_airframe = uri;
-    setData(&airframe, uri);
+    fetch(uri, [=,this](QByteArray data) {
+        airframe.setContent(data);
+        loadAirframeIncludes();
+        checkComplete();
+    });
 }
 
 void ConfigData::setSettings(QString uri) {

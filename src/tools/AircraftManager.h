@@ -8,6 +8,7 @@
 #include <QColor>
 #include "aircraft.h"
 #include <optional>
+#include <functional>
 #include <map>
 #include <pprzlinkQt/Message.h>
 #include <QMap>
@@ -29,6 +30,7 @@ public:
 
     QDomDocument getFlightPlan() {return flight_plan;}
     QDomDocument getAirframe() {return airframe;}
+    QMap<QString, QDomDocument> getAirframeIncludes() {return airframe_includes;}
     QDomDocument getSettings() {return settings;}
 
     QString getFlightPlanUri() {return uri_flight_plan;}
@@ -44,6 +46,7 @@ public:
     bool isComplete() {
         return !flight_plan.isNull() &&
                !airframe.isNull() &&
+               pending_includes == 0 &&
                !settings.isNull();
     }
 
@@ -53,6 +56,9 @@ signals:
 private:
 
     void setData(QDomDocument* doc, QString uri);
+    void fetch(QString uri, std::function<void(QByteArray)> callback, std::function<void()> on_error = nullptr);
+    void checkComplete();
+    void loadAirframeIncludes();
 
     QString ac_id;
     QString ac_name;
@@ -60,6 +66,9 @@ private:
 
     QDomDocument flight_plan;
     QDomDocument airframe;
+    QMap<QString, QDomDocument> airframe_includes;  // by href
+    int pending_includes = 0;
+    bool ready_sent = false;
     // QDomDocument radio;
     QDomDocument settings;
 

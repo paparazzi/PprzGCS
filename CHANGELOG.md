@@ -1,6 +1,8 @@
 # Changelog
 
 ## NEXT
++ Checklist: `optional`, `help` (tooltip) and `remember` attributes, `choice` items and a Reset button
++ Airframe: follow `<include>` for the checklist and defines (read-only)
 
 ## v1.0.13
 + Add Chat widget for `INFO_MSG`

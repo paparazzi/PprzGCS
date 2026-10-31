@@ -11,15 +11,34 @@ QString getAttribute(QDomElement ele, QString name) {
     return result;
 }
 
-Airframe::Airframe(QDomDocument doc, QObject* parent):  QObject(parent), doc(doc)
+Airframe::Airframe(QDomDocument doc, QMap<QString, QDomDocument> includes, QObject* parent):
+    QObject(parent), doc(doc)
 {
-    auto air_root = doc.firstChildElement( "airframe" );
+    // Like the airframe expansion of Paparazzi: the children of an included <airframe>
+    // replace its <include> node.
+    expanded = doc.cloneNode(true).toDocument();
+    auto root = expanded.firstChildElement();
+    for(auto inc=root.firstChildElement("include"); !inc.isNull();) {
+        auto next = inc.nextSiblingElement("include");
+        auto href = inc.attribute("href");
+        if(includes.contains(href)) {
+            auto inc_root = includes[href].firstChildElement();
+            for(auto child=inc_root.firstChild(); !child.isNull(); child=child.nextSibling()) {
+                root.insertBefore(expanded.importNode(child, true), inc);
+            }
+        }
+        root.removeChild(inc);
+        inc = next;
+    }
+
+    auto air_root = expanded.firstChildElement( "airframe" );
     name = getAttribute(air_root, "name");
 
     auto firmware_node = air_root.firstChildElement( "firmware" );
     firmware = getAttribute(firmware_node, "name");
 }
 
+// Only the params of the airframe file itself, as these are the ones setParams can save.
 QList<Param> Airframe::getParams() {
     QList<Param> params;
 
@@ -129,7 +148,7 @@ float Airframe::getAltShiftMinus() {
  * @return
  */
 std::optional<Param> Airframe::getDefine(QString def_name, QString section_name) {
-    for(auto section=doc.firstChildElement().firstChildElement("section");
+    for(auto section=expanded.firstChildElement().firstChildElement("section");
         !section.isNull();
         section=section.nextSiblingElement("section")) {
         if(section_name != "" && section_name != section.attribute("name", "")) {
@@ -153,7 +172,7 @@ std::optional<Param> Airframe::getDefine(QString def_name, QString section_name)
 QList<ChecklistItem*> Airframe::getChecklistItems() {
     QList<ChecklistItem*> items;
 
-    for(auto section=doc.firstChildElement().firstChildElement("checklist");
+    for(auto section=expanded.firstChildElement().firstChildElement("checklist");
         !section.isNull();
         section=section.nextSiblingElement("checklist")) {
         for(auto item=section.firstChildElement("item");
@@ -162,7 +181,17 @@ QList<ChecklistItem*> Airframe::getChecklistItems() {
             auto name = item.attribute("name");
             auto description = item.firstChild().nodeValue();
             auto type = item.attribute("type", "checkbox");
-            auto checklist_item = new ChecklistItem({name, description, type, ""});
+            auto checklist_item = new ChecklistItem();
+            checklist_item->name = name;
+            checklist_item->description = description;
+            checklist_item->type = type;
+            checklist_item->optional = item.attribute("optional", "false") == "true";
+            checklist_item->help = item.attribute("help");
+            checklist_item->remember = item.attribute("remember", "false") == "true";
+            if(item.hasAttribute("values")) {
+                checklist_item->values = item.attribute("values").split("|");
+            }
+
             items.append(checklist_item);
         }
     }
