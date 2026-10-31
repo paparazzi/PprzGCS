@@ -6,7 +6,7 @@
 
 LockButton::LockButton(QIcon icon, QWidget *parent) : QWidget(parent),
     state(IDLE), icon(icon), icon_lock(":/pictures/lock.svg"), icon_unlocked(":/pictures/unlocked.svg"),
-    _locked(false), active(false), _widget(nullptr)
+    _locked(false), active(false), _widget(nullptr), _badge(0)
 {
 
 }
@@ -23,6 +23,14 @@ void LockButton::setActiveSide(bool activeLeft) {
     activeSide = activeLeft;
     auto pos_active_rect = activeLeft ? 2 : _size.width()-4;
     active_rect = QRect(pos_active_rect, _size.height()/4, 2, _size.height()-2*_size.height()/4);
+}
+
+void LockButton::setBadge(int count) {
+    if(count == _badge) {
+        return;
+    }
+    _badge = count;
+    update();
 }
 
 void LockButton::enterEvent(QEvent* e) {
@@ -69,6 +77,25 @@ void LockButton::paintEvent(QPaintEvent* e) {
     if(active) {
         painter.setBrush(QBrush(0x50e050));
         painter.drawRect(active_rect);
+    }
+
+    if(_badge > 0) {
+        // notification bubble in the top-left corner (the lock is top-right)
+        QString txt = _badge > 99 ? "99+" : QString::number(_badge);
+        QFont font = painter.font();
+        font.setBold(true);
+        font.setPixelSize(qMax(8, _size.height()/5));
+        painter.setFont(font);
+        QFontMetrics fm(font);
+        int h = fm.height();
+        int w = qMax(h, fm.horizontalAdvance(txt) + h/2);
+        QRect badge_rect(1, 1, w, h);
+        painter.setRenderHint(QPainter::Antialiasing);
+        painter.setPen(Qt::NoPen);
+        painter.setBrush(QColor(0xe03030));
+        painter.drawRoundedRect(badge_rect, h/2.0, h/2.0);
+        painter.setPen(Qt::white);
+        painter.drawText(badge_rect, Qt::AlignCenter, txt);
     }
 }
 

@@ -29,6 +29,7 @@ public:
     QWidget* widget(){return _widget;}
     void setSize(QSize s);
     void setActiveSide(bool activeLeft);
+    int badge() {return _badge;}
 
 protected:
     virtual void enterEvent(QEvent* e);
@@ -42,6 +43,8 @@ signals:
     void locked(bool);
 
 public slots:
+    /// Show a notification bubble with this count on the button (0 hides it).
+    void setBadge(int count);
 
 private:
 
@@ -72,6 +75,8 @@ private:
     QRect active_rect;
 
     QWidget* _widget;
+
+    int _badge;
 };
 
 #endif // LOCK_BUTTON_H

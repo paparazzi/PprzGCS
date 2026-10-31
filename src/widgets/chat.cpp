@@ -94,6 +94,14 @@ Chat::~Chat()
     delete ui;
 }
 
+void Chat::showEvent(QShowEvent *event) {
+    QFrame::showEvent(event);
+    if(unread != 0) {
+        unread = 0;
+        emit unreadChanged(unread);
+    }
+}
+
 void Chat::onNewAircraft(QString ac_id) {
     auto ac = AircraftManager::get()->getAircraft(ac_id);
     ui->name_combo->addItem(ac->name());
@@ -134,6 +142,11 @@ void Chat::onSend() {
 
 void Chat::addMessage(QString txt, QString source, QString dst, bool sent) {
     (void)dst;
+    if(!sent && !isVisible()) {
+        unread += 1;
+        emit unreadChanged(unread);
+    }
+
     // Check if it can be combined with the previous message
     if(ui->scroll_widget->layout()->count() > 0) {
         auto last = ui->scroll_widget->layout()->itemAt(ui->scroll_widget->layout()->count()-1);

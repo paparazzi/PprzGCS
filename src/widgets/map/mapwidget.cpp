@@ -450,6 +450,11 @@ void MapWidget::addWidget(QWidget* widget, LockButton* button, WidgetContainer s
     button->setWidget(widget);
     buttons->append(button);
 
+    // Widgets that can have unseen content (e.g. chat) show a notification bubble on their button.
+    if(widget->metaObject()->indexOfSignal("unreadChanged(int)") != -1) {
+        connect(widget, SIGNAL(unreadChanged(int)), button, SLOT(setBadge(int)));
+    }
+
     connect(
         button, &LockButton::clicked,
         [=,this](bool active) {
