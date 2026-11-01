@@ -2,42 +2,33 @@
 #define LINKSTATUS_H
 
 #include <QtWidgets>
-#include "colorlabel.h"
 
+/// The telemetry links of an aircraft: a row per link with its state and numbers.
 class LinkStatus : public QWidget
 {
     Q_OBJECT
 public:
     explicit LinkStatus(QString ac_id, QWidget *parent = nullptr);
 
-signals:
-
 private:
-
     void updateData();
 
-    struct Status {
-        QLabel* link_id;
-        ColorLabel* status;
-        QLabel* ping_time;
-        QLabel* link_rx;
+    struct Row {
+        QWidget* widget;
+        QLabel* dot;
+        QLabel* name;
+        QLabel* state;
+        QLabel* ping;
+        QLabel* rx;
         QLabel* downlink;
         QLabel* uplink_lost;
     };
+    Row makeRow(QString link_id);
 
     QString ac_id;
-
-    QGridLayout* grid_layout;
-
-    QLabel* t_link_id;
-    QLabel* t_status;
-    QLabel* t_ping_time;
-    QLabel* t_link_rx;
-    QLabel* t_downlink;
-    QLabel* t_uplink_lost;
-
-    QMap<QString, Status> links;
-
+    QVBoxLayout* rows_layout;
+    QLabel* empty_label;
+    QMap<QString, Row> rows;
 };
 
 #endif // LINKSTATUS_H

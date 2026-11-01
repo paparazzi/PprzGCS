@@ -1,228 +1,372 @@
 #include "pfd.h"
 #include <QPaintEvent>
 #include <QPainter>
+#include <QPainterPath>
 #include <math.h>
-#include <QDebug>
-#include <QApplication>
-#include <algorithm>
 #include <AircraftManager.h>
 #include "dispatcher_ui.h"
-#include <QPixmap>
-#include <QBitmap>
-#include <QRegion>
-#include <QPainterPath>
 
+// colors of the indicator (the same in both themes: it is an instrument)
+static const QColor SKY_TOP(0x2f7fd1), SKY_BOTTOM(0x7cb8ee);
+static const QColor GROUND_TOP(0x9a6a3a), GROUND_BOTTOM(0x6b4423);
+static const QColor SYMBOL(0xffc400);
 
-Pfd::Pfd(QWidget *parent) : QWidget(parent), rotation(0), current_ac(""), border_stroke(6)
+Pfd::Pfd(QWidget *parent) : QWidget(parent), current_ac("")
 {
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &Pfd::changeCurrentAC);
-    connect(DispatcherUi::get(), &DispatcherUi::mapRotated, this, &Pfd::setRotation);
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &Pfd::updateEulers);
-    places[0] = ROLL;
-    places[1] = PITCH;
-    places[2] = YAW;
-
-    pix_roll_fixedwing = QPixmap(":/pictures/pfd_aircraft_roll.svg");
-    pix_pitch_fixedwing = QPixmap(":/pictures/pfd_aircraft_pitch.svg");
-    pix_yaw_fixedwing = QPixmap(":/pictures/pfd_aircraft_yaw.svg");
-    pix_no_ac = QPixmap(":/pictures/no_ac.svg");
-
-    pix_roll_rotorcraft = QPixmap(":/pictures/pfd_aircraft_roll_rotorcraft.svg");
-    pix_pitch_rotorcraft = QPixmap(":/pictures/pfd_aircraft_pitch_rotorcraft.svg");
-    pix_yaw_rotorcraft = QPixmap(":/pictures/pfd_aircraft_yaw_rotorcraft.svg");
-
-    pix_roll_rover = QPixmap(":/pictures/pfd_rover_roll.svg");
-    pix_pitch_rover = QPixmap(":/pictures/pfd_rover_pitch.svg");
-    pix_yaw_rover = QPixmap(":/pictures/pfd_rover_yaw.svg");
+    setToolTip("Attitude (roll, pitch) and heading of the selected aircraft");
 }
-
-void Pfd::resizeEvent(QResizeEvent *event) {
-    (void)event;
-    QRegion reg;
-    for(int i=0; i<3; i++){
-        QRect rect = placeRect(i);
-        rect.setWidth(rect.width()+border_stroke);
-        rect.setHeight(rect.height()+border_stroke);
-        QPointF center = placeCenter(i);
-        QPoint p(static_cast<int>(center.x()), static_cast<int>(center.y()));
-        rect.moveCenter(p);
-
-        QRegion ri(rect, QRegion::Ellipse);
-        reg = reg.united(ri);
-    }
-
-    setMask(reg);
-}
-
 
 void Pfd::paintEvent(QPaintEvent *event) {
     (void)event;
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setRenderHint(QPainter::TextAntialiasing);
 
-    //int side = qMin(width(), height());
-    //QRect rect = QRect(-side/4,-side/4, side/2, side/2);
-
-    if(eulers.find(current_ac) != eulers.end()) {
-        auto ac_color = AircraftManager::get()->getAircraft(current_ac)->getColor();
-        for(int i=0; i<3; i++) {
-            QRect rect = placeRect(i);
-            QPointF center = placeCenter(i);
-            if(places[i] == PITCH) {
-                float pitch = eulers[current_ac].pitch;
-                float roll = eulers[current_ac].roll;
-                paintPitch(rect, center, ac_color, pitch, roll);
-            } else if(places[i] == ROLL) {
-                float pitch = eulers[current_ac].pitch;
-                float roll = eulers[current_ac].roll;
-                paintRoll(rect, center, ac_color, pitch, roll);
-            } else {
-                float yaw = eulers[current_ac].yaw;
-                paintYaw(rect, center, ac_color, yaw);
-            }
-        }
-
-    } else {
-        auto no_ac_color = QColor(0x808080);
-        QRect rect = placeRect(0);
-        QPointF center = placeCenter(0);
-        paintPitch(rect, center, no_ac_color, 0, 0);
-        rect = placeRect(1);
-        center = placeCenter(1);
-        paintRoll(rect, center, no_ac_color, 0, 0);
-        rect = placeRect(2);
-        center = placeCenter(2);
-        paintYaw(rect, center, no_ac_color, 0);
-
+    bool valid = eulers.find(current_ac) != eulers.end();
+    Eulers e = valid ? eulers[current_ac] : Eulers{0, 0, 0};
+    QColor ac_color = QColor(0x808080);
+    if(valid && AircraftManager::get()->aircraftExists(current_ac)) {
+        ac_color = AircraftManager::get()->getAircraft(current_ac)->getColor();
     }
 
+    // square attitude indicator, the heading tape below
+    // attitude, with the height tape on its right; heading tape and values below
+    // speed tape | attitude | height tape; heading tape and values below
+    const double tape_h = 34, values_h = 22, alt_w = 58, spd_w = 54, gap = 6;
+    double side = qMin<double>(width() - alt_w - spd_w - 2 * gap, height() - tape_h - values_h - 2 * gap);
+    double left = (width() - side - alt_w - spd_w - 2 * gap) / 2;
+    QRectF spd_tape(left, 0, spd_w, side);
+    QRectF att(spd_tape.right() + gap, 0, side, side);
+    QRectF alt_tape(att.right() + gap, 0, alt_w, side);
+    QRectF tape(att.left(), att.bottom() + gap, side, tape_h);
+    QRectF values(spd_tape.left(), tape.bottom() + gap, spd_w + side + alt_w + 2 * gap, values_h);
 
+    paintSpeed(p, spd_tape, e, valid);
+    paintAttitude(p, att, e.roll, e.pitch, ac_color, valid);
+    paintAltitude(p, alt_tape, e, valid);
+    paintHeading(p, tape, e.yaw, valid);
 
+    // the values as text below the instrument
+    QFont vf = font();
+    vf.setPixelSize(13);
+    p.setFont(vf);
+    QColor text = palette().color(QPalette::WindowText);
+    QColor secondary = text;
+    secondary.setAlpha(170);
+    auto value = [&](QRectF r, QString caption, QString v) {
+        p.setPen(secondary);
+        p.drawText(r, Qt::AlignLeft | Qt::AlignVCenter, caption);
+        QFont bf = vf;
+        bf.setBold(true);
+        p.setFont(bf);
+        p.setPen(text);
+        p.drawText(r, Qt::AlignRight | Qt::AlignVCenter, v);
+        p.setFont(vf);
+    };
+    QString dash = QString::fromUtf8("\xE2\x80\x94");
+    double third = values.width() / 4;
+    value(QRectF(values.left(), values.top(), third - 10, values_h), "Roll", valid ? QString("%1°").arg(e.roll, 0, 'f', 0) : dash);
+    value(QRectF(values.left() + third + 5, values.top(), third - 10, values_h), "Pitch", valid ? QString("%1°").arg(e.pitch, 0, 'f', 0) : dash);
+    double hd = fmod(fmod(e.yaw, 360.) + 360., 360.);
+    value(QRectF(values.left() + 2 * third + 10, values.top(), third - 10, values_h), "Hdg", valid ? QString("%1°").arg(static_cast<int>(round(hd)) % 360) : dash);
+    value(QRectF(values.left() + 3 * third + 15, values.top(), third - 15, values_h), "MSL", valid ? QString("%1").arg(e.alt, 0, 'f', 0) : dash);
 }
 
-void Pfd::paintPitch(QRect rect,  QPointF center, QColor ac_color, float pitch, float roll) {
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.translate(center);
+void Pfd::paintAttitude(QPainter& p, QRectF r, float roll, float pitch, QColor ac_color, bool valid) {
+    const double radius = 10;
+    const double px_per_deg = r.height() / 60.;    // +-30 deg visible
+    QPointF c = r.center();
 
-    painter.setBrush(QBrush(QColor(0x00b0ea)));
-    painter.setPen(Qt::NoPen);
-    painter.drawEllipse(rect);
+    p.save();
+    QPainterPath clip;
+    clip.addRoundedRect(r, radius, radius);
+    p.setClipPath(clip);
 
-    double alpha = static_cast<double>(-roll) * M_PI/180.0;
-    double y = sin(alpha) * rect.height() / 2;
-    double x = cos(alpha) * rect.width() / 2 - border_stroke;
+    // horizon: rotated by the roll, moved down by the pitch
+    p.save();
+    p.translate(c);
+    p.rotate(-roll);
+    p.translate(0, pitch * px_per_deg);
+    double big = r.width() * 2;
+    QLinearGradient sky(0, -big / 2, 0, 0);
+    sky.setColorAt(0, SKY_TOP);
+    sky.setColorAt(1, SKY_BOTTOM);
+    QLinearGradient ground(0, 0, 0, big / 2);
+    ground.setColorAt(0, GROUND_TOP);
+    ground.setColorAt(1, GROUND_BOTTOM);
+    p.setPen(Qt::NoPen);
+    p.setBrush(sky);
+    p.drawRect(QRectF(-big, -big, 2 * big, big));
+    p.setBrush(ground);
+    p.drawRect(QRectF(-big, 0, 2 * big, big));
+    p.setPen(QPen(Qt::white, 2));
+    p.drawLine(QPointF(-big, 0), QPointF(big, 0));
 
-    painter.setBrush(QColor(0x986701));
-    painter.drawChord(rect, static_cast<int>(16*(alpha - M_PI)*180.0/M_PI), static_cast<int>(16*(2*(M_PI_2-alpha))*180.0/M_PI));
-
-    QPen pen = QPen(Qt::white, 4);
-    painter.setPen(pen);
-    QLine line(static_cast<int>(-x), static_cast<int>(y) , static_cast<int>(x), static_cast<int>(y));
-    //QLine line(rect.left(), 0 , rect.right() , 0);
-    painter.drawLine(line);
-
-    pen = QPen(Qt::black, 2, Qt::DashDotLine);
-    painter.setPen(pen);
-    line = QLine(rect.left()+border_stroke, 0 , rect.right()-border_stroke , 0);
-    painter.drawLine(line);
-
-    QPixmap* pix = getIcon(PITCH);
-
-    painter.rotate(static_cast<double>(pitch));
-    painter.drawPixmap(-rect.width()/2, -rect.height()/2, rect.width(), rect.height(), pix->scaled(pix->width(),pix->height(),Qt::KeepAspectRatio));
-
-    QPainterPath pp;
-    pp.addEllipse(rect);
-    pp.addEllipse(rect.center(), rect.left()+border_stroke, rect.top()+border_stroke);
-    painter.setBrush(ac_color);
-    painter.setPen(Qt::NoPen);
-    painter.drawPath(pp);
-}
-
-void Pfd::paintRoll(QRect rect,  QPointF center, QColor ac_color, float pitch, float roll) {
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.translate(center);
-    painter.setBrush(QBrush(QColor(0x00b0ea)));
-    painter.setPen(Qt::NoPen);
-    painter.drawEllipse(rect);
-
-    double alpha = static_cast<double>(pitch) * M_PI/180.0;
-    double y = sin(alpha) * rect.height() / 2;
-    double x = cos(alpha) * rect.width() / 2 - border_stroke;
-
-    painter.setBrush(QColor(0x986701));
-    painter.drawChord(rect, static_cast<int>(16*(alpha - M_PI)*180.0/M_PI), static_cast<int>(16*(2*(M_PI_2-alpha))*180.0/M_PI));
-
-    QPen pen = QPen(Qt::white, 4);
-    painter.setPen(pen);
-    QLine line(static_cast<int>(-x), static_cast<int>(y), static_cast<int>(x), static_cast<int>(y));
-    painter.drawLine(line);
-
-    pen = QPen(Qt::black, 2, Qt::DashDotLine);
-    painter.setPen(pen);
-    line = QLine(rect.left()+border_stroke, 0 , rect.right()-border_stroke , 0);
-    painter.drawLine(line);
-
-    QPixmap* pix = getIcon(ROLL);
-
-    painter.rotate(static_cast<double>(roll));
-    painter.drawPixmap(-rect.width()/2, -rect.height()/2, rect.width(), rect.height(), pix->scaled(pix->width(),pix->height(),Qt::KeepAspectRatio));
-
-    QPainterPath pp;
-    pp.addEllipse(rect);
-    pp.addEllipse(rect.center(), rect.left()+border_stroke, rect.top()+border_stroke);
-    painter.setBrush(ac_color);
-    painter.setPen(Qt::NoPen);
-    painter.drawPath(pp);
-}
-
-void Pfd::paintYaw(QRect rect, QPointF center, QColor ac_color, float yaw) {
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-    painter.translate(center);
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(QBrush(QColor(Qt::black)));
-    painter.drawEllipse(rect);
-
-    painter.rotate(rotation);
-    QRect rect_rose = QRect(rect.left() + border_stroke, rect.top() + border_stroke, rect.width()-2*border_stroke, rect.height()-2*border_stroke);
-    QPixmap rose(":/pictures/wind_rose.svg");
-    painter.drawPixmap(rect_rose, rose);
-
-    QPixmap* pix = getIcon(YAW);
-    painter.rotate(static_cast<double>(yaw));
-    painter.drawPixmap(-rect.width()/2, -rect.height()/2, rect.width(), rect.height(), pix->scaled(pix->width(),pix->height(),Qt::KeepAspectRatio));
-
-    QPainterPath pp;
-    pp.addEllipse(rect);
-    pp.addEllipse(rect.center(), rect.left()+border_stroke, rect.top()+border_stroke);
-    painter.setBrush(ac_color);
-    painter.setPen(Qt::NoPen);
-    painter.drawPath(pp);
-}
-
-
-void Pfd::mousePressEvent(QMouseEvent *event) {
-    (void)event;
-    for(int i=2; i>=0; i--){
-        QRect rect = placeRect(i);
-        QPointF center = placeCenter(i);
-        QPoint p(static_cast<int>(center.x()), static_cast<int>(center.y()));
-        rect.moveCenter(p);
-        if(rect.contains(event->pos())) {
-            double r = sqrt(pow(event->pos().x()-center.x(), 2) + pow(event->pos().y()-center.y(), 2));
-            if(r < rect.width()/2) {
-                Axis tmp = places[0];
-                places[0] = places[i];
-                places[i] = tmp;
-                update();
-                return;
-            }
+    // pitch ladder every 5 deg, labels every 10
+    QFont f = font();
+    f.setPixelSize(qMax(9, static_cast<int>(r.height() / 22)));
+    f.setBold(true);
+    p.setFont(f);
+    for(int deg = -60; deg <= 60; deg += 5) {
+        if(deg == 0) {
+            continue;
+        }
+        double y = -deg * px_per_deg;
+        double w = (deg % 10 == 0) ? r.width() * 0.22 : r.width() * 0.10;
+        p.setPen(QPen(Qt::white, deg % 10 == 0 ? 2 : 1.4));
+        p.drawLine(QPointF(-w / 2, y), QPointF(w / 2, y));
+        if(deg % 10 == 0) {
+            QString txt = QString::number(abs(deg));
+            QRectF lr(w / 2 + 4, y - 8, 30, 16);
+            p.drawText(lr, Qt::AlignVCenter | Qt::AlignLeft, txt);
+            QRectF rr(-w / 2 - 34, y - 8, 30, 16);
+            p.drawText(rr, Qt::AlignVCenter | Qt::AlignRight, txt);
         }
     }
+    p.restore();
 
-    event->ignore();
-    QWidget::mousePressEvent(event);
+    // roll scale: ticks at the top, fixed; the pointer turns with the roll
+    double rr = r.width() * 0.42;
+    p.save();
+    p.translate(c);
+    p.setPen(QPen(Qt::white, 2));
+    for(int a: {-60, -45, -30, -20, -10, 0, 10, 20, 30, 45, 60}) {
+        p.save();
+        p.rotate(a);
+        double len = (a % 30 == 0) ? 12 : 7;
+        p.drawLine(QPointF(0, -rr), QPointF(0, -rr - len));
+        p.restore();
+    }
+    // the sky pointer, turning with the horizon
+    p.rotate(-roll);
+    QPolygonF pointer;
+    pointer << QPointF(0, -rr + 1) << QPointF(-7, -rr + 12) << QPointF(7, -rr + 12);
+    p.setPen(Qt::NoPen);
+    p.setBrush(SYMBOL);
+    p.drawPolygon(pointer);
+    p.restore();
+
+    // fixed aircraft symbol, in the aircraft color outline
+    p.save();
+    p.translate(c);
+    double s = r.width() * 0.18;
+    QPainterPath wings;
+    wings.moveTo(-s * 1.6, 0);
+    wings.lineTo(-s * 0.55, 0);
+    wings.lineTo(-s * 0.3, s * 0.3);
+    wings.moveTo(s * 1.6, 0);
+    wings.lineTo(s * 0.55, 0);
+    wings.lineTo(s * 0.3, s * 0.3);
+    p.setBrush(Qt::NoBrush);
+    p.setPen(QPen(Qt::black, 7, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    p.drawPath(wings);
+    p.setPen(QPen(SYMBOL, 4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    p.drawPath(wings);
+    p.setPen(QPen(Qt::black, 1.5));
+    p.setBrush(SYMBOL);
+    p.drawEllipse(QPointF(0, 0), 4, 4);
+    p.restore();
+
+    // values: roll and pitch as text
+    QFont vf = font();
+    vf.setPixelSize(qMax(10, static_cast<int>(r.height() / 18)));
+    vf.setBold(true);
+    p.setFont(vf);
+    auto chip = [&](QRectF cr, QString txt) {
+        p.setPen(Qt::NoPen);
+        p.setBrush(QColor(0, 0, 0, 120));
+        p.drawRoundedRect(cr, 5, 5);
+        p.setPen(Qt::white);
+        p.drawText(cr, Qt::AlignCenter, txt);
+    };
+    double ch = vf.pixelSize() + 10;
+    if(!valid) {
+        chip(QRectF(c.x() - r.width() * 0.3, r.bottom() - ch - 8, r.width() * 0.6, ch), "No attitude data");
+    }
+    p.restore();
+
+    // border in the aircraft color
+    p.setBrush(Qt::NoBrush);
+    p.setPen(QPen(ac_color, 3));
+    p.drawRoundedRect(r.adjusted(1.5, 1.5, -1.5, -1.5), radius, radius);
+}
+
+void Pfd::paintHeading(QPainter& p, QRectF r, float heading, bool valid) {
+    const double radius = 8;
+    const double px_per_deg = r.width() / 90.;    // 90 deg visible
+    p.save();
+    QPainterPath clip;
+    clip.addRoundedRect(r, radius, radius);
+    p.setClipPath(clip);
+    p.fillRect(r, QColor(0x1b1f25));
+
+    QFont f = font();
+    f.setPixelSize(11);
+    f.setBold(true);
+    p.setFont(f);
+    double hd = fmod(fmod(heading, 360.) + 360., 360.);
+    double cx = r.center().x();
+    for(int d = static_cast<int>(hd) - 60; d <= static_cast<int>(hd) + 60; d++) {
+        if(d % 5 != 0) {
+            continue;
+        }
+        double x = cx + (d - hd) * px_per_deg;
+        int dn = ((d % 360) + 360) % 360;
+        p.setPen(QPen(QColor(0xd6dce3), 1.4));
+        double len = (dn % 10 == 0) ? 8 : 4;
+        p.drawLine(QPointF(x, r.top()), QPointF(x, r.top() + len));
+        if(dn % 30 == 0) {
+            QString txt;
+            switch(dn) {
+            case 0: txt = "N"; break;
+            case 90: txt = "E"; break;
+            case 180: txt = "S"; break;
+            case 270: txt = "W"; break;
+            default: txt = QString::number(dn / 10);
+            }
+            p.drawText(QRectF(x - 15, r.top() + 10, 30, r.height() - 12), Qt::AlignHCenter | Qt::AlignVCenter, txt);
+        }
+    }
+    p.restore();
+
+    // the heading in a box in the middle
+    QRectF box(cx - 28, r.top() + 4, 56, r.height() - 8);
+    p.setPen(QPen(SYMBOL, 2));
+    p.setBrush(QColor(0x1b1f25));
+    p.drawRoundedRect(box, 5, 5);
+    p.setPen(Qt::white);
+    QFont bf = font();
+    bf.setPixelSize(14);
+    bf.setBold(true);
+    p.setFont(bf);
+    p.drawText(box, Qt::AlignCenter, valid ? QString("%1°").arg(static_cast<int>(round(hd)) % 360, 3, 10, QChar('0')) : "---");
+}
+
+/**
+ * Height above ground: a vertical tape (+-25 m visible) with the value in a box, a marker at the
+ * target height of the flight plan and the climb rate below.
+ */
+void Pfd::paintAltitude(QPainter& p, QRectF r, const Eulers& e, bool valid) {
+    const double radius = 8;
+    const double range = 50.;      // m visible
+    double px_per_m = r.height() / range;
+    double cy = r.center().y();
+    p.save();
+    QPainterPath clip;
+    clip.addRoundedRect(r, radius, radius);
+    p.setClipPath(clip);
+    p.fillRect(r, QColor(0x1b1f25));
+
+    QFont f = font();
+    f.setPixelSize(10);
+    f.setBold(true);
+    p.setFont(f);
+    double h = valid ? e.agl : 0;
+    for(int m = static_cast<int>(floor((h - range / 2) / 5)) * 5; m <= h + range / 2; m += 5) {
+        double y = cy - (m - h) * px_per_m;
+        p.setPen(QPen(m < 0 ? QColor(0xb07a4a) : QColor(0xd6dce3), 1.4));
+        double len = (m % 10 == 0) ? 9 : 5;
+        p.drawLine(QPointF(r.left(), y), QPointF(r.left() + len, y));
+        // no numbers under the caption (top) and the climb (bottom)
+        if(m % 10 == 0 && y > r.top() + 22 && y < r.bottom() - 22) {
+            p.drawText(QRectF(r.left() + 12, y - 7, r.width() - 14, 14), Qt::AlignLeft | Qt::AlignVCenter, QString::number(m));
+        }
+    }
+    // the ground
+    double gy = cy + h * px_per_m;
+    if(gy < r.bottom()) {
+        p.fillRect(QRectF(r.left(), gy, r.width(), r.bottom() - gy), QColor(107, 68, 35, 150));
+    }
+    // the target height of the flight plan
+    if(valid && AircraftManager::get()->aircraftExists(current_ac)) {
+        auto nav = AircraftManager::get()->getAircraft(current_ac)->getStatus()->getMessage("NAV_STATUS");
+        if(nav) {
+            float target_alt = 0;
+            nav->getField("target_alt", target_alt);
+            double target_agl = target_alt - (e.alt - e.agl);
+            double ty = qBound(r.top() + 4, cy - (target_agl - h) * px_per_m, r.bottom() - 4);
+            QPolygonF tri;
+            tri << QPointF(r.right(), ty - 6) << QPointF(r.right() - 9, ty) << QPointF(r.right(), ty + 6);
+            p.setPen(Qt::NoPen);
+            p.setBrush(QColor(0x4fd1ff));
+            p.drawPolygon(tri);
+        }
+    }
+    p.restore();
+
+    // the height in a box
+    QRectF box(r.left() + 2, cy - 13, r.width() - 4, 26);
+    p.setPen(QPen(SYMBOL, 2));
+    p.setBrush(QColor(0x1b1f25));
+    p.drawRoundedRect(box, 5, 5);
+    QFont bf = font();
+    bf.setPixelSize(14);
+    bf.setBold(true);
+    p.setFont(bf);
+    p.setPen(Qt::white);
+    p.drawText(box, Qt::AlignCenter, valid ? QString::number(e.agl, 'f', 0) : "---");
+
+    // caption and climb
+    QFont cf = font();
+    cf.setPixelSize(10);
+    cf.setBold(true);
+    p.setFont(cf);
+    p.setPen(QColor(0xd6dce3));
+    p.drawText(QRectF(r.left(), r.top() + 2, r.width(), 14), Qt::AlignCenter, "AGL m");
+    QString climb = valid ? QString("%1%2").arg(e.climb > 0.05 ? QString::fromUtf8("\xE2\x86\x91") : (e.climb < -0.05 ? QString::fromUtf8("\xE2\x86\x93") : QString()))
+                                           .arg(fabs(e.climb), 0, 'f', 1) : QString();
+    p.drawText(QRectF(r.left(), r.bottom() - 16, r.width(), 14), Qt::AlignCenter, climb);
+}
+
+/// Ground speed: a vertical tape (+-10 m/s visible) with the value in a box, airspeed below.
+void Pfd::paintSpeed(QPainter& p, QRectF r, const Eulers& e, bool valid) {
+    const double radius = 8;
+    const double range = 20.;      // m/s visible
+    double px_per_ms = r.height() / range;
+    double cy = r.center().y();
+    double v = valid ? e.speed : 0;
+    p.save();
+    QPainterPath clip;
+    clip.addRoundedRect(r, radius, radius);
+    p.setClipPath(clip);
+    p.fillRect(r, QColor(0x1b1f25));
+    QFont f = font();
+    f.setPixelSize(10);
+    f.setBold(true);
+    p.setFont(f);
+    for(int s = qMax(0, static_cast<int>(floor(v - range / 2))); s <= v + range / 2; s++) {
+        double y = cy - (s - v) * px_per_ms;
+        p.setPen(QPen(QColor(0xd6dce3), 1.4));
+        double len = (s % 5 == 0) ? 9 : 4;
+        p.drawLine(QPointF(r.right() - len, y), QPointF(r.right(), y));
+        if(s % 5 == 0 && y > r.top() + 22 && y < r.bottom() - 22) {
+            p.drawText(QRectF(r.left() + 2, y - 7, r.width() - 14, 14), Qt::AlignRight | Qt::AlignVCenter, QString::number(s));
+        }
+    }
+    p.restore();
+
+    QRectF box(r.left() + 2, cy - 13, r.width() - 4, 26);
+    p.setPen(QPen(SYMBOL, 2));
+    p.setBrush(QColor(0x1b1f25));
+    p.drawRoundedRect(box, 5, 5);
+    QFont bf = font();
+    bf.setPixelSize(14);
+    bf.setBold(true);
+    p.setFont(bf);
+    p.setPen(Qt::white);
+    p.drawText(box, Qt::AlignCenter, valid ? QString::number(e.speed, 'f', 1) : "---");
+
+    QFont cf = font();
+    cf.setPixelSize(10);
+    cf.setBold(true);
+    p.setFont(cf);
+    p.setPen(QColor(0xd6dce3));
+    p.drawText(QRectF(r.left(), r.top() + 2, r.width(), 14), Qt::AlignCenter, "GS m/s");
+    if(valid && e.airspeed > 0.1) {
+        p.drawText(QRectF(r.left(), r.bottom() - 16, r.width(), 14), Qt::AlignCenter, QString("AS %1").arg(e.airspeed, 0, 'f', 1));
+    }
 }
 
 void Pfd::changeCurrentAC(QString id) {
@@ -230,11 +374,6 @@ void Pfd::changeCurrentAC(QString id) {
         current_ac = id;
         update();
     }
-}
-
-void Pfd::setRotation(double rot) {
-    rotation = rot;
-    update();
 }
 
 void Pfd::updateEulers(pprzlink::Message msg) {
@@ -245,92 +384,25 @@ void Pfd::updateEulers(pprzlink::Message msg) {
         msg.getField("roll", roll);
         msg.getField("pitch", pitch);
         msg.getField("heading", heading);
-        eulers[ac_id] = Eulers {roll, pitch, heading};
-        update();
-    }
-}
-
-
-QRect Pfd::placeRect(int i) {
-    int side = qMin(width(), height());
-
-    if(i==0) {
-        double sizeA = side*0.8;
-        return QRect(static_cast<int>(-sizeA/2),static_cast<int>(-sizeA/2), static_cast<int>(sizeA), static_cast<int>(sizeA));
-    } else if(i==1) {
-        double sizeB = side*0.35;
-        return QRect(static_cast<int>(-sizeB/2),static_cast<int>(-sizeB/2), static_cast<int>(sizeB), static_cast<int>(sizeB));
-    } else {
-        double sizeC = side*0.35;
-        return QRect(static_cast<int>(-sizeC/2),static_cast<int>(-sizeC/2), static_cast<int>(sizeC), static_cast<int>(sizeC));
-    }
-}
-
-QPointF Pfd::placeCenter(int i) {
-    int side = qMin(width(), height());
-    double dx = (width()-side)/2;
-    double dy = (height()-side)/2;
-    QRectF pfd_rect = QRectF(dx,dy, side, side);
-
-    if(i==0) {
-        double sizeA = side*0.8;
-        return QPointF(pfd_rect.left() + sizeA/2, pfd_rect.center().y());
-    } else if(i==1) {
-        double sizeB = side*0.35;
-        QRect rectB = QRect(static_cast<int>(-sizeB/2), static_cast<int>(-sizeB/2), static_cast<int>(sizeB), static_cast<int>(sizeB));
-        return pfd_rect.topRight()-rectB.topRight();
-    } else {
-        double sizeC = side*0.35;
-        QRect rectC = QRect(static_cast<int>(-sizeC/2),static_cast<int>(-sizeC/2), static_cast<int>(sizeC), static_cast<int>(sizeC));
-        return pfd_rect.bottomRight() - rectC.bottomRight();
-    }
-}
-
-QPixmap* Pfd::getIcon(Axis axis) {
-    if(current_ac == "") {
-        return &pix_no_ac;
-    }
-
-    auto firmware = AircraftManager::get()->getAircraft(current_ac)->getAirframe()->getFirmware();
-    if(firmware == "fixedwing") {
-        switch (axis) {
-        case ROLL:
-            return &pix_roll_fixedwing;
-        case PITCH:
-            return &pix_pitch_fixedwing;
-        case YAW:
-            return &pix_yaw_fixedwing;
+        Eulers e {roll, pitch, heading};
+        msg.getField("agl", e.agl);
+        msg.getField("alt", e.alt);
+        msg.getField("climb", e.climb);
+        msg.getField("speed", e.speed);
+        msg.getField("airspeed", e.airspeed);
+        eulers[ac_id] = e;
+        if(ac_id == current_ac) {
+            update();
         }
-    } else if(firmware == "rotorcraft") {
-        switch (axis) {
-        case ROLL:
-            return &pix_roll_rotorcraft;
-        case PITCH:
-            return &pix_pitch_rotorcraft;
-        case YAW:
-            return &pix_yaw_rotorcraft;
-        }
-    } else if(firmware == "rover") {
-        switch (axis) {
-        case ROLL:
-            return &pix_roll_rover;
-        case PITCH:
-            return &pix_pitch_rover;
-        case YAW:
-            return &pix_yaw_rover;
-        }
-    } else {
-        throw runtime_error("[PFD] firmware not supported yet!");
     }
-    return nullptr;
 }
 
 QSize Pfd::sizeHint() const
 {
-    return QSize(200, 200);
+    return QSize(380, 320);
 }
 
 QSize Pfd::minimumSizeHint() const
 {
-    return QSize(200, 200);
+    return QSize(320, 260);
 }

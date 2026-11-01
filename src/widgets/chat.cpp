@@ -14,6 +14,85 @@ Chat::Chat(QWidget *parent) :
     ui(new Ui::Chat)
 {
     ui->setupUi(this);
+    ui->label->hide();  // the title is on the card or the tab
+    ui->send_button->setObjectName("chat_send");
+    ui->send_button->setText("Send");
+    ui->msg_lineedit->setPlaceholderText("Message to All");
+
+    // filter row at the top
+    filter_row = new QWidget(this);
+    filter_layout = new QHBoxLayout(filter_row);
+    filter_layout->setContentsMargins(0, 0, 0, 0);
+    filter_layout->setSpacing(4);
+    filter_group = new QButtonGroup(this);
+    filter_group->setExclusive(true);
+    addFilter("all", "All", "");
+    addFilter("server", "Server", "");
+    addFilter("me", "Mine", "");
+    filter_layout->addStretch();
+    filters["all"]->setChecked(true);
+    filter_row->hide();
+    // rounded pills; set here so the card styles do not override them
+    filter_row->setStyleSheet(
+        "QPushButton#chat_filter {border: 1px solid palette(mid); border-radius: 10px; padding: 2px 10px;"
+        " font-size: 12px; font-weight: bold; background: transparent;}"
+        "QPushButton#chat_filter:checked {background: #1d5fc9; border-color: #1d5fc9; color: white;}");
+    // stay at the newest message when new ones arrive (unless scrolled up)
+    auto bar = ui->scrollArea->verticalScrollBar();
+    connect(bar, &QScrollBar::rangeChanged, this, [=](int min, int max) {
+        (void)min;
+        if(bar->property("at_end").toBool() || !bar->property("at_end").isValid()) {
+            bar->setValue(max);
+        }
+    });
+    connect(bar, &QScrollBar::valueChanged, this, [=](int v) {
+        bar->setProperty("at_end", v >= bar->maximum() - 4);
+    });
+    ui->verticalLayout->insertWidget(1, filter_row);
+
+    // one input row: message, recipient and log menu, send
+    ui->name_combo->hide();
+    ui->fd_combo->hide();
+    dest_button = new QToolButton(this);
+    dest_button->setObjectName("chat_dest");
+    dest_button->setPopupMode(QToolButton::InstantPopup);
+    dest_button->setToolTip("To, and where it is logged on the aircraft");
+    auto menu = new QMenu(dest_button);
+    dest_button->setMenu(menu);
+    connect(menu, &QMenu::aboutToShow, this, [=,this]() {
+        menu->clear();
+        menu->addSection("To");
+        for(int i=0; i<ui->name_combo->count(); i++) {
+            auto a = menu->addAction(ui->name_combo->itemText(i));
+            a->setCheckable(true);
+            a->setChecked(i == ui->name_combo->currentIndex());
+            connect(a, &QAction::triggered, this, [=,this]() {ui->name_combo->setCurrentIndex(i); updateDestButton();});
+        }
+        menu->addSection("Log in");
+        for(int i=0; i<ui->fd_combo->count(); i++) {
+            auto a = menu->addAction(ui->fd_combo->itemText(i));
+            a->setCheckable(true);
+            a->setChecked(i == ui->fd_combo->currentIndex());
+            connect(a, &QAction::triggered, this, [=,this]() {ui->fd_combo->setCurrentIndex(i); updateDestButton();});
+        }
+    });
+    auto input_row = new QHBoxLayout();
+    input_row->setSpacing(6);
+    ui->verticalLayout->removeWidget(ui->msg_lineedit);
+    ui->horizontalLayout->removeWidget(ui->send_button);
+    input_row->addWidget(ui->msg_lineedit, 1);
+    input_row->addWidget(dest_button);
+    input_row->addWidget(ui->send_button);
+    ui->verticalLayout->addLayout(input_row);
+    updateDestButton();
+    setFrameShape(QFrame::NoFrame);
+    setMinimumWidth(320);
+    ui->scrollArea->setMinimumHeight(300);     // a few messages visible
+    ui->scrollArea->setFrameShape(QFrame::NoFrame);
+    ui->verticalLayout->setContentsMargins(0, 0, 0, 0);
+    ui->verticalLayout->setSpacing(4);
+    ui->scroll_widget->layout()->setContentsMargins(0, 0, 4, 0);
+    ui->scroll_widget->layout()->setSpacing(3);
 
     auto settings_path = appConfig()->value("SETTINGS_PATH").toString();
     QSettings settings(settings_path, QSettings::IniFormat);
@@ -97,6 +176,49 @@ Chat::~Chat()
 void Chat::onNewAircraft(QString ac_id) {
     auto ac = AircraftManager::get()->getAircraft(ac_id);
     ui->name_combo->addItem(ac->name());
+    addFilter(ac_id, ac->name(), ac->getColor().name());
+}
+
+void Chat::addFilter(QString category, QString name, QString color) {
+    if(filters.contains(category)) {
+        return;
+    }
+    auto b = new QPushButton(name, filter_row);
+    b->setObjectName("chat_filter");
+    b->setCheckable(true);
+    if(!color.isEmpty()) {
+        b->setStyleSheet(QString("QPushButton#chat_filter:!checked {color: %1;}").arg(color));
+    }
+    filter_group->addButton(b);
+    // aircraft before Server and Mine
+    int index = filter_layout->count();
+    if(category != "all" && category != "server" && category != "me" && filters.contains("server")) {
+        index = filter_layout->indexOf(filters["server"]);
+    }
+    filter_layout->insertWidget(index, b);
+    filters[category] = b;
+    connect(b, &QPushButton::clicked, this, [=,this]() {
+        current_filter = category;
+        applyFilter();
+    });
+    int nb_ac = 0;
+    for(auto &k: filters.keys()) {
+        if(k != "all" && k != "server" && k != "me") {
+            nb_ac++;
+        }
+    }
+    filter_row->setVisible(nb_ac > 1);
+}
+
+void Chat::applyFilter() {
+    for(auto cb: ui->scroll_widget->findChildren<ChatBubble*>()) {
+        cb->setVisible(current_filter == "all" || cb->category() == current_filter);
+    }
+}
+
+void Chat::updateDestButton() {
+    dest_button->setText(ui->name_combo->currentText() + QString::fromUtf8(" \u25BE"));
+    ui->msg_lineedit->setPlaceholderText("Message to " + ui->name_combo->currentText());
 }
 
 void Chat::onAcDeleted(QString ac_id) {
@@ -104,6 +226,17 @@ void Chat::onAcDeleted(QString ac_id) {
     auto idx = ui->name_combo->findText(ac->name());
     if(idx != -1) {
         ui->name_combo->removeItem(idx);
+    }
+    if(filters.contains(ac_id)) {
+        auto b = filters.take(ac_id);
+        if(current_filter == ac_id) {
+            current_filter = "all";
+            filters["all"]->setChecked(true);
+        }
+        b->deleteLater();
+        applyFilter();
+        int nb_ac = filters.size() - 3;
+        filter_row->setVisible(nb_ac > 1);
     }
 }
 
@@ -138,7 +271,8 @@ void Chat::addMessage(QString txt, QString source, QString dst, bool sent) {
     if(ui->scroll_widget->layout()->count() > 0) {
         auto last = ui->scroll_widget->layout()->itemAt(ui->scroll_widget->layout()->count()-1);
         auto cb = dynamic_cast<ChatBubble*>(last->widget());
-        if(cb != nullptr && cb->getSource() == source && cb->getDest() == dst && cb->getTime().secsTo(QTime::currentTime()) < 5){
+        if(cb != nullptr && cb->getSource() == source && cb->getDest() == dst && cb->getTime().secsTo(QTime::currentTime()) < 5 &&
+           cb->currentLevel() == ChatBubble::level(txt)){   // a warning gets its own row
             cb->addText(txt);
             return;
         }
@@ -146,6 +280,7 @@ void Chat::addMessage(QString txt, QString source, QString dst, bool sent) {
 
     auto cb = new ChatBubble(source, dst, txt, sent, this);
     ui->scroll_widget->layout()->addWidget(cb);
+    cb->setVisible(current_filter == "all" || cb->category() == current_filter);
     ui->scroll_widget->installEventFilter(cb);
 
     // delay scroll to bottom to wait for the x=widget to be repainted.

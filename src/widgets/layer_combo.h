@@ -12,7 +12,7 @@ public:
     explicit LayerCombo(QWidget *parent = nullptr);
 
     void addLayerControl(MapLayerControl* mlc);
-    void makeLayerControl(QString name, bool initialState, int z);
+    void makeLayerControl(QString name, bool initialState, int z, QString title = QString());
     bool eventFilter(QObject *object, QEvent *event);
 
     void setPopo(QPoint p) {_pos = p;}

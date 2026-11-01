@@ -5,6 +5,10 @@
 #include "pprz_dispatcher.h"
 #include "configurable.h"
 
+/**
+ * Primary flight display of the selected aircraft: an attitude indicator (horizon moving with
+ * pitch and roll, pitch ladder, roll scale) and a heading tape, with the values as text.
+ */
 class Pfd : public QWidget, public Configurable
 {
     Q_OBJECT
@@ -14,70 +18,33 @@ public:
         float roll;
         float pitch;
         float yaw;
+        float agl = 0;      // height above ground
+        float alt = 0;      // altitude MSL
+        float climb = 0;
+        float speed = 0;    // ground speed
+        float airspeed = 0;
     };
 
     explicit Pfd(QWidget *parent = nullptr);
 
-    QSize sizeHint() const;
-    QSize minimumSizeHint() const;
-    void configure(QDomElement) {};
+    QSize sizeHint() const override;
+    QSize minimumSizeHint() const override;
+    void configure(QDomElement) override {};
 
 protected:
-    void paintEvent(QPaintEvent *event);
-    virtual void mousePressEvent(QMouseEvent *event);
-//    virtual void mouseMoveEvent(QMouseEvent *event);
-//    virtual void mouseReleaseEvent(QMouseEvent *event);
-    void resizeEvent(QResizeEvent *event);
-
-    void paintPitch(QRect rect, QPointF center, QColor ac_color, float pitch, float roll);
-    void paintRoll(QRect rect, QPointF center, QColor ac_color, float pitch, float roll);
-    void paintYaw(QRect rect, QPointF center, QColor ac_color, float yaw);
-
-
-
-
-signals:
-
-public slots:
+    void paintEvent(QPaintEvent *event) override;
 
 private:
-    enum Axis {
-        ROLL,
-        PITCH,
-        YAW
-    };
-
     void changeCurrentAC(QString id);
     void updateEulers(pprzlink::Message msg);
-    void setRotation(double rot);
 
-    QRect placeRect(int i);
-    QPointF placeCenter(int i);
+    void paintAttitude(QPainter& p, QRectF r, float roll, float pitch, QColor ac_color, bool valid);
+    void paintHeading(QPainter& p, QRectF r, float heading, bool valid);
+    void paintAltitude(QPainter& p, QRectF r, const Eulers& e, bool valid);
+    void paintSpeed(QPainter& p, QRectF r, const Eulers& e, bool valid);
 
-    QPixmap* getIcon(Axis axis);
-
-
-    Axis places[3];
     std::map<QString, struct Eulers> eulers;
-    double rotation;
-
     QString current_ac;
-
-    QPixmap pix_roll_fixedwing;
-    QPixmap pix_pitch_fixedwing;
-    QPixmap pix_yaw_fixedwing;
-    QPixmap pix_no_ac;
-
-    QPixmap pix_roll_rotorcraft;
-    QPixmap pix_pitch_rotorcraft;
-    QPixmap pix_yaw_rotorcraft;
-
-    QPixmap pix_roll_rover;
-    QPixmap pix_pitch_rover;
-    QPixmap pix_yaw_rover;
-
-    int border_stroke;
-
 };
 
 #endif // PFD_H

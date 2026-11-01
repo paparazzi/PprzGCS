@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QSlider>
 #include "imagebutton.h"
+#include "switch.h"
 
 class MapLayerControl : public QWidget
 {
@@ -50,7 +51,7 @@ private:
     QLabel* nameLabel;
     QLabel* imageLabel;
     QSlider* opacitySlider;
-    ImageButton *show_button;
+    Switch* show_switch;
 
     QString _name;
     bool showState;

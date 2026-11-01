@@ -13,6 +13,10 @@ LayerCombo::LayerCombo(QWidget *parent) : QWidget(parent), moved_layer_control(n
     scroll->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
 
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll->setFrameShape(QFrame::NoFrame);
+    main_layout->setContentsMargins(0, 0, 0, 0);
+    content_layout->setContentsMargins(0, 0, 0, 0);
+    content_layout->setSpacing(0);
 
     moved_thumbnail = new QLabel();
     moved_thumbnail->setWindowFlag(Qt::SubWindow);
@@ -27,7 +31,7 @@ bool LayerCombo::eventFilter(QObject *object, QEvent *event)
 {
 
     if (object == scroll_content && event->type() == QEvent::Resize) {
-        resize(scroll_content->sizeHint().width() + 40 , size().height());
+        resize(scroll_content->sizeHint().width() + scroll->verticalScrollBar()->sizeHint().width(), size().height());
     }
     return false;
 }
@@ -143,7 +147,7 @@ void LayerCombo::mouseReleaseEvent(QMouseEvent* e) {
 
 
 
-void LayerCombo::makeLayerControl(QString name, bool initialState, int z) {
+void LayerCombo::makeLayerControl(QString name, bool initialState, int z, QString title) {
     QString path = user_or_app_path("pictures/map_thumbnails/" + name + ".png");
     auto settings = getAppSettings();
     QPixmap thumbnail = QPixmap(path);
@@ -152,7 +156,8 @@ void LayerCombo::makeLayerControl(QString name, bool initialState, int z) {
         thumbnail = QPixmap(path);
     }
 
-    MapLayerControl* layer_control = new MapLayerControl(name, thumbnail, initialState, z);
+    MapLayerControl* layer_control = new MapLayerControl(title.isEmpty() ? name : title, thumbnail, initialState, z);
+    layer_control->setToolTip(name);
 
     connect(
         layer_control, &MapLayerControl::showLayer, this,
