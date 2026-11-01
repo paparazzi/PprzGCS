@@ -21,7 +21,9 @@ class QTimer;
  *    (and reconnects) to the pipeline, e.g. ... ! jpegenc ! tcpserversink port=5601
  *    (also with multipartmux, the frames are found by their JPEG markers)
  *
- * Layout: <widget name="video"><configure source="udp://:5600"/></widget>
+ * Layout: <widget name="video"><configure source="udp://:5600" width="320"/></widget>
+ * The width (pixels) is the preferred size of the widget, the height follows the
+ * aspect ratio of the video. Change it with Ctrl + mouse wheel or the context menu.
  */
 class VideoViewer : public QWidget, public Configurable
 {
@@ -35,6 +37,8 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
+    void contextMenuEvent(QContextMenuEvent *event) override;
 
 private:
     void setSource(const QString &source);
@@ -42,6 +46,7 @@ private:
     void readTcp();
     void connectTcp();
     void showFrame(const QByteArray &jpeg);
+    void setPreferredWidth(int width);
 
     QUrl source;
     QUdpSocket *udp = nullptr;
@@ -51,6 +56,7 @@ private:
     QByteArray tcp_buffer;
     QImage image;
     QElapsedTimer last_frame;
+    int preferred_width = 320;
 };
 
 #endif // VIDEO_VIEWER_H

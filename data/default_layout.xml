@@ -10,7 +10,7 @@
                 <widget name="PFD" icon="rail_pfd.svg" title="PFD"/>
                 <widget name="link_status" icon="rail_link.svg" title="Link status"/>
                 <widget name="video" icon="rail_video.svg" title="Video">
-                    <configure source="udp://:5600"/>
+                    <configure source="udp://:5600" width="320"/>
                 </widget>
             </columnLeft>
           </configure>
