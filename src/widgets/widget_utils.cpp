@@ -20,6 +20,7 @@
 
 #include "chat.h"
 #include "checklist.h"
+#include "video_viewer.h"
 
 #include <QDebug>
 #include <QLabel>
@@ -34,7 +35,7 @@ using ac_widgets_list = std::tuple<
     Plotter, LinkStatus, GVFViewer, GridViewer,
     Checklist
 >;
-using simple_widgets_list = std::tuple<PprzMap, Pfd, Chat, GroupController>;
+using simple_widgets_list = std::tuple<PprzMap, Pfd, Chat, VideoViewer, GroupController>;
 using containers_list = std::tuple<StackContainer, ListContainer>;
 
 std::map<QString, size_t> AC_WIDGETS_MAP = {
@@ -56,6 +57,7 @@ std::map<QString, size_t> SIMPLE_WIDGETS_MAP = {
     {"map2d", tuple_element_index_v<PprzMap, simple_widgets_list>},
     {"PFD", tuple_element_index_v<Pfd, simple_widgets_list>},
     {"chat", tuple_element_index_v<Chat, simple_widgets_list>},
+    {"video", tuple_element_index_v<VideoViewer, simple_widgets_list>},
     {"group_controller", tuple_element_index_v<GroupController, simple_widgets_list>},
 };
 
