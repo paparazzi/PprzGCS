@@ -14,6 +14,28 @@ using namespace std;
 
 Q_DECLARE_METATYPE(pprzlink::Message)
 
+// A message handler that throws would stop the GCS (and the control of the aircraft): log
+// it and continue. Every message and request callback of the dispatcher goes through this.
+static pprzlink::messageCallback_t guarded(QString name, pprzlink::messageCallback_t cb) {
+    return [=](QString sender, pprzlink::Message msg) {
+        try {
+            cb(sender, msg);
+        } catch(std::exception &e) {
+            qWarning() << "Error handling" << name << "from" << sender << ":" << e.what();
+        } catch(...) {
+            qWarning() << "Error handling" << name << "from" << sender;
+        }
+    };
+}
+
+static long bindGuarded(pprzlink::IvyQtLink* link, const pprzlink::MessageDefinition& def, QObject* context, pprzlink::messageCallback_t cb) {
+    return link->BindMessage(def, context, guarded(def.getName(), cb));
+}
+
+static long requestGuarded(pprzlink::IvyQtLink* link, const pprzlink::Message& msg, pprzlink::messageCallback_t cb) {
+    return link->sendRequest(msg, guarded(msg.getDefinition().getName(), cb));
+}
+
 PprzDispatcher::PprzDispatcher(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox), started(false), silent_mode(false)
 {
 
@@ -52,7 +74,7 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
     });
 
 
-    long bid = link->BindMessage(dict->getDefinition("WAYPOINT_MOVED"), nullptr,
+    long bid = bindGuarded(link, dict->getDefinition("WAYPOINT_MOVED"), nullptr,
         [=,this](QString ac_id, pprzlink::Message msg) {
             (void)ac_id;
             QString id;
@@ -65,7 +87,7 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
     });
     _bindIds.append(bid);
 
-    bid = link->BindMessage(dict->getDefinition("AIRCRAFT_DIE"), nullptr,
+    bid = bindGuarded(link, dict->getDefinition("AIRCRAFT_DIE"), nullptr,
         [=,this](QString ac_id, pprzlink::Message msg) {
             (void)ac_id;
             QString id;
@@ -128,7 +150,7 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
             }
         });
 
-    bid = link->BindMessage(dict->getDefinition("NEW_AIRCRAFT"), nullptr,
+    bid = bindGuarded(link, dict->getDefinition("NEW_AIRCRAFT"), nullptr,
         [=,this](QString ac_id, pprzlink::Message msg) {
             (void)ac_id;
             QString id;
@@ -153,7 +175,7 @@ void PprzDispatcher::unbindAll() {
 }
 
 void PprzDispatcher::bindDeftoSignal(QString const &name, sig_ptr_t sig) {
-    long bid = link->BindMessage(dict->getDefinition(name), nullptr,
+    long bid = bindGuarded(link, dict->getDefinition(name), nullptr,
         [=,this](QString sender, pprzlink::Message msg) {
             if(sender == "ground") {
                 time_msg_server = QDateTime::currentMSecsSinceEpoch();
@@ -178,7 +200,7 @@ void PprzDispatcher::requestConfig(QString ac_id) {
     pprzlink::Message reqConfig(dict->getDefinition("CONFIG_REQ"));
     reqConfig.addField("ac_id", ac_id);
     reqConfig.setSenderId(pprzlink_id);
-    link->sendRequest(reqConfig, [=,this](QString ai, pprzlink::Message msg) {
+    requestGuarded(link, reqConfig, [=,this](QString ai, pprzlink::Message msg) {
         (void)ai;
         AircraftManager::get()->newAircraftConfig(msg);
     });
@@ -197,7 +219,7 @@ void PprzDispatcher::requestAircrafts() {
     pprzlink::Message msg(def_ar);
     msg.setSenderId(pprzlink_id);
 
-    link->sendRequest(msg, [=,this](QString sender, pprzlink::Message msg) {
+    requestGuarded(link, msg, [=,this](QString sender, pprzlink::Message msg) {
         (void)sender;
         QString ac_list;
         msg.getField("ac_list", ac_list);
@@ -213,7 +235,7 @@ void PprzDispatcher::requestAircrafts() {
 }
 
 long PprzDispatcher::bind(QString msg_name, pprzlink::messageCallback_t cb) {
-    long ret = link->BindMessage(dict->getDefinition(msg_name), nullptr, cb);
+    long ret = bindGuarded(link, dict->getDefinition(msg_name), nullptr, cb);
     _bindIds.append(ret);
     return ret;
 }
@@ -221,7 +243,7 @@ long PprzDispatcher::bind(QString msg_name, pprzlink::messageCallback_t cb) {
 long PprzDispatcher::bind(QString msg_name, QObject* context, pprzlink::messageCallback_t cb) {
     try
     {
-         long ret = link->BindMessage(dict->getDefinition(msg_name), context, cb);
+         long ret = bindGuarded(link, dict->getDefinition(msg_name), context, cb);
         _bindIds.append(ret);
         return ret;
     }

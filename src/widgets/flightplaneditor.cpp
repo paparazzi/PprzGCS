@@ -772,16 +772,14 @@ void FlightPlanEditor::onItemDoubleClicked(QTreeWidgetItem *item, int column) {
 }
 
 void FlightPlanEditor::onNavStatus() {
-    auto last = blocks[last_block];
-    if(last == nullptr) {
-        return;
+    auto last = blocks.value(last_block, nullptr);
+    if(last != nullptr) {
+        applyRecursive(last, [=,this](QTreeWidgetItem* item){
+            for(int i=0; i<item->columnCount(); ++i) {
+                item->setBackground(i, Qt::transparent);
+            }
+        });
     }
-
-    applyRecursive(last, [=,this](QTreeWidgetItem* item){
-        for(int i=0; i<item->columnCount(); ++i) {
-            item->setBackground(i, Qt::transparent);
-        }
-    });
 
     auto msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("NAV_STATUS");
     if(msg) {
@@ -791,7 +789,12 @@ void FlightPlanEditor::onNavStatus() {
         msg->getField("cur_block", cur_block);
         msg->getField("cur_stage", cur_stage);
 
-        applyRecursive(blocks[cur_block], [=,this](QTreeWidgetItem* item){
+        // a block that is not in this flight plan (e.g. another build): nothing to highlight
+        auto current = blocks.value(cur_block, nullptr);
+        if(current == nullptr) {
+            return;
+        }
+        applyRecursive(current, [=,this](QTreeWidgetItem* item){
             QColor color = Qt::darkGreen;
             auto node = nodes[item];
             auto cno = xmlGetProp(node, BAD_CAST "no");

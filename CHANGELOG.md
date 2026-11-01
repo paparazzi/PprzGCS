@@ -5,6 +5,24 @@
 + On `AIRCRAFT_REBOOT` the aircraft is reloaded (waypoints, settings, checklist), with a notice in the chat
 + Wind indicator and GVF config cleared on `AIRCRAFT_DIE`
 + Airframe: follow `<include>` for the checklist and defines (read-only)
++ Map: position, reference and SRTM moved from the row above the map to the status bar; empty toolbar removed
++ Map: smaller side buttons (48 px) with a tooltip; the lock shows on hover or when locked, and a long press locks (touchscreens)
++ Map: compact wind indicator (compass and wind speed in one pill); only the compass when there is no wind data
++ Flight plan: blocks as full-width rows (touch friendly); the current block is highlighted with its time; tap a block, then Go, to jump
++ Layout: the strips take the height of their content, the rest goes to the flight plan
++ Strip: new layout (name, mode, block and time; then labeled battery, altitude, speed and throttle); status icons only when not ok, with a text; lost links frame the strip in amber or red, a low battery shows the voltage in amber or red
++ Aircraft selection: click a strip to select its aircraft (selected strip framed); the aircraft bar above the panels only shows when the layout has no strips; the first aircraft is selected at start
++ Map: aircraft icons whose color is in a style attribute (e.g. rotorcraft) now take the aircraft color instead of always red
++ Notifications at the top of the map (see-through): messages for 6 s (3 s when busy), low battery and lost links until fixed or dismissed; alarms first, at most three rows, repeats counted (×8), "+N more in the chat"; clicking selects and centers the aircraft. Replaces the battery and link icons next to the aircraft
++ Chat: a row per message with the sender name as a tag in its aircraft color, the time on hover, warnings highlighted, own messages in blue; filter row (All, each aircraft, Server, Mine) with more than one aircraft; message, recipient/log menu and Send on one row
++ Rail panels redesigned: PFD as an attitude indicator with pitch ladder, roll scale, a speed tape (ground speed, airspeed), a height (AGL) tape with the target height and climb, and a heading tape, plus roll/pitch/heading/MSL values; compact chat, cards without extra width or padding; GPS with accuracy, satellites and a quality pill above signal bars per satellite; chat bubbles (received left, sent in blue) and a Send button; link status as a row per link; map layers as a short list with a small thumbnail, a clear title (tile_sources title attribute), an on/off switch and the opacity behind a button
++ Map rail panels (layers, GPS, chat, PFD, link) open as cards with a title bar and a close button; GPS quality as a colored bar and text; commands menu as a card with the aircraft color and section captions
++ Panels: drag a tab (Flight plan, Settings, ...) or a rail button to another tab group, below a group (split), to the bottom of the map or to the rail; the arrangement is restored at start, File > Reset panels goes back to the layout file
++ Layout: Flight plan, Settings, Checklist and Plot as tabs on the right (new <tabs> layout element); a full-height rail with line icons on the left of the map; flat tabs; strips as cards with a thin aircraft-color bar; block names with their waypoints in gray; status bar with Server and the link of the selected aircraft
++ Robustness: an error while handling an incoming message is logged instead of stopping the GCS; an unknown block number (e.g. flight plan of another build) or an unsupported firmware in the PFD no longer stop the GCS
++ Settings: groups with the same name (e.g. System from several modules) are shown as one; compact rows (name, value on the aircraft with unit, send/undo/reset, editor below); a sent value is amber until the aircraft confirms it; search and save on one row, home at the start of the path; the group in search results
++ Checklist: progress bar and count of the required items, open items in amber, aligned rows
++ Style: the default theme is for sunlight; new night theme (night_style.qss), chosen from a list in Settings > General > Style
 
 ## v1.0.13
 + Add Chat widget for `INFO_MSG`
