@@ -30,6 +30,7 @@ public:
 
 private:
     void init(QDomElement setel, uint8_t& setting_no);
+    void mergeSameNames();
 
     QString name;
     QList<SettingMenu*> setting_menus;

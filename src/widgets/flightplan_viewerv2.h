@@ -19,15 +19,14 @@ public slots:
 
 private:
     void handleNavStatus();
-    void updateNavStatus(uint8_t cur_block, uint8_t cur_stage);
+    void updateNavStatus(uint8_t cur_block, uint8_t cur_stage, uint32_t block_time);
 
     QWidget* make_blocks_tab();
     QString ac_id;
     uint8_t current_block, current_stage;
 
-    QList<QLabel*> block_labels;
-
-    QString labels_stylesheet;
+    QList<QPushButton*> block_rows;     // one per block: tap to select, then "Go"
+    QList<QLabel*> block_times;         // time in the current block
 };
 
 #endif // FLIGHTPLAN_VIEWERV2_H

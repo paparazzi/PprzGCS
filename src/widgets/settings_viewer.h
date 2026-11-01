@@ -30,13 +30,14 @@ private:
     void restore_searched_items();
     QWidget* makeSettingWidget(Setting* setting, QWidget* parent);
     void updateSettings(QString id, Setting*, float);
+    void send(Setting* setting, float value);
+    void markPending(Setting* setting, bool is_pending);
 
     QString ac_id;
     QVBoxLayout* main_layout;
     QHBoxLayout* search_layout;
-    QHBoxLayout* path_save_layout;
-    QHBoxLayout* path_layout;
     QStackedWidget* path;
+    QWidget* path_row;
     QScrollArea* scroll;
     QStackedWidget* scroll_content;
     QVBoxLayout* content_layout;
@@ -52,6 +53,7 @@ private:
     QMap<SettingMenu*, int> path_indexes;
 
     int last_widget_index;
+    int root_path_index = -1;
     int last_path_index;
 
     QMap<Setting*, QWidget*> setting_widgets;
@@ -72,6 +74,8 @@ private:
     std::map<Setting*, std::function<void(double)>> label_setters;
     std::map<Setting*, std::function<void(double)>> setters;
     std::map<Setting*, bool> initialized;
+    std::map<Setting*, QPushButton*> value_buttons;
+    std::map<Setting*, float> pending;      // sent values not yet confirmed by the aircraft
 
 };
 

@@ -38,6 +38,37 @@ void SettingMenu::init(QDomElement setel, uint8_t& setting_no) {
 
     }
 
+    mergeSameNames();
+}
+
+/**
+ * Sub-menus with the same name (e.g. "System" from several modules) are shown as one: the
+ * settings and sub-menus of the later ones go into the first. The setting numbers do not change.
+ */
+void SettingMenu::mergeSameNames() {
+    QList<SettingMenu*> merged;
+    for(auto menu: setting_menus) {
+        auto same = std::find_if(merged.begin(), merged.end(), [=](SettingMenu* m) {
+            return !menu->name.isEmpty() && m->name == menu->name;
+        });
+        if(same == merged.end()) {
+            merged.append(menu);
+            continue;
+        }
+        for(auto setting: menu->settings) {
+            setting->setParent(*same);
+            (*same)->settings.append(setting);
+        }
+        for(auto sub: menu->setting_menus) {
+            sub->setParent(*same);
+            (*same)->setting_menus.append(sub);
+        }
+        menu->settings.clear();
+        menu->setting_menus.clear();
+        menu->deleteLater();
+        (*same)->mergeSameNames();
+    }
+    setting_menus = merged;
 }
 
 
