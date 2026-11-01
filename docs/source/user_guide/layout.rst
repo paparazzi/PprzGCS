@@ -46,6 +46,28 @@ This example of layout features a map on the left, with *strips* and *commands* 
    This is how this layout renders.
    
 
+.. _layout_tabs:
+
+Tabs
+----
+
+Widgets can be grouped as tabs:
+
+.. code-block:: xml
+
+    <rows>
+        <widget name="strips" container="list"/>
+        <tabs>
+            <widget name="flightplan" title="Flight plan"/>
+            <widget name="settings" title="Settings"/>
+        </tabs>
+    </rows>
+
+The tabs, and the buttons on the left of the map, can be dragged: to another group of tabs, below a group (a new
+group), to the bottom of the map, or to the map rail. The arrangement is restored at the next start;
+*File > Reset panels* goes back to the layout file.
+
+
 Containers
 ----------
 
