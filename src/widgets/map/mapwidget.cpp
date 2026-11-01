@@ -1,5 +1,6 @@
 #include "mapwidget.h"
 #include "panels.h"
+#include <cmath>
 #include "map_notifications.h"
 #include <QGraphicsEllipseItem>
 #include <QGraphicsScene>
@@ -460,12 +461,10 @@ void MapWidget::addWidget(QWidget* widget, LockButton* button, WidgetContainer s
     if(side == WIDGETS_LEFT) {
         columnLeft->addWidget(widget);
         buttonsLeftLayout->addWidget(button);
-        button->setActiveSide(false);
         buttons = &buttonsLeft;
     } else  {
         columnRight->addWidget(widget);
         buttonsRightLayout->addWidget(button);
-        button->setActiveSide(true);
         buttons = &buttonsRight;
         columnRight->setAlignment(widget, Qt::AlignRight);
     }
@@ -598,6 +597,11 @@ void MapWidget::configure(QDomElement ele) {
         });
     }
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &MapWidget::watchAircraftStates);
+    // an aircraft that is removed: its states go
+    connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, [=,this](QString id) {
+        notifications->setState("bat:" + id, id, "", MapNotifications::INFO);
+        notifications->setState("link:" + id, id, "", MapNotifications::INFO);
+    });
     for(auto ac: AircraftManager::get()->getAircrafts()) {
         watchAircraftStates(ac->getId());
     }
@@ -1186,6 +1190,11 @@ void MapWidget::updateAircraftItem(pprzlink::Message msg) {
     double lat = getFloatingField(msg, "lat");
     double lon = getFloatingField(msg, "long");
     double heading = getFloatingField(msg, "heading");
+
+    // a broken position (NaN, out of range) would move the aircraft out of the map
+    if(!std::isfinite(lat) || !std::isfinite(lon) || !std::isfinite(heading) || fabs(lat) > 90 || fabs(lon) > 180) {
+        return;
+    }
 
     if(AircraftManager::get()->aircraftExists(ac_id)) {
         auto ai = ac_items_managers[ac_id]->getAircraftItem();
@@ -1851,13 +1860,6 @@ void MapWidget::watchAircraftStates(QString ac_id) {
         case AircraftWatcher::LinkStatus::LINK_OK:
             n->setState("link:" + ac_id, ac_id, "", MapNotifications::INFO);
             break;
-        }
-    });
-    // an aircraft that is removed: its states go
-    connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, [=](QString id) {
-        if(n && id == ac_id) {
-            n->setState("bat:" + ac_id, ac_id, "", MapNotifications::INFO);
-            n->setState("link:" + ac_id, ac_id, "", MapNotifications::INFO);
         }
     });
 }

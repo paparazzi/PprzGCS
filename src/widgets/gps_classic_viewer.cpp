@@ -3,7 +3,7 @@
 #include <QDebug>
 
 GPSClassicViewer::GPSClassicViewer(QString ac_id, QWidget *parent) : QWidget(parent),
-    ac_id(ac_id), reduced(true)
+    ac_id(ac_id)
 {
     connect(AircraftManager::get()->getAircraft(ac_id)->getStatus(),
             &AircraftStatus::engine_status, this, [=,this]() {
@@ -13,10 +13,6 @@ GPSClassicViewer::GPSClassicViewer(QString ac_id, QWidget *parent) : QWidget(par
             &AircraftStatus::svsinfo, this, [=,this]() {
         this->update();
     });
-}
-
-void GPSClassicViewer::mousePressEvent(QMouseEvent *event) {
-    (void)event;
 }
 
 /**
@@ -184,7 +180,9 @@ std::tuple<uint16_t, QList<struct GPSClassicViewer::SvInfo>> GPSClassicViewer::g
     }
 
 
-    for(int i=0; i<svids.size(); i++) {
+    // the lists should have the same length; do not read past a shorter one
+    int n = qMin(qMin(svids.size(), flags.size()), qMin(cno.size(), msg_age.size()));
+    for(int i=0; i<n; i++) {
         infos.append(SvInfo{svids[i], flags[i], cno[i], msg_age[i]});
     }
 

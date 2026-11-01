@@ -26,9 +26,6 @@ public:
     static QString level(QString text);
     QString currentLevel() {return _level;}
 
-protected:
-    bool eventFilter(QObject *obj, QEvent *ev) override;
-
 private:
     void updateLevel();
 

@@ -3,6 +3,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <math.h>
+#include <cmath>
 #include <AircraftManager.h>
 #include "dispatcher_ui.h"
 
@@ -384,6 +385,9 @@ void Pfd::updateEulers(pprzlink::Message msg) {
         msg.getField("roll", roll);
         msg.getField("pitch", pitch);
         msg.getField("heading", heading);
+        if(!std::isfinite(roll) || !std::isfinite(pitch) || !std::isfinite(heading)) {
+            return;     // keep the last good attitude
+        }
         Eulers e {roll, pitch, heading};
         msg.getField("agl", e.agl);
         msg.getField("alt", e.alt);

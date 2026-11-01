@@ -281,7 +281,6 @@ void Chat::addMessage(QString txt, QString source, QString dst, bool sent) {
     auto cb = new ChatBubble(source, dst, txt, sent, this);
     ui->scroll_widget->layout()->addWidget(cb);
     cb->setVisible(current_filter == "all" || cb->category() == current_filter);
-    ui->scroll_widget->installEventFilter(cb);
 
     // delay scroll to bottom to wait for the x=widget to be repainted.
     QTimer::singleShot(20, this, [=,this](){

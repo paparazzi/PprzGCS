@@ -4,7 +4,6 @@
 #include "gcs_utils.h"
 #include "AircraftManager.h"
 #include "dispatcher_ui.h"
-#include "chatbubble.h"
 #include <QtWidgets>
 #include <memory>
 #include <QDebug>

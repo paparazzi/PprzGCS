@@ -30,7 +30,6 @@ public:
     void setWidget(QWidget* w) {_widget = w;}
     QWidget* widget(){return _widget;}
     void setSize(QSize s);
-    void setActiveSide(bool activeLeft);
 
 protected:
     virtual void enterEvent(QEvent* e);
@@ -63,7 +62,6 @@ private:
     QIcon icon;
     QIcon icon_lock;
     QIcon icon_unlocked;
-    bool activeSide;
 
     bool _locked;
     bool active;
@@ -74,7 +72,6 @@ private:
     QColor m_color_active = QColor(0x1d5fc9);  // background of the button of an open panel
 
     QRect lock_rect;
-    QRect active_rect;
 
     QWidget* _widget;
 

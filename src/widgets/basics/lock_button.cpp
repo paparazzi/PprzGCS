@@ -18,14 +18,7 @@ void LockButton::setSize(QSize s) {
     auto lock_size = QSize(qMax(12, _size.width()/4), qMax(12, _size.height()/4));
     lock_rect = QRect(_size.width() - lock_size.width(), 0, lock_size.width(), lock_size.height());
     icon_margins = QMargins(_size.width()/5, _size.height()/5, _size.width()/5, _size.height()/5);
-    setActiveSide(activeSide);
     updateGeometry();   // the size can come from the style sheet after the layout was made
-}
-
-void LockButton::setActiveSide(bool activeLeft) {
-    activeSide = activeLeft;
-    auto pos_active_rect = activeLeft ? 2 : _size.width()-4;
-    active_rect = QRect(pos_active_rect, _size.height()/4, 2, _size.height()-2*_size.height()/4);
 }
 
 void LockButton::enterEvent(QEvent* e) {

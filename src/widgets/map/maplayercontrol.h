@@ -5,7 +5,6 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QSlider>
-#include "imagebutton.h"
 #include "switch.h"
 
 class MapLayerControl : public QWidget
@@ -34,7 +33,6 @@ public:
         return (z_value < mlc.z_value);
     }
 
-    //ImageButton* button() {return show_button;}
 
 signals:
     void showLayer(bool);

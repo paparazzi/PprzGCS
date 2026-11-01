@@ -98,9 +98,3 @@ void ChatBubble::updateLevel() {
         message->style()->polish(message);
     }
 }
-
-bool ChatBubble::eventFilter(QObject *obj, QEvent *ev) {
-    (void)obj;
-    (void)ev;
-    return false;
-}

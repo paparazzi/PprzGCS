@@ -14,7 +14,6 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event);
-    virtual void mousePressEvent(QMouseEvent *event);
 
 signals:
 
@@ -37,7 +36,6 @@ private:
 
     QSize minSize;
 
-    bool reduced;
 };
 
 #endif // GPS_CLASSIC_VIEWER_H
