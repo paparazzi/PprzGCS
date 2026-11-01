@@ -36,13 +36,16 @@ private:
     void populate_menu();
 
     QMenuBar *menu_bar;
-    QToolBar *mainToolBar;
     QStatusBar *statusBar;
 
     QMenu* aircraftsTopMenu;
     QMap<QString, QMenu*> acMenus;
     QMap<QString, QAction*> acActions;
     QLabel* serverStatusLed;
+    QLabel* linkStatusLed;      // link of the selected aircraft
+    QLabel* linkStatusLabel;
+    QMap<QString, int> link_states;
+    void updateLinkStatus();
 };
 
 

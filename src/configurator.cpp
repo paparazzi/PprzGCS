@@ -3,6 +3,8 @@
 #include <QFile>
 #include <QPushButton>
 #include <QSplitter>
+#include <QTabWidget>
+#include "panels.h"
 #include <QMainWindow>
 #include <iostream>
 #include "pprzmain.h"
@@ -50,6 +52,29 @@ QWidget* rec_layout_build(QDomElement &ele, QSplitter* parent, int* size) {
             return splitter;
         }
 
+    } else if(ele.tagName()=="tabs") {
+        // widgets as tabs: <tabs><widget name="flightplan" title="Flight plan"/>...</tabs>
+        // the panels can be dragged to other groups, the bottom of the map or the map rail
+        static int tabs_count = 0;
+        QString tabs_id = ele.attribute("id", tabs_count == 0 ? QString("tabs") : QString("tabs_%1").arg(tabs_count + 1));
+        tabs_count++;
+        auto tabs = new PanelTabs(tabs_id, parent);
+        PanelManager::get()->registerTabs(tabs);
+        for(auto child=ele.firstChildElement("widget"); !child.isNull(); child=child.nextSiblingElement("widget")) {
+            int s = 0;
+            QWidget* w = rec_layout_build(child, nullptr, &s);
+            w->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+            auto name = child.attribute("name");
+            auto title = child.attribute("title", name);
+            auto icon = child.attribute("icon", "rail_" + name.toLower() + ".svg");
+            tabs->addTab(w, title);
+            PanelManager::get()->registerPanel(child.attribute("id", name), w, title, icon, tabs);
+        }
+        if(parent != nullptr) {
+            parent->addWidget(tabs);
+        } else {
+            return tabs;
+        }
     } else if(ele.tagName()=="widget") {
         QString name = ele.attribute("name", "");
         auto container = ele.attribute("container", "stack");
@@ -63,6 +88,11 @@ QWidget* rec_layout_build(QDomElement &ele, QSplitter* parent, int* size) {
 
         QWidget* widget = makeWidget(parent, container, name, alt);
         widget->setObjectName(id);
+        if(parent != nullptr) {
+            // in a splitter, the widget takes the size the splitter gives it (some containers
+            // are fixed-size for when they float over the map)
+            widget->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        }
 
         for(auto layout_ele=ele.firstChildElement(); !layout_ele.isNull(); layout_ele=layout_ele.nextSiblingElement()) {
             if(layout_ele.tagName() == "configure") {
@@ -85,7 +115,7 @@ QWidget* rec_layout_build(QDomElement &ele, QSplitter* parent, int* size) {
             return widget;
         }
     } else {
-        qCritical(LOG_CONFIG)  << "Invalid tag: the tag should be one of [rows, columns, widget]";
+        qCritical(LOG_CONFIG)  << "Invalid tag: the tag should be one of [rows, columns, tabs, widget]";
         exit(-1);
     }
     return nullptr;
@@ -167,6 +197,10 @@ PprzMain* configure(QString filename) {
 
     auto window = pprzApp()->mainWindow();
     window->setupUi(width, height, widget);
+
+    // the panels where the user put them last time, per layout file
+    PanelManager::get()->setLayoutName(QFileInfo(filename).completeBaseName());
+    PanelManager::get()->restore();
 
 
     //configure speech

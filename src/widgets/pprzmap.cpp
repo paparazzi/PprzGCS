@@ -6,6 +6,7 @@
 #include "maputils.h"
 #include "AircraftManager.h"
 #include "pprzmain.h"
+#include "PprzApplication.h"
 #include "srtm_manager.h"
 #include "point2dpseudomercator.h"
 #include <QSet>
@@ -55,6 +56,29 @@ PprzMap::PprzMap(QWidget *parent) :
 #if GRPC_ENABLED
     connect(GRPCConnector::get(), &GRPCConnector::dl_srtm, [=,this]() {dl_strm(true);});
 #endif
+
+    // The position, reference and SRTM controls go in the status bar of the main window,
+    // instead of taking a row above the map (the first map only, if there are several).
+    ui->srtm_label->setText("Ground: no SRTM");
+    ui->srtm_label->setToolTip("Ground elevation (SRTM) under the cursor");
+    ui->pos_label->setText("");
+    ui->pos_label->setToolTip("Cursor position, or bearing and distance from the selected waypoint");
+    ui->reference_combobox->setToolTip("Reference for the cursor position");
+    ui->srtm_button->setToolTip("Download the SRTM elevation tiles for this area");
+    ui->srtm_button->setText("Get SRTM");
+    connect(pprzApp()->mainWindow(), &PprzMain::ready, this, [=,this]() {
+        static bool status_bar_used = false;
+        if(status_bar_used) {
+            return;
+        }
+        status_bar_used = true;
+        auto status_bar = static_cast<QMainWindow*>(pprzApp()->mainWindow())->statusBar();
+        ui->verticalLayout->removeItem(ui->horizontalLayout);
+        for(auto w: QList<QWidget*>{ui->pos_label, ui->reference_combobox, ui->srtm_label, ui->srtm_button}) {
+            status_bar->addWidget(w);
+        }
+        ui->verticalLayout->setContentsMargins(0, 0, 0, 0);
+    });
 
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &PprzMap::changeCurrentAC);
     connect(ui->map, &MapWidget::mouseMoved, this, &PprzMap::handleMouseMove);
@@ -135,10 +159,10 @@ void PprzMap::handleMouseMove(QPointF scenePos) {
 
     auto ele = SRTMManager::get()->get_elevation(pt.lat(), pt.lon());
     if(ele) {
-        QString txt = QString("%1").arg(ele.value(), 4, 10, QChar(' ')) + "m";
+        QString txt = "Ground: " + QString("%1").arg(ele.value(), 4, 10, QChar(' ')) + " m";
         ui->srtm_label->setText(txt);
     } else {
-        ui->srtm_label->setText("No SRTM");
+        ui->srtm_label->setText("Ground: no SRTM");
     }
 }
 

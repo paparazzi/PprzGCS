@@ -34,8 +34,10 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
 
     auto ac = pprzApp()->toolbox()->aircraftManager()->getAircraft(ac_id);
     auto watcher = ac->getStatus()->getWatcher();
-    connect(watcher, &AircraftWatcher::bat_status, this, &AircraftItem::handle_bat_alarm);
-    connect(watcher, &AircraftWatcher::link_status, this, &AircraftItem::handle_link_alarm);
+    // battery and link states are notifications at the top of the map (MapWidget), not icons here
+    (void)watcher;
+    bat_alarm->hide();
+    link_alarm->hide();
 
     setZoomFactor(1.1);
 }

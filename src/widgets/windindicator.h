@@ -31,11 +31,13 @@ public:
 
     explicit WindIndicator(QWidget *parent = nullptr);
 
-    void setSizeProperty(int s) {_size = QSize(s,s); update();}
-    int getSizeProperty() {return _size.width();}
+    // size: the height; the widget is a pill with the compass on the left and the wind speed
+    void setSizeProperty(int s) {_size = QSize(s*7/2, s); updateGeometry(); update();}
+    int getSizeProperty() {return _size.height();}
 
     void setWindData(QString ac_id, double dir, double speed) {
         wind_data[ac_id] = {dir, speed};
+        updateGeometry();   // the speed shows next to the compass
         update();
     }
     void setCompass(double c) {compass = c; update();}
@@ -58,11 +60,12 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private slots:
-    void setAC(QString ac_id) {current_ac_id = ac_id; update();}
-    void removeAC(QString ac_id) {wind_data.remove(ac_id); update();}
+    void setAC(QString ac_id) {current_ac_id = ac_id; updateGeometry(); update();}
+    void removeAC(QString ac_id) {wind_data.remove(ac_id); updateGeometry(); update();}
 
 private:
     bool onNorth(QMouseEvent* event);
+    QRect compassRect() const {return QRect(0, 0, height(), height());}
 
     QString current_ac_id;
     double compass;

@@ -6,6 +6,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/tileitem.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/map2d.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mapwidget.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/map_notifications.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/maplayercontrol.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mapscene.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/maputils.cpp

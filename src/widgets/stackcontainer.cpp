@@ -2,6 +2,7 @@
 #include "dispatcher_ui.h"
 #include "AircraftManager.h"
 #include <QLabel>
+#include "listcontainer.h"
 
 StackContainer::StackContainer(std::function<QWidget*(QString, QWidget*)> constructor,
                                [[maybe_unused]] std::function<QWidget*(QString, QWidget*)> alt_constructor,
@@ -21,6 +22,7 @@ StackContainer::StackContainer(std::function<QWidget*(QString, QWidget*)> constr
     stackLayout->setContentsMargins(0,0,0,0);
     ac_selector = new ACSelector(this);
     vLayout->addWidget(ac_selector);
+    ac_selector->hide();
     vLayout->addWidget(contentWidget);
     vLayout->setStretch(1, 1);
 
@@ -64,6 +66,14 @@ void StackContainer::handleNewAC(QString ac_id) {
     stackLayout->addWidget(sv);
     viewers_widgets[ac_id] = sv;
     sv->hide();
+    // the aircraft is selected in the strips (or the Aircraft menu): the selector above the
+    // panel only shows when there is more than one aircraft
+    updateSelectorVisibility();
+    if(DispatcherUi::get()->getSelectedAcId().isEmpty()) {
+        emit DispatcherUi::get()->ac_selected(ac_id);
+    } else if(DispatcherUi::get()->getSelectedAcId() == ac_id) {
+        sv->show();
+    }
 }
 
 void StackContainer::removeAC(QString ac_id) {
@@ -73,4 +83,14 @@ void StackContainer::removeAC(QString ac_id) {
     stackLayout->removeWidget(w);
     //viewers_widgets[ac_id]->disconnect();
     w->deleteLater();
+    updateSelectorVisibility();
+}
+
+/**
+ * The aircraft are selected in the strips: the selector above the panel only shows when there
+ * are no strips in the window and there is more than one aircraft.
+ */
+void StackContainer::updateSelectorVisibility() {
+    bool has_strips = window() && !window()->findChildren<ListContainer*>().isEmpty();
+    ac_selector->setVisible(!has_strips && viewers_widgets.size() > 1);
 }

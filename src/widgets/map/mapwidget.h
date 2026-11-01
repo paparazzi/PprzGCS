@@ -28,6 +28,7 @@ class ACItemManager;
 class ItemEditStateMachine;
 class MapItem;
 class LayerCombo;
+class PanelTabs;
 class PathItem;
 
 enum InteractionState {
@@ -58,6 +59,11 @@ public:
     void itemsForbidHighlight(bool fh);
     void itemsEditable(bool ed);
     void updateHighlights(QString ac_id);
+
+    // panels on the rail (see PanelManager)
+    void addRailPanel(QString id, QWidget* widget, QString title, QString icon);
+    void removeRailPanel(QWidget* widget);
+    PanelTabs* bottomTabs() {return bottom_tabs;}
     MapScene* scene() {return _scene;}
     void centerLatLon(Point2DLatLon latLon) override;
     void setZoom(double z) override;
@@ -148,6 +154,18 @@ private:
     WindIndicator* wind_indicator;
 
     QList<LockButton*> buttonsLeft;
+    PanelTabs* bottom_tabs;
+    class MapNotifications* notifications;
+    void watchAircraftStates(QString ac_id);
+public:
+    /// Show a rail panel (as if its button was pressed)
+    bool openRailPanel(QWidget* widget);
+private:
+    QMap<QWidget*, QFrame*> rail_cards;   // panel -> its card over the map (title, close)
+    void fitRailCards();
+protected:
+    void resizeEvent(QResizeEvent *event) override;
+private:
     QList<LockButton*> buttonsRight;
 
     QPoint lastPos;

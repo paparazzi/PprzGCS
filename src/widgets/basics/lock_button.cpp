@@ -4,6 +4,8 @@
 #include <QDebug>
 #include <QApplication>
 
+static constexpr int LONG_PRESS_MS = 600;
+
 LockButton::LockButton(QIcon icon, QWidget *parent) : QWidget(parent),
     state(IDLE), icon(icon), icon_lock(":/pictures/lock.svg"), icon_unlocked(":/pictures/unlocked.svg"),
     _locked(false), active(false), _widget(nullptr)
@@ -13,10 +15,11 @@ LockButton::LockButton(QIcon icon, QWidget *parent) : QWidget(parent),
 
 void LockButton::setSize(QSize s) {
     _size = s;
-    auto lock_size = QSize(_size.width()/4, _size.height()/4);
+    auto lock_size = QSize(qMax(12, _size.width()/4), qMax(12, _size.height()/4));
     lock_rect = QRect(_size.width() - lock_size.width(), 0, lock_size.width(), lock_size.height());
-    icon_margins = QMargins(_size.width()/20, _size.height()/4, _size.width()/20, _size.height()/20);
+    icon_margins = QMargins(_size.width()/5, _size.height()/5, _size.width()/5, _size.height()/5);
     setActiveSide(activeSide);
+    updateGeometry();   // the size can come from the style sheet after the layout was made
 }
 
 void LockButton::setActiveSide(bool activeLeft) {
@@ -43,7 +46,7 @@ void LockButton::paintEvent(QPaintEvent* e) {
 
     switch (state) {
     case IDLE:
-        painter.setBrush(QBrush(m_color_idle));
+        painter.setBrush(QBrush(active ? m_color_active : m_color_idle));
         break;
     case HOVER:
         painter.setBrush(QBrush(m_color_hover));
@@ -55,21 +58,20 @@ void LockButton::paintEvent(QPaintEvent* e) {
 
     painter.setPen(Qt::NoPen);
 
-    painter.drawRect(rect());
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.drawRoundedRect(rect(), 8, 8);
 
     QRect icon_rect = rect().marginsRemoved(icon_margins);
     icon.paint(&painter, icon_rect);
 
+    // the lock only when locked, or on hover to lock it
     if(_locked) {
-        icon_lock.paint(&painter, lock_rect.marginsRemoved(QMargins(2, 2, 2, 2)));
-    } else {
-       icon_unlocked.paint(&painter, lock_rect.marginsRemoved(QMargins(2, 2, 2, 2)));
+        icon_lock.paint(&painter, lock_rect.marginsRemoved(QMargins(1, 1, 1, 1)));
+    } else if(state != IDLE) {
+        icon_unlocked.paint(&painter, lock_rect.marginsRemoved(QMargins(1, 1, 1, 1)));
     }
 
-    if(active) {
-        painter.setBrush(QBrush(0x50e050));
-        painter.drawRect(active_rect);
-    }
+
 }
 
 void LockButton::mousePressEvent(QMouseEvent *e) {
@@ -82,20 +84,44 @@ void LockButton::mousePressEvent(QMouseEvent *e) {
     } else {
         state = PRESSED;
     }
+    press_time.start();
+    press_pos = e->pos();
+    dragging = false;
 
     repaint();
+}
+
+void LockButton::mouseMoveEvent(QMouseEvent *e) {
+    if((e->buttons() & Qt::LeftButton) && !dragging && !lock_rect.contains(press_pos) &&
+       (e->pos() - press_pos).manhattanLength() > QApplication::startDragDistance() * 2) {
+        dragging = true;
+        press_time.invalidate();
+        state = IDLE;
+        update();
+        emit dragStarted();
+    }
 }
 
 void LockButton::mouseReleaseEvent(QMouseEvent *e) {
     if(e->button() != Qt::LeftButton) {
         return;
     }
+    if(dragging) {
+        dragging = false;
+        return;
+    }
 
     state = HOVER;
 
-    if(lock_rect.contains(e->pos())) {
+    bool long_press = press_time.isValid() && press_time.elapsed() > LONG_PRESS_MS;
+    if(lock_rect.contains(e->pos()) || long_press) {
         _locked = !_locked;
         emit locked(_locked);
+        if(long_press && _locked && !active) {
+            // lock and open it
+            active = true;
+            emit clicked(active);
+        }
 
     } else {
         active = !active;

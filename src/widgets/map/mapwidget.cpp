@@ -1,4 +1,6 @@
 #include "mapwidget.h"
+#include "panels.h"
+#include "map_notifications.h"
 #include <QGraphicsEllipseItem>
 #include <QGraphicsScene>
 #include "map_item.h"
@@ -50,7 +52,16 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
 {
     auto settings = getAppSettings();
 
-    horizontalLayout = new QHBoxLayout(this);   // main layout
+    // main layout: the rail, panels and buttons over the map, and panels along its bottom
+    auto main_layout = new QVBoxLayout(this);
+    main_layout->setContentsMargins(0, 0, 0, 0);
+    main_layout->setSpacing(0);
+    horizontalLayout = new QHBoxLayout();
+    main_layout->addLayout(horizontalLayout, 1);
+    bottom_tabs = new PanelTabs("map_bottom", this, false);
+    bottom_tabs->setMaximumHeight(340);
+    bottom_tabs->setAutoFillBackground(true);
+    main_layout->addWidget(bottom_tabs);
     buttonsLeftLayout = new QVBoxLayout();
     columnLeft = new QVBoxLayout();
     rightLayout = new QVBoxLayout();
@@ -63,7 +74,20 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     buttonsLeftLayout->setAlignment(Qt::AlignTop);
     buttonsRightLayout->setAlignment(Qt::AlignTop);
 
-    horizontalLayout->addItem(buttonsLeftLayout);
+    // the buttons on the left are a full-height rail along the edge of the map
+    auto rail = new QWidget(this);
+    rail->setObjectName("map_rail");
+    rail->setAttribute(Qt::WA_StyledBackground);
+    rail->setLayout(buttonsLeftLayout);
+    buttonsLeftLayout->setContentsMargins(4, 6, 4, 6);
+    buttonsLeftLayout->setSpacing(4);
+    if(!qApp->styleSheet().contains("map_rail")) {
+        rail->setStyleSheet("#map_rail {background: #22272e;}");
+    }
+    horizontalLayout->setContentsMargins(0, 0, 9, 0);
+    columnLeft->setContentsMargins(6, 9, 0, 9);
+    rightLayout->setContentsMargins(0, 9, 0, 9);
+    horizontalLayout->addWidget(rail);
     horizontalLayout->addItem(columnLeft);
     horizontalLayout->addStretch(1);
     horizontalLayout->addItem(rightLayout);
@@ -399,7 +423,7 @@ LayerCombo* MapWidget::makeLayerCombo() {
     for(auto &tp: tps ) {
         int z = tps.count() - tp->config()->initial_rank;
         bool visible = tp->isVisible();
-        layer_combo->makeLayerControl(tp->config()->name, visible, z);
+        layer_combo->makeLayerControl(tp->config()->name, visible, z, tp->config()->title);
     }
 
     connect(
@@ -509,19 +533,79 @@ void MapWidget::configure(QDomElement ele) {
                 throw runtime_error(s);
             }
 
-            auto icon = QIcon(user_or_app_path("pictures/" + icon_src));
-            auto button = new LockButton(icon, this);
-            button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+            // name on hover: the "title" attribute, else the widget name ("gps_classic_viewer" -> "Gps classic viewer")
+            auto title = widget_ele.attribute("title");
+            if(title.isEmpty()) {
+                title = name;
+                title.replace('_', ' ');
+                title[0] = title[0].toUpper();
+            }
 
-            addWidget(widget, button, side);
+            if(side == WIDGETS_LEFT) {
+                // the rail: panels that can be dragged to the tabs or the bottom of the map
+                widget->setObjectName(id);
+                PanelManager::get()->registerPanel(id, widget, title, icon_src, nullptr);
+                addRailPanel(id, widget, title, icon_src);
+            } else {
+                auto icon = QIcon(user_or_app_path("pictures/" + icon_src));
+                auto button = new LockButton(icon, this);
+                button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+                button->setToolTip(title + " (long press or the lock in the corner: keep it open)");
+                addWidget(widget, button, side);
+            }
             installEventFilter(widget);
 
         }
     }
 
+    PanelManager::get()->setMap(this);
+
+    // notifications at the top of the map: messages, low battery, lost links
+    notifications = new MapNotifications(this);
+    connect(notifications, &MapNotifications::openChat, this, []() {
+        PanelManager::get()->showPanel("chat");
+    });
+    connect(notifications, &MapNotifications::senderClicked, this, [=,this](QString sender) {
+        if(AircraftManager::get()->aircraftExists(sender)) {
+            emit DispatcherUi::get()->ac_selected(sender);
+            auto ac = AircraftManager::get()->getAircraft(sender);
+            if(ac->isReal()) {
+                centerLatLon(ac->getPosition());
+            }
+        }
+    });
+    PprzDispatcher::get()->bind("INFO_MSG", this, [=,this](QString sender, pprzlink::Message msg) {
+        QByteArray ar;
+        msg.getField("msg", ar);
+        notifications->message(sender, QString(ar));
+    });
+    {
+        QSettings app_settings(appConfig()->value("SETTINGS_PATH").toString(), QSettings::IniFormat);
+        QString own_id = app_settings.value("pprzlink/id").toString();
+        PprzDispatcher::get()->bind("INFO_MSG_GROUND", this, [=,this](QString sender, pprzlink::Message msg) {
+            (void)sender;
+            QString txt, source, dest;
+            msg.getField("msg", txt);
+            msg.getField("source", source);
+            msg.getField("dest", dest);
+            auto d = dest.split(':')[0];
+            bool ok;
+            int dest_id = d.toInt(&ok, 0);
+            // to us, the ground or all; not our own messages
+            if(source != own_id && (d == own_id || (ok && (dest_id == 0 || dest_id == 0xFF)))) {
+                notifications->message(source, txt);
+            }
+        });
+    }
+    connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &MapWidget::watchAircraftStates);
+    for(auto ac: AircraftManager::get()->getAircrafts()) {
+        watchAircraftStates(ac->getId());
+    }
+
     wind_indicator = new WindIndicator(this);
     wind_indicator->setObjectName("wind_indicator");
     wind_indicator->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    rightLayout->addStretch(1);  // at the bottom, also when there are no panels on the right
     rightLayout->addWidget(wind_indicator, 0, Qt::AlignRight);
 
     PprzDispatcher::get()->bind("WIND", this, [=,this](QString sender, pprzlink::Message msg){
@@ -1632,4 +1716,165 @@ void MapWidget::showCrashPrediction(bool state) {
             itemManager->getCrashItem()->setVisible(false);
         }
     }
+}
+
+void MapWidget::addRailPanel(QString id, QWidget* widget, QString title, QString icon) {
+    auto button = new LockButton(QIcon(user_or_app_path("pictures/" + icon)), this);
+    button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    button->setToolTip(title + " (long press: keep it open; drag: move it to the tabs or the bottom of the map)");
+
+    // the panel in a card over the map: a title bar with a close button
+    auto card = new QFrame(this);
+    card->setObjectName("rail_card");
+    card->setAttribute(Qt::WA_StyledBackground);
+    auto card_layout = new QVBoxLayout(card);
+    card_layout->setContentsMargins(0, 0, 0, 0);
+    card_layout->setSpacing(0);
+    auto header = new QWidget(card);
+    header->setObjectName("rail_card_header");
+    auto header_layout = new QHBoxLayout(header);
+    header_layout->setContentsMargins(10, 2, 2, 2);
+    auto title_label = new QLabel(title, header);
+    title_label->setObjectName("rail_card_title");
+    auto close_button = new QToolButton(header);
+    close_button->setObjectName("rail_card_close");
+    close_button->setText(QString::fromUtf8("\xE2\x9C\x95"));
+    close_button->setToolTip("Close");
+    header_layout->addWidget(title_label, 1);
+    header_layout->addWidget(close_button);
+    card_layout->addWidget(header);
+    auto body = new QWidget(card);
+    body->setObjectName("rail_card_body");
+    auto body_layout = new QVBoxLayout(body);
+    body_layout->setContentsMargins(6, 4, 6, 6);
+    body_layout->addWidget(widget);
+    card_layout->addWidget(body);
+    widget->show();
+    // only panels made for a column (e.g. from the tabs) need a usable width over the map
+    if(widget->sizeHint().width() < 200) {
+        card->setMinimumWidth(320);
+    }
+    if(!qApp->styleSheet().contains("rail_card")) {
+        card->setStyleSheet("#rail_card {background: white; border: 1px solid #c4ccd5; border-radius: 8px;}"
+                            "#rail_card_title {font-weight: bold;}"
+                            "#rail_card_close {border: 0; background: transparent;}");
+    }
+    rail_cards[widget] = card;
+
+    card->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
+    addWidget(card, button, WIDGETS_LEFT);
+    columnLeft->setAlignment(card, Qt::AlignTop | Qt::AlignLeft);   // as tall as its content
+    connect(close_button, &QToolButton::clicked, this, [=]() {
+        card->hide();
+        button->setActive(false);
+    });
+    connect(button, &LockButton::dragStarted, this, [=,this]() {
+        PanelManager::get()->startDrag(id, button, button->grab());
+    });
+    fitRailCards();
+}
+
+void MapWidget::removeRailPanel(QWidget* widget) {
+    auto card = rail_cards.take(widget);
+    if(card == nullptr) {
+        return;
+    }
+    for(auto button: QList<LockButton*>(buttonsLeft)) {
+        if(button->widget() == card) {
+            buttonsLeft.removeAll(button);
+            buttonsLeftLayout->removeWidget(button);
+            button->hide();
+            button->deleteLater();
+        }
+    }
+    columnLeft->removeWidget(card);
+    widget->hide();
+    widget->setParent(nullptr);     // taken out of the card (the caller puts it elsewhere)
+    card->hide();
+    card->deleteLater();
+}
+
+/// The cards are not taller than the map.
+void MapWidget::fitRailCards() {
+    for(auto card: rail_cards) {
+        card->setMaximumHeight(qMax(200, height() - 30));
+    }
+}
+
+void MapWidget::resizeEvent(QResizeEvent *event) {
+    Map2D::resizeEvent(event);
+    fitRailCards();
+}
+
+/// Low battery and lost links of an aircraft as notifications at the top of the map.
+void MapWidget::watchAircraftStates(QString ac_id) {
+    if(!AircraftManager::get()->aircraftExists(ac_id)) {
+        return;
+    }
+    auto ac = AircraftManager::get()->getAircraft(ac_id);
+    auto watcher = ac->getStatus()->getWatcher();
+    QPointer<MapNotifications> n = notifications;
+    connect(watcher, &AircraftWatcher::bat_status, this, [=](AircraftWatcher::BatStatus bs) {
+        if(!n || !AircraftManager::get()->aircraftExists(ac_id)) {
+            return;
+        }
+        auto msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("ENGINE_STATUS");
+        float bat = 0;
+        if(msg) {
+            msg->getField("bat", bat);
+        }
+        QString v = QString("%1 V").arg(bat, 0, 'f', 1);
+        switch(bs) {
+        case AircraftWatcher::BatStatus::CATASTROPHIC:
+        case AircraftWatcher::BatStatus::CRITIC:
+            n->setState("bat:" + ac_id, ac_id, "Battery critical: " + v, MapNotifications::ALARM);
+            break;
+        case AircraftWatcher::BatStatus::LOW:
+            n->setState("bat:" + ac_id, ac_id, "Battery low: " + v, MapNotifications::WARNING);
+            break;
+        case AircraftWatcher::BatStatus::OK:
+            n->setState("bat:" + ac_id, ac_id, "", MapNotifications::INFO);
+            break;
+        }
+    });
+    connect(watcher, &AircraftWatcher::link_status, this, [=](AircraftWatcher::LinkStatus ls) {
+        if(!n) {
+            return;
+        }
+        switch(ls) {
+        case AircraftWatcher::LinkStatus::LINK_LOST:
+            n->setState("link:" + ac_id, ac_id, "Link lost", MapNotifications::ALARM);
+            break;
+        case AircraftWatcher::LinkStatus::LINK_PARTIALY_LOST:
+            n->setState("link:" + ac_id, ac_id, "Link partly lost", MapNotifications::WARNING);
+            break;
+        case AircraftWatcher::LinkStatus::LINK_OK:
+            n->setState("link:" + ac_id, ac_id, "", MapNotifications::INFO);
+            break;
+        }
+    });
+    // an aircraft that is removed: its states go
+    connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, [=](QString id) {
+        if(n && id == ac_id) {
+            n->setState("bat:" + ac_id, ac_id, "", MapNotifications::INFO);
+            n->setState("link:" + ac_id, ac_id, "", MapNotifications::INFO);
+        }
+    });
+}
+
+bool MapWidget::openRailPanel(QWidget* widget) {
+    auto card = rail_cards.value(widget, nullptr);
+    if(card == nullptr) {
+        return false;
+    }
+    for(auto button: buttonsLeft) {
+        if(button->widget() == card) {
+            if(!button->isActive()) {
+                button->setActive(true);
+                emit button->clicked(true);
+            }
+            return true;
+        }
+    }
+    return false;
 }

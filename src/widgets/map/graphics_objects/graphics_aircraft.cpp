@@ -4,6 +4,7 @@
 #include <QtXml>
 #include <QFile>
 #include <QtSvg/QSvgRenderer>
+#include <QRegularExpression>
 
 void SetAttrRecur(QDomElement &elem, QString ac_color);
 
@@ -62,6 +63,13 @@ void SetAttrRecur(QDomElement &elem, QString ac_color)
 {
     if(elem.attribute("pprz") == "ac_color") {
         elem.setAttribute("fill", ac_color);
+        // a fill in the style attribute wins over the fill attribute: change it there too
+        // (e.g. the rotorcraft icon, which showed red for every aircraft)
+        if(elem.hasAttribute("style")) {
+            auto style = elem.attribute("style");
+            style.replace(QRegularExpression("(^|;)\\s*fill\\s*:[^;]*"), "\\1fill:" + ac_color);
+            elem.setAttribute("style", style);
+        }
     }
     // loop all children
     for (int i = 0; i < elem.childNodes().count(); i++)

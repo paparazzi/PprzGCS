@@ -19,6 +19,7 @@ signals:
 private:
     void handleNewAC(QString ac_id);
     void removeAC(QString ac_id);
+    void fitInSplitter();
 
     std::function<QWidget*(QString, QWidget*)> constructor;
     std::function<QWidget*(QString, QWidget*)> alt_constructor;
@@ -28,6 +29,7 @@ private:
 
     QMap<QWidget*, QString> buttons;
     QGridLayout* grid_layout;
+    int fitted_height = -1;     // content height when last fitted in the splitter
 
     QDomElement conf;
 
