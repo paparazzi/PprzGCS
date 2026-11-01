@@ -20,6 +20,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/mission_model.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/panels.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pfd.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/video_viewer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/plotter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pprzmap.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pprzmap.ui
