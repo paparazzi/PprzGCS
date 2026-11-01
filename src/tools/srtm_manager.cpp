@@ -150,10 +150,13 @@ int SRTMManager::load_tile(QString name, bool dl) {
         if(zip_file != nullptr) {
             char* binaryData = new char[ZIP_LEN];
             zip_int64_t bytes_read = zip_fread(zip_file, binaryData, ZIP_LEN);
-            assert(bytes_read == ZIP_LEN);
-            tiles[name] = binaryData;
-            int err = zip_fclose(zip_file);
-            assert(err == 0);
+            zip_fclose(zip_file);
+            if(bytes_read == ZIP_LEN) {
+                tiles[name] = binaryData;
+            } else {
+                qDebug() << "could not read " << filename << " in " << path;
+                delete[] binaryData;
+            }
         } else {
             qDebug() << "could not open " << filename << " in " << path;
         }

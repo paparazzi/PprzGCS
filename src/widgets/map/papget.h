@@ -11,6 +11,7 @@ class MapWidget;
 class Papget : public QObject, public QGraphicsItem
 {
     Q_OBJECT
+    Q_INTERFACES(QGraphicsItem)
 public:
 
     struct DataDef {

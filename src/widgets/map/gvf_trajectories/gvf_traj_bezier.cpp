@@ -126,25 +126,27 @@ void GVF_traj_bezier::set_param(QList<float> param, QList<float> _phi, float wb)
 
   // Read:
   if ((file_x = fopen(x_val, "r")) != NULL) {
-    fscanf(file_x, "%f ", &N_SEG);
-    n_seg = -(int)N_SEG;
-    for (k = 0; k < 3 * (int)n_seg + 1; k++) {
-      fscanf(file_x, "%f ", &xx[k]);
+    if (fscanf(file_x, "%f ", &N_SEG) == 1) {
+      n_seg = -(int)N_SEG;
+      for (k = 0; k < 3 * (int)n_seg + 1; k++) {
+        if (fscanf(file_x, "%f ", &xx[k]) != 1) { break; }
+      }
     }
     fclose(file_x);
   }
   if ((file_y = fopen(y_val, "r")) != NULL) {
-    fscanf(file_y, "%f ", &N_SEG);
-    n_seg = (int)N_SEG;
-    for (k = 0; k < 3 * (int)n_seg + 1; k++) {
-      fscanf(file_y, "%f ", &yy[k]);
+    if (fscanf(file_y, "%f ", &N_SEG) == 1) {
+      n_seg = (int)N_SEG;
+      for (k = 0; k < 3 * (int)n_seg + 1; k++) {
+        if (fscanf(file_y, "%f ", &yy[k]) != 1) { break; }
+      }
     }
     fclose(file_y);
   }
   if ((file_ks = fopen(ks_val, "r")) != NULL) {
-    fscanf(file_ks, "%f", &kx);
-    fscanf(file_ks, "%f", &ky);
-    fscanf(file_ks, "%f", &beta);
+    if (fscanf(file_ks, "%f %f %f", &kx, &ky, &beta) != 3) {
+      fprintf(stderr, "GVF bezier: could not read %s\n", ks_val);
+    }
     fclose(file_ks);
   }
 
