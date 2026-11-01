@@ -155,7 +155,7 @@ private:
 
     QList<LockButton*> buttonsLeft;
     PanelTabs* bottom_tabs;
-    class MapNotifications* notifications;
+    class MapNotifications* notifications = nullptr;
     void watchAircraftStates(QString ac_id);
 public:
     /// Show a rail panel (as if its button was pressed)

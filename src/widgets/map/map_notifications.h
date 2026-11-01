@@ -24,6 +24,8 @@ public:
     void setState(QString key, QString sender, QString text, Level level);
 
     void reposition();
+    /// Keep clear of this panel over the map (moves when it is shown, hidden or resized)
+    void avoid(QWidget* panel);
 
 signals:
     void openChat();

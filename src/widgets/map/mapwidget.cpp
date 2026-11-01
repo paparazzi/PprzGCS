@@ -561,6 +561,9 @@ void MapWidget::configure(QDomElement ele) {
 
     // notifications at the top of the map: messages, low battery, lost links
     notifications = new MapNotifications(this);
+    for(auto card: rail_cards) {
+        notifications->avoid(card);
+    }
     connect(notifications, &MapNotifications::openChat, this, []() {
         PanelManager::get()->showPanel("chat");
     });
@@ -1769,6 +1772,9 @@ void MapWidget::addRailPanel(QString id, QWidget* widget, QString title, QString
                             "#rail_card_close {border: 0; background: transparent;}");
     }
     rail_cards[widget] = card;
+    if(notifications) {
+        notifications->avoid(card);
+    }
 
     card->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
     addWidget(card, button, WIDGETS_LEFT);

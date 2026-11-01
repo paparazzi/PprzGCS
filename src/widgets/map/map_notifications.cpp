@@ -217,23 +217,42 @@ void MapNotifications::rebuild() {
     reposition();
 }
 
+void MapNotifications::avoid(QWidget* panel) {
+    panel->installEventFilter(this);
+    reposition();
+}
+
+/// Centered in the part of the map right of the open panels (rail cards), so they stay visible.
 void MapNotifications::reposition() {
     auto p = parentWidget();
     if(!p) {
         return;
     }
-    int w = qMin(420, p->width() - 140);
+    int left = 60;     // the rail
+    for(auto card: p->findChildren<QFrame*>("rail_card")) {
+        if(card->isVisible()) {
+            left = qMax(left, card->mapTo(p, QPoint(card->width(), 0)).x() + 10);
+        }
+    }
+    int right = p->width() - 10;
+    int w = qBound(200, right - left, 420);
+    int x = left + qMax(0, (right - left - w) / 2);
     setFixedWidth(w);
     layout->activate();
     int h = layout->hasHeightForWidth() ? layout->heightForWidth(w) : layout->sizeHint().height();
     setFixedHeight(qMax(h, layout->minimumSize().height()));
-    move((p->width() - w) / 2 + 26, 10);
+    move(x, 10);
     raise();
 }
 
 bool MapNotifications::eventFilter(QObject* obj, QEvent* event) {
     if(obj == parentWidget() && event->type() == QEvent::Resize) {
         reposition();
+        return false;
+    }
+    if(obj != parentWidget() && obj->objectName() == "rail_card" &&
+       (event->type() == QEvent::Show || event->type() == QEvent::Hide || event->type() == QEvent::Resize)) {
+        QTimer::singleShot(0, this, &MapNotifications::reposition);    // after the layout placed it
         return false;
     }
     auto row = qobject_cast<QFrame*>(obj);
