@@ -72,7 +72,7 @@ Chat::Chat(QWidget *parent) :
     }
 
     // Notice for an aircraft reboot (PprzDispatcher reloads the aircraft)
-    PprzDispatcher::get()->bind("AIRCRAFT_REBOOT", this, [=,this](QString sender, pprzlink::Message msg) {
+    PprzDispatcher::get()->bindOptional("AIRCRAFT_REBOOT", this, [=,this](QString sender, pprzlink::Message msg) {
         (void)sender;
         QString id, reason;
         msg.getField("ac_id", id);

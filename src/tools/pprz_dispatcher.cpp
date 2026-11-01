@@ -80,7 +80,8 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
 
     // A rebooted aircraft is back at its initial state (flight plan, settings): reload it as
     // for AIRCRAFT_DIE + NEW_AIRCRAFT. This also gives it a new checklist for the new log.
-    bind("AIRCRAFT_REBOOT", this,
+    // (older Paparazzi versions don't have this message)
+    bindOptional("AIRCRAFT_REBOOT", this,
         [=,this](QString sender, pprzlink::Message msg) {
             (void)sender;
             QString id;
@@ -230,6 +231,22 @@ long PprzDispatcher::bind(QString msg_name, QObject* context, pprzlink::messageC
         std::cerr << e.what() << '\n';
     }
     return -1;
+}
+
+bool PprzDispatcher::hasMessage(QString msg_name) {
+    try {
+        (void)dict->getDefinition(msg_name);
+        return true;
+    } catch(const pprzlink::no_such_message&) {
+        return false;
+    }
+}
+
+long PprzDispatcher::bindOptional(QString msg_name, QObject* context, pprzlink::messageCallback_t cb) {
+    if(!hasMessage(msg_name)) {
+        return -1;
+    }
+    return bind(msg_name, context, cb);
 }
 
 void PprzDispatcher::unBind(long bid) {
