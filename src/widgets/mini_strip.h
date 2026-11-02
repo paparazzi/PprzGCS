@@ -65,6 +65,7 @@ private:
     QHBoxLayout* status_layout;
     QHBoxLayout* compact_icons;     // the status icons on the first line, when compact
     bool compact = false;
+    bool all_icons = false;     // GCS setting: the status icons always, also when ok
 
     QPushButton* time_button;
     QLabel* flight_time_label;

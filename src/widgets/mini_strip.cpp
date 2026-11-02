@@ -12,11 +12,8 @@
 // (on the voltage), styled by the application style sheet (light and night themes). These
 // colors are used when the style sheet does not style them (an older custom style).
 static const QString STRIP_STYLE =
-    "QPushButton#strip_kill {border: 1px solid #b42318; color: #b42318; background: transparent;"
-    " border-radius: 5px; padding: 1px 8px; font-weight: bold;}"
-    "QPushButton#strip_kill:hover {background: #b42318; color: white;}"
-    "QPushButton#strip_kill[killed=\"true\"] {border-color: #1a7f37; color: #1a7f37;}"
-    "QPushButton#strip_kill[killed=\"true\"]:hover {background: #1a7f37; color: white;}"
+    "QPushButton#strip_kill {border: 0; background: transparent; padding: 0;}"
+    "QPushButton#strip_kill:hover {background: rgba(128, 128, 128, 60); border-radius: 12px;}"
     // the row of the status icons: the strip color behind it (selected: blue)
     "#mini_strip QWidget#status_row {background: transparent;}"
     "QLabel#value {font-family: \"Monospace\"; font-size: 14px;}"
@@ -101,11 +98,15 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     // kill the throttle (or resurrect it), after a confirmation: when the aircraft has the setting
     for(auto setting: settings) {
         if(setting->getName() == "autopilot.kill_throttle") {
-            kill_button = new QPushButton("Kill", this);
+            // a small round power button: red (kill), green while killed (resurrect)
+            kill_button = new QPushButton(this);
+            kill_button->setIcon(QIcon(user_or_app_path("pictures/strip_kill.svg")));
+            kill_button->setIconSize(QSize(20, 20));
+            kill_button->setFixedSize(24, 24);
             kill_button->setObjectName("strip_kill");
             kill_button->setCursor(Qt::PointingHandCursor);
             kill_button->setToolTip("Kill the throttle (asks first)");
-            row1->addWidget(kill_button);
+            // placed on the values row, after the throttle (below)
             connect(kill_button, &QPushButton::clicked, this, [=,this]() {
                 bool killed = kill_button->property("killed").toBool();
                 QString name = AircraftManager::get()->getAircraft(ac_id)->name();
@@ -150,7 +151,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
 
     /////////// second row: values ///////////
     auto row2 = new QGridLayout();
-    row2->setHorizontalSpacing(10);
+    row2->setHorizontalSpacing(4);
     row2->setVerticalSpacing(0);
 
     QLabel* bat_caption;
@@ -205,6 +206,10 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     throttle_caption->setText("Throttle");
     th_cell->setAttribute(Qt::WA_TransparentForMouseEvents);
     row2->addWidget(th_cell, 0, 3);
+    if(kill_button != nullptr) {
+        // next to the throttle: the first line keeps its room for the block name
+        row2->addWidget(kill_button, 0, 4, Qt::AlignRight | Qt::AlignVCenter);
+    }
     // the last column on the right edge, under the time
     for(auto l: {throttle_caption, throttle_label}) {
         l->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
@@ -264,6 +269,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
         l->ensurePolished();
     }
     time_button->setMinimumWidth(time_button->layout()->sizeHint().width() + 8);
+    time_button->setProperty("full_width", time_button->minimumWidth());
 
     // the selected aircraft's strip is highlighted; clicking a strip selects its aircraft
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, [=,this](QString id) {
@@ -282,6 +288,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
         l->setText(QString::fromUtf8("\xE2\x80\x94"));
     }
     updateAp("");
+    all_icons = getAppSettings().value("strips/status_icons", false).toBool();
     updateStatusRow();
 
     auto ac_status = AircraftManager::get()->getAircraft(ac_id)->getStatus();
@@ -329,13 +336,13 @@ void MiniStrip::updateStatusRow() {
     QStringList problems;
     for(auto l: {link_icon, gps_icon, rc_icon, imu_icon}) {
         bool show = l->property("problem").toBool();
-        l->setVisible(show);
+        l->setVisible(show || all_icons);
         if(show) {
             problems.append(l->toolTip());
         }
     }
     status_text->setText(problems.join(" · "));
-    status_row->setVisible(!problems.isEmpty() && !compact);
+    status_row->setVisible((!problems.isEmpty() || all_icons) && !compact);
 }
 
 void MiniStrip::handle_bat_status(AircraftWatcher::BatStatus bs) {
@@ -525,9 +532,9 @@ void MiniStrip::updateData() {
     throttle_caption->setText(kill_mode == "OFF" || kill_mode.isEmpty() ? "Throttle" : "Throttle (kill)");
     if(kill_button != nullptr) {
         bool killed = !(kill_mode == "OFF" || kill_mode.isEmpty());
-        if(kill_button->property("killed").toBool() != killed || kill_button->text().isEmpty()) {
+        if(kill_button->property("killed").toBool() != killed || !kill_button->property("killed").isValid()) {
             kill_button->setProperty("killed", killed);
-            kill_button->setText(killed ? "Resurrect" : "Kill");
+            kill_button->setIcon(QIcon(user_or_app_path(killed ? "pictures/strip_resurrect.svg" : "pictures/strip_kill.svg")));
             kill_button->setToolTip(killed ? "The throttle is killed: resurrect it (asks first)" : "Kill the throttle (asks first)");
             kill_button->style()->unpolish(kill_button);
             kill_button->style()->polish(kill_button);
@@ -673,6 +680,11 @@ void MiniStrip::setCompact(bool c) {
     compact = c;
     for(auto l: captions) {
         l->setVisible(!compact);
+    }
+    // the time without its caption: no empty space before it (room for the block name)
+    if(time_button->property("full_width").isValid()) {
+        time_button->setMinimumWidth(compact ? flight_time_label->sizeHint().width() + 6 :
+                                               time_button->property("full_width").toInt());
     }
     for(auto cell: value_cells) {
         if(!cell->property("full_height").isValid()) {
