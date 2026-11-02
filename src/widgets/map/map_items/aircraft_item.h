@@ -29,6 +29,9 @@ public:
     void setHeading(double h);
     void clearTrack();
     GraphicsText* label() {return graphics_text;}
+    /// how far its name is moved down (unscaled), so that names do not overlap
+    double labelShift() {return label_shift;}
+    void setLabelShift(double d) {label_shift = d;}
     QGraphicsItem* icon() {return graphics_aircraft;}
     bool isHovered() {return hovered;}
 
@@ -59,6 +62,7 @@ private:
 
     QList<Point2DLatLon> track_points;
     bool hovered = false;
+    double label_shift = 0;
 };
 
 #endif // AIRCRAFT_ITEM_H

@@ -1001,7 +1001,8 @@ void MapWidget::arrangeWaypointLabels() {
             auto label = wpi->label();
             if(label && label->isVisible() && !label->toPlainText().isEmpty()) {
                 QRectF r = label->boundingRect();
-                wps.append({wpi, marker->sceneBoundingRect().center(), QSizeF(r.width(), r.height()) * label->scale()});
+                // its exact position (as WaypointItem places the name), not the middle of its box
+                wps.append({wpi, wpi->scenePos(), QSizeF(r.width(), r.height()) * label->scale()});
             }
         }
     }
@@ -1095,21 +1096,28 @@ void MapWidget::arrangeAircraftLabels() {
             continue;
         }
         auto label = ai->label();
-        QRectF r = label->sceneBoundingRect();
+        // from its default place (not from where it was moved last time: no jumping around)
+        double sc = label->scale() > 0 ? label->scale() : 1;
+        double shift = 0;
+        QRectF r = label->sceneBoundingRect().translated(0, -ai->labelShift() * sc);
         // below the labels it overlaps
         for(int tries = 0; tries < 8; tries++) {
             bool moved = false;
             for(auto &p: placed) {
                 if(p.intersects(r)) {
                     double dy = p.bottom() - r.top() + 1;
-                    label->setPos(label->pos() + QPointF(0, dy));
                     r.translate(0, dy);
+                    shift += dy;
                     moved = true;
                 }
             }
             if(!moved) {
                 break;
             }
+        }
+        if(fabs(shift / sc - ai->labelShift()) > 0.01) {
+            label->setPos(label->pos() + QPointF(0, shift - ai->labelShift() * sc));
+            ai->setLabelShift(shift / sc);
         }
         placed.append(r);
     }

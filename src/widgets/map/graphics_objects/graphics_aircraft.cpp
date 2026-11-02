@@ -1,5 +1,6 @@
 #include "graphics_aircraft.h"
 #include <QPainter>
+#include <QGraphicsSceneMouseEvent>
 #include <cmath>
 #include <QPixmap>
 #include <QtXml>
@@ -22,6 +23,16 @@ GraphicsAircraft::GraphicsAircraft(PprzPalette palette, QString icon_path, int s
 void GraphicsAircraft::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
     QGraphicsItem::hoverEnterEvent(event);
     emit hoverChanged(true);
+}
+
+void GraphicsAircraft::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+    // a single press goes on to the map (panning); a double click selects
+    event->ignore();
+}
+
+void GraphicsAircraft::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
+    emit objectDoubleClicked(event->scenePos());
+    event->accept();
 }
 
 void GraphicsAircraft::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {

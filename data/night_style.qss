@@ -752,3 +752,18 @@ QScrollBar::add-page, QScrollBar::sub-page {
 QWidget#setting_actions QPushButton {
     padding: 3px 7px;
 }
+
+/* Window buttons in the menu bar (the menu bar is the title bar) */
+QMenuBar QToolButton#window_button, QMenuBar QToolButton#window_close {
+    border: 0;
+    background: transparent;
+    color: #e6e8eb;
+    font-size: 14px;
+}
+QMenuBar QToolButton#window_button:hover {
+    background: rgba(128, 128, 128, 60);
+}
+QMenuBar QToolButton#window_close:hover {
+    background: #d92d20;
+    color: white;
+}

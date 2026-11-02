@@ -6,6 +6,7 @@
 #include <QDebug>
 #include "aircraft.h"
 #include "gcs_utils.h"
+#include "dispatcher_ui.h"
 #include "graphics_icon.h"
 #include <QGraphicsDropShadowEffect>
 
@@ -46,6 +47,9 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
         alarms->setGraphicsEffect(shadow);
     }
 
+    connect(graphics_aircraft, &GraphicsObject::objectDoubleClicked, this, [=,this]() {
+        emit DispatcherUi::get()->ac_selected(acId());
+    });
     connect(graphics_aircraft, &GraphicsObject::hoverChanged, this, [=,this](bool h) {
         hovered = h;
         emit hoverChanged();
@@ -73,7 +77,7 @@ void AircraftItem::updateGraphics(MapWidget* map, uint32_t update_event) {
         double r = map->getRotation();
         auto rot = QTransform().rotate(-r);
         graphics_text->setScale(s);
-        graphics_text->setPos(scene_pos + rot.map(QPointF(18*s, 14*s)));
+        graphics_text->setPos(scene_pos + rot.map(QPointF(18*s, (14 + label_shift)*s)));
         graphics_text->setRotation(-r);
 
         if(alarms) {

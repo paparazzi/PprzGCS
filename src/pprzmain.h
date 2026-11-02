@@ -28,7 +28,16 @@ signals:
     void ready();
 
 
+protected:
+    // the menu bar is also the title bar (no window frame): move, maximize and resize
+    bool eventFilter(QObject* obj, QEvent* event) override;
+    void changeEvent(QEvent* event) override;
+
 private:
+    void setupTitleBar();
+    Qt::Edges edgesAt(QPoint global_pos);
+    QToolButton* max_button = nullptr;
+    bool resize_cursor = false;
     void newAC(QString ac_id);
     void removeAC(QString ac_id);
     void delete_ac(QString ac_id);
