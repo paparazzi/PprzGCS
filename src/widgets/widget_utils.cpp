@@ -16,9 +16,16 @@
 #include "tuple_helpers.h"
 #include "gvf_viewer.h"
 #include "grid_viewer.h"
+#include "group_controller.h"
 
 #include "chat.h"
 #include "checklist.h"
+
+#include <QDebug>
+#include <QLabel>
+#include <QVBoxLayout>
+
+#include <exception>
 
 using ac_widgets_list = std::tuple<
     SettingsViewer, MiniStrip,
@@ -27,7 +34,7 @@ using ac_widgets_list = std::tuple<
     Plotter, LinkStatus, GVFViewer, GridViewer,
     Checklist
 >;
-using simple_widgets_list = std::tuple<PprzMap, Pfd, Chat>;
+using simple_widgets_list = std::tuple<PprzMap, Pfd, Chat, GroupController>;
 using containers_list = std::tuple<StackContainer, ListContainer>;
 
 std::map<QString, size_t> AC_WIDGETS_MAP = {
@@ -49,6 +56,7 @@ std::map<QString, size_t> SIMPLE_WIDGETS_MAP = {
     {"map2d", tuple_element_index_v<PprzMap, simple_widgets_list>},
     {"PFD", tuple_element_index_v<Pfd, simple_widgets_list>},
     {"chat", tuple_element_index_v<Chat, simple_widgets_list>},
+    {"group_controller", tuple_element_index_v<GroupController, simple_widgets_list>},
 };
 
 
@@ -93,13 +101,28 @@ R select_type(F f, std::size_t i) {
     return r;
 }
 
+static QWidget* makeErrorWidget(QWidget* parent, const QString& message) {
+    qCritical().noquote() << message;
+    auto widget = new QWidget(parent);
+    auto layout = new QVBoxLayout(widget);
+    auto label = new QLabel(message, widget);
+    label->setWordWrap(true);
+    layout->addWidget(label);
+    layout->addStretch();
+    return widget;
+}
 
-
-template<class ET, class... X>
-auto createInstance(const ET eventType, X&&... x) {
-    return select_type<QWidget*, simple_widgets_list>([&](auto p){
-        return new std::decay_t<decltype(*p)>(std::forward<X>(x)...);
-    }, (std::size_t)eventType);
+template<class ET>
+QWidget* createInstance(const ET eventType, QWidget* parent) {
+    try {
+        return select_type<QWidget*, simple_widgets_list>([&](auto p){
+            return new std::decay_t<decltype(*p)>(parent);
+        }, (std::size_t)eventType);
+    } catch (const std::exception& e) {
+        return makeErrorWidget(parent, QString::fromUtf8(e.what()));
+    } catch (...) {
+        return makeErrorWidget(parent, QStringLiteral("Unknown error creating widget"));
+    }
 }
 
 
@@ -141,27 +164,26 @@ QWidget* make_container(QString container, QWidget* parent, size_t wt, size_t wt
 
 
 QWidget* makeWidget(QWidget* parent, QString container, QString name, QString alt) {
-    QWidget* widget = nullptr;
+    try {
+        auto ac_widget_index = AC_WIDGETS_MAP.find(name);
+        auto alt_index = AC_WIDGETS_MAP.find(alt);
+        auto simple_widget_index = SIMPLE_WIDGETS_MAP.find(name);
 
-    auto ac_widget_index = AC_WIDGETS_MAP.find(name);
-    auto alt_index = AC_WIDGETS_MAP.find(alt);
-    auto simple_widget_index = SIMPLE_WIDGETS_MAP.find(name);
-
-    if(ac_widget_index != AC_WIDGETS_MAP.end()) {
-        if(alt_index != AC_WIDGETS_MAP.end()) {
-            widget = make_container(container, parent, ac_widget_index->second, alt_index->second);
-        } else {
-            widget = make_container(container, parent, ac_widget_index->second);
+        if(ac_widget_index != AC_WIDGETS_MAP.end()) {
+            if(alt_index != AC_WIDGETS_MAP.end()) {
+                return make_container(container, parent, ac_widget_index->second, alt_index->second);
+            }
+            return make_container(container, parent, ac_widget_index->second);
         }
 
-    }
-    else if(simple_widget_index != SIMPLE_WIDGETS_MAP.end()) {
-        widget = createInstance(simple_widget_index->second, parent);
-    }
-    else {
-        std::string s = "Widget " + name.toStdString() + " unknown";
-        throw runtime_error(s);
-    }
+        if(simple_widget_index != SIMPLE_WIDGETS_MAP.end()) {
+            return createInstance(simple_widget_index->second, parent);
+        }
 
-    return widget;
+        throw std::runtime_error("Widget " + name.toStdString() + " unknown");
+    } catch (const std::exception& e) {
+        return makeErrorWidget(parent, QString::fromUtf8(e.what()));
+    } catch (...) {
+        return makeErrorWidget(parent, QStringLiteral("Unknown error creating widget %1").arg(name));
+    }
 }
