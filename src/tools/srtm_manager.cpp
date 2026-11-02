@@ -120,7 +120,7 @@ void SRTMManager::load_tiles(QList<QString> names, bool local_only) {
 
     // open the dialog for the tiles to be downloaded
     if(tiles_dl.size() > 0 && !local_only) {
-        auto dialog = new SRTMDialog(tiles_dl);
+        auto dialog = new SRTMDialog(names, tiles_dl, QApplication::activeWindow());
 
         connect(dialog, &SRTMDialog::tilesConfirmed, this, [=,this](QList<QString> tiles_confirmed) {
             for(auto &name: tiles_confirmed) {
@@ -128,7 +128,7 @@ void SRTMManager::load_tiles(QList<QString> names, bool local_only) {
             }
         });
 
-        dialog->exec();
+        dialog->showMovable();
     }
 }
 
@@ -176,7 +176,10 @@ int SRTMManager::load_tile(QString name, bool dl) {
             QUrl url = srtm_url + name + ".SRTMGL1.hgt.zip";
             QNetworkRequest request = QNetworkRequest(url);
             request.setAttribute(QNetworkRequest::User, name);
-            manager->get(request);
+            auto reply = manager->get(request);
+            connect(reply, &QNetworkReply::downloadProgress, this, [=,this](qint64 received, qint64 total) {
+                emit downloadProgress(name, received, total);
+            });
             pending_downloads.append(name);
             return true;
         } else {
@@ -187,9 +190,11 @@ int SRTMManager::load_tile(QString name, bool dl) {
 }
 
 void SRTMManager::handleReply(QNetworkReply *reply) {
-    auto settings = getAppSettings();
-
     auto name = reply->request().attribute(QNetworkRequest::User).toString();
+    reply->deleteLater();
+    pending_downloads.removeAll(name);  // also on errors: it can be tried again
+
+    QString error;
     if(reply->error() == QNetworkReply::NetworkError::NoError) {
         auto status = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
         if(status.toInt() == 200) {
@@ -203,71 +208,147 @@ void SRTMManager::handleReply(QNetworkReply *reply) {
             if(file.open(QIODevice::WriteOnly)) {
                 file.write(reply->readAll());
                 file.close();
-                reply->deleteLater();
-                pending_downloads.removeAll(name);
                 load_tile(name, false);
+            } else {
+                error = "can't write " + path;
             }
         } else {
-            qDebug() << "Error fetching SRTM tile, http status: " << status.toString();
+            error = "http status " + status.toString();
         }
     } else {
-        qDebug() << "Error fetching SRTM tile " << reply->errorString() << "! " << QString(reply->readAll());
+        error = reply->errorString();
     }
+    if(!error.isEmpty()) {
+        qDebug() << "Error fetching SRTM tile" << name << ":" << error;
+    }
+    emit downloadFinished(name, error.isEmpty(), error);
 }
 
 
-SRTMDialog::SRTMDialog(QList<QString> tiles_names, QWidget *parent) : QDialog(parent)
+SRTMDialog::SRTMDialog(QList<QString> tiles_names, QList<QString> missing, QWidget *parent) :
+    CardDialog("Ground height (SRTM)", "flight plans and map view", parent)
 {
-    setWindowTitle("Load SRTM tiles");
+    setAttribute(Qt::WA_DeleteOnClose);
+    addText(QString("%1 %2 the flight plans and the map view, %3 missing:")
+            .arg(tiles_names.size()).arg(tiles_names.size() == 1 ? "tile covers" : "tiles cover").arg(missing.size()));
 
-    auto lay = new QVBoxLayout(this);
+    auto grid = new QGridLayout();
+    grid->setHorizontalSpacing(8);
+    grid->setVerticalSpacing(4);
+    grid->setColumnStretch(1, 1);
+    body()->addLayout(grid);
 
-    auto select_all = new QCheckBox("Select all", this);
-    lay->addWidget(select_all);
-    select_all->setChecked(true);
-
-    QFrame* line = new QFrame();
-    line->setFrameShape(QFrame::HLine);
-    line->setFrameShadow(QFrame::Sunken);
-    lay->addWidget(line);
-
-    QList<QCheckBox*> chk_tiles;
-    for(auto &name: tiles_names) {
-        auto ck = new QCheckBox(name, this);
-        ck->setChecked(true);
-        lay->addWidget(ck);
-        chk_tiles.append(ck);
+    QMap<QString, QCheckBox*> checks;
+    QMap<QString, QLabel*> states;
+    QMap<QString, QProgressBar*> bars;
+    // missing tiles first
+    QList<QString> ordered = missing;
+    for(auto &n: tiles_names) {
+        if(!ordered.contains(n)) {
+            ordered.append(n);
+        }
+    }
+    int r = 0;
+    for(auto &name: ordered) {
+        auto state = new QLabel(this);
+        state->setObjectName("card_muted");
+        auto name_label = new QLabel(name, this);
+        name_label->setStyleSheet("font-family: Monospace;");
+        if(missing.contains(name)) {
+            auto ck = new QCheckBox(this);
+            ck->setChecked(true);
+            checks[name] = ck;
+            grid->addWidget(ck, r, 0);
+            state->setText(SRTMManager::get()->isDownloading(name) ? "downloading" : "missing");
+        } else {
+            auto ok = new QLabel(QString::fromUtf8("✓"), this);
+            ok->setStyleSheet("color: #1a7f37; font-weight: bold;");
+            grid->addWidget(ok, r, 0, Qt::AlignCenter);
+            name_label->setObjectName("card_muted");
+            state->setText("on this computer");
+        }
+        grid->addWidget(name_label, r, 1);
+        grid->addWidget(state, r, 2, Qt::AlignRight);
+        states[name] = state;
+        r++;
+        if(missing.contains(name)) {
+            auto bar = new QProgressBar(this);
+            bar->setTextVisible(false);
+            bar->setFixedHeight(6);
+            bar->setRange(0, 0);
+            bar->setVisible(false);
+            grid->addWidget(bar, r, 1, 1, 2);
+            bars[name] = bar;
+            r++;
+        }
     }
 
-    connect(select_all, &QCheckBox::toggled, this, [=,this](bool checked) {
-        for(auto &ck: chk_tiles) {
-            ck->setChecked(checked);
-        }
-    });
+    auto close = addButton("Close");
+    auto download = addButton("", PRIMARY, 2);
 
-
-    auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-    lay->addWidget(buttonBox);
-
-    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [=,this]() {
-        QList<QString> tiles_ok;
-        for(auto ck: chk_tiles) {
-            if(ck->isChecked()) {
-                tiles_ok.append(ck->text());
+    auto checked = [=]() {
+        QList<QString> l;
+        for(auto it = checks.begin(); it != checks.end(); ++it) {
+            if(it.value()->isEnabled() && it.value()->isChecked()) {
+                l.append(it.key());
             }
         }
-        emit tilesConfirmed(tiles_ok);
-        accept();
+        return l;
+    };
+    auto update_button = [=]() {
+        auto n = checked().size();
+        download->setText(n == 1 ? QString("Download 1 tile") : QString("Download %1 tiles").arg(n));
+        download->setEnabled(n > 0);
+    };
+    for(auto ck: checks) {
+        connect(ck, &QCheckBox::toggled, this, update_button);
+    }
+    update_button();
+
+    connect(close, &QPushButton::clicked, this, &QDialog::reject);
+    connect(download, &QPushButton::clicked, this, [=,this]() {
+        auto names = checked();
+        for(auto &name: names) {
+            checks[name]->setEnabled(false);
+            states[name]->setText("starting");
+            states[name]->setStyleSheet("");
+            bars[name]->setRange(0, 0);
+            bars[name]->setVisible(true);
+        }
+        emit tilesConfirmed(names);
+        update_button();
     });
 
-    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=,this](){
-        reject();
+    connect(SRTMManager::get(), &SRTMManager::downloadProgress, this, [=](QString name, qint64 received, qint64 total) {
+        if(!bars.contains(name)) {
+            return;
+        }
+        bars[name]->setVisible(true);
+        if(total > 0) {
+            bars[name]->setRange(0, 1000);
+            bars[name]->setValue(static_cast<int>(1000 * received / total));
+            states[name]->setText(QString("%1 / %2 MB").arg(received / 1e6, 0, 'f', 1).arg(total / 1e6, 0, 'f', 1));
+        } else {
+            states[name]->setText(QString("%1 MB").arg(received / 1e6, 0, 'f', 1));
+        }
     });
-}
-
-void SRTMDialog::keyPressEvent(QKeyEvent *e) {
-    // keep ESC to exit dialog:
-    // if closed with ESC, the mouse tracking
-    // stop working on the map...
-    (void)e;
+    connect(SRTMManager::get(), &SRTMManager::downloadFinished, this, [=](QString name, bool ok, QString error) {
+        if(!bars.contains(name)) {
+            return;
+        }
+        bars[name]->setVisible(false);
+        if(ok) {
+            states[name]->setText("downloaded");
+            states[name]->setStyleSheet("color: #1a7f37;");
+            checks[name]->setChecked(false);
+            checks[name]->setEnabled(false);
+        } else {
+            // can be tried again
+            states[name]->setText("failed");
+            states[name]->setStyleSheet("color: #b42318;");
+            states[name]->setToolTip(error);
+            checks[name]->setEnabled(true);
+        }
+        update_button();
+    });
 }

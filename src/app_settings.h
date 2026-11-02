@@ -24,6 +24,7 @@ private:
         PATH_DIR,
         PATH_FILE,
         STRING_COMBO,
+        BOOL,
     };
 
     std::function<void()> addSetting(QString name, QString key, QWidget* w, QGridLayout* gl, int &row, Type type, QVariant data = QVariant());

@@ -1,11 +1,12 @@
+#include "card_dialog.h"
 #include "checklist.h"
 #include "ui_checklist.h"
 #include "pprz_dispatcher.h"
 #include "gcs_utils.h"
 #include "AircraftManager.h"
 #include "dispatcher_ui.h"
-#include "chatbubble.h"
 #include <QtWidgets>
+#include <memory>
 #include <QDebug>
 #include <ostream>
 
@@ -31,15 +32,56 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
         }
     }
 
-    // Title row with the reset button
+    // Title row: title, progress (bar and count of the required items) and the reset button
     ui->verticalLayout->removeWidget(ui->label);
     auto header = new QHBoxLayout();
+    header->setSpacing(10);
     header->addWidget(ui->label);
-    header->addStretch();
+    auto progress = new QProgressBar(this);
+    progress->setObjectName("checklist_progress");
+    progress->setTextVisible(false);
+    progress->setFixedHeight(8);
+    header->addWidget(progress, 1);
+    auto count_label = new QLabel(this);
+    count_label->setObjectName("checklist_count");
+    header->addWidget(count_label);
     auto reset_button = new QPushButton("Reset");
     reset_button->setToolTip("Clear the checklist for the next flight");
     header->addWidget(reset_button);
     ui->verticalLayout->insertLayout(0, header);
+    ui->verticalLayout->setSpacing(8);
+
+    // Required items that are not done are shown in amber; these colors when the application
+    // style sheet does not style them
+    if(!qApp->styleSheet().contains("checklist_open")) {
+        setStyleSheet(
+            "*[checklist_open=\"true\"] {color: #8a4b00; font-weight: bold;}"
+            "QProgressBar#checklist_progress {border: 0; border-radius: 4px; background: #e3e7ec;}"
+            "QProgressBar#checklist_progress::chunk {border-radius: 4px; background: #1f7a3f;}"
+            "QLabel#checklist_count {font-family: \"Monospace\";}");
+    }
+    auto markers = std::make_shared<QMap<ChecklistItem*, QWidget*>>();  // the widget that shows an item is open
+
+    auto refresh_progress = [=,this]() {
+        int total = 0, done = 0;
+        for(auto item: ac->getChecklist()) {
+            if(item->optional || !markers->contains(item)) {
+                continue;
+            }
+            total += 1;
+            bool is_done = item->type == "checkbox" ? item->value == "true" : !item->value.isEmpty();
+            done += is_done ? 1 : 0;
+            auto w = (*markers)[item];
+            if(w->property("checklist_open").toBool() != !is_done) {
+                w->setProperty("checklist_open", !is_done);
+                w->style()->unpolish(w);
+                w->style()->polish(w);
+            }
+        }
+        progress->setMaximum(qMax(total, 1));
+        progress->setValue(done);
+        count_label->setText(QString("%1/%2").arg(done).arg(total));
+    };
 
     QString remember_prefix = "checklist/" + ac->name() + "/";
 
@@ -68,6 +110,7 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
             settings.setValue(remember_prefix + item->name, value);
         }
         update_finished();
+        refresh_progress();
     };
 
     // The value an item starts with (after loading or a reset)
@@ -84,10 +127,13 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
         auto row = new QHBoxLayout();
         auto label = new QLabel(item->description);
         label->setToolTip(item->help);
+        label->setMinimumWidth(110);
         input->setToolTip(item->help);
+        input->setMinimumHeight(30);
         row->addWidget(label);
-        row->addWidget(input);
+        row->addWidget(input, 1);
         ui->verticalLayout->addLayout(row);
+        (*markers)[item] = label;
     };
 
     // Go through the checklist items and create the widget
@@ -101,6 +147,8 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
         if(item->type == "checkbox") {
             auto widget_item = new QCheckBox(item->description);
             widget_item->setToolTip(item->help);
+            widget_item->setMinimumHeight(30);
+            (*markers)[item] = widget_item;
             if(item->value == "true") {
                 widget_item->setChecked(true);
             }
@@ -160,19 +208,22 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
         for(auto &reset: resets) {
             reset();
         }
+        refresh_progress();
         if(pfc_setting != nullptr) {
             ac->setSetting(pfc_setting, 0);
         }
     };
 
     connect(reset_button, &QPushButton::clicked, this, [=,this]() {
-        auto answer = QMessageBox::question(this, "Reset checklist",
-            "Clear the checklist of " + ac->name() + " for the next flight?");
-        if(answer == QMessageBox::Yes) {
+        if(CardDialog::ask(this, "Reset the checklist of " + ac->name() + "?",
+                           "All items go back to unchecked for the next flight. Remembered values stay filled in.",
+                           "Reset checklist", CardDialog::DANGER)) {
             reset_checklist();
         }
     });
 
+    refresh_progress();
+    ui->verticalLayout->addStretch(1);    // items at the top when there is extra height (e.g. in a tab)
     setAutoFillBackground(true);
 }
 

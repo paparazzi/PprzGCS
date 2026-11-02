@@ -1,80 +1,93 @@
 #include "papgetconfig.h"
 #include "AircraftManager.h"
 
-PapgetConfig::PapgetConfig(Papget::DataDef datadef, Papget::Params params, QWidget *parent) : QDialog(parent),
-    datadef(datadef), current_index(0), params(params)
+PapgetConfig::PapgetConfig(Papget::DataDef datadef, Papget::Params params, QWidget *parent) :
+    CardDialog("Papget", AircraftManager::get()->getAircraft(datadef.ac_id)->name(), parent),
+    datadef(datadef), params(params)
 {
-    setWindowTitle(datadef.msg_name + " " + datadef.field);
-    auto lay = new QVBoxLayout(this);
-    auto comboStyle = new QComboBox(this);
-    lay->addWidget(comboStyle);
-    auto stack = new QStackedWidget(this);
-    lay->addWidget(stack);
+    setAttribute(Qt::WA_DeleteOnClose);
+    auto ac = AircraftManager::get()->getAircraft(datadef.ac_id);
+    this->params.style = Papget::Style::TEXT;
 
+    // what it shows
+    auto what = addText(QString("%1 · %2%3").arg(datadef.msg_name, datadef.field,
+                        datadef.scale != 1 ? QString(" × %1").arg(datadef.scale) : QString()));
+    what->setStyleSheet("font-family: Monospace;");
 
-    comboStyle->addItem("Text");
-    QWidget* text_widget = new QWidget(this);
-    auto cb = config_text(text_widget);
-    callbacks.append(cb);
-    stack->addWidget(text_widget);
+    auto row = [=,this](QString name) {
+        auto lay = new QHBoxLayout();
+        lay->setSpacing(6);
+        auto l = new QLabel(name, this);
+        l->setObjectName("card_muted");
+        l->setFixedWidth(48);
+        lay->addWidget(l);
+        body()->addLayout(lay);
+        return lay;
+    };
 
-    connect(comboStyle, qOverload<int>(&QComboBox::currentIndexChanged), this, [=,this](int index) {
-        stack->setCurrentIndex(index);
-        callbacks[index]();
+    // size: S M L XL
+    auto size_lay = row("Size");
+    auto sizes = QList<QPair<QString, int>>{{"S", 10}, {"M", 14}, {"L", 20}, {"XL", 28}};
+    int closest = 0;
+    for(int i=0; i<sizes.size(); i++) {
+        if(abs(sizes[i].second - params.fontSize) < abs(sizes[closest].second - params.fontSize)) {
+            closest = i;
+        }
+    }
+    auto size_group = new QButtonGroup(this);
+    for(int i=0; i<sizes.size(); i++) {
+        auto b = new QPushButton(sizes[i].first, this);
+        b->setCheckable(true);
+        b->setChecked(i == closest);
+        b->setObjectName("papget_size");
+        b->setMinimumHeight(30);
+        size_group->addButton(b, i);
+        size_lay->addWidget(b, 1);
+    }
+    connect(size_group, &QButtonGroup::idClicked, this, [=,this](int id) {
+        this->params.fontSize = sizes[id].second;
+        emit paramsChanged(this->params);
     });
 
+    // color: the aircraft color first
+    auto color_lay = row("Color");
+    auto colors = QList<QColor>{ac->getColor(), QColor("#111418"), QColor("#ffffff"), QColor("#2060ff"),
+                                QColor("#d92d20"), QColor("#1a7f37"), QColor("#f2c46d"), QColor("#8250df")};
+    auto color_group = new QButtonGroup(this);
+    for(int i=0; i<colors.size(); i++) {
+        auto b = new QPushButton(this);
+        b->setCheckable(true);
+        b->setChecked(colors[i] == params.color);
+        b->setFixedSize(24, 24);
+        b->setToolTip(i == 0 ? "Aircraft color" : colors[i].name());
+        b->setStyleSheet(QString(
+            "QPushButton {background: %1; border: 1px solid #8c959f; border-radius: 12px;}"
+            "QPushButton:checked {border: 3px solid #1d5fc9;}").arg(colors[i].name()));
+        color_group->addButton(b, i);
+        color_lay->addWidget(b);
+    }
+    color_lay->addStretch(1);
+    connect(color_group, &QButtonGroup::idClicked, this, [=,this](int id) {
+        this->params.color = colors[id];
+        emit paramsChanged(this->params);
+    });
 
-    auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-    lay->addWidget(buttonBox);
+    if(!qApp->styleSheet().contains("papget_size")) {
+        setStyleSheet(styleSheet() +
+            "QPushButton#papget_size {border: 1px solid #c4ccd5; border-radius: 6px; background: #ffffff;}"
+            "QPushButton#papget_size:checked {background: #dde7f7; color: #123f88; font-weight: bold;}");
+    }
 
-    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, [=,this]() mutable {
-
+    auto remove = addButton("Remove", DANGER_OUTLINE, 0);
+    auto cancel = addButton("Cancel");
+    auto apply = addButton("Apply", PRIMARY);
+    connect(remove, &QPushButton::clicked, this, [=,this]() {
+        emit removeRequested();
+        accept();
+    });
+    connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
+    connect(apply, &QPushButton::clicked, this, [=,this]() {
         emit paramsChanged(this->params);
         accept();
     });
-
-    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, [=,this](){
-        reject();
-    });
-}
-
-std::function<void()> PapgetConfig::config_text(QWidget* w) {
-    auto layout = new QVBoxLayout(w);
-
-    auto size_layout = new QHBoxLayout();
-    size_layout->addWidget(new QLabel("Size", w));
-    auto size_sp = new QSpinBox(w);
-    size_sp->setValue(params.fontSize);
-    size_layout->addWidget(size_sp);
-    layout->addLayout(size_layout);
-
-    auto color_layout = new QHBoxLayout();
-    color_layout->addWidget(new QLabel("Color", w));
-    auto combo_color = new QComboBox(w);
-    color_layout->addWidget(combo_color);
-    QStringList colors = {"", "AC color", "black", "blue", "red", "green", "purple", "yellow", "white"};
-    combo_color->addItems(colors);
-    layout->addLayout(color_layout);
-
-    connect(size_sp, qOverload<int>(&QSpinBox::valueChanged), [=,this](int val) {
-        params.fontSize = val;
-        emit paramsChanged(params);
-    });
-
-    connect(combo_color, &QComboBox::currentTextChanged, this, [=,this](QString text) {
-        if(text == "AC color" || text == ""){
-            auto ac = AircraftManager::get()->getAircraft(datadef.ac_id);
-            params.color = ac->getColor();
-        } else {
-            params.color = text;
-        }
-        emit paramsChanged(params);
-    });
-
-    auto val = [=,this]() mutable {
-        params.fontSize = size_sp->value();
-        params.style = Papget::Style::TEXT;
-    };
-
-    return val;
 }

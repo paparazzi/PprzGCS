@@ -77,7 +77,7 @@ void AircraftManager::newAircraftConfig(pprzlink::Message msg) {
     msg.getField("radio", radio);
     msg.getField("settings", settings);
 
-    QColor color = parseColor(default_gui_color);
+    QColor color = aircraftColor(id, ac_name, parseColor(default_gui_color));
 
     if(aircraftExists(id)) {
         qDebug() << "Aircraft " << id << " already exits!";
@@ -280,4 +280,52 @@ void ConfigData::setAirframe(QString uri) {
 
 void ConfigData::setSettings(QString uri) {
     setData(&settings, uri);
+}
+
+QColor AircraftManager::aircraftColor(QString id, QString name, QColor configured) {
+    auto settings = getAppSettings();
+    QColor chosen(settings.value("aircraft_colors/" + name).toString());
+    if(chosen.isValid()) {
+        assigned_colors[id] = chosen;
+        configured_colors[id] = configured;
+        return chosen;
+    }
+    // the same as last time (e.g. reloaded after a reboot)
+    if(assigned_colors.contains(id) && configured_colors[id] == configured) {
+        return assigned_colors[id];
+    }
+    // two colors that look alike: a close hue (both clearly colored), or close RGB values
+    auto close = [](QColor a, QColor b) {
+        if(a.hsvSaturation() > 80 && b.hsvSaturation() > 80 && a.value() > 80 && b.value() > 80) {
+            int dh = abs(a.hsvHue() - b.hsvHue());
+            dh = std::min(dh, 360 - dh);
+            return dh < 30;
+        }
+        int dr = a.red() - b.red(), dg = a.green() - b.green(), db = a.blue() - b.blue();
+        return dr * dr + dg * dg + db * db < 100 * 100;
+    };
+    auto used = [&](QColor c) {
+        for(auto it = assigned_colors.begin(); it != assigned_colors.end(); ++it) {
+            if(it.key() != id && close(it.value(), c)) {
+                return true;
+            }
+        }
+        return false;
+    };
+    QColor color = configured;
+    if(color.isValid() && used(color)) {
+        static const QList<QColor> palette = {
+            QColor("#2060ff"), QColor("#d92d20"), QColor("#1a7f37"), QColor("#8250df"),
+            QColor("#e8590c"), QColor("#0e9fa8"), QColor("#c2185b"), QColor("#7a5c00"),
+        };
+        for(auto &p: palette) {
+            if(!used(p)) {
+                color = p;
+                break;
+            }
+        }
+    }
+    assigned_colors[id] = color;
+    configured_colors[id] = configured;
+    return color;
 }

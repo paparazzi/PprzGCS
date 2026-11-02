@@ -1,0 +1,769 @@
+/* Night theme: dim dark surfaces so the screen does not blind at night.
+   The default (default_style.qss) is the light theme for sunlight. */
+
+QWidget {
+    background-color: #1b1f25;
+    color: #e6e8eb;
+}
+QMenuBar, QMenu, QStatusBar {
+    background-color: #15181d;
+    color: #e6e8eb;
+}
+QMenuBar::item:selected, QMenu::item:selected {
+    background-color: #2d4a7a;
+}
+QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QTextEdit, QPlainTextEdit,
+QListView, QTreeView, QTableView, QAbstractScrollArea {
+    background-color: #232830;
+    color: #e6e8eb;
+    border: 1px solid #3a424d;
+}
+QComboBox QAbstractItemView {
+    background-color: #232830;
+    selection-background-color: #2d4a7a;
+}
+QPushButton, QToolButton {
+    background-color: #2a3038;
+    color: #e6e8eb;
+    border: 1px solid #444c56;
+    border-radius: 4px;
+    padding: 3px 8px;
+}
+QPushButton:hover, QToolButton:hover {
+    background-color: #333a44;
+}
+QPushButton:checked, QToolButton:checked {
+    background-color: #2d4a7a;
+}
+QSplitter::handle {
+    background: #2d333b;
+}
+QTabBar {
+    qproperty-drawBase: 0;
+}
+QTabWidget::pane {
+    border: 0;
+    border-top: 1px solid #3a424d;
+}
+QTabBar::tab {
+    background: transparent;
+    border: 0;
+    padding: 8px 12px;
+    color: #aab3bd;
+}
+QTabBar::tab:hover {
+    color: #e6e8eb;
+}
+QTabBar::tab:selected {
+    color: #e6e8eb;
+    font-weight: bold;
+    border-bottom: 2px solid #6ea8ff;
+}
+QHeaderView::section {
+    background-color: #232830;
+    color: #e6e8eb;
+    border: 0;
+    padding: 4px;
+}
+QToolTip {
+    background-color: #2a3038;
+    color: #e6e8eb;
+    border: 1px solid #6ea8ff;
+}
+
+/* the rail of panel buttons on the left of the map */
+#map_rail {
+    background: #15181d;
+}
+LockButton {
+    qproperty-color_idle: #ff15181d;
+    qproperty-color_hover: #ff343c47;
+    qproperty-color_pressed: #ff0d0f12;
+    qproperty-color_active: #ff2d4a7a;
+    qproperty-size: 48;
+}
+
+WindIndicator {
+    qproperty-arrow_color: #ff6b5b;
+    qproperty-pen_color: #e6e8eb;
+    qproperty-background_color: #602d4a7a;
+    qproperty-size: 100;
+}
+
+MiniStrip {
+    qproperty-size: 30;
+}
+
+MapWidget {
+    qproperty-color_background: #202020;
+    qproperty-ac_arrow_size: 50;
+    qproperty-show_hidden_waypoints: false;
+}
+
+/* Strips: a frame when links are lost, the battery voltage in amber or red */
+#mini_strip {
+    border: 1px solid #2d333b;
+    border-radius: 6px;
+    background: #1b1f25;
+}
+#mini_strip QLabel {
+    background: transparent;
+}
+#mini_strip QLabel#caption {
+    color: #aab3bd;
+}
+#mini_strip QLabel#status_text {
+    color: #ff8a80;
+    font-weight: bold;
+}
+#mini_strip[selected="true"] {
+    border: 2px solid #6ea8ff;
+    background: #1f2937;
+}
+#mini_strip[link="warning"] {
+    border: 3px solid #d9a03f;
+    background: #2a2214;
+}
+#mini_strip[link="lost"] {
+    border: 3px solid #ff6b5b;
+    background: #3a1a18;
+}
+#mini_strip QLabel[bat="low"] {
+    color: #f2c46d;
+    font-weight: bold;
+}
+#mini_strip QLabel[bat="critic"] {
+    color: #ff8a80;
+    font-weight: bold;
+}
+
+/* Flight plan blocks: selected (tapped) and current block */
+QPushButton#block_row {
+    border: 0;
+    border-radius: 0;
+    padding: 0 8px;
+    min-height: 40px;
+    background: transparent;
+    text-align: left;
+}
+QPushButton#block_row QLabel {
+    background: transparent;
+}
+QPushButton#block_row QLabel#block_detail {
+    color: #aab3bd;
+}
+QPushButton#block_row:checked {
+    background: #1f2b3d;
+    border-left: 4px solid #6ea8ff;
+}
+QPushButton#block_row[current="true"] {
+    background: #1d3526;
+    border-left: 4px solid #4cc274;
+}
+QPushButton#block_row[current="true"] QLabel {
+    color: #d7f5df;
+    font-weight: bold;
+}
+QPushButton#block_row[jumping="true"] {
+    background: #2a2214;
+    border-left: 4px solid #d4a72c;
+}
+QPushButton#block_row[jumping="true"] QLabel {
+    color: #f2c46d;
+    font-weight: bold;
+}
+QPushButton#block_go {
+    background: #3b74d6;
+    color: white;
+    font-weight: bold;
+    border: 0;
+    border-radius: 5px;
+    padding: 0 14px;
+    min-height: 30px;
+}
+
+/* Settings: a row per setting, the value on the aircraft (amber until a sent value is confirmed) */
+#setting_row {
+    border: 0;
+}
+#setting_row QLabel#setting_name {
+    font-weight: normal;
+}
+#setting_row QLabel#setting_unit, #setting_row QLabel#setting_group_label {
+    color: #aab3bd;
+}
+QPushButton#setting_value {
+    font-family: "Monospace";
+    background-color: #232830;
+    border: 1px solid #3a424d;
+    border-radius: 4px;
+    padding: 3px 8px;
+    min-width: 48px;
+}
+QPushButton#setting_value[pending="true"] {
+    background-color: #2a2214;
+    border: 2px solid #d9a03f;
+    color: #f2c46d;
+    font-weight: bold;
+}
+QToolButton#setting_action {
+    background: transparent;
+    border: 0;
+    border-radius: 4px;
+    min-width: 28px;
+    min-height: 28px;
+    font-size: 15px;
+}
+QToolButton#setting_action:hover {
+    background-color: #232830;
+}
+#setting_row[editing="true"] {
+    background-color: #1f2b3d;
+}
+#setting_row[pending="true"] {
+    background-color: #2a2214;
+    border-left: 3px solid #d4a72c;
+}
+QLabel#setting_aircraft {
+    color: #aab3bd;
+    font-family: "Monospace";
+    font-size: 11px;
+}
+#setting_row[pending="true"] QLabel#setting_aircraft {
+    color: #f2c46d;
+    font-weight: bold;
+}
+QLabel#setting_aircraft[state="asking"], QLabel#setting_aircraft[state="answered"],
+QLabel#setting_aircraft[state="failed"] {
+    border-radius: 8px;
+    padding: 1px 7px;
+    font-size: 12px;
+    font-weight: bold;
+}
+QLabel#setting_aircraft[state="asking"] {
+    background-color: #3a2d14;
+    color: #f2c46d;
+}
+QLabel#setting_aircraft[state="answered"] {
+    background-color: #1d3526;
+    color: #7ee2a0;
+}
+QLabel#setting_aircraft[state="failed"] {
+    background-color: #3a1d1b;
+    color: #ff8a80;
+}
+QLineEdit#setting_number {
+    font-family: "Monospace";
+    padding: 3px 6px;
+}
+QLineEdit#setting_number[out_of_range="true"] {
+    border: 2px solid #ff8a80;
+    background-color: #3a1d1b;
+    color: #ff8a80;
+}
+QLabel#setting_out_of_range {
+    color: #ff8a80;
+    font-size: 11px;
+    font-weight: bold;
+    background: transparent;
+}
+QPushButton#setting_choice {
+    background-color: #2a3038;
+    border: 1px solid #3a424d;
+    border-radius: 6px;
+    padding: 3px 9px;
+}
+QPushButton#setting_choice:checked {
+    background-color: #1f2b3d;
+    color: #c2dbff;
+    font-weight: bold;
+}
+QPushButton#setting_undo, QPushButton#setting_send {
+    border: 1px solid #3a424d;
+    border-radius: 6px;
+    padding: 3px 14px;
+    background-color: #2a3038;
+}
+QPushButton#setting_send {
+    background-color: #3b74d6;
+    border-color: #3b74d6;
+    color: white;
+    font-weight: bold;
+}
+QToolButton#setting_action::menu-indicator {
+    image: none;
+}
+QLabel#setting_group_name {
+    font-weight: bold;
+}
+QFrame#setting_groups {
+    background-color: #232830;
+    border: 1px solid #2d333b;
+    border-radius: 8px;
+}
+QPushButton#setting_group {
+    text-align: left;
+    background-color: transparent;
+    border: 0;
+    border-bottom: 1px solid #2d333b;
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+}
+QPushButton#setting_group[last="true"] {
+    border-bottom: 0;
+}
+QPushButton#setting_group:hover {
+    background-color: #2a3340;
+}
+/* inside the rows, the row's background (the right pane gives widgets a white one) */
+#right_pane #setting_row QLabel, #right_pane QWidget#setting_actions,
+#right_pane #setting_row QSlider, #setting_row QSlider, #right_pane #setting_row Switch,
+#right_pane QPushButton#setting_group QLabel, #setting_row QLabel, QWidget#setting_actions,
+QPushButton#setting_group QLabel {
+    background: transparent;
+}
+
+/* Text fields: rounded, blue border while typing */
+QLineEdit {
+    background-color: #232830;
+    border: 1px solid #3a424d;
+    border-radius: 6px;
+    padding: 5px 8px;
+}
+QLineEdit:focus {
+    border: 2px solid #6ea8ff;
+    padding: 4px 7px;
+}
+/* Settings: home and save as flat icon buttons, the path as links */
+QToolButton#setting_tool {
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+    min-width: 32px;
+    min-height: 32px;
+}
+QToolButton#setting_tool:hover {
+    background-color: #2a3038;
+}
+QPushButton#setting_path {
+    background: transparent;
+    border: 0;
+    padding: 2px 2px;
+    color: #8fbcff;
+    font-weight: bold;
+}
+QPushButton#setting_path:hover {
+    text-decoration: underline;
+}
+QLabel#setting_path_sep {
+    color: #aab3bd;
+}
+
+/* Checklist: progress of the required items, the open ones in amber */
+*[checklist_open="true"] {
+    color: #f2c46d;
+    font-weight: bold;
+}
+QProgressBar#checklist_progress {
+    border: 0;
+    border-radius: 4px;
+    background: #2d333b;
+}
+QProgressBar#checklist_progress::chunk {
+    border-radius: 4px;
+    background: #4cc274;
+}
+QLabel#checklist_count {
+    font-family: "Monospace";
+}
+#right_pane Checklist {
+    border: 0;
+}
+
+/* Panels over the map (opened from the rail): a card with a title bar */
+#rail_card {
+    background-color: #1b1f25;
+    border: 1px solid #3a424d;
+    border-radius: 8px;
+}
+#rail_card_header {
+    background-color: #232830;
+    border-bottom: 1px solid #3a424d;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+#rail_card_body, #rail_card_body > QWidget {
+    background-color: #1b1f25;
+}
+QLabel#rail_card_title {
+    font-weight: bold;
+}
+QToolButton#rail_card_close {
+    border: 0;
+    background: transparent;
+    min-width: 28px;
+    min-height: 28px;
+    border-radius: 4px;
+}
+QToolButton#rail_card_close:hover {
+    background-color: #2a3038;
+}
+/* Commands menu of a strip */
+#commands {
+    background-color: #1b1f25;
+}
+QLabel#commands_caption {
+    color: #aab3bd;
+    font-size: 11px;
+    font-weight: bold;
+    margin-top: 6px;
+}
+#commands QPushButton {
+    background-color: #2a3038;
+    border: 1px solid #3a424d;
+    border-radius: 6px;
+    padding: 4px 10px;
+    min-height: 30px;
+    min-width: 30px;
+}
+#commands QPushButton:hover {
+    background-color: #333a44;
+}
+
+/* Chat */
+#chat_bubble {
+    background-color: #232830;
+    border-radius: 10px;
+}
+#chat_bubble_sent {
+    background-color: #1f2b3d;
+    border-radius: 10px;
+}
+QLabel#chat_time {
+    color: #aab3bd;
+    font-size: 11px;
+}
+QPushButton#chat_send {
+    background-color: #3b74d6;
+    color: white;
+    font-weight: bold;
+    border: 0;
+    border-radius: 6px;
+    padding: 5px 14px;
+}
+/* Link status */
+#link_row {
+    background-color: #1b1f25;
+    border: 1px solid #2d333b;
+    border-radius: 6px;
+}
+QLabel#link_name {
+    font-weight: bold;
+}
+QLabel#link_secondary {
+    color: #aab3bd;
+    font-size: 11px;
+}
+QLabel#link_value {
+    font-family: "Monospace";
+}
+/* Map layers */
+#layer_row {
+    border-bottom: 1px solid #2d333b;
+}
+QLabel#layer_name {
+    font-weight: bold;
+}
+QToolButton#layer_opacity_button {
+    border: 0;
+    background: transparent;
+    min-width: 30px;
+    min-height: 30px;
+    border-radius: 4px;
+    font-size: 16px;
+    color: #aab3bd;
+}
+QToolButton#layer_opacity_button:checked, QToolButton#layer_opacity_button:hover {
+    background-color: #2a3038;
+}
+
+/* Notifications at the top of the map: see-through, fully opaque on hover */
+#notification_info {
+    background-color: rgba(27,31,37,190);
+    border: 1px solid rgba(58,66,77,230);
+    border-radius: 8px;
+}
+#notification_info:hover {
+    background-color: rgb(27,31,37);
+}
+#notification_warning {
+    background-color: rgba(42,34,20,215);
+    border: 1px solid #c27c0e;
+    border-left: 4px solid #c27c0e;
+    border-radius: 8px;
+}
+#notification_warning:hover {
+    background-color: rgb(42,34,20);
+}
+#notification_alarm {
+    background-color: rgba(58,26,24,220);
+    border: 1px solid #b42318;
+    border-left: 4px solid #b42318;
+    border-radius: 8px;
+}
+#notification_alarm:hover {
+    background-color: rgb(58,26,24);
+}
+#notification_info QLabel#notification_text {
+    color: #e6e8eb;
+    font-weight: 500;
+}
+#notification_warning QLabel#notification_text {
+    color: #f2c46d;
+    font-weight: bold;
+}
+#notification_alarm QLabel#notification_text {
+    color: #ff8a80;
+    font-weight: bold;
+}
+QLabel#notification_time {
+    color: #aab3bd;
+    font-family: "Monospace";
+    font-size: 11px;
+}
+QLabel#notification_count {
+    background-color: rgba(17,20,24,190);
+    color: white;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 0 6px;
+}
+QToolButton#notification_close {
+    border: 0;
+    background: transparent;
+    min-width: 24px;
+    min-height: 24px;
+}
+QPushButton#notification_more {
+    background-color: rgba(17,20,24,185);
+    color: white;
+    border: 0;
+    border-radius: 11px;
+    padding: 3px 12px;
+    font-weight: bold;
+}
+
+/* Chat: a row per message, warnings highlighted, own messages in blue */
+#chat_row[level="warning"] {
+    background-color: #2a2214;
+}
+#chat_row[level="warning"] QLabel#chat_text {
+    color: #f2c46d;
+    font-weight: bold;
+}
+#chat_row[level="alarm"] {
+    background-color: #3a1a18;
+}
+#chat_row[level="alarm"] QLabel#chat_text {
+    color: #ff8a80;
+    font-weight: bold;
+}
+#chat_row_sent {
+    background-color: #1f2b3d;
+}
+QPushButton#chat_filter {
+    border: 1px solid #3a424d;
+    border-radius: 11px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: bold;
+    background-color: transparent;
+}
+QPushButton#chat_filter:checked {
+    background-color: #3b74d6;
+    border-color: #3b74d6;
+    color: white;
+}
+QToolButton#chat_dest {
+    border: 1px solid #3a424d;
+    border-radius: 6px;
+    background-color: #2a3038;
+    padding: 4px 8px;
+}
+QToolButton#chat_dest::menu-indicator {
+    image: none;
+}
+
+/* Banner on the map while the waypoints are frozen */
+QPushButton#map_mode_banner {
+    background-color: #2a2214;
+    color: #f2c46d;
+    border: 2px solid #c27c0e;
+    border-radius: 14px;
+    padding: 5px 16px;
+    font-weight: bold;
+}
+
+/* Waypoint dialog: a card */
+/* Card dialogs (waypoint, save settings, papget, questions, SRTM) */
+#card_header {
+    background-color: #232830;
+    border-bottom: 1px solid #3a424d;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+QLabel#card_title, QLabel#card_question {
+    font-weight: bold;
+}
+QLabel#card_secondary, QLabel#card_muted {
+    color: #aab3bd;
+}
+QLabel#card_note {
+    background-color: #3a2d14;
+    color: #f2c46d;
+    border-radius: 6px;
+    padding: 6px 8px;
+}
+QPushButton#card_button, QPushButton#card_button_danger_outline {
+    background-color: #2a3038;
+    border: 1px solid #3a424d;
+    border-radius: 6px;
+    min-height: 32px;
+    padding: 0 12px;
+}
+QPushButton#card_button:hover, QPushButton#card_button_danger_outline:hover {
+    background-color: #333a44;
+}
+QPushButton#card_button_danger_outline {
+    color: #ff8a80;
+}
+QPushButton#card_button_primary, QPushButton#card_button_danger {
+    background-color: #3b74d6;
+    color: white;
+    font-weight: bold;
+    border: 0;
+    border-radius: 6px;
+    min-height: 34px;
+    padding: 0 12px;
+}
+QPushButton#card_button_danger {
+    background-color: #c4372b;
+}
+QPushButton#card_button_primary:disabled, QPushButton#card_button_danger:disabled {
+    background-color: #3a424d;
+}
+QPushButton#papget_size {
+    border: 1px solid #3a424d;
+    border-radius: 6px;
+    background-color: #2a3038;
+}
+QPushButton#papget_size:checked {
+    background-color: #1f2b3d;
+    color: #c2dbff;
+    font-weight: bold;
+}
+QLabel#waypoint_editor_moved {
+    color: #8fbcff;
+    font-weight: bold;
+}
+#waypoint_editor_line {
+    background-color: #2d333b;
+}
+QLineEdit#waypoint_editor_coord, QDoubleSpinBox#waypoint_editor_coord {
+    font-family: "Monospace";
+    border: 1px solid #3a424d;
+    border-radius: 6px;
+    padding: 5px 8px;
+}
+QPushButton#waypoint_editor_step {
+    background-color: #2a3038;
+    border: 1px solid #3a424d;
+    border-radius: 6px;
+    min-height: 32px;
+}
+QPushButton#waypoint_editor_step:hover {
+    background-color: #333a44;
+}
+QComboBox#waypoint_editor_ref {
+    border: 1px solid #3a424d;
+    border-radius: 11px;
+    padding: 1px 8px;
+    font-size: 12px;
+}
+
+/* Scroll bars: thin and rounded */
+QScrollBar:vertical {
+    background: transparent;
+    width: 10px;
+    margin: 0;
+}
+QScrollBar:horizontal {
+    background: transparent;
+    height: 10px;
+    margin: 0;
+}
+QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
+    background-color: #3a424d;
+    border-radius: 3px;
+    margin: 2px;
+}
+QScrollBar::handle:vertical {
+    min-height: 30px;
+}
+QScrollBar::handle:horizontal {
+    min-width: 30px;
+}
+QScrollBar::handle:vertical:hover, QScrollBar::handle:horizontal:hover {
+    background-color: #57606a;
+}
+QScrollBar::add-line, QScrollBar::sub-line {
+    width: 0;
+    height: 0;
+}
+QScrollBar::add-page, QScrollBar::sub-page {
+    background: none;
+}
+
+/* Settings sliders (styled whole: a style sheet on a slider replaces its native look) */
+#setting_row QSlider {
+    min-height: 22px;
+}
+#setting_row QSlider::groove:horizontal {
+    height: 4px;
+    border-radius: 2px;
+    background: #3a424d;
+}
+#setting_row QSlider::sub-page:horizontal {
+    border-radius: 2px;
+    background: #3b74d6;
+}
+#setting_row QSlider::handle:horizontal {
+    width: 14px;
+    height: 14px;
+    margin: -6px 0;
+    border-radius: 8px;
+    background: #e6e8eb;
+    border: 2px solid #3b74d6;
+}
+
+/* the buttons of an open setting row: five fit in the panel */
+QWidget#setting_actions QPushButton {
+    padding: 3px 7px;
+}
+
+/* Window buttons in the menu bar (the menu bar is the title bar) */
+QMenuBar QToolButton#window_button, QMenuBar QToolButton#window_close {
+    border: 0;
+    background: transparent;
+    color: #e6e8eb;
+    font-size: 14px;
+}
+QMenuBar QToolButton#window_button:hover {
+    background: rgba(128, 128, 128, 60);
+}
+QMenuBar QToolButton#window_close:hover {
+    background: #d92d20;
+    color: white;
+}

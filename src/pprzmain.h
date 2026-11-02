@@ -28,7 +28,16 @@ signals:
     void ready();
 
 
+protected:
+    // the menu bar is also the title bar (no window frame): move, maximize and resize
+    bool eventFilter(QObject* obj, QEvent* event) override;
+    void changeEvent(QEvent* event) override;
+
 private:
+    void setupTitleBar();
+    Qt::Edges edgesAt(QPoint global_pos);
+    QToolButton* max_button = nullptr;
+    bool resize_cursor = false;
     void newAC(QString ac_id);
     void removeAC(QString ac_id);
     void delete_ac(QString ac_id);
@@ -36,13 +45,16 @@ private:
     void populate_menu();
 
     QMenuBar *menu_bar;
-    QToolBar *mainToolBar;
     QStatusBar *statusBar;
 
     QMenu* aircraftsTopMenu;
     QMap<QString, QMenu*> acMenus;
     QMap<QString, QAction*> acActions;
     QLabel* serverStatusLed;
+    QLabel* linkStatusLed;      // link of the selected aircraft
+    QLabel* linkStatusLabel;
+    QMap<QString, int> link_states;
+    void updateLinkStatus();
 };
 
 

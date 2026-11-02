@@ -29,7 +29,8 @@ GraphicsPoint::GraphicsPoint(int size, PprzPalette palette, QObject *parent) :
 }
 
 QRectF GraphicsPoint::boundingRect() const {
-    return QRectF(-halfSize-1, -halfSize-1, 2*halfSize+2, 2*halfSize+2);
+    // with the white border and the shadow
+    return QRectF(-halfSize-4, -halfSize-4, 2*halfSize+8, 2*halfSize+9);
 }
 
 
@@ -45,8 +46,9 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     switch (style) {
     case DEFAULT: {
         QPainterPath path;
-        double fx = 0.8;
-        double fy = 1.0;
+        // a square diamond
+        double fx = 0.9;
+        double fy = 0.9;
         if(!isHighlighted()) {
             current_color = COLOR_UNFOCUSED;
             fx /= settings.value("map/size_highlight_factor").toDouble();
@@ -63,6 +65,12 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
 
         path.addPolygon(poly);
 
+        // a shadow, then the waypoint with a white border: visible on any background
+        painter->setRenderHint(QPainter::Antialiasing);
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(QColor(0, 0, 0, 90));
+        painter->drawPath(path.translated(0, 1.5));
+        painter->setPen(QPen(QColor(255, 255, 255, isHighlighted() ? 255 : 170), 2));
         painter->setBrush(QBrush(palette.getVariant(current_color)));
         painter->drawPath(path);
         }
@@ -75,8 +83,13 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         poly.append(QPointF(halfSize*cos(3*M_PI/2), -halfSize*sin(3*M_PI/2)));
 
         path.addPolygon(poly);
-        painter->setBrush(QBrush(QColor(255, 170, 0)));
+        // the navigation target: orange, with a shadow and a white border like the waypoints
+        painter->setRenderHint(QPainter::Antialiasing);
         painter->setPen(Qt::NoPen);
+        painter->setBrush(QColor(0, 0, 0, 90));
+        painter->drawPath(path.translated(0, 1.5));
+        painter->setPen(QPen(Qt::white, 1.5));
+        painter->setBrush(QBrush(QColor(255, 170, 0)));
         painter->drawPath(path);
         }
         break;

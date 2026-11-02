@@ -28,8 +28,15 @@ public:
     void setPosition(Point2DLatLon pt);
     void setHeading(double h);
     void clearTrack();
+    GraphicsText* label() {return graphics_text;}
+    /// how far its name is moved down (unscaled), so that names do not overlap
+    double labelShift() {return label_shift;}
+    void setLabelShift(double d) {label_shift = d;}
+    QGraphicsItem* icon() {return graphics_aircraft;}
+    bool isHovered() {return hovered;}
 
 signals:
+    void hoverChanged();
 
 public slots:
 
@@ -41,9 +48,10 @@ protected:
 private:
     GraphicsAircraft* graphics_aircraft;
     GraphicsText* graphics_text;
-    GraphicsGroup* alarms;
-    GraphicsIcon* bat_alarm;
-    GraphicsIcon* link_alarm;
+    // battery and link icons above the aircraft (GCS setting, off: the notifications show them)
+    GraphicsGroup* alarms = nullptr;
+    GraphicsIcon* bat_alarm = nullptr;
+    GraphicsIcon* link_alarm = nullptr;
 
     Point2DLatLon latlon;
     double heading;
@@ -53,6 +61,8 @@ private:
     QColor color_unfocused;
 
     QList<Point2DLatLon> track_points;
+    bool hovered = false;
+    double label_shift = 0;
 };
 
 #endif // AIRCRAFT_ITEM_H

@@ -24,6 +24,7 @@ public:
     bool isValid(Point2DTile pt_tile);
 
     QString name;
+    QString title;      // shown in the layers panel (default: the name)
     QString dir;
     QString addr;
     int zoomMin;

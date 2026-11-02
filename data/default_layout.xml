@@ -4,27 +4,29 @@
         <widget name="map2d" size="800">
           <configure>
             <columnLeft>
-                <widget name="layers" icon="map_layers_normal.svg"/>
-                <widget name="flightplan" icon="flight_plan.svg"/>
-                <widget name="gps_classic_viewer" icon="gps.svg"/>
-                <widget name="chat" icon="chat.svg"/>
-                <widget name="checklist" icon="checklist.svg"/>
-            </columnLeft>
-            <columnRight>
-                <widget name="PFD" icon="pfd.svg"/>
-                <widget name="settings" icon="settings.svg"/>
-                <widget name="plotter" icon="plotter.svg">
-                    <configure>
-                        <plot name="ground:ENGINE_STATUS:bat:1." min="9" max="13"/>
-                    </configure>
+                <widget name="layers" icon="rail_layers.svg" title="Map layers"/>
+                <widget name="gps_classic_viewer" icon="rail_gps.svg" title="GPS"/>
+                <widget name="chat" icon="rail_chat.svg" title="Chat"/>
+                <widget name="PFD" icon="rail_pfd.svg" title="PFD"/>
+                <widget name="link_status" icon="rail_link.svg" title="Link status"/>
+                <widget name="video" icon="rail_video.svg" title="Video">
+                    <configure source="udp://:5600" width="320"/>
                 </widget>
-                <widget name="link_status" icon="link_ok.svg"/>
-            </columnRight>
+            </columnLeft>
           </configure>
         </widget>
         <rows size="200" id="right_pane">
             <widget name="strips" container="list" alt="commands"/>
-            <widget name="flightplan"/>
+            <tabs size="30">
+                <widget name="flightplan" title="Flight plan"/>
+                <widget name="settings" title="Settings"/>
+                <widget name="checklist" title="Checklist"/>
+                <widget name="plotter" title="Plot">
+                    <configure>
+                        <plot name="ground:ENGINE_STATUS:bat:1." min="9" max="13"/>
+                    </configure>
+                </widget>
+            </tabs>
         </rows>
       </columns>
     </layout>

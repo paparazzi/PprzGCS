@@ -3,25 +3,29 @@
 #include <QDebug>
 
 GPSClassicViewer::GPSClassicViewer(QString ac_id, QWidget *parent) : QWidget(parent),
-    ac_id(ac_id), reduced(true)
+    ac_id(ac_id)
 {
     connect(AircraftManager::get()->getAircraft(ac_id)->getStatus(),
             &AircraftStatus::engine_status, this, [=,this]() {
         this->update();
     });
+    connect(AircraftManager::get()->getAircraft(ac_id)->getStatus(),
+            &AircraftStatus::svsinfo, this, [=,this]() {
+        this->update();
+    });
 }
 
-void GPSClassicViewer::mousePressEvent(QMouseEvent *event) {
-    (void)event;
-    reduced = !reduced;
-}
-
+/**
+ * The position accuracy and the number of satellites used, with the quality as a colored bar
+ * and text; below, a signal bar per satellite (green: used, gray: not used, faded: old).
+ */
 void GPSClassicViewer::paintEvent(QPaintEvent *event) {
     (void)event;
     QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
 
     auto [pacc, infos] = getData();
-
+    bool no_data = pacc == 65535;
     int nb_sat_used = 0;
     for(auto &info: infos) {
         if(info.flags & 0x01) {
@@ -29,86 +33,85 @@ void GPSClassicViewer::paintEvent(QPaintEvent *event) {
         }
     }
 
-    if(pacc > 800 || nb_sat_used <= 4) {
-        p.setBrush(QColor(0xff8888));
+    QColor quality, quality_bg;
+    QString quality_txt;
+    if(no_data) {
+        quality = QColor(0x6e7781); quality_bg = QColor(0xeef1f4); quality_txt = "No data";
+    } else if(pacc > 800 || nb_sat_used <= 4) {
+        quality = QColor(0xb42318); quality_bg = QColor(0xfde8e6); quality_txt = "Poor";
     } else if(pacc > 400 || nb_sat_used <= 6) {
-        p.setBrush(QColor(0xffc088));
+        quality = QColor(0x8a4b00); quality_bg = QColor(0xfff4e0); quality_txt = "Fair";
     } else {
-        p.setBrush(QColor(0x88ff88));
+        quality = QColor(0x1f7a3f); quality_bg = QColor(0xe3f1e6); quality_txt = "Good";
     }
+    QColor text = palette().color(QPalette::WindowText);
+    QColor secondary = text;
+    secondary.setAlpha(170);
+
+    // first row: accuracy, satellites, quality pill
+    QFont caption = font();
+    caption.setPixelSize(11);
+    QFont value = font();
+    value.setPixelSize(18);
+    value.setBold(true);
+
+    p.setFont(caption);
+    p.setPen(secondary);
+    p.drawText(QRectF(0, 0, 120, 16), Qt::AlignLeft | Qt::AlignVCenter, "Accuracy");
+    p.drawText(QRectF(110, 0, 90, 16), Qt::AlignLeft | Qt::AlignVCenter, "Satellites");
+    p.setFont(value);
+    p.setPen(text);
+    p.drawText(QRectF(0, 16, 120, 26), Qt::AlignLeft | Qt::AlignVCenter,
+               no_data ? QString::fromUtf8("\xE2\x80\x94") : QString("%1 m").arg(pacc / 100., 0, 'f', 1));
+    p.drawText(QRectF(110, 16, 90, 26), Qt::AlignLeft | Qt::AlignVCenter,
+               no_data ? QString::fromUtf8("\xE2\x80\x94") : QString("%1 / %2").arg(nb_sat_used).arg(infos.size()));
+
+    QFont pill_font = font();
+    pill_font.setPixelSize(12);
+    pill_font.setBold(true);
+    p.setFont(pill_font);
+    QRectF pill(qMax(205.0, width() - 72.0), 12, 70, 24);
     p.setPen(Qt::NoPen);
-    p.drawRect(rect());
+    p.setBrush(quality_bg);
+    p.drawRoundedRect(pill, 12, 12);
+    p.setPen(quality);
+    p.drawText(pill, Qt::AlignCenter, quality_txt);
 
-    int ypacc = 0;
-
-    if(!reduced) {
-        minSize = QSize(infos.size() * SV_WIDTH, 20 + 90 + 20 + 20 + 20);
-        setMinimumSize(minSize);
-
-        const int yId = 20 + 90;
-        ypacc = yId + 20;
-
-        for(int i=0; i<infos.size(); i++) {
-            int id = infos[i].id;
-            int flags = infos[i].flags;
-            int cno = infos[i].cno;
-            int age = infos[i].age;
-
-            p.setPen(Qt::black);
-
-            auto rect_cno = QRect(SV_WIDTH*i, 0, SV_WIDTH, 20);
-            p.drawText(rect_cno, Qt::AlignCenter, QString::number(cno), &rect_cno);
-
-
-            p.setPen(Qt::NoPen);
-            if(age > 4) {
-                p.setBrush(QColor(0x888888));
-            } else {
-                if(flags & 0x01) {
-                    p.setBrush(QColor(0x00a000));
-                } else {
-                    p.setBrush(QColor(0xcc0000));
-                }
+    // satellites: signal bars (C/N0), the id below
+    const int top = 52, bars_h = 70, label_h = 16;
+    int n = infos.size();
+    if(n == 0) {
+        p.setFont(caption);
+        p.setPen(secondary);
+        p.drawText(QRectF(0, top, width(), 20), Qt::AlignLeft | Qt::AlignVCenter, "No satellites");
+        minSize = QSize(280, top + 24);
+    } else {
+        double w = qMin(22.0, (width() - 2.0) / n);
+        p.setPen(QPen(QColor(128, 128, 128, 60), 1));
+        p.drawLine(QPointF(0, top + bars_h), QPointF(width(), top + bars_h));
+        p.setFont(caption);
+        for(int i=0; i<n; i++) {
+            auto &sv = infos[i];
+            double h = qBound(2.0, (sv.cno - 15) * bars_h / 35.0, static_cast<double>(bars_h));
+            QColor c = (sv.flags & 0x01) ? QColor(0x1f7a3f) : QColor(0x8c959f);
+            if(sv.age > 4) {
+                c.setAlpha(90);
             }
-
-            int s = (qMax(20, cno) - 20) * 3;
-
-            int bar_top = yId - s;
-            auto rect_cno_bar = QRect(SV_WIDTH*i, bar_top, SV_WIDTH, s);
-
-            p.drawRect(rect_cno_bar.marginsRemoved(QMargins(5, 5, 5, 5)));
-
-
-            p.setPen(Qt::black);
-            auto rect_id = QRect(SV_WIDTH*i, yId, SV_WIDTH, 20);
-            p.drawText(rect_id, Qt::AlignCenter, QString::number(id), &rect_id);
+            p.setPen(Qt::NoPen);
+            p.setBrush(c);
+            p.drawRoundedRect(QRectF(i * w + 2, top + bars_h - h, w - 4, h), 2, 2);
+            p.setPen(secondary);
+            p.drawText(QRectF(i * w, top + bars_h + 2, w, label_h), Qt::AlignCenter, QString::number(sv.id));
         }
-    } else {
-        minSize = QSize(200, 40);
+        minSize = QSize(280, top + bars_h + label_h + 4);
+    }
+    // the quality as a thin line at the bottom
+    p.setPen(Qt::NoPen);
+    p.setBrush(quality);
+    p.drawRoundedRect(QRectF(0, minSize.height() - 3, width(), 3), 1.5, 1.5);
+    if(minimumSize() != minSize) {
         setMinimumSize(minSize);
     }
-
-
-    auto rect_acc = QRect(0, ypacc, rect().width(), 20);
-    auto txt = QString("Pos accuracy: %1m").arg(pacc/100., 0, 'f', 1);
-    QFont f;
-    f.setBold(true);
-    p.setFont(f);
-    if(pacc > 2000) {
-        p.setPen(Qt::red);
-    } else {
-        p.setPen(Qt::black);
-    }
-    p.drawText(rect_acc, Qt::AlignLeft, txt, &rect_acc);
-
-
-    auto rect_nb_used = QRect(0, ypacc + 20, rect().width(), 20);
-    p.drawText(rect_nb_used, Qt::AlignLeft, QString("%1 satellites used").arg(nb_sat_used), &rect_nb_used);
-
-
-
-
-
 }
 
 QSize GPSClassicViewer::sizeHint() const
@@ -118,7 +121,7 @@ QSize GPSClassicViewer::sizeHint() const
 
 QSize GPSClassicViewer::minimumSizeHint() const
 {
-    return QSize(qMax(minSize.width(), 200), qMax(minSize.height(), 40));
+    return QSize(qMax(minSize.width(), 280), qMax(minSize.height(), 76));
 }
 
 
@@ -177,7 +180,9 @@ std::tuple<uint16_t, QList<struct GPSClassicViewer::SvInfo>> GPSClassicViewer::g
     }
 
 
-    for(int i=0; i<svids.size(); i++) {
+    // the lists should have the same length; do not read past a shorter one
+    int n = qMin(qMin(svids.size(), flags.size()), qMin(cno.size(), msg_age.size()));
+    for(int i=0; i<n; i++) {
         infos.append(SvInfo{svids[i], flags[i], cno[i], msg_age[i]});
     }
 

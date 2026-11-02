@@ -16,9 +16,18 @@ public:
 
 signals:
 
+protected:
+    // a click on a widget selects its aircraft, a double click also centers the map on it
+    bool eventFilter(QObject* obj, QEvent* event) override;
+
 private:
+    void showSelected();
     void handleNewAC(QString ac_id);
     void removeAC(QString ac_id);
+    void fitInSplitter();
+    /// with more than 3 aircraft, the ones not selected are compact (when the widget can be)
+    void updateCompact();
+    QString selected_ac;
 
     std::function<QWidget*(QString, QWidget*)> constructor;
     std::function<QWidget*(QString, QWidget*)> alt_constructor;
@@ -28,6 +37,7 @@ private:
 
     QMap<QWidget*, QString> buttons;
     QGridLayout* grid_layout;
+    int fitted_height = -1;     // content height when last fitted in the splitter
 
     QDomElement conf;
 

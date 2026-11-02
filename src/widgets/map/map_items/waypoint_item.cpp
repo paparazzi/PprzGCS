@@ -135,10 +135,14 @@ void WaypointItem::updateGraphics(MapWidget* map, uint32_t update_event) {
 
         auto rot = QTransform().rotate(-r);
         graphics_text->setPlainText(_waypoint->getName());
-        graphics_text->setPos(scene_pos + rot.map(QPointF(5*s, -30*s)));
+        graphics_text->setPos(scene_pos + rot.map(label_offset * s));
         graphics_text->setScale(s);
         graphics_text->setRotation(-r);
     }
+}
+
+QGraphicsItem* WaypointItem::marker() {
+    return point;
 }
 
 void WaypointItem::removeFromScene(MapWidget* map) {

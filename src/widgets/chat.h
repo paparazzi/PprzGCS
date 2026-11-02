@@ -1,7 +1,13 @@
 #ifndef CHAT_H
 #define CHAT_H
 
+#include "flowlayout.h"
 #include <QFrame>
+#include <QMap>
+class QPushButton;
+class QToolButton;
+class QButtonGroup;
+class QHBoxLayout;
 
 namespace Ui {
 class Chat;
@@ -33,6 +39,18 @@ private:
 
     QString chat_id;
     int unread = 0;
+
+    // filter row (with more than one aircraft): All, each aircraft, Server, Mine
+    void addFilter(QString category, QString name, QString color);
+    void applyFilter();
+    void updateDestButton();
+    QWidget* filter_row;
+    FlowLayout* filter_layout;     // the filters wrap on more lines (many aircraft)
+    QList<QPushButton*> filter_order;
+    QButtonGroup* filter_group;
+    QMap<QString, QPushButton*> filters;
+    QString current_filter = "all";
+    QToolButton* dest_button;
 
     Ui::Chat *ui;
 };

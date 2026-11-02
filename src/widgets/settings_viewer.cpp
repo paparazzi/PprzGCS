@@ -35,7 +35,7 @@ SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent)
     scroll_content = new QStackedWidget();
     scroll_content->setContentsMargins(0, 0, 20, 0);
 
-    main_layout->addWidget(scroll);
+    main_layout->addWidget(scroll, 1);    // the list takes the extra height (e.g. in a tab)
     scroll->setWidget(scroll_content);
     scroll->setWidgetResizable(true);
 

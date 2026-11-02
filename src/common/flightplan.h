@@ -57,6 +57,7 @@ public:
     double getDefaultAltitude() {return defaultAlt;}
     double getMaxDistFromHome() {return max_dist_from_home;}
     double getGroundAlt() {return ground_alt;}
+    double getSecurityHeight() {return security_height;}
     void setGroundAlt(double ga) {ground_alt = ga;}
     Waypoint* getOrigin() {return origin;}
     Waypoint::WpFrame getFrame() {return frame_type;}

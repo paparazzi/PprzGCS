@@ -144,5 +144,5 @@ QSize ACSelector::sizeHint() const
 
 QSize ACSelector::minimumSizeHint() const
 {
-    return QSize(2*ARROW_WIDTH + 40, 2*ARROW_WIDTH);
+    return QSize(2*ARROW_WIDTH + 40, 28);
 }

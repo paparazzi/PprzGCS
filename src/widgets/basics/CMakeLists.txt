@@ -13,7 +13,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/graphwidget.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/colorbar.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/chatbubble.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/chatbubble.ui
+    ${CMAKE_CURRENT_SOURCE_DIR}/card_dialog.cpp
 )
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})

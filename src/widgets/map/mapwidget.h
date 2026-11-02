@@ -1,11 +1,13 @@
 #ifndef MAPWIDGET_H
 #define MAPWIDGET_H
 
+#include <QElapsedTimer>
 #include <QGraphicsItem>
 #include <QList>
 #include <QLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QPushButton>
 #include "map2d.h"
 #include "tileprovider.h"
 #include "maplayercontrol.h"
@@ -28,6 +30,7 @@ class ACItemManager;
 class ItemEditStateMachine;
 class MapItem;
 class LayerCombo;
+class PanelTabs;
 class PathItem;
 
 enum InteractionState {
@@ -58,6 +61,19 @@ public:
     void itemsForbidHighlight(bool fh);
     void itemsEditable(bool ed);
     void updateHighlights(QString ac_id);
+
+    // panels on the rail (see PanelManager)
+    void addRailPanel(QString id, QWidget* widget, QString title, QString icon, int index = -1);
+    /// position of a panel on the rail (-1: not on it)
+    int railIndexOf(QWidget* widget);
+    /// where a panel dropped at global_pos goes on the rail, and the line showing it (global)
+    int railInsertAt(QPoint global_pos, QRect* line = nullptr);
+    /// the size set by the user with the grip of the card (invalid: as big as the panel asks)
+    void setRailCardSize(QWidget* widget, QSize size);
+    /// a card moved by the user over the map (top left, in the map; invalid: next to the rail)
+    void setRailCardPos(QWidget* widget, QPoint pos);
+    void removeRailPanel(QWidget* widget);
+    PanelTabs* bottomTabs() {return bottom_tabs;}
     MapScene* scene() {return _scene;}
     void centerLatLon(Point2DLatLon latLon) override;
     void setZoom(double z) override;
@@ -75,6 +91,8 @@ signals:
     void mouseMoved(QPointF scenePos);
     void itemAdded(MapItem* map_item);
     void itemRemoved(MapItem* item);
+    void railCardResized(QWidget* widget, QSize size);   // by the user (invalid size: reset)
+    void railCardMoved(QWidget* widget, QPoint pos);     // by the user (invalid: docked)
 
 protected:
     virtual void mousePressEvent(QMouseEvent *event) override;
@@ -117,7 +135,7 @@ private:
     void handleNewAC(QString ac_id);
     void removeAC(QString ac_id);
     LayerCombo* makeLayerCombo();
-    void addWidget(QWidget* w, LockButton* button, WidgetContainer side);
+    void addWidget(QWidget* w, LockButton* button, WidgetContainer side, int index = -1);
     void setEditorMode();
     void registerWaypoint(WaypointItem* waypoint);
     void updateGraphics(uint32_t update_events);
@@ -130,6 +148,32 @@ private:
 
     QList<MapItem*> _items;
     QList<Papget*> papgets;
+
+    // a waypoint move sent to the aircraft, until it confirms it: its old position (a dashed
+    // diamond) and a line to the new one
+    struct PendingMove {
+        QGraphicsPolygonItem* marker;
+        QGraphicsLineItem* line;
+        Point2DLatLon from;
+        QMetaObject::Connection conn;
+    };
+    QMap<WaypointItem*, PendingMove> pending_moves;
+
+    // a dark layer over the imagery (map brightness), below everything drawn on the map
+    QGraphicsRectItem* dim_rect = nullptr;
+    void setMapDim(int percent);
+    /// the aircraft names moved down when they overlap
+    void arrangeAircraftLabels();
+    /// the waypoint names where they do not overlap other names or waypoints
+    void arrangeWaypointLabels();
+    QTimer* wp_labels_timer = nullptr;
+
+    // the position from the telemetry (ROTORCRAFT_FP), newer than FLIGHT_PARAM (about 1 Hz)
+    QMap<QString, QElapsedTimer> direct_position;
+    void setAircraftPose(QString ac_id, Point2DLatLon pos, double heading);
+    void showPendingMove(WaypointItem* wpi);
+    void updatePendingMove(WaypointItem* wpi);
+    void clearPendingMove(WaypointItem* wpi);
 
     QMap<uint8_t, MapItem*> shapes;
     QMap<QString, GVF_trajectory*> gvf_trajectories;
@@ -150,6 +194,21 @@ private:
     WindIndicator* wind_indicator;
 
     QList<LockButton*> buttonsLeft;
+    PanelTabs* bottom_tabs;
+    class MapNotifications* notifications = nullptr;
+    void watchAircraftStates(QString ac_id);
+public:
+    /// Show a rail panel (as if its button was pressed)
+    bool openRailPanel(QWidget* widget);
+private:
+    QMap<QWidget*, QFrame*> rail_cards;   // panel -> its card over the map (title, close)
+    void fitRailCards();
+    void setFrozen(bool frozen);
+    void placeFrozenBanner();
+    QPushButton* frozen_banner = nullptr;
+protected:
+    void resizeEvent(QResizeEvent *event) override;
+private:
     QList<LockButton*> buttonsRight;
 
     QPoint lastPos;
