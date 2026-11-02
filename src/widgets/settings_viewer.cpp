@@ -11,25 +11,33 @@ SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent)
 {
     main_layout = new QVBoxLayout(this);
     search_layout = new QHBoxLayout();
-    path_save_layout = new QHBoxLayout();
-    path_layout = new QHBoxLayout();
     main_layout->addItem(search_layout);
 
 
     button_home = new QToolButton(this);
-    button_home->setText(QString::fromUtf8("\xE2\x8C\x82"));
+    button_home->setObjectName("setting_tool");
+    button_home->setIcon(QIcon(user_or_app_path("pictures/tool_home.svg")));
+    button_home->setIconSize(QSize(20, 20));
 
     button_save = new QToolButton(this);
-    button_save->setIcon(style()->standardIcon(QStyle::SP_DialogSaveButton));
+    button_save->setObjectName("setting_tool");
+    button_save->setIcon(QIcon(user_or_app_path("pictures/tool_save.svg")));
+    button_save->setIconSize(QSize(20, 20));
 
-    path_layout->addWidget(button_home);
+    // home, search and save on one row; the path (System > Logger) below, only inside a group
+    main_layout->setContentsMargins(6, 6, 6, 6);
+    // the path row (inside a group): home, then the groups (System > Logger)
+    path_row = new QWidget(this);
+    auto path_row_layout = new QHBoxLayout(path_row);
+    path_row_layout->setContentsMargins(0, 0, 0, 0);
+    path_row_layout->setSpacing(2);
     path = new QStackedWidget(this);
-    path_layout->addWidget(path);
-
-    main_layout->addItem(path_save_layout);
-    path_save_layout->addItem(path_layout);
-    path_save_layout->addStretch();
-    path_save_layout->addWidget(button_save);
+    path->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    path_row_layout->addWidget(button_home);
+    path_row_layout->addWidget(path, 1);
+    main_layout->addWidget(path_row);
+    button_home->setToolTip("All groups");
+    button_save->setToolTip("Save the settings in the airframe file");
 
     scroll = new QScrollArea();
     scroll_content = new QStackedWidget();
@@ -38,14 +46,34 @@ SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent)
     main_layout->addWidget(scroll, 1);    // the list takes the extra height (e.g. in a tab)
     scroll->setWidget(scroll_content);
     scroll->setWidgetResizable(true);
+    scroll->setFrameShape(QFrame::NoFrame);
 
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-//    scroll->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+
+    // The size of the list is the one of the group shown, not the biggest of all groups: no empty
+    // space to scroll down to, and no sideways scrolling (the hidden groups are ignored).
+    connect(scroll_content, &QStackedWidget::currentChanged, this, [=,this](int index) {
+        for(int i=0; i<scroll_content->count(); i++) {
+            auto w = scroll_content->widget(i);
+            if(i == index) {
+                w->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+            } else {
+                w->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+            }
+        }
+        scroll->horizontalScrollBar()->setValue(0);
+        fitContent();
+    });
 
     search_bar = new QLineEdit(this);
     search_bar->setPlaceholderText("search");
     search_bar->setClearButtonEnabled(true);
-    search_layout->addWidget(search_bar);
+    search_layout->addWidget(search_bar, 1);
+    search_layout->addWidget(button_save);
+
+    connect(path, &QStackedWidget::currentChanged, this, [=,this](int index) {
+        path_row->setVisible(index != root_path_index);
+    });
 
     auto search_callback = [=,this](const QString str) {
         if(str == "") {
@@ -80,10 +108,36 @@ SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent)
     init(ac_id);
 }
 
+/// The list as tall as the page shown (rows open and close): never squeezed, no space below.
+void SettingsViewer::fitContent() {
+    QTimer::singleShot(0, this, [this]() {
+        auto page = scroll_content->currentWidget();
+        if(page == nullptr) {
+            return;
+        }
+        if(page->layout()) {
+            page->layout()->invalidate();
+            page->layout()->activate();
+        }
+        int h = page->layout() ? page->layout()->sizeHint().height() : page->sizeHint().height();
+        scroll_content->setMinimumHeight(h);
+        scroll_content->setMaximumHeight(QWIDGETSIZE_MAX);
+        scroll_content->updateGeometry();
+    });
+}
+
 bool SettingsViewer::eventFilter(QObject *object, QEvent *event)
 {
-    (void)object;
-    (void)event;
+    if(event->type() == QEvent::MouseButtonDblClick && name_labels.contains(object)) {
+        return true;    // two clicks: open and close again, nothing more
+    }
+    if(event->type() == QEvent::MouseButtonRelease && name_labels.contains(object)) {
+        auto setting = name_labels[object];
+        if(toggle_slider.count(setting)) {
+            toggle_slider[setting]();
+        }
+        return true;
+    }
     if(search_bar->hasFocus() && event->type() == QEvent::KeyPress) {
         return true;    //interrupt event
     }
@@ -91,6 +145,7 @@ bool SettingsViewer::eventFilter(QObject *object, QEvent *event)
 }
 
 void SettingsViewer::init(QString ac_id) {
+    rows_open = getAppSettings().value("settings/rows_open", false).toBool();
     this->ac_id = ac_id;
     auto settings = AircraftManager::get()->getAircraft(ac_id)->getSettingMenu();
     create_widgets(settings, QList<SettingMenu*>());
@@ -100,6 +155,7 @@ void SettingsViewer::init(QString ac_id) {
     auto result_widget = new QWidget(scroll_content);
     auto result_layout = new QVBoxLayout(result_widget);
     result_layout->addStretch();
+    result_widget->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);   // until shown
     search_result_index = scroll_content->addWidget(result_widget);
     auto search_label = new QLabel("  searching...", path);
     search_path_index = path->addWidget(search_label);
@@ -121,7 +177,7 @@ void SettingsViewer::init(QString ac_id) {
         button_save, &QToolButton::clicked, this,
         [=,this]() {
             auto saver_dialog = new SettingSaver(ac_id, this);
-            saver_dialog->open();
+            saver_dialog->showMovable();
         }
     );
 
@@ -134,6 +190,7 @@ void SettingsViewer::create_widgets(SettingMenu* setting_menu, QList<SettingMenu
     auto path_widget = new QWidget(this);
     auto menu_layout = new QVBoxLayout(widget);
     auto current_path_layout = new QHBoxLayout(path_widget);
+    current_path_layout->setContentsMargins(0, 0, 0, 0);
 
     auto new_stack = QList<SettingMenu*>(stack);
     new_stack.append(setting_menu);
@@ -141,8 +198,10 @@ void SettingsViewer::create_widgets(SettingMenu* setting_menu, QList<SettingMenu
     if(new_stack.size()>0) {
         for(auto setmm = std::next(new_stack.begin()); setmm != new_stack.end(); ++setmm) {
             auto setm = (*setmm);
-            auto sep = new QLabel(">", path_widget);
+            auto sep = new QLabel(QString::fromUtf8("\xE2\x80\xBA"), path_widget);
+            sep->setObjectName("setting_path_sep");
             auto button = new QPushButton(setm->getName(), path_widget);
+            button->setObjectName("setting_path");
             sep->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
             button->setSizePolicy(QSizePolicy::Fixed,QSizePolicy::Fixed);
             current_path_layout->addWidget(sep);
@@ -166,10 +225,59 @@ void SettingsViewer::create_widgets(SettingMenu* setting_menu, QList<SettingMenu
 
     int index_path = path->addWidget(path_widget);
     path_indexes[setting_menu] = index_path;
+    if(stack.isEmpty()) {
+        root_path_index = index_path;
+        path_row->setVisible(path->currentIndex() != root_path_index);
+    }
 
+    // the groups in one block, the settings below it without space between them
+    menu_layout->setSpacing(0);
+    menu_layout->setContentsMargins(0, 4, 0, 4);
+    QFrame* groups_box = nullptr;
+    QVBoxLayout* groups_lay = nullptr;
+    QPushButton* last_group = nullptr;
     for(auto sets: setting_menu->getSettingMenus()) {
-        auto button = new QPushButton(sets->getName());
-        menu_layout->addWidget(button);
+        if(groups_box == nullptr) {
+            groups_box = new QFrame(widget);
+            groups_box->setObjectName("setting_groups");
+            groups_lay = new QVBoxLayout(groups_box);
+            groups_lay->setContentsMargins(1, 1, 1, 1);
+            groups_lay->setSpacing(0);
+            menu_layout->addWidget(groups_box);
+            menu_layout->addSpacing(8);
+        }
+        auto button = new QPushButton();
+        button->setObjectName("setting_group");
+        auto button_lay = new QHBoxLayout(button);
+        button_lay->setContentsMargins(8, 0, 8, 0);
+        // a folder, the name, and what is in it: it opens more settings
+        auto icon_label = new QLabel(button);
+        icon_label->setPixmap(QIcon(user_or_app_path("pictures/setting_group.svg")).pixmap(18, 18));
+        button_lay->addWidget(icon_label);
+        auto name_label = new QLabel(sets->getName(), button);
+        name_label->setObjectName("setting_group_name");
+        int nb_settings = sets->getSettings().size();
+        int nb_groups = sets->getSettingMenus().size();
+        QStringList what;
+        if(nb_groups > 0) {
+            what.append(QString("%1 %2").arg(nb_groups).arg(nb_groups == 1 ? "group" : "groups"));
+        }
+        if(nb_settings > 0) {
+            what.append(QString("%1 %2").arg(nb_settings).arg(nb_settings == 1 ? "setting" : "settings"));
+        }
+        auto count_label = new QLabel(what.join(", ") + "  \u203A", button);
+        count_label->setObjectName("setting_unit");
+        button->setToolTip("Open " + sets->getName());
+        button->setCursor(Qt::PointingHandCursor);
+        for(auto l: {icon_label, name_label, count_label}) {
+            l->setAttribute(Qt::WA_TransparentForMouseEvents);
+            l->setStyleSheet("background: transparent; border: 0;");    // the row's background
+        }
+        button_lay->addWidget(name_label, 1);
+        button_lay->addWidget(count_label);
+        button->setMinimumHeight(40);     // touch
+        groups_lay->addWidget(button);
+        last_group = button;
 
         setting_menu_widgets[sets] = button;
 
@@ -186,12 +294,16 @@ void SettingsViewer::create_widgets(SettingMenu* setting_menu, QList<SettingMenu
             }
         );
     }
+    if(last_group != nullptr) {
+        last_group->setProperty("last", true);     // no line below the last one
+    }
     for(auto &set: setting_menu->getSettings()) {
         auto setting_widget = makeSettingWidget(set, widget);
         menu_layout->addWidget(setting_widget);
         setting_widgets[set] = setting_widget;
     }
     menu_layout->addStretch();
+    widget->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);   // until shown
     int index_widget = scroll_content->addWidget(widget);
     widgets_indexes[setting_menu] = index_widget;
 }
@@ -200,6 +312,9 @@ void SettingsViewer::restore_searched_items() {
     while (pos_hist.size() > 0) {
         auto pos = pos_hist.takeLast();
         pos.layout->insertWidget(pos.index, pos.widget);
+        if(auto group = pos.widget->findChild<QLabel*>("setting_group_label")) {
+            group->hide();
+        }
     }
 }
 
@@ -227,6 +342,9 @@ void SettingsViewer::populate_search_results(QString searched) {
             int index = w->parentWidget()->layout()->indexOf(w);
             pos_hist.push_back(PositionHistory{w, dynamic_cast<QBoxLayout*>(w->parentWidget()->layout()), index});
             l->insertWidget(l->count()-1, w);
+            if(auto group = w->findChild<QLabel*>("setting_group_label")) {
+                group->setVisible(!group->text().isEmpty());
+            }
         }
     }
 
@@ -235,345 +353,679 @@ void SettingsViewer::populate_search_results(QString searched) {
 
 
 
+/**
+ * One setting on one line: its name and its control (a few choices as buttons, more as a list,
+ * on/off as a switch, a number as a field with a slider below while editing). The control shows
+ * the value on the aircraft; changing it marks the row and shows Undo / Send. A sent value stays
+ * marked until the aircraft confirms it. The menu (⋯) asks the value again, or sends the previous
+ * or the initial value.
+ */
 QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     QWidget* widget = new QWidget(parent);
+    widget->setObjectName("setting_row");
+    widget->setAttribute(Qt::WA_StyledBackground);
+    rows[setting] = widget;
     QVBoxLayout* vLay = new QVBoxLayout(widget);
+    vLay->setContentsMargins(6, 2, 2, 2);
+    vLay->setSpacing(2);
+    widget->setMinimumHeight(38);     // touch
     QHBoxLayout* hlay = new QHBoxLayout();
-    vLay->addItem(hlay);
+    hlay->setSpacing(6);
+    vLay->addLayout(hlay);
 
-    QWidget* label = new QLabel(setting->getName(), widget);
-    label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    hlay->addWidget(label);
+    QLabel* label = new QLabel(setting->getName(), widget);
+    label->setObjectName("setting_name");
+    label->setMinimumWidth(30);
+    label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    label->setToolTip(setting->getName() + " (click: open, with the slider and the buttons)");
+    label->installEventFilter(this);
+    name_labels[label] = setting;
+    hlay->addWidget(label, 1);
 
-    QPushButton* value_btn = new QPushButton("?", widget);
-    value_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    hlay->addWidget(value_btn);
-    auto ok_btn = new QToolButton(widget);
-    ok_btn->setText(QString::fromUtf8("\xE2\x9C\x93"));
-    ok_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    ok_btn->setToolTip("commit");
-    hlay->addWidget(ok_btn);
+    // the group, shown in search results
+    QLabel* group_label = new QLabel(widget);
+    group_label->setObjectName("setting_group_label");
+    if(auto menu = qobject_cast<SettingMenu*>(setting->parent())) {
+        group_label->setText(menu->getName());
+    }
+    group_label->hide();
+    hlay->addWidget(group_label);
 
-    auto undo_btn = new QToolButton(widget);
-    undo_btn->setText(QString::fromUtf8("\xE2\x86\xA9"));
-    undo_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    undo_btn->setToolTip("undo");
-    hlay->addWidget(undo_btn);
+    // the value on the aircraft, while the control shows another one
+    auto aircraft_label = new QLabel(widget);
+    aircraft_label->setObjectName("setting_aircraft");
+    aircraft_label->hide();
+    hlay->addWidget(aircraft_label);
+    aircraft_labels[setting] = aircraft_label;
 
-    auto reset_btn = new QToolButton(widget);
-    reset_btn->setText(QString::fromUtf8("\xE2\x86\xBA"));
-    reset_btn->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    reset_btn->setToolTip("reset to initial");
-    hlay->addWidget(reset_btn);
+    QHBoxLayout* control_lay = new QHBoxLayout();
+    control_lay->setSpacing(4);
+    hlay->addLayout(control_lay);
 
-    connect(value_btn, &QPushButton::clicked, this, [=,this]() {
-        value_btn->setText("?");
-        pprzlink::Message getSetting(PprzDispatcher::get()->getDict()->getDefinition("GET_DL_SETTING"));
-        getSetting.addField("ac_id", ac_id);
-        getSetting.addField("index", setting->getNo());
-        PprzDispatcher::get()->sendMessage(getSetting);
-    });
+    QString unit = setting->getDisplayUnit();
+    QLabel* unit_label = nullptr;
 
-    connect(undo_btn, &QToolButton::clicked, this, [=,this]() {
-        auto prev = setting->getPreviousValue();
-        AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, prev);
-        setting->setUserValue(prev);
-    });
+    auto menu_btn = new QToolButton(widget);
+    menu_btn->setObjectName("setting_action");
+    menu_btn->setText(QString::fromUtf8("⋯"));
+    menu_btn->setToolTip("Ask the value again, send the previous or the initial value");
+    menu_btn->setPopupMode(QToolButton::InstantPopup);
+    auto menu = new QMenu(menu_btn);
+    menu_btn->setMenu(menu);
 
-    connect(reset_btn, &QToolButton::clicked, this, [=,this]() {
-        auto initial_value = setting->getInitialValue();
-        if(initial_value.has_value()) {
-            AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, initial_value.value());
-            setting->setUserValue(initial_value.value());
-        }
-
-    });
+    // second line (numbers): the slider; last line: Undo / Send while changed
+    QHBoxLayout* slider_lay = new QHBoxLayout();
+    vLay->addLayout(slider_lay);
+    auto actions = new QWidget(widget);
+    actions->setObjectName("setting_actions");
+    auto actions_lay = new QHBoxLayout(actions);
+    actions_lay->setContentsMargins(0, 0, 0, 2);
+    // the previous and the initial value, sent at once
+    auto prev_btn = new QPushButton(QString::fromUtf8("\u21A9 Previous"), actions);
+    prev_btn->setObjectName("setting_undo");
+    prev_btn->setToolTip("Send the previous value");
+    auto init_btn = new QPushButton(QString::fromUtf8("\u21BA Initial"), actions);
+    init_btn->setObjectName("setting_undo");
+    init_btn->setToolTip("Send the initial value (at the start of the flight)");
+    auto ask_btn = new QPushButton(QString::fromUtf8("\u21BB Ask"), actions);
+    ask_btn->setObjectName("setting_undo");
+    ask_btn->setToolTip("Ask the aircraft its value (again after 3 s without answer)");
+    actions_lay->addWidget(ask_btn);
+    actions_lay->addWidget(prev_btn);
+    actions_lay->addWidget(init_btn);
+    actions_lay->addStretch(1);
+    auto undo_btn = new QPushButton("Undo", actions);
+    undo_btn->setObjectName("setting_undo");
+    undo_btn->setToolTip("Back to the value on the aircraft");
+    auto send_btn = new QPushButton("Send", actions);
+    send_btn->setObjectName("setting_send");
+    actions_lay->addWidget(undo_btn);
+    actions_lay->addWidget(send_btn);
+    actions->hide();
+    vLay->addWidget(actions);
+    // a number outside the range: said in red, and Send asks first
+    auto range_note = new QLabel(widget);
+    range_note->setObjectName("setting_out_of_range");
+    range_note->hide();
+    vLay->insertWidget(vLay->indexOf(actions), range_note);
 
     initialized[setting] = false;
+    dirty[setting] = false;
+    std::function<float()> control_value;           // in the displayed unit
+    std::function<void(bool)> show_editor = [](bool) {};
+    // opened by a click on the name: the slider (numbers) and the buttons
+    auto expanded = std::make_shared<bool>(rows_open);     // GCS setting: all rows open
+    auto update_actions = [=,this]() {
+        actions->setVisible(dirty[setting] || *expanded);
+        undo_btn->setEnabled(dirty[setting]);
+    };
 
     auto [min, max, step] = setting->getBounds();
+    auto values = setting->getValues();
+    bool updating = false;
+    auto changed = std::make_shared<std::function<void()>>([](){});
 
-    if(setting->getValues().size() > 2) {
-        // named values -> combo box
-        QComboBox* combo = new QComboBox(widget);
-        for(auto &s:setting->getValues()) {
-            combo->addItem(s);
+    if(values.size() > 2) {
+        // named values: buttons for a few short ones, else a list
+        bool short_names = values.size() <= 3;
+        for(auto &v: values) {
+            short_names = short_names && v.size() <= 8;
         }
-        vLay->addWidget(combo);
-
-        setters[setting] = [combo](double value) {combo->setCurrentIndex(static_cast<int>(value));};
-        label_setters[setting] = [combo, value_btn](double value) {
-            value_btn->setText(combo->itemText(static_cast<int>(value)));
-        };
-
-        connect(ok_btn, &QToolButton::clicked, this, [=,this]() {
-            float value = static_cast<float>(combo->currentIndex());
-            AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
-            setting->setUserValue(value);
-        });
-
-    } else if(setting->getValues().size() == 2 || abs(min+step-max) < 0.0001) {
-        QString s1 = setting->getValues().size() == 2 ? setting->getValues()[0] : QString::number(min);
-        QString s2 = setting->getValues().size() == 2 ? setting->getValues()[1] : QString::number(max);
-        QHBoxLayout *hbox = new QHBoxLayout;
-        Switch* sw = new Switch();
-        QLabel* l1 = new QLabel(s1);
-        l1->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-        QLabel* l2 = new QLabel(s2);
-        l2->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-        hbox->addWidget(l1);
-        hbox->addWidget(sw);
-        hbox->addWidget(l2);
-
-        vLay->addLayout(hbox);
-
-        setters[setting] = [sw, min=min, step=step](double value) {sw->setChecked(value > (min + step/2));};
-        label_setters[setting] = [setting, value_btn, s1, s2, min=min, step=step, max=max](double value) {
-            QString txt;
-            if(setting->getValues().size() == 2 && value >= min && value <= max) {
-                txt = value < (min + step/2) ? s1: s2;
-            } else {
-                txt = QString::number(value);
+        if(short_names) {
+            auto group = new QButtonGroup(widget);
+            group->setExclusive(true);
+            for(int i=0; i<values.size(); i++) {
+                auto b = new QPushButton(values[i], widget);
+                b->setObjectName("setting_choice");
+                b->setCheckable(true);
+                group->addButton(b, i);
+                control_lay->addWidget(b);
             }
-
-            value_btn->setText(txt);
+            setters[setting] = [group](double value) {
+                if(auto b = group->button(static_cast<int>(value))) {
+                    b->setChecked(true);
+                }
+            };
+            control_value = [group]() {return static_cast<float>(group->checkedId());};
+            connect(group, &QButtonGroup::idClicked, this, [=](int) {(*changed)();});
+        } else {
+            QComboBox* combo = new QComboBox(widget);
+            combo->setObjectName("setting_combo");
+            for(auto &v: values) {
+                combo->addItem(v);
+            }
+            combo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+            control_lay->addWidget(combo);
+            setters[setting] = [combo](double value) {
+                QSignalBlocker b(combo);
+                combo->setCurrentIndex(static_cast<int>(value));
+            };
+            control_value = [combo]() {return static_cast<float>(combo->currentIndex());};
+            connect(combo, qOverload<int>(&QComboBox::activated), this, [=](int) {(*changed)();});
+        }
+        label_setters[setting] = [=](double value) {
+            int i = static_cast<int>(value);
+            aircraft_label->setText(i >= 0 && i < values.size() ? values[i] : QString::number(value));
         };
 
-        connect(ok_btn, &QToolButton::clicked, this, [=, this, min=min, max=max]() {
-            // min and max are in the displayed unit: sent in the aircraft's
-            float value = (sw->isChecked() ? max : min) / setting->getSendCoef();
-            AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
-            setting->setUserValue(value);
+    } else if(values.size() == 2 || abs(min+step-max) < 0.0001) {
+        QString s1 = values.size() == 2 ? values[0] : QString::number(min);
+        QString s2 = values.size() == 2 ? values[1] : QString::number(max);
+        auto state = new QLabel(s1, widget);
+        state->setObjectName("setting_unit");
+        Switch* sw = new Switch();
+        control_lay->addWidget(state);
+        control_lay->addWidget(sw);
+        setters[setting] = [=, min=min, step=step](double value) {
+            QSignalBlocker b(sw);
+            sw->setChecked(value > (min + step/2));
+            state->setText(sw->isChecked() ? s2 : s1);
+        };
+        control_value = [sw, min=min, max=max]() {return sw->isChecked() ? max : min;};
+        connect(sw, &QAbstractButton::toggled, this, [=](bool on) {
+            state->setText(on ? s2 : s1);
+            (*changed)();
         });
+        label_setters[setting] = [=, min=min, step=step](double value) {
+            aircraft_label->setText(value < (min + step/2) ? s1 : s2);
+        };
 
     } else if(abs(max-min) < 0.00001) {
-        setters[setting] = [](double value) {(void)value;};
-        label_setters[setting] = [value_btn](double value) {value_btn->setText(QString::number(value));};
+        // a single value: a button that sends it
         float value = min;
-        QLabel* uniq_val = new QLabel(QString::number(value));
-        uniq_val->setAlignment(Qt::AlignCenter);
-        vLay->addWidget(uniq_val);
-
-        connect(ok_btn, &QToolButton::clicked, this, [=,this]() {
-            float raw = value / setting->getSendCoef();  // min is in the displayed unit
-            AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, raw);
-            setting->setUserValue(raw);
+        auto b = new QPushButton(QString("Send %1").arg(value), widget);
+        b->setObjectName("setting_choice");
+        control_lay->addWidget(b);
+        setters[setting] = [](double) {};
+        control_value = [value]() {return value;};
+        label_setters[setting] = [=](double v) {aircraft_label->setText(QString::number(v));};
+        connect(b, &QPushButton::clicked, this, [=,this]() {
+            send(setting, value / setting->getSendCoef());
         });
 
     } else {
+        // a number: a field (Enter sends), the slider below while editing
+        int precision = step < 1 ? static_cast<int>(ceil(abs(log10(step)))) : 0;
+        auto edit = new QLineEdit(widget);
+        edit->setObjectName("setting_number");
+        edit->setAlignment(Qt::AlignRight);
+        edit->setFixedWidth(80);
+        edit->setToolTip(QString("%1 to %2%3 (Enter: send; other values are possible)")
+                         .arg(min).arg(max).arg(unit.isEmpty() ? QString() : " " + unit));
+        control_lay->addWidget(edit);
         DoubleSlider* slider = new DoubleSlider(Qt::Horizontal, widget);
-        QLineEdit* raw_edit = new QLineEdit(widget);
-        raw_edit->hide();
-        QToolButton* expert_button = new QToolButton(widget);
-        expert_button->setIcon(QIcon(":/pictures/lock_dark.svg"));
-        expert_button->setToolTip("Expert mode");
-
-        setters[setting] = [slider, raw_edit](double value) {slider->setDoubleValue(value); raw_edit->setText(QString::number(value));};
-        label_setters[setting] = [value_btn](double value) {value_btn->setText(QString::number(value));};
-
         slider->setDoubleRange(min, max, step);
-        QHBoxLayout* vbox = new QHBoxLayout();
-        // the slider, its label and the text box are in the displayed unit (min, max and step are)
-        QString unit = setting->getDisplayUnit();
-        QString unit_suffix = unit.isEmpty() ? QString() : " " + unit;
-        QLabel* la = new QLabel(QString::number(min, 'f', 2) + unit_suffix);
-        int precision = 0;
-        if(step < 1) {
-            precision = static_cast<int>(ceil(abs(log10(step))));
-        }
-        connect(slider, &DoubleSlider::doubleValueChanged,
-            [=,this](double value) {
-                la->setText(QString::number(value, 'f', precision) + unit_suffix);
-            });
-        raw_edit->setPlaceholderText(unit.isEmpty() ? QString("value") : unit);
-        raw_edit->setToolTip(QString("Value in %1, sent on Enter").arg(unit.isEmpty() ? "the setting's unit" : unit));
-
-        connect(expert_button, &QToolButton::clicked,
-            [=,this]() {
-                raw_edit->setVisible(!raw_edit->isVisible());
-                if(raw_edit->isVisible()) {
-                    expert_button->setIcon(QIcon(":/pictures/lock_warning.svg"));
-                } else {
-                    expert_button->setIcon(QIcon(":/pictures/lock_dark.svg"));
-                }
-            });
-
-        connect(raw_edit, &QLineEdit::returnPressed, this,
-            [=, this, min=min, max=max]() {
-                auto txt = raw_edit->text();
-                bool ok;
-                auto value = static_cast<float>(txt.toDouble(&ok));
-                if(ok) {
-                    if(value > min && value < max) {
-                        raw_edit->setStyleSheet("QLineEdit{background-color: #88ff88;}");
-                    } else {
-                        raw_edit->setStyleSheet("QLineEdit{background-color: #ffd088;}");
-                    }
-                    // typed in the displayed unit, like the slider: sent in the aircraft's unit
-                    // (sending the typed number as is sent e.g. degrees as radians)
-                    float raw = value / setting->getSendCoef();
-                    AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, raw);
-                    setting->setUserValue(raw);
-                } else {
-                    raw_edit->setStyleSheet("QLineEdit{background-color: #ff8888;}");
-                }
-            });
-
-        connect(raw_edit, &QLineEdit::textChanged,
-            [=,this]() {
-                raw_edit->setStyleSheet("QLineEdit{background-color: #ffffff;}");
-            });
-
-        vbox->addWidget(la);
-        la->setAlignment(Qt::AlignCenter);
-        vbox->addWidget(slider);
-        vbox->addWidget(raw_edit);
-        vbox->addWidget(expert_button);
-        vLay->addLayout(vbox);
-
-        connect(ok_btn, &QToolButton::clicked, this, [=,this]() {
-            auto coef = setting->getSendCoef();
-            float value = static_cast<float>(slider->doubleValue()) / coef;
-            AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
-            setting->setUserValue(value);
+        auto lmin = new QLabel(QString::number(min), widget);
+        auto lmax = new QLabel(QString::number(max), widget);
+        lmin->setObjectName("setting_unit");
+        lmax->setObjectName("setting_unit");
+        slider_lay->addWidget(lmin);
+        slider_lay->addWidget(slider, 1);
+        slider_lay->addWidget(lmax);
+        show_editor = [=,this](bool show) {
+            bool visible = show || *expanded;
+            for(auto w: std::initializer_list<QWidget*>{lmin, slider, lmax}) {
+                w->setVisible(visible);
+            }
+        };
+        show_editor(false);
+        setters[setting] = [=](double value) {
+            QSignalBlocker b1(slider);
+            QSignalBlocker b2(edit);
+            slider->setDoubleValue(value);
+            edit->setText(QString::number(value, 'f', precision));
+        };
+        control_value = [=]() {
+            bool ok;
+            double v = edit->text().toDouble(&ok);
+            return static_cast<float>(ok ? v : slider->doubleValue());
+        };
+        label_setters[setting] = [=](double value) {
+            aircraft_label->setText(QString::number(value, 'f', precision));
+        };
+        connect(slider, &DoubleSlider::doubleValueChanged, this, [=](double value) {
+            QSignalBlocker b(edit);
+            edit->setText(QString::number(value, 'f', precision));
+            (*changed)();
+        });
+        connect(edit, &QLineEdit::textEdited, this, [=,this](QString txt) {
+            bool ok;
+            double v = txt.toDouble(&ok);
+            bool out = ok && (v < min || v > max);
+            edit->setProperty("out_of_range", out);
+            edit->style()->unpolish(edit);
+            edit->style()->polish(edit);
+            range_note->setText(QString("Outside the range %1 \u2026 %2%3").arg(min).arg(max)
+                                .arg(unit.isEmpty() ? QString() : " " + unit));
+            if(range_note->isVisible() != out) {
+                range_note->setVisible(out);
+                fitContent();
+            }
+            if(ok) {
+                QSignalBlocker b(slider);
+                slider->setDoubleValue(qBound(static_cast<double>(min), v, static_cast<double>(max)));
+            }
+            (*changed)();
+        });
+        connect(edit, &QLineEdit::returnPressed, send_btn, &QPushButton::click);
+        // the slider while the field is used
+        connect(qApp, &QApplication::focusChanged, edit, [=,this](QWidget*, QWidget* now) {
+            if(now == edit) {
+                show_editor(true);
+            } else if(!dirty[setting] && now != slider) {
+                show_editor(false);
+            }
         });
     }
+    if(!unit.isEmpty() && (values.size() == 0 && abs(max-min) >= 0.00001 && abs(min+step-max) >= 0.0001)) {
+        unit_label = new QLabel(unit, widget);
+        unit_label->setObjectName("setting_unit");
+        control_lay->addWidget(unit_label);
+    }
+    hlay->addWidget(menu_btn);
 
-    QFrame *line = new QFrame(widget);
-    vLay->addWidget(line);
-    line->setFrameShape(QFrame::HLine);
-    line->setFrameShadow(QFrame::Sunken);
+    // a click on the name opens the row: the slider and the buttons
+    label->setCursor(Qt::PointingHandCursor);
+    toggle_slider[setting] = [=,this]() {
+        *expanded = !*expanded;
+        show_editor(false);
+        update_actions();
+        fitContent();
+    };
+    update_actions();
+
+    // changed here: mark the row, show the aircraft's value and Undo / Send
+    set_dirty[setting] = [=,this](bool d) {
+        dirty[setting] = d;
+        update_actions();
+        fitContent();
+        if(!d) {
+            show_editor(false);
+        }
+        widget->setProperty("editing", d);
+        widget->style()->unpolish(widget);
+        widget->style()->polish(widget);
+        showAircraftValue(setting);
+    };
+    *changed = [=,this]() {
+        if(!updating) {
+            set_dirty[setting](true);
+        }
+    };
+
+    connect(send_btn, &QPushButton::clicked, this, [=,this, min=min, max=max]() {
+        float v = control_value();
+        if(v < min - 1e-6 || v > max + 1e-6) {
+            QString u = unit.isEmpty() ? QString() : " " + unit;
+            if(!CardDialog::ask(this, QString("Send %1%2 to %3?").arg(v).arg(u, setting->getName()),
+                                QString("This is outside its range (%1 to %2%3).").arg(min).arg(max).arg(u),
+                                "Send anyway", CardDialog::DANGER)) {
+                return;
+            }
+        }
+        send(setting, v / setting->getSendCoef());
+        range_note->hide();
+        set_dirty[setting](false);
+    });
+    connect(undo_btn, &QPushButton::clicked, this, [=,this]() {
+        range_note->hide();
+        if(aircraft_values.count(setting)) {
+            setters[setting](aircraft_values[setting]);
+        }
+        set_dirty[setting](false);
+    });
+
+    connect(ask_btn, &QPushButton::clicked, this, [=,this]() {
+        requestValue(setting);
+    });
+    connect(prev_btn, &QPushButton::clicked, this, [=,this]() {
+        send(setting, setting->getPreviousValue());
+    });
+    connect(init_btn, &QPushButton::clicked, this, [=,this]() {
+        auto initial_value = setting->getInitialValue();
+        if(initial_value.has_value()) {
+            send(setting, initial_value.value());
+        }
+    });
+    init_btn->setEnabled(setting->getInitialValue().has_value());
+
+    menu->addAction("Ask the value again", this, [=,this]() {
+        requestValue(setting);
+    });
+    menu->addAction("Send the previous value", this, [=,this]() {
+        send(setting, setting->getPreviousValue());
+    });
+    menu->addAction("Send the initial value", this, [=,this]() {
+        auto initial_value = setting->getInitialValue();
+        if(initial_value.has_value()) {
+            send(setting, initial_value.value());
+        }
+    });
 
     return widget;
 }
 
+/// The value on the aircraft next to the control, when the control shows another value
+/// (changed here, or sent and not yet confirmed); amber while a sent value is not confirmed.
+void SettingsViewer::showAircraftValue(Setting* setting) {
+    if(!aircraft_labels.count(setting)) {
+        return;
+    }
+    auto l = aircraft_labels[setting];
+    bool is_pending = pending.count(setting) > 0;
+    bool known = aircraft_values.count(setting) > 0;
+    bool state = !l->property("state").toString().isEmpty();
+    l->setVisible(((dirty[setting] || is_pending) && known) || state);
+    l->setToolTip(is_pending ?
+        QString("On the aircraft; sent %1, not yet confirmed").arg(pending[setting] * setting->getAltUnitCoef()) :
+        QString("Value on the aircraft"));
+    auto row = rows[setting];
+    if(row->property("pending").toBool() != is_pending) {
+        row->setProperty("pending", is_pending);
+        row->style()->unpolish(row);
+        row->style()->polish(row);
+    }
+}
+
+void SettingsViewer::requestValue(Setting* setting, int attempt) {
+    if(aircraft_labels.count(setting)) {
+        aircraft_labels[setting]->setText(attempt > 1 ? QString("asking\u2026 %1/3").arg(attempt) : QString("asking\u2026"));
+        aircraft_labels[setting]->setToolTip("Asked the aircraft its value");
+        setLabelState(aircraft_labels[setting], "asking");
+        aircraft_labels[setting]->show();
+    }
+    asking[setting] = attempt;
+    pprzlink::Message getSetting(PprzDispatcher::get()->getDict()->getDefinition("GET_DL_SETTING"));
+    getSetting.addField("ac_id", ac_id);
+    getSetting.addField("index", setting->getNo());
+    PprzDispatcher::get()->sendMessage(getSetting);
+    // no answer: again, 3 times
+    QTimer::singleShot(3000, this, [=,this]() {
+        if(asking.count(setting) && asking[setting] == attempt) {
+            if(attempt < 3) {
+                requestValue(setting, attempt + 1);
+            } else {
+                asking.erase(setting);
+                if(aircraft_labels.count(setting)) {
+                    aircraft_labels[setting]->setText("no answer");
+                    aircraft_labels[setting]->setToolTip("The aircraft did not answer (3 times); \u21BB Ask to ask again");
+                    setLabelState(aircraft_labels[setting], "failed");
+                }
+            }
+        }
+    });
+}
+
+/// Send a value (in the aircraft's unit); it shows as not confirmed until the aircraft reports it.
+void SettingsViewer::send(Setting* setting, float value) {
+    AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, value);
+    setting->setUserValue(value);
+    pending[setting] = value;
+    markPending(setting, true);
+}
+
+void SettingsViewer::markPending(Setting* setting, bool is_pending) {
+    (void)is_pending;
+    showAircraftValue(setting);
+}
+
 void SettingsViewer::updateSettings(QString id, Setting* setting, float value) {
-    if(ac_id == id) {
+    if(ac_id == id && label_setters.count(setting)) {
         auto val = setting->getAltUnitCoef() * value;
+        aircraft_values[setting] = val;
+        bool was_asked = asking.count(setting) > 0 ||
+            (aircraft_labels.count(setting) && aircraft_labels[setting]->property("state").toString() == "failed");
+        asking.erase(setting);     // answered
         label_setters[setting](val);
         setting->setValue(value);
-        if(!initialized[setting]) {
+        if(pending.count(setting) && abs(pending[setting] - value) < 1e-4 * std::max(1.f, abs(value))) {
+            pending.erase(setting);
+        }
+        // the control follows the aircraft, unless it is being changed here or shows a sent value,
+        // or is being used (e.g. the cursor in the field: it would jump)
+        auto focus = QApplication::focusWidget();
+        bool in_use = focus != nullptr && rows.count(setting) && rows[setting]->isAncestorOf(focus);
+        if(!dirty[setting] && !pending.count(setting) && !in_use) {
             setters[setting](val);
+        }
+        if(!initialized[setting]) {
             setting->setInitialValue(value);
             initialized[setting] = true;
         }
+        markPending(setting, pending.count(setting) > 0);
+        if(was_asked && aircraft_labels.count(setting)) {
+            // the answer, in green for 2 s
+            auto l = aircraft_labels[setting];
+            setLabelState(l, "answered");
+            l->setText(QString::fromUtf8("\u2713 ") + l->text());
+            l->show();
+            QTimer::singleShot(2000, l, [=,this]() {
+                if(l->property("state").toString() == "answered") {
+                    setLabelState(l, "");
+                    label_setters[setting](aircraft_values[setting]);
+                    showAircraftValue(setting);
+                }
+            });
+        } else if(aircraft_labels.count(setting)) {
+            setLabelState(aircraft_labels[setting], "");
+        }
+    }
+}
+
+void SettingsViewer::setLabelState(QLabel* l, QString state) {
+    if(l->property("state").toString() != state) {
+        l->setProperty("state", state);
+        l->style()->unpolish(l);
+        l->style()->polish(l);
     }
 }
 
 
 
-SettingSaver::SettingSaver(QString ac_id, QWidget *parent) : QDialog(parent),
+/**
+ * Save the settings that changed into the airframe file: the changed ones (checked), the others
+ * folded away, and the settings that are not in the airframe file in a note.
+ */
+SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
+    CardDialog("Save settings to airframe", AircraftManager::get()->getAircraft(ac_id)->name(), parent,
+               AircraftManager::get()->getAircraft(ac_id)->getColor()),
     ac_id(ac_id)
 {
-
-    setWindowTitle("Save Settings");
-
-    auto settings = AircraftManager::get()->getAircraft(ac_id)->getSettingMenu()->getAllSettings();
-    auto airframe = AircraftManager::get()->getAircraft(ac_id)->getAirframe();
+    setAttribute(Qt::WA_DeleteOnClose);
+    auto ac = AircraftManager::get()->getAircraft(ac_id);
+    auto settings = ac->getSettingMenu()->getAllSettings();
+    auto airframe = ac->getAirframe();
     auto params = airframe->getParams();
 
+    struct Row {
+        QString name;
+        QString airframe_value;
+        QString value;
+        bool changed;
+    };
+    QList<Row> rows;
     QStringList unsavable;
-
-    auto tree = new QTreeWidget(this);
-    tree->setColumnCount(3);
-    tree->setHeaderLabels(QStringList() << "Parameter" << "Airframe Value" << "Setting Value");
-    tree->header()->setSectionResizeMode(QHeaderView::ResizeMode::ResizeToContents);
 
     for(auto setting: settings) {
         auto param_name = setting->getParam();
-        if(param_name != "" && setting->getValue().has_value()) {
-            bool found = false;
-            for(auto &p: params) {
-                if(p.name == param_name) {
-                    auto item = new QTreeWidgetItem(tree);
-                    item->setText(0, param_name);
-                    item->setText(1, p.value);
-                    auto val = setting->getValue().value() * setting->getAltUnitCoef(p.unit);
-                    auto valtxt = QString::number(val);
-                    item->setText(2, valtxt);
-                    if(abs(val - p.value.toFloat()) > 0.0001) {
-                        item->setCheckState(0, Qt::Checked);
-                    } else {
-                        item->setCheckState(0, Qt::Unchecked);
-                    }
-
-                    found = true;
-                }
+        if(param_name == "" || !setting->getValue().has_value()) {
+            continue;
+        }
+        bool found = false;
+        for(auto &p: params) {
+            if(p.name == param_name) {
+                auto val = setting->getValue().value() * setting->getAltUnitCoef(p.unit);
+                bool changed = abs(val - p.value.toFloat()) > 0.0001;
+                rows.append({param_name, p.value, QString::number(val), changed});
+                found = true;
+                break;
             }
-            if(!found) {
-                unsavable.append(param_name);
-            }
+        }
+        if(!found) {
+            unsavable.append(param_name);
         }
     }
+    std::stable_sort(rows.begin(), rows.end(), [](const Row& a, const Row& b) {return a.changed && !b.changed;});
+    int nb_changed = static_cast<int>(std::count_if(rows.begin(), rows.end(), [](const Row& r) {return r.changed;}));
 
-    QString unsavables_text = "Some parameters not writable in the airframe file:\n\n" + unsavable.join("\n");
-    QMessageBox::warning(this, tr("Save Settings"), unsavables_text, QMessageBox::Ok);
+    addText(nb_changed == 0 ? QString("No setting changed since the airframe was loaded") :
+            nb_changed == 1 ? QString("1 setting changed since the airframe was loaded") :
+                              QString("%1 settings changed since the airframe was loaded").arg(nb_changed));
 
-    auto lay = new QVBoxLayout(this);
+    // the settings: changed ones first and checked, the others behind "Show N unchanged"
+    auto grid_widget = new QWidget(this);
+    auto grid = new QGridLayout(grid_widget);
+    grid->setContentsMargins(0, 0, 0, 0);
+    grid->setHorizontalSpacing(10);
+    grid->setVerticalSpacing(4);
+    grid->setColumnStretch(1, 1);
+    int r = 0;
+    auto head = [&](QString t, int col) {
+        auto l = new QLabel(t, grid_widget);
+        l->setObjectName("card_muted");
+        l->setStyleSheet("font-size: 11px; font-weight: bold;");
+        grid->addWidget(l, r, col, col >= 2 ? Qt::AlignRight : Qt::AlignLeft);
+    };
+    head("Setting", 1);
+    head("Airframe", 2);
+    head("Now", 3);
+    r++;
 
-    auto all_check = new QCheckBox("select/unselect all", this);
-
-    lay->addWidget(all_check);
-
-
-    connect(all_check, &QCheckBox::toggled, this, [=,this](bool state) {
-        for(int i=0; i < tree->topLevelItemCount(); i++) {
-            auto item = tree->topLevelItem(i);
-            item->setCheckState(0, state ? Qt::Checked : Qt::Unchecked);
-        }
-    });
-
-
-    lay->addWidget(tree);
-
-
-
-    auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel, this);
-    lay->addWidget(buttonBox);
-
-    connect(buttonBox->button(QDialogButtonBox::Save), &QPushButton::clicked, this, [=,this](){
-        QMap<QString, QString> changed_params;
-
-        for(int i=0; i < tree->topLevelItemCount(); i++) {
-            auto item = tree->topLevelItem(i);
-            if(item->checkState(0)) {
-                auto param_name = item->text(0);
-                auto value = item->text(2);
-                changed_params[param_name] = value;
-            }
-        }
-
-        auto uri = AircraftManager::get()->getAircraft(ac_id)->getConfig()->getAirframeUri();
-        QString separator = "://";
-        int sepi = uri.indexOf(separator);
-        (void)sepi;
-        QString path;
-        if(uri.left(sepi) == "file") {
-            path = uri.mid(sepi + separator.size());
+    QList<QCheckBox*> checks;
+    QList<QWidget*> unchanged_widgets;
+    for(auto &row: rows) {
+        auto ck = new QCheckBox(grid_widget);
+        ck->setChecked(row.changed);
+        ck->setProperty("param", row.name);
+        ck->setProperty("value", row.value);
+        checks.append(ck);
+        auto name = new QLabel(row.name, grid_widget);
+        auto af = new QLabel(row.airframe_value, grid_widget);
+        af->setObjectName("card_muted");
+        auto now = new QLabel(row.value, grid_widget);
+        if(row.changed) {
+            now->setStyleSheet("font-weight: bold; color: #1d5fc9;");
         } else {
-            auto settings = getAppSettings();
-            path = appConfig()->value("PAPARAZZI_HOME").toString() + "/conf/airframes";
+            now->setObjectName("card_muted");
+            unchanged_widgets << ck << name << af << now;
         }
+        for(auto l: {af, now}) {
+            l->setStyleSheet(l->styleSheet() + "font-family: Monospace;");
+        }
+        grid->addWidget(ck, r, 0);
+        grid->addWidget(name, r, 1);
+        grid->addWidget(af, r, 2, Qt::AlignRight);
+        grid->addWidget(now, r, 3, Qt::AlignRight);
+        r++;
+    }
 
-        auto savePath = QFileDialog::getSaveFileName(this, "Save File", path, "XML files (*.xml)", 0, QFileDialog::DontUseNativeDialog);
-        //auto savePath = QFileDialog::getSaveFileName(this, "Save File", path, "XML files (*.xml)", 0);
+    auto scroll = new QScrollArea(this);
+    scroll->setWidget(grid_widget);
+    scroll->setWidgetResizable(true);
+    scroll->setFrameShape(QFrame::NoFrame);
+    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll->setMinimumWidth(380);
+    body()->addWidget(scroll);
+    auto fit = [=,this]() {
+        grid->invalidate();
+        grid->activate();
+        scroll->setFixedHeight(qMin(grid->sizeHint().height() + 2, 360));
+        layout()->invalidate();
+        layout()->activate();
+        resize(width(), layout()->sizeHint().height());
+    };
 
-        if(savePath != "") {
-            if(savePath == path) {
-                // copy original file before overwriting it
-                auto suffix = QDateTime::currentDateTime().toString("_yy_MM_dd__hh_mm_ss") + ".xml";
-                auto newpath = path.left(path.length() - 4) + suffix;
-                QFile::copy(path, newpath);
+    int nb_unchanged = rows.size() - nb_changed;
+    if(nb_unchanged > 0) {
+        auto more = new QPushButton(QString("▸ Show %1 unchanged").arg(nb_unchanged), this);
+        more->setFlat(true);
+        more->setCheckable(true);
+        more->setObjectName("card_muted");
+        more->setStyleSheet("text-align: left; border: 0; padding: 0; background: transparent;");
+        more->setCursor(Qt::PointingHandCursor);
+        body()->addWidget(more);
+        for(auto w: unchanged_widgets) {
+            w->setVisible(false);
+        }
+        connect(more, &QPushButton::toggled, this, [=,this](bool show) {
+            more->setText(QString("%1 %2 %3 unchanged").arg(show ? "▾" : "▸", show ? "Hide" : "Show").arg(nb_unchanged));
+            for(auto w: unchanged_widgets) {
+                w->setVisible(show);
             }
-            airframe->setParams(changed_params);
-            airframe->saveSettings(savePath);
+            QTimer::singleShot(0, this, fit);
+        });
+    }
+
+    if(!unsavable.isEmpty()) {
+        addText(QString("%1 not in the airframe file, can't be saved: %2")
+                .arg(unsavable.size() == 1 ? "1 setting is" : QString("%1 settings are").arg(unsavable.size()))
+                .arg(unsavable.join(", ")), "card_note");
+    }
+
+    // the airframe file, when it is a local file
+    auto uri = ac->getConfig()->getAirframeUri();
+    QString path;
+    if(uri.startsWith("file://")) {
+        path = uri.mid(QString("file://").size());
+    }
+    QCheckBox* keep_copy = nullptr;
+    if(!path.isEmpty()) {
+        keep_copy = new QCheckBox("Keep a copy of the old file", this);
+        keep_copy->setChecked(true);
+        body()->addWidget(keep_copy);
+        auto path_label = addText(path);
+        path_label->setStyleSheet("font-family: Monospace; font-size: 11px;");
+        path_label->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    }
+
+    auto cancel = addButton("Cancel");
+    auto save_as = addButton("Save as…");
+    auto save = addButton("Save", PRIMARY);
+    save->setVisible(!path.isEmpty());
+    if(path.isEmpty()) {
+        save_as->setObjectName("card_button_primary");
+        save_as->setDefault(true);
+    }
+
+    auto changed_params = [=]() {
+        QMap<QString, QString> changed;
+        for(auto ck: checks) {
+            if(ck->isChecked()) {
+                changed[ck->property("param").toString()] = ck->property("value").toString();
+            }
         }
+        return changed;
+    };
+    auto update_buttons = [=]() {
+        bool any = !changed_params().isEmpty();
+        save->setEnabled(any);
+        save_as->setEnabled(any);
+    };
+    for(auto ck: checks) {
+        connect(ck, &QCheckBox::toggled, this, update_buttons);
+    }
+    update_buttons();
 
+    auto write = [=,this](QString file) {
+        if(file == path && keep_copy != nullptr && keep_copy->isChecked()) {
+            // copy original file before overwriting it
+            auto suffix = QDateTime::currentDateTime().toString("_yy_MM_dd__hh_mm_ss") + ".xml";
+            QFile::copy(path, path.left(path.length() - 4) + suffix);
+        }
+        airframe->setParams(changed_params());
+        airframe->saveSettings(file);
         accept();
+    };
 
+    connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
+    connect(save, &QPushButton::clicked, this, [=]() {write(path);});
+    connect(save_as, &QPushButton::clicked, this, [=,this]() {
+        QString dir = path.isEmpty() ? appConfig()->value("PAPARAZZI_HOME").toString() + "/conf/airframes" : path;
+        auto file = QFileDialog::getSaveFileName(this, "Save airframe as", dir, "XML files (*.xml)", 0, QFileDialog::DontUseNativeDialog);
+        if(file != "") {
+            write(file);
+        }
     });
 
-    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=,this](){
-        reject();
-    });
+    fit();
 }
