@@ -1,5 +1,6 @@
 #include "card_dialog.h"
 #include "checklist.h"
+#include <QScrollArea>
 #include "ui_checklist.h"
 #include "pprz_dispatcher.h"
 #include "gcs_utils.h"
@@ -223,7 +224,34 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
     });
 
     refresh_progress();
-    ui->verticalLayout->addStretch(1);    // items at the top when there is extra height (e.g. in a tab)
+
+    // the items scroll below the header (title, progress, Reset) when there is not enough height,
+    // instead of being squeezed
+    auto items = new QWidget();
+    items->setObjectName("checklist_items");
+    auto items_lay = new QVBoxLayout(items);
+    items_lay->setContentsMargins(0, 0, 0, 0);
+    items_lay->setSpacing(ui->verticalLayout->spacing());
+    while(ui->verticalLayout->count() > 1) {
+        auto item = ui->verticalLayout->takeAt(1);
+        if(item->widget()) {
+            items_lay->addWidget(item->widget());
+            delete item;
+        } else if(item->layout()) {
+            items_lay->addLayout(item->layout());   // label and field rows (their widgets move along)
+        } else {
+            items_lay->addItem(item);
+        }
+    }
+    items_lay->addStretch(1);    // items at the top when there is extra height (e.g. in a tab)
+    auto scroll = new QScrollArea(this);
+    scroll->setWidget(items);
+    scroll->setWidgetResizable(true);
+    scroll->setFrameShape(QFrame::NoFrame);
+    scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scroll->viewport()->setAutoFillBackground(false);
+    items->setAutoFillBackground(false);
+    ui->verticalLayout->addWidget(scroll, 1);
     setAutoFillBackground(true);
 }
 
