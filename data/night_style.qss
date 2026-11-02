@@ -77,7 +77,7 @@ QToolTip {
 }
 LockButton {
     qproperty-color_idle: #ff15181d;
-    qproperty-color_hover: #ff2a3038;
+    qproperty-color_hover: #ff343c47;
     qproperty-color_pressed: #ff0d0f12;
     qproperty-color_active: #ff2d4a7a;
     qproperty-size: 48;

@@ -21,7 +21,7 @@ void LockButton::setSize(QSize s) {
     updateGeometry();   // the size can come from the style sheet after the layout was made
 }
 
-void LockButton::enterEvent(QEvent* e) {
+void LockButton::enterEvent(QEnterEvent* e) {
     (void)e;
     state = HOVER;
     repaint();

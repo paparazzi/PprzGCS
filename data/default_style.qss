@@ -6,7 +6,7 @@
 }
 LockButton {
     qproperty-color_idle: #ff22272e;
-    qproperty-color_hover: #ff3a4350;
+    qproperty-color_hover: #ff46505e;
     qproperty-color_pressed: #ff14171c;
     qproperty-color_active: #ff1d5fc9;
     qproperty-size: 48;

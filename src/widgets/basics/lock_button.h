@@ -33,8 +33,8 @@ public:
     int badge() {return _badge;}
 
 protected:
-    virtual void enterEvent(QEvent* e);
-    virtual void leaveEvent(QEvent* e);
+    void enterEvent(QEnterEvent* e) override;     // Qt6: QEnterEvent (a QEvent one is never called)
+    void leaveEvent(QEvent* e) override;
     virtual void paintEvent(QPaintEvent* e);
     virtual void mousePressEvent(QMouseEvent *e);
     virtual void mouseReleaseEvent(QMouseEvent *e);
