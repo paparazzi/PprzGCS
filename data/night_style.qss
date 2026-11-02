@@ -88,7 +88,7 @@ WindIndicator {
     qproperty-pen_color: #e6e8eb;
     qproperty-background_color: #f21b1f25;
     qproperty-border_color: #57606a;
-    qproperty-size: 52;
+    qproperty-size: 60;
 }
 
 MiniStrip {
