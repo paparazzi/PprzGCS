@@ -35,7 +35,11 @@ void PprzMain::setupUi(int width, int height, QWidget* centralWidget) {
     setCentralWidget(centralWidget);
     setWindowIcon(QIcon(":/pictures/icon.svg"));
     populate_menu();
-    setupTitleBar();
+    // the menu bar as the title bar: an option, as the window then has no border or shadow from the
+    // window manager (e.g. KDE: its edges are hard to see)
+    if(getAppSettings().value("window/menu_title_bar", false).toBool()) {
+        setupTitleBar();
+    }
 
     // on the right: the server, and the link of the selected aircraft
     serverStatusLed = new QLabel(statusBar);
