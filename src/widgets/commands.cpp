@@ -9,56 +9,59 @@
 Commands::Commands(QString ac_id, QWidget *parent) : QWidget(parent),
     ac_id(ac_id)
 {
+    setObjectName("commands");
+    setAttribute(Qt::WA_TranslucentBackground);     // rounded corners (the popup is frameless)
     auto lay = new QVBoxLayout(this);
     lay->setSizeConstraint(QLayout::SetFixedSize);
+    lay->setContentsMargins(12, 14, 12, 12);
+    lay->setSpacing(6);
 
     auto name = AircraftManager::get()->getAircraft(ac_id)->name();
     auto name_label = new QLabel(name, this);
-    name_label->setStyleSheet("font-weight: bold");
+    name_label->setStyleSheet("font-weight: bold; font-size: 14px;");
     lay->addWidget(name_label);
 
     auto spe_cmd_lay = new QGridLayout();
     addSpecialCommands(spe_cmd_lay);
     lay->addLayout(spe_cmd_lay);
 
-    auto line = new QFrame(this);
-    line->setFrameShape(QFrame::HLine);
-    lay->addWidget(line);
+    auto fp_caption = new QLabel("Flight plan", this);
+    fp_caption->setObjectName("commands_caption");
+    lay->addWidget(fp_caption);
 
     auto fp_lay = new QGridLayout();
     addFlightPlanButtons(fp_lay);
     lay->addLayout(fp_lay);
+    fp_caption->setVisible(fp_lay->count() > 0);
 
-    auto line2 = new QFrame(this);
-    line2->setFrameShape(QFrame::HLine);
-    lay->addWidget(line2);
+    auto set_caption = new QLabel("Settings", this);
+    set_caption->setObjectName("commands_caption");
+    lay->addWidget(set_caption);
 
     auto set_lay = new QGridLayout();
     addSettingsButtons(set_lay);
     lay->addLayout(set_lay);
+    set_caption->setVisible(set_lay->count() > 0);
 
     target_alt = static_cast<float>(AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getDefaultAltitude());
     connect(PprzDispatcher::get(), &PprzDispatcher::nav_status, this, &Commands::updateTargetAlt);
 }
 
 void Commands::paintEvent(QPaintEvent* e) {
+    // a card with a bar in the aircraft color at the top
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
-    QPainterPath path;
-    path.addRect(rect());
+    QColor background = palette().color(QPalette::Window);
+    QColor border = palette().color(QPalette::Mid);
+    p.setPen(QPen(border, 1));
+    p.setBrush(background);
+    p.drawRoundedRect(QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5), 8, 8);
     p.setPen(Qt::NoPen);
-
-    QColor color = AircraftManager::get()->getAircraft(ac_id)->getColor();
-    int hue = color.hue();
-    int sat = color.saturation();
-    color.setHsv(hue, static_cast<int>(sat*0.2), 255);
-
-    p.fillPath(path, color);
-    p.drawPath(path);
+    p.setBrush(AircraftManager::get()->getAircraft(ac_id)->getColor());
+    p.drawRoundedRect(QRect(0, 0, width(), 6), 3, 3);
 
     QWidget::paintEvent(e);
 }
-
 
 void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
     auto groups = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getGroups();

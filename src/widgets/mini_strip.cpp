@@ -1,3 +1,4 @@
+#include "card_dialog.h"
 #include "mini_strip.h"
 #include "AircraftManager.h"
 #include "gcs_utils.h"
@@ -5,6 +6,37 @@
 #include "mini_strip.h"
 #include <QDebug>
 #include <QSettings>
+#include <QApplication>
+
+// Lost links and battery level are shown with the properties "link" (on the strip) and "bat"
+// (on the voltage), styled by the application style sheet (light and night themes). These
+// colors are used when the style sheet does not style them (an older custom style).
+static const QString STRIP_STYLE =
+    "QPushButton#strip_kill {border: 1px solid #b42318; color: #b42318; background: transparent;"
+    " border-radius: 5px; padding: 1px 8px; font-weight: bold;}"
+    "QPushButton#strip_kill:hover {background: #b42318; color: white;}"
+    "QPushButton#strip_kill[killed=\"true\"] {border-color: #1a7f37; color: #1a7f37;}"
+    "QPushButton#strip_kill[killed=\"true\"]:hover {background: #1a7f37; color: white;}"
+    // the row of the status icons: the strip color behind it (selected: blue)
+    "#mini_strip QWidget#status_row {background: transparent;}"
+    "QLabel#value {font-family: \"Monospace\"; font-size: 14px;}"
+    "QLabel#caption {font-size: 11px;}"
+    "QLabel#name {font-weight: bold; font-size: 15px;}"
+    "QPushButton#cell {border: 0; background: transparent; padding: 0; text-align: left;}"
+    "QPushButton#cell:hover {background: rgba(128, 128, 128, 40);}";
+static const QString STRIP_FALLBACK =
+    "#mini_strip[selected=\"true\"] {border: 2px solid #1d5fc9; background: #f5f8fd;}"
+    "#mini_strip[link=\"warning\"] {border: 3px solid #c27c0e; background: #fff4e0;}"
+    "#mini_strip[link=\"lost\"] {border: 3px solid #b42318; background: #fde8e6;}"
+    "QLabel[bat=\"low\"] {color: #8a4b00; font-weight: bold;}"
+    "QLabel[bat=\"critic\"] {color: #b42318; font-weight: bold;}"
+    "QLabel#caption {color: #30363d;}"
+    "QLabel#status_text {color: #b42318; font-weight: bold;}";
+
+static void restyle(QWidget* w) {
+    w->style()->unpolish(w);
+    w->style()->polish(w);
+}
 
 const QMap<QString, QString> MiniStrip::mode_colors{
     // fixedwings
@@ -30,162 +62,26 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     ac_id(ac_id), icons_size(QSize(30, 30)), time_mode(TimeMode::FLIGHT_TIME),
     alt_mode(true), speed_mode(SpeedMode::GROUND_SPEED)
 {
-    setContentsMargins(0, 0, 20, 0);
-    auto gl = new QGridLayout(this);
+    // Two rows: name, mode, block and time; then labeled values. The status icons (link, GPS,
+    // RC, IMU) only show when something is wrong. Clicking time, altitude or speed switches
+    // what they show; the caption says which.
+    setContentsMargins(0, 0, 0, 0);
+    setMinimumWidth(360);
     auto ac = AircraftManager::get()->getAircraft(ac_id);
-    auto ac_name = new QLabel(ac->name());
-    ac_name->setStyleSheet("font-weight: bold");
-    gl->addWidget(ac_name, 0, 0);
+    auto vbox = new QVBoxLayout(this);
+    vbox->setContentsMargins(8, 6, 8, 6);
+    vbox->setSpacing(4);
 
+    /////////// first row: name, mode, block, time ///////////
+    auto row1 = new QHBoxLayout();
+    row1->setSpacing(8);
+    auto ac_name = new QLabel(ac->name(), this);
+    ac_name->setObjectName("name");
+    row1->addWidget(ac_name);
 
-    /////////// alt ///////////
-    QHBoxLayout* alt_layout = new QHBoxLayout();
-    alt_button = new QToolButton(this);
-    alt_button->setIconSize(icons_size);
-    agl_icon = QIcon(":/pictures/agl.svg");
-    msl_icon = QIcon(":/pictures/msl.svg");
-    alt_button->setIcon(agl_icon);
-    alt_layout->addWidget(alt_button);
-    alt_label = new QLabel("0 m", this);
-    alt_label->setToolTip("Altitude AGL");
-    alt_layout->addWidget(alt_label);
-    gl->addLayout(alt_layout, 1, 1);
-    connect(alt_button, &QToolButton::clicked, this,
-        [=,this]() {
-            alt_mode = !alt_mode;
-            if(alt_mode) {
-                alt_button->setIcon(agl_icon);
-                alt_label->setToolTip("Altitude AGL");
-            } else {
-                alt_button->setIcon(msl_icon);
-                alt_label->setToolTip("Altitude MSL");
-            }
-            updateData();
-        });
-
-    /////////// flight time ///////////
-    QHBoxLayout* ft_lay = new QHBoxLayout();
-    time_button = new QToolButton(this);
-    time_button->setIconSize(icons_size);
-    time_flight = QIcon(":/pictures/flight_time.svg");
-    time_block = QIcon(":/pictures/block_time.svg");
-    time_stage = QIcon(":/pictures/stage_time.svg");
-    time_button->setIcon(time_flight);
-    time_button->setToolTip("Flight time");
-    ft_lay->addWidget(time_button);
-    flight_time_label = new QLabel("0 s", this);
-    flight_time_label->setToolTip("Flight time");
-    ft_lay->addWidget(flight_time_label);
-    ft_lay->addStretch();
-    gl->addLayout(ft_lay, 0, 1);
-    connect(time_button, &QToolButton::clicked, this,
-        [=,this]() {
-        switch (time_mode) {
-        case FLIGHT_TIME:
-            time_mode = BLOCK_TIME;
-            time_button->setToolTip("Block time");
-            time_button->setIcon(time_block);
-            flight_time_label->setToolTip("Block time");
-            break;
-        case BLOCK_TIME:
-            time_mode = STAGE_TIME;
-            time_button->setToolTip("Stage time");
-            time_button->setIcon(time_stage);
-            flight_time_label->setToolTip("Stage time");
-            break;
-        case STAGE_TIME:
-            time_mode = FLIGHT_TIME;
-            time_button->setToolTip("Flight time");
-            time_button->setIcon(time_flight);
-            flight_time_label->setToolTip("Flight time");
-            break;
-        }
-        updateData();
-        });
-
-
-    /////////// speed //////////////////
-    QHBoxLayout* speed_lay = new QHBoxLayout();
-    speed_button = new QToolButton(this);
-    speed_button->setIconSize(icons_size);
-    ground_speed_icon = QIcon(":/pictures/ground_speed.svg");
-    air_speed_icon = QIcon(":/pictures/airspeed.svg");
-    vertical_speed_icon = QIcon(":/pictures/vertical_speed.svg");
-    speed_button->setIcon(ground_speed_icon);
-    speed_lay->addWidget(speed_button);
-    speed_label = new QLabel("0 m/s", this);
-    speed_label->setToolTip("Ground speed");
-    speed_lay->addWidget(speed_label);
-    gl->addLayout(speed_lay, 2, 1);
-    connect(speed_button, &QToolButton::clicked, this,
-        [=,this]() {
-            switch (speed_mode) {
-            case GROUND_SPEED:
-                speed_mode = AIR_SPEED;
-                speed_button->setIcon(air_speed_icon);
-                speed_label->setToolTip("Air speed");
-                break;
-            case AIR_SPEED:
-                speed_mode = VERTICAL_SPEED;
-                speed_button->setIcon(vertical_speed_icon);
-                speed_label->setToolTip("Vertical speed");
-                break;
-            case VERTICAL_SPEED:
-                speed_mode = GROUND_SPEED;
-                speed_button->setIcon(ground_speed_icon);
-                speed_label->setToolTip("Ground speed");
-                break;
-            }
-            updateData();
-        });
-
-
-
-    /////////// block /////////
-    auto block_lay = new QHBoxLayout();
-    block_icon = new QLabel(this);
-    block_label = new QLabel(this);
-    block_lay->addWidget(block_icon);
-    block_lay->addWidget(block_label);
-    block_lay->addStretch();
-    block_icon->setToolTip("block");
-    block_label->setToolTip("block");
-    gl->addLayout(block_lay, 0, 2);
-
-    ////////// bat /////////////
-    auto bat_lay = new QHBoxLayout();
-    bat_ok = QIcon(":/pictures/bat_ok.svg");
-    bat_low = QIcon(":/pictures/bat_low.svg");
-    bat_critic = QIcon(":/pictures/bat_critic.svg");
-    bat_catastrophic = QIcon(":/pictures/bat_catastrophic.svg");
-    bat_icon = new QLabel(this);
-    bat_icon->setPixmap(bat_catastrophic.pixmap(icons_size));
-    bat_label = new QLabel("00.0 V", this);
-    bat_lay->addWidget(bat_icon);
-    bat_lay->addWidget(bat_label);
-    gl->addLayout(bat_lay, 1, 0);
-
-    auto bnbc = ac->getAirframe()->getDefine("BAT_NB_CELLS");
-    bat_nb_cells = bnbc.has_value() ? bnbc->value.toInt() : 0;
-
-
-    ////////// throttle /////////////
-    auto th_lay = new QHBoxLayout();
-    throttle_on = QIcon(":/pictures/throttle_on.svg");
-    throttle_killed = QIcon(":/pictures/throttle_killed.svg");
-    throttle_icon = new QLabel(this);
-    throttle_icon->setPixmap(throttle_killed.pixmap(icons_size));
-    th_lay->addWidget(throttle_icon);
-    throttle_label = new QLabel("0 %", this);
-    throttle_label->setToolTip("Throttle");
-    th_lay->addWidget(throttle_label);
-    gl->addLayout(th_lay, 2, 0);
-
-    //////// mode //////////
-    ap_mode_button = new QPushButton("MODE");
-    ap_mode_button->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    gl->addWidget(ap_mode_button, 1, 2);
+    ap_mode_button = new QPushButton("", this);
     ap_mode_button->setToolTip("AP mode");
+    row1->addWidget(ap_mode_button);
     auto settings = ac->getSettingMenu()->getAllSettings();
     for(auto setting: settings) {
         if(setting->getName() == "autopilot.mode") {
@@ -196,45 +92,197 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
         }
     }
 
+    block_icon = new QLabel(this);
+    block_label = new QLabel(this);
+    block_label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    row1->addWidget(block_icon);
+    row1->addWidget(block_label, 1);
 
+    // kill the throttle (or resurrect it), after a confirmation: when the aircraft has the setting
+    for(auto setting: settings) {
+        if(setting->getName() == "autopilot.kill_throttle") {
+            kill_button = new QPushButton("Kill", this);
+            kill_button->setObjectName("strip_kill");
+            kill_button->setCursor(Qt::PointingHandCursor);
+            kill_button->setToolTip("Kill the throttle (asks first)");
+            row1->addWidget(kill_button);
+            connect(kill_button, &QPushButton::clicked, this, [=,this]() {
+                bool killed = kill_button->property("killed").toBool();
+                QString name = AircraftManager::get()->getAircraft(ac_id)->name();
+                bool ok = killed ?
+                    CardDialog::ask(this, "Resurrect the throttle of " + name + "?",
+                                    "The motors can start again.", "Resurrect", CardDialog::PRIMARY) :
+                    CardDialog::ask(this, "Kill the throttle of " + name + "?",
+                                    "The motors stop at once, also in flight.", "Kill", CardDialog::DANGER);
+                if(ok && AircraftManager::get()->aircraftExists(ac_id)) {
+                    AircraftManager::get()->getAircraft(ac_id)->setSetting(setting, killed ? 0.f : 1.f);
+                }
+            });
+            break;
+        }
+    }
 
-    ///// Link, GPS, RC //////
-    auto misc_lay = new QHBoxLayout();
-    link_icon = new QLabel(this);
+    QLabel* time_caption;
+    time_button = makeCell(time_caption, flight_time_label, false);
+    time_caption->setText("Flight");
+    flight_time_label->setText("00:00:00");
+    time_button->setToolTip("Flight time (click: block, stage time)");
+    row1->addWidget(time_button);
+    connect(time_button, &QPushButton::clicked, this,
+        [=,this]() {
+        switch (time_mode) {
+        case FLIGHT_TIME:
+            time_mode = BLOCK_TIME;
+            time_caption->setText("Block");
+            break;
+        case BLOCK_TIME:
+            time_mode = STAGE_TIME;
+            time_caption->setText("Stage");
+            break;
+        case STAGE_TIME:
+            time_mode = FLIGHT_TIME;
+            time_caption->setText("Flight");
+            break;
+        }
+        updateData();
+        });
+    vbox->addLayout(row1);
+
+    /////////// second row: values ///////////
+    auto row2 = new QGridLayout();
+    row2->setHorizontalSpacing(10);
+    row2->setVerticalSpacing(0);
+
+    QLabel* bat_caption;
+    auto bat_cell = makeCell(bat_caption, bat_label, true);
+    bat_caption->setText("Battery");
+    bat_cell->setFocusPolicy(Qt::NoFocus);
+    bat_cell->setAttribute(Qt::WA_TransparentForMouseEvents);
+    auto bnbc = ac->getAirframe()->getDefine("BAT_NB_CELLS");
+    bat_nb_cells = bnbc.has_value() ? bnbc->value.toInt() : 0;
+    row2->addWidget(bat_cell, 0, 0);
+
+    QLabel* alt_caption;
+    alt_button = makeCell(alt_caption, alt_label, true);
+    alt_caption->setText("AGL | to target");
+    alt_button->setToolTip("Height above ground, and to the target altitude (click: MSL)");
+    row2->addWidget(alt_button, 0, 1);
+    connect(alt_button, &QPushButton::clicked, this,
+        [=,this]() {
+            alt_mode = !alt_mode;
+            alt_caption->setText(alt_mode ? "AGL | to target" : "MSL | to target");
+            alt_button->setToolTip(alt_mode ?
+                "Height above ground, and to the target altitude (click: MSL)" :
+                "Altitude MSL, and to the target altitude (click: AGL)");
+            updateData();
+        });
+
+    QLabel* speed_caption;
+    speed_button = makeCell(speed_caption, speed_label, true);
+    speed_caption->setText("Ground speed");
+    speed_button->setToolTip("Click: ground speed, airspeed, climb");
+    row2->addWidget(speed_button, 0, 2);
+    connect(speed_button, &QPushButton::clicked, this,
+        [=,this]() {
+            switch (speed_mode) {
+            case GROUND_SPEED:
+                speed_mode = AIR_SPEED;
+                speed_caption->setText("Airspeed");
+                break;
+            case AIR_SPEED:
+                speed_mode = VERTICAL_SPEED;
+                speed_caption->setText("Climb");
+                break;
+            case VERTICAL_SPEED:
+                speed_mode = GROUND_SPEED;
+                speed_caption->setText("Ground speed");
+                break;
+            }
+            updateData();
+        });
+
+    auto th_cell = makeCell(throttle_caption, throttle_label, true);
+    throttle_caption->setText("Throttle");
+    th_cell->setAttribute(Qt::WA_TransparentForMouseEvents);
+    row2->addWidget(th_cell, 0, 3);
+    // the last column on the right edge, under the time
+    for(auto l: {throttle_caption, throttle_label}) {
+        l->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    }
+    for(int i=0; i<4; i++) {
+        row2->setColumnStretch(i, 1);
+    }
+    compact_icons = new QHBoxLayout();
+    compact_icons->setSpacing(2);
+    row1->insertLayout(row1->indexOf(time_button), compact_icons);   // before the time
+    vbox->addLayout(row2);
+    captions = {time_caption, bat_caption, alt_caption, speed_caption, throttle_caption};
+    value_cells = {bat_cell, alt_button, speed_button, th_cell};
+    for(auto cell: QList<QPushButton*>{bat_cell, alt_button, speed_button, th_cell, time_button}) {
+        cell->installEventFilter(this);
+    }
+
+    ///// Link, GPS, RC, IMU: only when not ok //////
+    auto status_lay = new QHBoxLayout();
+    status_lay->setSpacing(6);
+    QSize status_size(22, 22);
     link_ok = QIcon(":/pictures/link_ok.svg");
     link_warning = QIcon(":/pictures/link_warning.svg");
     link_lost = QIcon(":/pictures/link_nok.svg");
-    link_icon->setPixmap(link_lost.pixmap(icons_size));
-    link_icon->setToolTip("Link");
-    misc_lay->addWidget(link_icon);
-
-    gps_icon = new QLabel(this);
     gps_lost = QIcon(":/pictures/gps_nok.svg");
     gps_ok = QIcon(":/pictures/gps_ok.svg");
     gps_dgps = QIcon(":/pictures/gps_dgps.svg");
     gps_rtk = QIcon(":/pictures/gps_rtk.svg");
-    gps_icon->setPixmap(gps_lost.pixmap(30,30));
-    gps_icon->setToolTip("Gps");
-    misc_lay->addWidget(gps_icon);
-
-
-    rc_icon = new QLabel(this);
     rc_ok = QIcon(":/pictures/rc_ok.svg");
     rc_lost = QIcon(":/pictures/rc_nok.svg");
-    rc_icon->setPixmap(rc_lost.pixmap(icons_size));
-    rc_icon->setToolTip("RC");
-    misc_lay->addWidget(rc_icon);
-
-    imu_icon = new QLabel(this);
     imu_ok = QIcon(":/pictures/imu_ok.svg");
     imu_lost = QIcon(":/pictures/imu_nok.svg");
-    imu_icon->setPixmap(imu_lost.pixmap(icons_size));
-    imu_icon->setToolTip("IMU");
-    misc_lay->addWidget(imu_icon);
+    link_icon = new QLabel(this);
+    gps_icon = new QLabel(this);
+    rc_icon = new QLabel(this);
+    imu_icon = new QLabel(this);
+    status_text = new QLabel(this);
+    status_text->setObjectName("status_text");
+    for(auto l: {link_icon, gps_icon, rc_icon, imu_icon}) {
+        l->setFixedSize(status_size);
+        l->setScaledContents(true);
+        status_lay->addWidget(l);
+    }
+    status_lay->addWidget(status_text, 1);
+    status_layout = status_lay;
+    status_row = new QWidget(this);
+    status_row->setObjectName("status_row");
+    status_row->setLayout(status_lay);
+    status_lay->setContentsMargins(0, 0, 0, 0);
+    vbox->addWidget(status_row);
 
-    gl->addLayout(misc_lay, 2, 2);
+    setObjectName("mini_strip");
+    setAttribute(Qt::WA_StyledBackground);
+    setStyleSheet(STRIP_STYLE + (qApp->styleSheet().contains("mini_strip") ? "" : STRIP_FALLBACK));
+    // the time keeps its width (measured with the style sheet fonts)
+    for(auto l: time_button->findChildren<QLabel*>()) {
+        l->ensurePolished();
+    }
+    time_button->setMinimumWidth(time_button->layout()->sizeHint().width() + 8);
 
-    setStyleSheet("QLabel {font-family: \"Monospace\";}");
+    // the selected aircraft's strip is highlighted; clicking a strip selects its aircraft
+    connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, [=,this](QString id) {
+        bool selected = id == this->ac_id;
+        if(property("selected").toBool() != selected) {
+            setProperty("selected", selected);
+            restyle(this);
+        }
+    });
+    if(DispatcherUi::get()->getSelectedAcId() == ac_id) {
+        setProperty("selected", true);
+    }
+
+    // until the first data
+    for(auto l: {bat_label, alt_label, speed_label, throttle_label}) {
+        l->setText(QString::fromUtf8("\xE2\x80\x94"));
+    }
+    updateAp("");
+    updateStatusRow();
 
     auto ac_status = AircraftManager::get()->getAircraft(ac_id)->getStatus();
 
@@ -247,21 +295,66 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     connect(ac_status->getWatcher(), &AircraftWatcher::bat_status, this, &MiniStrip::handle_bat_status);
 }
 
+/**
+ * A value with its caption: a flat button (clickable to change what it shows), the caption
+ * above (vertical) or before the value.
+ */
+QPushButton* MiniStrip::makeCell(QLabel*& caption, QLabel*& value, bool vertical) {
+    auto cell = new QPushButton(this);
+    cell->setObjectName("cell");
+    connect(cell, &QPushButton::clicked, this, [=,this]() {
+        emit DispatcherUi::get()->ac_selected(ac_id);
+    });
+    cell->setFlat(true);
+    QBoxLayout* lay = vertical ? static_cast<QBoxLayout*>(new QVBoxLayout(cell)) : static_cast<QBoxLayout*>(new QHBoxLayout(cell));
+    lay->setContentsMargins(2, 0, 2, 0);
+    lay->setSpacing(vertical ? 0 : 6);
+    caption = new QLabel(cell);
+    caption->setObjectName("caption");
+    value = new QLabel(cell);
+    value->setObjectName("value");
+    for(auto l: {caption, value}) {
+        l->setAttribute(Qt::WA_TransparentForMouseEvents);
+        lay->addWidget(l);
+    }
+    if(vertical) {
+        cell->setMinimumHeight(caption->sizeHint().height() + value->sizeHint().height() + 6);
+    }
+    cell->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    return cell;
+}
+
+/// The status icons that are not ok, with a short text.
+void MiniStrip::updateStatusRow() {
+    QStringList problems;
+    for(auto l: {link_icon, gps_icon, rc_icon, imu_icon}) {
+        bool show = l->property("problem").toBool();
+        l->setVisible(show);
+        if(show) {
+            problems.append(l->toolTip());
+        }
+    }
+    status_text->setText(problems.join(" · "));
+    status_row->setVisible(!problems.isEmpty() && !compact);
+}
+
 void MiniStrip::handle_bat_status(AircraftWatcher::BatStatus bs) {
-    // change battery icon
+    // the voltage in amber or red
+    QString level;
     switch (bs) {
     case AircraftWatcher::BatStatus::CATASTROPHIC:
-        bat_icon->setPixmap(bat_catastrophic.pixmap(icons_size));
-        break;
     case AircraftWatcher::BatStatus::CRITIC:
-        bat_icon->setPixmap(bat_critic.pixmap(icons_size));
+        level = "critic";
         break;
     case AircraftWatcher::BatStatus::LOW:
-        bat_icon->setPixmap(bat_low.pixmap(icons_size));
+        level = "low";
         break;
     case AircraftWatcher::BatStatus::OK:
-        bat_icon->setPixmap(bat_ok.pixmap(icons_size));
         break;
+    }
+    if(bat_label->property("bat").toString() != level) {
+        bat_label->setProperty("bat", level);
+        restyle(bat_label);
     }
 }
 
@@ -287,61 +380,66 @@ void MiniStrip::updateFlightTime(uint32_t flight_time, uint32_t block_time, uint
 }
 
 void MiniStrip::updateAp(QString ap_mode) {
-    QColor color = QColor(Qt::white);
+    // a pill in the mode's color (gray while unknown)
+    QColor color = QColor("#d0d7de");
     if(mode_colors.contains(ap_mode)) {
         color = QColor(mode_colors[ap_mode]);
-
     }
-    QString style_back = "background: rgb(%1, %2, %3);";
-    QString style = "QPushButton {";
-    style += style_back.arg(color.red()).arg(color.green()).arg(color.blue());
-    style += "color:black; font-size:12px;";
-    style += " font-weight:bold;";
-    style += "}";
-    ap_mode_button->setStyleSheet(style);
-    ap_mode_button->setText(ap_mode);
+    QString style = QString("QPushButton { background: %1; color: black; font-size: 12px; font-weight: bold;"
+                            " border: 0; border-radius: 4px; padding: 2px 8px; }").arg(color.name());
+    if(ap_mode_button->styleSheet() != style) {
+        ap_mode_button->setStyleSheet(style);
+    }
+    ap_mode_button->setText(ap_mode.isEmpty() ? QString::fromUtf8("\xE2\x80\x94") : ap_mode);
 }
 
 void MiniStrip::updateGps(QString gps_mode) {
-    if(gps_mode == "NOFIX" || gps_mode == "NA" || gps_mode == "2D") {
+    bool problem = true;
+    if(gps_mode == "NOFIX" || gps_mode == "NA" || gps_mode == "2D" || gps_mode == "") {
         gps_icon->setPixmap(gps_lost.pixmap(30,30));
     } else if(gps_mode == "3D" ) {
         gps_icon->setPixmap(gps_ok.pixmap(30,30));
+        problem = false;
     } else if(gps_mode == "DGPS") {
         gps_icon->setPixmap(gps_dgps.pixmap(30,30));
+        problem = false;
     } else if(gps_mode == "RTK") {
         gps_icon->setPixmap(gps_rtk.pixmap(30,30));
+        problem = false;
     }
-    gps_icon->setToolTip("Gps " + QString(gps_mode));
+    gps_icon->setToolTip("GPS " + (gps_mode.isEmpty() ? QString("?") : gps_mode));
+    gps_icon->setProperty("problem", problem);
 }
 
 void MiniStrip::updateImu(QString state_filter_mode) {
-    if(state_filter_mode == "OK") {
-        imu_icon->setPixmap(imu_ok.pixmap(icons_size));
-    } else {
-        imu_icon->setPixmap(imu_lost.pixmap(icons_size));
-    }
-    imu_icon->setToolTip("IMU " + QString(state_filter_mode));
+    bool ok = state_filter_mode == "OK";
+    imu_icon->setPixmap((ok ? imu_ok : imu_lost).pixmap(icons_size));
+    imu_icon->setToolTip("IMU " + (state_filter_mode.isEmpty() ? QString("?") : state_filter_mode));
+    imu_icon->setProperty("problem", !ok);
 }
 
 void MiniStrip::updateCurrentBlock(uint8_t cur_block) {
-    auto block = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getBlock(cur_block);
+    shared_ptr<Block> block;
+    try {
+        block = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getBlock(cur_block);
+    } catch(std::runtime_error &e) {
+        // a block that is not in the loaded flight plan (e.g. another build): do not stop the GCS
+        block_label->setText(QString("Block %1").arg(cur_block));
+        block_label->setToolTip(e.what());
+        block_icon->hide();
+        return;
+    }
     QString block_name = block->getName();
     block_label->setToolTip("Block " + block_name);
-    if(block_name.size() > 15) {
-        block_name.truncate(12);
-        block_name += "...";
-    }
     block_label->setText(block_name);
-
-    auto settings = getAppSettings();
 
     QString icon_name = block->getIcon();
     if(icon_name != "") {
         QString icon_path = appConfig()->value("GCS_ICONS_PATH").toString() + "/" + icon_name;
-        block_icon->setPixmap(QIcon(icon_path).pixmap(icons_size));
+        block_icon->setPixmap(QIcon(icon_path).pixmap(QSize(20, 20)));
+        block_icon->show();
     } else {
-        block_icon->setText(QString::fromUtf8("\xE2\x88\x85"));
+        block_icon->hide();
     }
 }
 
@@ -414,29 +512,30 @@ void MiniStrip::updateData() {
     }
 
 
-    // batterie
+    // battery
     if(bat_nb_cells != 0) {
-        bat_label->setText(QString("%1 V/c").arg(bat/bat_nb_cells, 5, 'f', 2));
-        bat_label->setToolTip(QString("%1 V").arg(bat, 5, 'f', 2));
-        bat_icon->setToolTip(QString("%1 V").arg(bat, 5, 'f', 2));
+        bat_label->setText(QString("%1 V/c").arg(bat/bat_nb_cells, 0, 'f', 2));
+        bat_label->setToolTip(QString("%1 V").arg(bat, 0, 'f', 2));
     } else {
-        bat_label->setText(QString("%1 V").arg(bat, 5, 'f', 2));
+        bat_label->setText(QString("%1 V").arg(bat, 0, 'f', 1));
     }
 
-    // throttle
-    /// TODO: change bat icon : full/half/low
-    throttle_label->setText(QString("%1 %").arg(throttle, 4, 'f', 1));
-
-    // kill
-    if(kill_mode == "OFF") {
-        throttle_icon->setPixmap(throttle_on.pixmap(icons_size));
-    } else {
-        throttle_icon->setPixmap(throttle_killed.pixmap(icons_size));
+    // throttle, and kill
+    throttle_label->setText(QString("%1 %").arg(throttle, 0, 'f', 0));
+    throttle_caption->setText(kill_mode == "OFF" || kill_mode.isEmpty() ? "Throttle" : "Throttle (kill)");
+    if(kill_button != nullptr) {
+        bool killed = !(kill_mode == "OFF" || kill_mode.isEmpty());
+        if(kill_button->property("killed").toBool() != killed || kill_button->text().isEmpty()) {
+            kill_button->setProperty("killed", killed);
+            kill_button->setText(killed ? "Resurrect" : "Kill");
+            kill_button->setToolTip(killed ? "The throttle is killed: resurrect it (asks first)" : "Kill the throttle (asks first)");
+            kill_button->style()->unpolish(kill_button);
+            kill_button->style()->polish(kill_button);
+        }
     }
 
     // flight time
     updateFlightTime(flight_time, block_time, stage_time);
-
 
     // mode
     updateAp(ap_mode);
@@ -448,7 +547,6 @@ void MiniStrip::updateData() {
     updateImu(state_filter_mode);
 
     // link
-    QString tip_txt;
     int nb_links_ok = 0;
     for(auto &telemetry_msg: telemetry_messages) {
         float time_since_last_msg = 9999;
@@ -458,46 +556,42 @@ void MiniStrip::updateData() {
         }
     }
 
-
+    QString link_state;
     if(nb_links_ok == telemetry_messages.size()) {
-        // all links ok
         link_icon->setPixmap(link_ok.pixmap(icons_size));
     } else if(nb_links_ok > 0) {
-        // some links lost
         link_icon->setPixmap(link_warning.pixmap(icons_size));
+        link_state = "warning";
     } else {
-        // All links lost
         link_icon->setPixmap(link_lost.pixmap(icons_size));
+        link_state = "lost";
     }
-
+    if(property("link").toString() != link_state) {
+        setProperty("link", link_state);
+        restyle(this);
+    }
     if(telemetry_messages.size() > 1) {
-        // multiple links
-        tip_txt = QString("Link %1 / %2").arg(nb_links_ok).arg(telemetry_messages.size());
+        link_icon->setToolTip(QString("Link %1/%2").arg(nb_links_ok).arg(telemetry_messages.size()));
     } else {
-        // one link
-        if(nb_links_ok > 0) {
-            tip_txt = "Link ok";
-        } else {
-            tip_txt = "Link lost";
-        }
+        link_icon->setToolTip(nb_links_ok > 0 ? "Link ok" : "Link lost");
     }
-    link_icon->setToolTip(tip_txt);
+    link_icon->setProperty("problem", !link_state.isEmpty());
 
     // RC
-    if(rc_status == "OK") {
-        rc_icon->setPixmap(rc_ok.pixmap(icons_size));
-    } else {
-        rc_icon->setPixmap(rc_lost.pixmap(icons_size));
-    }
-    rc_icon->setToolTip("RC " + rc_status);
+    bool rc_is_ok = rc_status == "OK";
+    rc_icon->setPixmap((rc_is_ok ? rc_ok : rc_lost).pixmap(icons_size));
+    rc_icon->setToolTip("RC " + (rc_status.isEmpty() ? QString("?") : rc_status));
+    rc_icon->setProperty("problem", !rc_is_ok);
+
+    updateStatusRow();
 
     // alt
     double alt_display = alt_mode ? agl: alt;
     double diff_alt = alt - target_alt;
-    QString alt_str = QString("%1m | %2%3 m")
-            .arg(alt_display, 3, 'f', 0)
+    QString alt_str = QString("%1 | %2%3 m")
+            .arg(alt_display, 0, 'f', 0)
             .arg(diff_alt >= 0 ? "+": "")
-            .arg(diff_alt, 3, 'f', abs(diff_alt) > 10 ? 0: 1);
+            .arg(diff_alt, 0, 'f', abs(diff_alt) > 10 ? 0: 1);
     alt_label->setText(alt_str);
 
     // speed
@@ -544,12 +638,60 @@ void MiniStrip::updateData() {
 
 }
 
+void MiniStrip::mousePressEvent(QMouseEvent *event) {
+    (void)event;
+    emit DispatcherUi::get()->ac_selected(ac_id);
+}
+
 bool MiniStrip::eventFilter(QObject *object, QEvent *event)
 {
     (void) object;
-    if (event->type() == QEvent::MouseButtonPress) {
-        emit DispatcherUi::get()->ac_selected(ac_id);
-        return true;
+    // a double click on a value (they are buttons) also centers the map on the aircraft
+    if (event->type() == QEvent::MouseButtonDblClick) {
+        centerOnAircraft();
     }
     return false;
+}
+
+void MiniStrip::mouseDoubleClickEvent(QMouseEvent *event) {
+    (void)event;
+    centerOnAircraft();
+}
+
+void MiniStrip::centerOnAircraft() {
+    emit DispatcherUi::get()->ac_selected(ac_id);
+    if(AircraftManager::get()->aircraftExists(ac_id)) {
+        auto ac = AircraftManager::get()->getAircraft(ac_id);
+        if(ac->isReal()) {
+            emit DispatcherUi::get()->centerMap(ac->getPosition());
+        }
+    }
+}
+
+void MiniStrip::setCompact(bool c) {
+    // two lines: the values without captions; the status icons (not ok) on the first line
+    compact = c;
+    for(auto l: captions) {
+        l->setVisible(!compact);
+    }
+    for(auto cell: value_cells) {
+        if(!cell->property("full_height").isValid()) {
+            cell->setProperty("full_height", cell->minimumHeight());
+        }
+        cell->setMinimumHeight(compact ? 0 : cell->property("full_height").toInt());
+    }
+    int i = 0;
+    for(auto icon: {link_icon, gps_icon, rc_icon, imu_icon}) {
+        icon->setFixedSize(compact ? QSize(16, 16) : QSize(22, 22));
+        if(compact) {
+            compact_icons->addWidget(icon);
+        } else {
+            status_layout->insertWidget(i++, icon);
+        }
+    }
+    if(auto lay = qobject_cast<QVBoxLayout*>(layout())) {
+        lay->setContentsMargins(8, compact ? 3 : 6, 8, compact ? 3 : 6);
+        lay->setSpacing(compact ? 0 : 4);
+    }
+    updateStatusRow();
 }
