@@ -455,10 +455,19 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     std::function<void(bool)> show_editor = [](bool) {};
     // opened by a click on the name: the slider (numbers) and the buttons
     auto expanded = std::make_shared<bool>(rows_open);     // GCS setting: all rows open
+    auto opened_by_field = std::make_shared<bool>(false);
     auto update_actions = [=,this]() {
         actions->setVisible(dirty[setting] || *expanded);
         undo_btn->setEnabled(dirty[setting]);
+        // the initial value: the first value received from the aircraft (once it is known)
+        auto initial = setting->getInitialValue();
+        init_btn->setEnabled(initial.has_value());
+        init_btn->setToolTip(initial.has_value() ?
+            QString("Send the initial value: %1 (the first value received from the aircraft)")
+                .arg(initial.value() * setting->getAltUnitCoef()) :
+            QString("The initial value is not known yet (no value received from the aircraft)"));
     };
+    refresh_actions[setting] = update_actions;
 
     auto [min, max, step] = setting->getBounds();
     auto values = setting->getValues();
@@ -608,12 +617,22 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
             (*changed)();
         });
         connect(edit, &QLineEdit::returnPressed, send_btn, &QPushButton::click);
-        // the slider while the field is used
+        // using the field opens the whole row (slider and buttons), as a click on the name; it
+        // closes again when leaving it without a change
         connect(qApp, &QApplication::focusChanged, edit, [=,this](QWidget*, QWidget* now) {
-            if(now == edit) {
-                show_editor(true);
-            } else if(!dirty[setting] && now != slider) {
+            if(now == edit && !*expanded) {
+                *expanded = true;
+                *opened_by_field = true;
+                refresh_actions[setting]();
                 show_editor(false);
+                fitContent();
+            } else if(now != edit && *opened_by_field && !dirty[setting] &&
+                      !(now != nullptr && widget->isAncestorOf(now))) {
+                *expanded = false;
+                *opened_by_field = false;
+                refresh_actions[setting]();
+                show_editor(false);
+                fitContent();
             }
         });
     }
@@ -628,6 +647,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     label->setCursor(Qt::PointingHandCursor);
     toggle_slider[setting] = [=,this]() {
         *expanded = !*expanded;
+        *opened_by_field = false;
         show_editor(false);
         update_actions();
         fitContent();
@@ -687,7 +707,6 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
             send(setting, initial_value.value());
         }
     });
-    init_btn->setEnabled(setting->getInitialValue().has_value());
 
     menu->addAction("Ask the value again", this, [=,this]() {
         requestValue(setting);
@@ -791,6 +810,9 @@ void SettingsViewer::updateSettings(QString id, Setting* setting, float value) {
         if(!initialized[setting]) {
             setting->setInitialValue(value);
             initialized[setting] = true;
+            if(refresh_actions.count(setting)) {
+                refresh_actions[setting]();    // Initial can be used now
+            }
         }
         markPending(setting, pending.count(setting) > 0);
         if(was_asked && aircraft_labels.count(setting)) {
