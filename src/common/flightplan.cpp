@@ -1,6 +1,7 @@
 #include "flightplan.h"
 #include "gcs_utils.h"
 #include <clocale>
+#include <utility>
 #include <QDebug>
 
 using namespace std;
@@ -218,7 +219,7 @@ QList<shared_ptr<BlockGroup>> FlightPlan::getGroups()
 
     std::map<QString, shared_ptr<BlockGroup>> groups_map;
 
-    for(auto b: qAsConst(blocks)) {
+    for(auto b: std::as_const(blocks)) {
         if(groups_map.find(b->getGroup()) == groups_map.end()) {
             groups_map[b->getGroup()] = make_shared<BlockGroup>();
             groups_map[b->getGroup()]->group_name = b->getGroup();

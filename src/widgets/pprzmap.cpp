@@ -3,6 +3,7 @@
 #include "pprz_dispatcher.h"
 #include "dispatcher_ui.h"
 #include <iostream>
+#include <utility>
 #include "maputils.h"
 #include "AircraftManager.h"
 #include "pprzmain.h"
@@ -145,7 +146,7 @@ void PprzMap::handleMouseMove(QPointF scenePos) {
         ui->pos_label->setText(txt);
     } else {
         auto wps = AircraftManager::get()->getAircraft(current_ac)->getFlightPlan()->getWaypoints();
-        for(auto ref_wp: qAsConst(wps)) {
+        for(auto ref_wp: std::as_const(wps)) {
             if(ref_wp->getName() == ui->reference_combobox->currentText()) {
                 Point2DLatLon pt_wp(ref_wp);
                 double distance, azimut;
