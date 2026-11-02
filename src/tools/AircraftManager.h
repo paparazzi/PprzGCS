@@ -8,9 +8,11 @@
 #include <QColor>
 #include "aircraft.h"
 #include <optional>
+#include <functional>
 #include <map>
 #include <pprzlinkQt/Message.h>
 #include <QMap>
+#include <QSet>
 #include "PprzToolbox.h"
 #include "PprzApplication.h"
 #include <QtXml>
@@ -29,6 +31,7 @@ public:
 
     QDomDocument getFlightPlan() {return flight_plan;}
     QDomDocument getAirframe() {return airframe;}
+    QMap<QString, QDomDocument> getAirframeIncludes() {return airframe_includes;}
     QDomDocument getSettings() {return settings;}
 
     QString getFlightPlanUri() {return uri_flight_plan;}
@@ -44,6 +47,7 @@ public:
     bool isComplete() {
         return !flight_plan.isNull() &&
                !airframe.isNull() &&
+               pending_includes == 0 &&
                !settings.isNull();
     }
 
@@ -53,6 +57,9 @@ signals:
 private:
 
     void setData(QDomDocument* doc, QString uri);
+    void fetch(QString uri, std::function<void(QByteArray)> callback, std::function<void()> on_error = nullptr);
+    void checkComplete();
+    void loadAirframeIncludes();
 
     QString ac_id;
     QString ac_name;
@@ -60,6 +67,9 @@ private:
 
     QDomDocument flight_plan;
     QDomDocument airframe;
+    QMap<QString, QDomDocument> airframe_includes;  // by href
+    int pending_includes = 0;
+    bool ready_sent = false;
     // QDomDocument radio;
     QDomDocument settings;
 
@@ -86,6 +96,8 @@ public:
     void newAircraftConfig(pprzlink::Message msg);
     bool aircraftExists(QString id);
     void removeAircraft(QString ac_id);
+    /// Select this aircraft again when it is added (e.g. after a reload)
+    void selectWhenAdded(QString ac_id) {select_when_added.insert(ac_id);}
 
     void addFPAircraft(QString ac_id, QString flightplan);
 
@@ -98,6 +110,7 @@ private:
     QDomDocument getXml(QString uri);
 
     QMap<QString, Aircraft*> aircrafts;
+    QSet<QString> select_when_added;
 
 private slots:
     void addAircraft(ConfigData* config);

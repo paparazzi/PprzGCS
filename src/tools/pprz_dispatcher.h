@@ -29,6 +29,12 @@ public:
     void sendMessage(pprzlink::Message);
     pprzlink::MessageDictionary* getDict() {return dict;}
 
+    /// true if the messages file (of the running Paparazzi) has this message
+    bool hasMessage(QString msg_name);
+
+    /// bind as below, but only if the message exists: for messages that older Paparazzi versions don't have
+    long bindOptional(QString msg_name, QObject* context, pprzlink::messageCallback_t cb);
+
     /**
      * @brief bind message to callback. Use it only for messages not handled by default by the application
      * @param msg_name

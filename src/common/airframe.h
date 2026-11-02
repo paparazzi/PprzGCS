@@ -14,8 +14,13 @@ struct Param {
 struct ChecklistItem {
     QString name;
     QString description;
-    QString type;
+    QString type;           // checkbox, text or choice
     QString value;
+    bool optional = false;  // not needed to finish the checklist
+    QString help;           // longer instructions, shown as tooltip
+    bool remember = false;  // pre-fill with the value of the previous flight
+    QStringList values;     // choices of a "choice" item
+    bool logged = false;    // the current value has been sent
 };
 
 class Airframe: public QObject
@@ -23,7 +28,11 @@ class Airframe: public QObject
     Q_OBJECT
 public:
 
-    Airframe(QDomDocument doc, QObject* parent=nullptr);
+    /**
+     * @param doc: the airframe file
+     * @param includes: the files of its <include> nodes, by href (see ConfigData)
+     */
+    Airframe(QDomDocument doc, QMap<QString, QDomDocument> includes = {}, QObject* parent=nullptr);
 
     QString getFirmware() {return firmware;}
     QString getIconName();
@@ -41,7 +50,8 @@ private:
     QString name;
     QString firmware;
 
-    QDomDocument doc;
+    QDomDocument doc;       // the airframe file itself: the one saved by saveSettings
+    QDomDocument expanded;  // with the <include> nodes replaced by the included content
 
     static constexpr float ALT_PLUS_FW = 10;
     static constexpr float ALT_MINUS_FW = -10;

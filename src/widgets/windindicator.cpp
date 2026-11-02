@@ -14,6 +14,7 @@ WindIndicator::WindIndicator(QWidget *parent) : QWidget(parent),
     m_arrow_color(Qt::red), m_pen_color(Qt::black)
 {
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &WindIndicator::setAC);
+    connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &WindIndicator::removeAC);
 }
 
 void WindIndicator::resizeEvent(QResizeEvent *event) {
