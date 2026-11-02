@@ -695,31 +695,30 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         set_dirty[setting](false);
     });
 
+    // Ask: a change here is dropped, the control shows the answer of the aircraft
     connect(ask_btn, &QPushButton::clicked, this, [=,this]() {
+        set_dirty[setting](false);
         requestValue(setting);
     });
+    // Previous and Initial: the control shows the value sent (amber until it is confirmed)
+    auto send_shown = [=,this](float value) {
+        set_dirty[setting](false);
+        setters[setting](value * setting->getAltUnitCoef());
+        send(setting, value);
+    };
     connect(prev_btn, &QPushButton::clicked, this, [=,this]() {
-        send(setting, setting->getPreviousValue());
+        send_shown(setting->getPreviousValue());
     });
     connect(init_btn, &QPushButton::clicked, this, [=,this]() {
         auto initial_value = setting->getInitialValue();
         if(initial_value.has_value()) {
-            send(setting, initial_value.value());
+            send_shown(initial_value.value());
         }
     });
 
-    menu->addAction("Ask the value again", this, [=,this]() {
-        requestValue(setting);
-    });
-    menu->addAction("Send the previous value", this, [=,this]() {
-        send(setting, setting->getPreviousValue());
-    });
-    menu->addAction("Send the initial value", this, [=,this]() {
-        auto initial_value = setting->getInitialValue();
-        if(initial_value.has_value()) {
-            send(setting, initial_value.value());
-        }
-    });
+    menu->addAction("Ask the value again", ask_btn, &QPushButton::click);
+    menu->addAction("Send the previous value", prev_btn, &QPushButton::click);
+    menu->addAction("Send the initial value", init_btn, &QPushButton::click);
 
     return widget;
 }
@@ -803,7 +802,11 @@ void SettingsViewer::updateSettings(QString id, Setting* setting, float value) {
         // the control follows the aircraft, unless it is being changed here or shows a sent value,
         // or is being used (e.g. the cursor in the field: it would jump)
         auto focus = QApplication::focusWidget();
-        bool in_use = focus != nullptr && rows.count(setting) && rows[setting]->isAncestorOf(focus);
+        // only typing in the field (or holding the slider) blocks it, not e.g. the Ask button
+        bool in_use = focus != nullptr && rows.count(setting) && rows[setting]->isAncestorOf(focus) &&
+                      (qobject_cast<QLineEdit*>(focus) != nullptr ||
+                       (qobject_cast<QAbstractSlider*>(focus) != nullptr &&
+                        qobject_cast<QAbstractSlider*>(focus)->isSliderDown()));
         if(!dirty[setting] && !pending.count(setting) && !in_use) {
             setters[setting](val);
         }
