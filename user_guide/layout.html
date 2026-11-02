@@ -47,6 +47,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index_user.html">User guide</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Layout</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#general-layout">General Layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tabs">Tabs</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#containers">Containers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#configure">Configure</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#map">Map</a></li>
@@ -121,6 +122,22 @@
 <p><span class="caption-text">This is how this layout renders.</span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
 </figcaption>
 </figure>
+</section>
+<section id="tabs">
+<span id="layout-tabs"></span><h2>Tabs<a class="headerlink" href="#tabs" title="Permalink to this heading"></a></h2>
+<p>Widgets can be grouped as tabs:</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;rows&gt;</span>
+<span class="w">    </span><span class="nt">&lt;widget</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;strips&quot;</span><span class="w"> </span><span class="na">container=</span><span class="s">&quot;list&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;tabs&gt;</span>
+<span class="w">        </span><span class="nt">&lt;widget</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;flightplan&quot;</span><span class="w"> </span><span class="na">title=</span><span class="s">&quot;Flight plan&quot;</span><span class="nt">/&gt;</span>
+<span class="w">        </span><span class="nt">&lt;widget</span><span class="w"> </span><span class="na">name=</span><span class="s">&quot;settings&quot;</span><span class="w"> </span><span class="na">title=</span><span class="s">&quot;Settings&quot;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/tabs&gt;</span>
+<span class="nt">&lt;/rows&gt;</span>
+</pre></div>
+</div>
+<p>The tabs, and the buttons on the left of the map, can be dragged: to another group of tabs, below a group (a new
+group), to the bottom of the map, or to the map rail. The arrangement is restored at the next start;
+<em>File &gt; Reset panels</em> goes back to the layout file.</p>
 </section>
 <section id="containers">
 <h2>Containers<a class="headerlink" href="#containers" title="Permalink to this heading"></a></h2>

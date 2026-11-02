@@ -49,10 +49,11 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Widgets</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#map-2d">Map 2D</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#strip">Strip</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pdf">PDF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pfd">PFD</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#commands">Commands</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#flight-plan">Flight plan</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#settings">Settings</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#chat">Chat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#plotter">Plotter</a></li>
 </ul>
 </li>
@@ -94,7 +95,24 @@
 <p>name: <code class="docutils literal notranslate"><span class="pre">map2d</span></code></p>
 <p>This is a classic 2D map to display waypoints and aircrafts.</p>
 <p>A telemetry message can be dropped on it to display a papget.</p>
-<p>It can be configured to add buttons in a left and right columns to display other widgets over it.</p>
+<p>It can be configured to add buttons in a left and right columns to display other widgets over it.
+The left column is a rail along the edge of the map: a button opens its widget in a card over the map,
+a long press keeps it open, and dragging the button moves the widget (see <a class="reference internal" href="layout.html#layout-tabs"><span class="std std-ref">Layout/Tabs</span></a>).</p>
+<p>The cards can be moved over the map by their title bar (double click: back next to the rail) and
+resized with the grip in their bottom right corner.</p>
+<p>Messages from the aircraft, a low battery and lost links are shown as notifications at the top of the map.
+Messages disappear after a few seconds, warnings stay until fixed or dismissed. Click a notification to
+select its aircraft and open the chat.</p>
+<ul class="simple">
+<li><p>Double click an aircraft to select it; with several aircraft their names show (in their color) when the
+pointer is on them or when they overlap. <em>Aircrafts &gt; Colors</em> changes the color of an aircraft; aircraft
+with the same configured color get distinct ones.</p></li>
+<li><p>Drag a waypoint to move it: a card next to it shows how far it moved and its height above ground, and its
+old position stays on the map until the aircraft confirms the move.</p></li>
+<li><p><em>Map layers</em> has a brightness slider: a slightly darker map makes the aircraft and waypoints stand out.</p></li>
+<li><p><em>File &gt; Settings &gt; General</em> can show the battery and link icons next to the aircraft.</p></li>
+</ul>
+<img alt="../_images/notifications.png" src="../_images/notifications.png" />
 <figure class="align-default" id="id1">
 <img alt="map2d widget" src="../_images/map2d_configure.png" />
 <figcaption>
@@ -120,18 +138,15 @@
 <li><p>status for Link, GPS, RC, IMU</p></li>
 </ul>
 </section>
-<section id="pdf">
-<h2>PDF<a class="headerlink" href="#pdf" title="Permalink to this heading"></a></h2>
+<section id="pfd">
+<h2>PFD<a class="headerlink" href="#pfd" title="Permalink to this heading"></a></h2>
 <p>name: <code class="docutils literal notranslate"><span class="pre">PFD</span></code></p>
-<p>Display attitude of the aircraft</p>
-<img alt="../_images/strip.png" src="../_images/strip.png" />
-<p>There are 3 views:</p>
-<ul class="simple">
-<li><p>from the rear</p></li>
-<li><p>from the left</p></li>
-<li><p>from the top</p></li>
-</ul>
-<p>Clicking on the small views make them switch with the main view.</p>
+<p>Primary flight display of the selected aircraft: an attitude indicator (roll and pitch), the ground speed
+(air speed below) on the left, the height above ground on the right with a marker at the target height and the
+climb rate, the heading below, and the values as text.</p>
+<p>Right click on it to choose the view: <em>pilot view</em> (the horizon moves, as in an aircraft) or
+<em>ground view</em> (the horizon stays level and the aircraft symbol banks and pitches, as seen from the ground).</p>
+<img alt="../_images/PFD.png" src="../_images/PFD.png" />
 </section>
 <section id="commands">
 <h2>Commands<a class="headerlink" href="#commands" title="Permalink to this heading"></a></h2>
@@ -143,8 +158,8 @@
 <h2>Flight plan<a class="headerlink" href="#flight-plan" title="Permalink to this heading"></a></h2>
 <p>name: <code class="docutils literal notranslate"><span class="pre">flightplan</span></code></p>
 <p>Control the flight plan.</p>
-<p>The first tab show the blocks, the current block being highlighted in green.
-You can switch to a block by cliking on the arrow button.</p>
+<p>The first tab shows the blocks, the current block being highlighted in green with its time.
+Tap a block, then <em>Go</em>, or double click it to switch to it (amber until the aircraft is in it).</p>
 <img alt="../_images/flightplan_blocks.png" src="../_images/flightplan_blocks.png" />
 <p>The second tab show the detail of the flight plan, parsed from the XML.
 Double click on a block to switch to it.</p>
@@ -155,6 +170,14 @@ Double click on a block to switch to it.</p>
 <p>name: <code class="docutils literal notranslate"><span class="pre">settings</span></code></p>
 <p>Aircraft settings. The search bar can be useful.</p>
 <img alt="../_images/settings.png" src="../_images/settings.png" />
+</section>
+<section id="chat">
+<h2>Chat<a class="headerlink" href="#chat" title="Permalink to this heading"></a></h2>
+<p>name: <code class="docutils literal notranslate"><span class="pre">chat</span></code></p>
+<p>Messages from the aircraft (<code class="docutils literal notranslate"><span class="pre">INFO_MSG</span></code>) and the ground, one row per message with the sender name in its color;
+the time is shown on hover. Messages about a problem (low, lost, fail, …) are highlighted.
+With more than one aircraft, a filter shows the messages of one sender.</p>
+<img alt="../_images/chat.png" src="../_images/chat.png" />
 </section>
 <section id="plotter">
 <h2>Plotter<a class="headerlink" href="#plotter" title="Permalink to this heading"></a></h2>
