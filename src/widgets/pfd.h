@@ -34,6 +34,7 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void contextMenuEvent(QContextMenuEvent* event) override;   // pilot or ground view
 
 private:
     void changeCurrentAC(QString id);
@@ -48,6 +49,7 @@ private:
     std::map<QString, struct Eulers> eulers;
     std::map<QString, QElapsedTimer> direct_attitude;   // last attitude from the aircraft itself
     QString current_ac;
+    bool earth_view = false;    // ground view: the aircraft symbol moves instead of the horizon
 };
 
 #endif // PFD_H

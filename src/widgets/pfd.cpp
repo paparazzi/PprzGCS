@@ -1,4 +1,7 @@
 #include "pfd.h"
+#include "gcs_utils.h"
+#include <QContextMenuEvent>
+#include <QMenu>
 #include <QPaintEvent>
 #include <QPainter>
 #include <QPainterPath>
@@ -14,6 +17,7 @@ static const QColor SYMBOL(0xffc400);
 
 Pfd::Pfd(QWidget *parent) : QWidget(parent), current_ac("")
 {
+    earth_view = getAppSettings().value("pfd/ground_view", false).toBool();
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &Pfd::changeCurrentAC);
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &Pfd::updateEulers);
 
@@ -35,7 +39,7 @@ Pfd::Pfd(QWidget *parent) : QWidget(parent), current_ac("")
         const float coef = 0.0139882f;   // ANGLE_BFP to deg
         updateAttitude(sender, phi * coef, theta * coef, psi * coef);
     });
-    setToolTip("Attitude (roll, pitch) and heading of the selected aircraft");
+    setToolTip("Attitude (roll, pitch) and heading of the selected aircraft (right click: pilot or ground view)");
 }
 
 void Pfd::paintEvent(QPaintEvent *event) {
@@ -104,11 +108,14 @@ void Pfd::paintAttitude(QPainter& p, QRectF r, float roll, float pitch, QColor a
     clip.addRoundedRect(r, radius, radius);
     p.setClipPath(clip);
 
-    // horizon: rotated by the roll, moved down by the pitch
+    // pilot view: the horizon turns with the roll and moves with the pitch (the aircraft fixed);
+    // ground view: the horizon fixed, the aircraft symbol banks and pitches (seen from the ground)
     p.save();
     p.translate(c);
-    p.rotate(-roll);
-    p.translate(0, pitch * px_per_deg);
+    if(!earth_view) {
+        p.rotate(-roll);
+        p.translate(0, pitch * px_per_deg);
+    }
     // sky and ground: past the corners for any pitch (e.g. a tailsitter at -90 deg)
     double big = std::abs(pitch) * px_per_deg + std::hypot(r.width(), r.height()) + 10;
     QLinearGradient sky(0, -big / 2, 0, 0);
@@ -160,8 +167,8 @@ void Pfd::paintAttitude(QPainter& p, QRectF r, float roll, float pitch, QColor a
         p.drawLine(QPointF(0, -rr), QPointF(0, -rr - len));
         p.restore();
     }
-    // the sky pointer, turning with the horizon
-    p.rotate(-roll);
+    // the pointer: with the horizon (pilot view) or with the aircraft (ground view)
+    p.rotate(earth_view ? roll : -roll);
     QPolygonF pointer;
     pointer << QPointF(0, -rr + 1) << QPointF(-7, -rr + 12) << QPointF(7, -rr + 12);
     p.setPen(Qt::NoPen);
@@ -169,9 +176,14 @@ void Pfd::paintAttitude(QPainter& p, QRectF r, float roll, float pitch, QColor a
     p.drawPolygon(pointer);
     p.restore();
 
-    // fixed aircraft symbol, in the aircraft color outline
+    // the aircraft symbol: fixed (pilot view), or banked and pitched (ground view)
     p.save();
     p.translate(c);
+    if(earth_view) {
+        double dy = qBound(-r.height() / 2 + 10, -pitch * px_per_deg, r.height() / 2 - 10);
+        p.translate(0, dy);
+        p.rotate(roll);
+    }
     double s = r.width() * 0.18;
     QPainterPath wings;
     wings.moveTo(-s * 1.6, 0);
@@ -442,6 +454,23 @@ void Pfd::updateAttitude(QString ac_id, float roll, float pitch, float yaw) {
     e.yaw = fmod(fmod(yaw, 360.f) + 360.f, 360.f);
     direct_attitude[ac_id].start();
     if(ac_id == current_ac) {
+        update();
+    }
+}
+
+void Pfd::contextMenuEvent(QContextMenuEvent* event) {
+    QMenu menu(this);
+    auto pilot = menu.addAction("Pilot view (the horizon moves)");
+    auto ground = menu.addAction("Ground view (the aircraft moves)");
+    pilot->setCheckable(true);
+    ground->setCheckable(true);
+    pilot->setChecked(!earth_view);
+    ground->setChecked(earth_view);
+    auto chosen = menu.exec(event->globalPos());
+    if(chosen == pilot || chosen == ground) {
+        earth_view = chosen == ground;
+        auto settings = getAppSettings();
+        settings.setValue("pfd/ground_view", earth_view);
         update();
     }
 }
