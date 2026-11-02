@@ -84,8 +84,10 @@ void WindIndicator::paintEvent(QPaintEvent *event) {
         painter.setRenderHint(QPainter::SmoothPixmapTransform);
         painter.translate(QRectF(r_out).center());
         painter.rotate(compass - 90 + wind_dir + 180);
-        double wsWidth = r_out.width() * 0.62;
-        windsock.render(&painter, QRectF(-wsWidth/2, -wsWidth/2, wsWidth, wsWidth));
+        // with its own proportions (2:1, it was stretched to a square), a bit slimmer
+        double wsWidth = r_out.width() * 0.78;
+        double wsHeight = wsWidth * 0.4;
+        windsock.render(&painter, QRectF(-wsWidth/2, -wsHeight/2, wsWidth, wsHeight));
         painter.restore();
 
         QString txt;
