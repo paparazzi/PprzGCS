@@ -112,10 +112,15 @@ Settings
 
 name: ``settings``
 
-Aircraft settings. The search bar can be useful.
+Aircraft settings, one per line with its control: buttons or a list for named values, a switch for
+on/off, a field for a number. Click the name of a setting to open it: the slider for a number, and
+*Ask* (the value on the aircraft, asked again after 3 s without answer), *Previous*, *Initial*, *Undo*
+and *Send*. A value outside the range is shown in red and sent after a confirmation. A sent value stays
+amber until the aircraft confirms it. Search finds settings in all groups; groups with the same name are
+shown as one. The save button writes the changed settings into the airframe file.
+*File > Settings > General* can show every setting open, as in the old layout.
 
 .. image:: settings.png
-
 
 Chat
 ----
