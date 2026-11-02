@@ -20,6 +20,13 @@ public:
 
     AircraftWatcher* getWatcher() {return watcher;}
 
+    /// the origin of the aircraft's local frame (from INS_REF), once received
+    struct InsRef {
+        double lat;     // deg
+        double lon;     // deg
+    };
+    std::optional<InsRef> getInsRef() {return ins_ref_origin;}
+
 signals:
     void flight_param();
     void ap_status();
@@ -32,6 +39,7 @@ signals:
     void telemetry_status();
     void fly_by_wire();
     void svsinfo();
+    void ins_ref();     // a new INS reference: the positions jump
 
 public slots:
 
@@ -42,6 +50,7 @@ private:
     QMap<QString, pprzlink::Message> telemetry_messages;
 
     AircraftWatcher* watcher;
+    std::optional<InsRef> ins_ref_origin;
 };
 
 #endif // AIRCRAFTSTATUS_H

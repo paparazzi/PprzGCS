@@ -13,6 +13,11 @@ class WaypointItem : public MapItem
     Q_OBJECT
     Q_PROPERTY(int size MEMBER m_size WRITE setSize)
 public:
+    GraphicsText* label() {return graphics_text;}
+    /// where its name is, next to it (unscaled; chosen so that names do not overlap)
+    QPointF labelOffset() {return label_offset;}
+    void setLabelOffset(QPointF o) {label_offset = o;}
+    QGraphicsItem* marker();
     WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     WaypointItem(Point2DLatLon pt, QString ac_id, PprzPalette palette, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     WaypointItem(Waypoint* wp, QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
@@ -57,6 +62,7 @@ private:
     void init();
     GraphicsPoint * point;
     GraphicsText* graphics_text;
+    QPointF label_offset{4, -26};
     Waypoint* original_waypoint;
     // waypoint used to draw this WaypointItem
     Waypoint* _waypoint;

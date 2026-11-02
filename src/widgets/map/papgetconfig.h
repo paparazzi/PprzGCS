@@ -3,8 +3,13 @@
 
 #include <QtWidgets>
 #include "papget.h"
+#include "card_dialog.h"
 
-class PapgetConfig : public QDialog
+/**
+ * The look of a papget: size and color, shown on the map while changing them. Apply, Cancel
+ * (back to how it was), or Remove the papget.
+ */
+class PapgetConfig : public CardDialog
 {
     Q_OBJECT
 public:
@@ -12,18 +17,11 @@ public:
 
 signals:
     void paramsChanged(Papget::Params);
-
-public slots:
+    void removeRequested();
 
 private:
     Papget::DataDef datadef;
-    QList<std::function<void()>> callbacks;
-    int current_index;
-
-    std::function<void()> config_text(QWidget* w);
-
     Papget::Params params;
-
 };
 
 

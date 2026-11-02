@@ -7,6 +7,8 @@
 #include <QSettings>
 #include "app_settings.h"
 #include "gcs_utils.h"
+#include <QColorDialog>
+#include "panels.h"
 
 #if defined(SPEECH_ENABLED)
 #include "speaker.h"
@@ -27,9 +29,6 @@ void PprzMain::setupUi(int width, int height, QWidget* centralWidget) {
     menu_bar->setObjectName(QString::fromUtf8("menuBar"));
     menu_bar->setGeometry(QRect(0, 0, 555, 22));
     setMenuBar(menu_bar);
-    mainToolBar = new QToolBar(this);
-    mainToolBar->setObjectName(QString::fromUtf8("mainToolBar"));
-    addToolBar(Qt::TopToolBarArea, mainToolBar);
     statusBar = new QStatusBar(this);
     statusBar->setObjectName(QString::fromUtf8("statusBar"));
     setStatusBar(statusBar);
@@ -37,11 +36,17 @@ void PprzMain::setupUi(int width, int height, QWidget* centralWidget) {
     setWindowIcon(QIcon(":/pictures/icon.svg"));
     populate_menu();
 
-    statusBar->addPermanentWidget(new QLabel("server status:"));
-
+    // on the right: the server, and the link of the selected aircraft
     serverStatusLed = new QLabel(statusBar);
     setServerStatus(false);
     statusBar->addPermanentWidget(serverStatusLed);
+    statusBar->addPermanentWidget(new QLabel("Server  "));
+    linkStatusLed = new QLabel(statusBar);
+    linkStatusLabel = new QLabel(statusBar);
+    statusBar->addPermanentWidget(linkStatusLed);
+    statusBar->addPermanentWidget(linkStatusLabel);
+    updateLinkStatus();
+    connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &PprzMain::updateLinkStatus);
 
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &PprzMain::newAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &PprzMain::removeAC);
@@ -125,6 +130,12 @@ void PprzMain::populate_menu() {
         GlobalConfig::get()->setValue("MAP_TRACK_AC", checked);
     });
 
+    auto reset_panels = file_menu->addAction("Reset panels");
+    reset_panels->setToolTip("Put the panels (tabs, rail, bottom of the map) back as in the layout file");
+    connect(reset_panels, &QAction::triggered, this, [](){
+        PanelManager::get()->reset();
+    });
+
     auto quit = file_menu->addAction("&Quit");
     connect(quit, &QAction::triggered, qApp, QApplication::quit);
 
@@ -132,6 +143,40 @@ void PprzMain::populate_menu() {
     aircraftsTopMenu = menu_bar->addMenu("&Aircrafts");
 
     aircraftsTopMenu->addAction("Update", PprzDispatcher::get(), &PprzDispatcher::requestAircrafts);
+
+    // the color of each aircraft (saved by aircraft name)
+    auto colors_menu = aircraftsTopMenu->addMenu("Colors");
+    connect(colors_menu, &QMenu::aboutToShow, this, [=,this]() {
+        colors_menu->clear();
+        for(auto ac: AircraftManager::get()->getAircrafts()) {
+            if(!ac->isReal()) {
+                continue;
+            }
+            QPixmap swatch(14, 14);
+            swatch.fill(ac->getColor());
+            QString id = ac->getId();
+            QString name = ac->name();
+            colors_menu->addAction(QIcon(swatch), name + "\u2026", this, [=,this]() {
+                auto color = QColorDialog::getColor(AircraftManager::get()->getAircraft(id)->getColor(),
+                                                    this, "Color of " + name);
+                if(color.isValid()) {
+                    auto settings = getAppSettings();
+                    settings.setValue("aircraft_colors/" + name, color.name());
+                    PprzDispatcher::get()->reloadAircraft(id);
+                }
+            });
+        }
+        colors_menu->addSeparator();
+        colors_menu->addAction("Back to the configured colors", this, [=]() {
+            auto settings = getAppSettings();
+            settings.remove("aircraft_colors");
+            for(auto ac: AircraftManager::get()->getAircrafts()) {
+                if(ac->isReal()) {
+                    PprzDispatcher::get()->reloadAircraft(ac->getId());
+                }
+            }
+        });
+    });
 
     auto help_menu = menu_bar->addMenu("&Help");
     auto about = help_menu->addAction("&About");
@@ -182,6 +227,37 @@ void PprzMain::newAC(QString ac_id) {
     menu->addAction("Remove", this, [ac_id](){
         AircraftManager::get()->removeAircraft(ac_id);
     });
+
+    auto watcher = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getWatcher();
+    connect(watcher, &AircraftWatcher::link_status, menu, [=,this](AircraftWatcher::LinkStatus status) {
+        link_states[ac_id] = static_cast<int>(status);
+        if(DispatcherUi::get()->getSelectedAcId() == ac_id) {
+            updateLinkStatus();
+        }
+    });
+}
+
+void PprzMain::updateLinkStatus() {
+    auto ac_id = DispatcherUi::get()->getSelectedAcId();
+    if(ac_id.isEmpty() || !link_states.contains(ac_id)) {
+        linkStatusLed->clear();
+        linkStatusLabel->setText(ac_id.isEmpty() ? "" : "Link: no data");
+        return;
+    }
+    auto status = static_cast<AircraftWatcher::LinkStatus>(link_states[ac_id]);
+    QString led = status == AircraftWatcher::LINK_OK ? ":/pictures/green_led.svg" : ":/pictures/red_led.svg";
+    linkStatusLed->setPixmap(QIcon(led).pixmap(15, 15));
+    switch(status) {
+    case AircraftWatcher::LINK_OK:
+        linkStatusLabel->setText("Link");
+        break;
+    case AircraftWatcher::LINK_PARTIALY_LOST:
+        linkStatusLabel->setText("Link: partly lost");
+        break;
+    case AircraftWatcher::LINK_LOST:
+        linkStatusLabel->setText("Link lost");
+        break;
+    }
 }
 
 void PprzMain::removeAC(QString ac_id) {
@@ -190,6 +266,7 @@ void PprzMain::removeAC(QString ac_id) {
 
     acActions.remove(ac_id);
     acMenus.remove(ac_id);
+    link_states.remove(ac_id);
 
     aircraftsTopMenu->removeAction(action);
 

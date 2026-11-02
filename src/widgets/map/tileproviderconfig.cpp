@@ -36,6 +36,7 @@ TileProviderConfig::TileProviderConfig(QDomElement ele) {
     addr = ele.attribute("addr");
 
     name = ele.attribute("name");
+    title = ele.attribute("title", name);
 
     tileSize = ele.attribute("tileSize").toInt();
     format = ele.attribute("format");

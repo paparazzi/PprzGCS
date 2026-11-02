@@ -2,45 +2,70 @@
 #include <QPixmap>
 #include <QPainter>
 #include <QPaintEvent>
+#include <QPainterPath>
 
 
+/**
+ * A map layer: thumbnail, name, a switch to show it, and its opacity (when shown).
+ * Drag a layer (in the LayerCombo) to change the order.
+ */
 MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState, int z, QWidget *parent) : QWidget(parent),
     _name(name), showState(initialState), z_value(z)
 {
-    verticalLayout = new QVBoxLayout(this);
-    verticalLayout->setSpacing(0);
+    setObjectName("layer_row");
+    setAttribute(Qt::WA_StyledBackground);
+    auto row = new QHBoxLayout(this);
+    row->setContentsMargins(6, 4, 12, 4);     // room from the card edge and the scroll bar
+    row->setSpacing(10);
 
-    auto hLay = new QHBoxLayout();
-
-    nameLabel = new QLabel(name);
-    verticalLayout->addWidget(nameLabel);
-    verticalLayout->setAlignment(nameLabel, Qt::AlignHCenter);
-    nameLabel->setMargin(5);
-
-    verticalLayout->addLayout(hLay);
-
-    imageLabel = new QLabel(this);
-    hLay->addWidget(imageLabel);
-    imageLabel->setPixmap(pixmap);
-
-    QIcon icon(":/pictures/displayed.svg");
-    if(showState) {
-        icon = QIcon(":/pictures/hidden.svg");
+    // rounded thumbnail
+    QSize thumb_size(36, 26);
+    QPixmap thumb(thumb_size * devicePixelRatioF());
+    thumb.setDevicePixelRatio(devicePixelRatioF());
+    thumb.fill(Qt::transparent);
+    {
+        QPainter p(&thumb);
+        p.setRenderHint(QPainter::Antialiasing);
+        p.setRenderHint(QPainter::SmoothPixmapTransform);
+        QPainterPath path;
+        path.addRoundedRect(QRectF(0, 0, thumb_size.width(), thumb_size.height()), 4, 4);
+        p.setClipPath(path);
+        p.drawPixmap(QRect(QPoint(0, 0), thumb_size), pixmap.scaled(thumb_size * devicePixelRatioF(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation));
     }
+    imageLabel = new QLabel(this);
+    imageLabel->setPixmap(thumb);
+    imageLabel->setFixedSize(thumb_size);
+    row->addWidget(imageLabel);
 
-    show_button = new ImageButton(icon, QSize(60, 60), false, imageLabel);
-    QVBoxLayout* image_layout = new QVBoxLayout(imageLabel);
-    image_layout->addWidget(show_button);
-    image_layout->setAlignment(show_button, Qt::AlignHCenter);
-    connect(
-        show_button, &QPushButton::clicked,
-        [=,this]() {
-            toggleShowState();
-        });
-
-    opacitySlider = new QSlider(Qt::Vertical, this);
+    auto col = new QVBoxLayout();
+    col->setSpacing(4);
+    nameLabel = new QLabel(name, this);
+    nameLabel->setObjectName("layer_name");
+    col->addWidget(nameLabel);
+    // the opacity: hidden until the button next to the switch is pressed
+    opacitySlider = new QSlider(Qt::Horizontal, this);
+    opacitySlider->setToolTip("Opacity");
     opacitySlider->setValue(opacitySlider->maximum());
-    hLay->addWidget(opacitySlider);
+    opacitySlider->hide();
+    col->addWidget(opacitySlider);
+    row->addLayout(col, 1);
+
+    auto opacity_button = new QToolButton(this);
+    opacity_button->setObjectName("layer_opacity_button");
+    opacity_button->setText(QString::fromUtf8("\xE2\x97\x90"));     // half circle
+    opacity_button->setToolTip("Opacity");
+    opacity_button->setCheckable(true);
+    row->addWidget(opacity_button);
+    connect(opacity_button, &QToolButton::toggled, opacitySlider, &QWidget::setVisible);
+
+    show_switch = new Switch(this);
+    show_switch->setToolTip("Show this layer");
+    row->addWidget(show_switch);
+    setShowState(initialState);
+
+    connect(show_switch, &QAbstractButton::clicked, this, [=,this]() {
+        toggleShowState();
+    });
 
     connect(
         opacitySlider, &QSlider::valueChanged,
@@ -48,17 +73,14 @@ MapLayerControl::MapLayerControl(QString name, QPixmap pixmap, bool initialState
             (void) value;
             emit layerOpacityChanged(opacity());
         });
-
 }
 
 
 void MapLayerControl::setShowState(bool state) {
     showState = state;
-    if(showState) {
-        show_button->setNormalIcon(QIcon(":/pictures/hidden.svg"));
-    } else {
-        show_button->setNormalIcon(QIcon(":/pictures/displayed.svg"));
-    }
+    show_switch->setChecked(state);
+    opacitySlider->setEnabled(state);
+    nameLabel->setEnabled(state);
 }
 
 void MapLayerControl::setOpacitySlider(qreal opacity) {

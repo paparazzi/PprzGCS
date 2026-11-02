@@ -13,6 +13,8 @@ class PprzDispatcher : public PprzTool
 {
     Q_OBJECT
 public:
+    /// load the aircraft again (as after a reboot: flight plan, settings, color)
+    void reloadAircraft(QString ac_id);
     explicit PprzDispatcher(PprzApplication* app, PprzToolbox* toolbox);
     ~PprzDispatcher();
 

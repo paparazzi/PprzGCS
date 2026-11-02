@@ -106,6 +106,11 @@ signals:
     void waypoint_added(Waypoint*, QString ac_id);      //new waypoint (for flightplan edition)
 
 private:
+    /// the color of an aircraft: the one chosen by the user (Aircrafts > Colors), else its
+    /// configured one, or another one when an other aircraft already has (nearly) that color
+    QColor aircraftColor(QString id, QString name, QColor configured);
+    QMap<QString, QColor> assigned_colors;      // per aircraft id
+    QMap<QString, QColor> configured_colors;    // the configured color it was assigned for
     static QColor parseColor(QString str);
     QDomDocument getXml(QString uri);
 

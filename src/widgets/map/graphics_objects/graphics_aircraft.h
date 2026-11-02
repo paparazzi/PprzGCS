@@ -18,6 +18,8 @@ public:
 
 protected:
     virtual void changeFocus() override;
+    void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
+    void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
 
 private:
     void loadSvg(QString path);

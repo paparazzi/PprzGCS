@@ -6,6 +6,7 @@
 #include <QMouseEvent>
 #include <QEvent>
 #include <QPaintEvent>
+#include <QElapsedTimer>
 
 class LockButton : public QWidget
 {
@@ -13,6 +14,7 @@ class LockButton : public QWidget
     Q_PROPERTY(QColor color_hover MEMBER m_color_hover DESIGNABLE true)
     Q_PROPERTY(QColor color_idle  MEMBER m_color_idle DESIGNABLE true)
     Q_PROPERTY(QColor color_pressed  MEMBER m_color_pressed DESIGNABLE true)
+    Q_PROPERTY(QColor color_active  MEMBER m_color_active DESIGNABLE true)
     Q_PROPERTY(int size READ getSizeProperty WRITE setSizeProperty DESIGNABLE true)
 public:
     explicit LockButton(QIcon icon, QWidget *parent = nullptr);
@@ -28,7 +30,6 @@ public:
     void setWidget(QWidget* w) {_widget = w;}
     QWidget* widget(){return _widget;}
     void setSize(QSize s);
-    void setActiveSide(bool activeLeft);
     int badge() {return _badge;}
 
 protected:
@@ -37,9 +38,11 @@ protected:
     virtual void paintEvent(QPaintEvent* e);
     virtual void mousePressEvent(QMouseEvent *e);
     virtual void mouseReleaseEvent(QMouseEvent *e);
+    virtual void mouseMoveEvent(QMouseEvent *e);
 
 signals:
     void clicked(bool);
+    void dragStarted();     // the button is dragged (e.g. to move its panel)
     void locked(bool);
 
 public slots:
@@ -62,7 +65,6 @@ private:
     QIcon icon;
     QIcon icon_lock;
     QIcon icon_unlocked;
-    bool activeSide;
 
     bool _locked;
     bool active;
@@ -70,13 +72,16 @@ private:
     QColor m_color_idle;
     QColor m_color_hover;
     QColor m_color_pressed;
+    QColor m_color_active = QColor(0x1d5fc9);  // background of the button of an open panel
 
     QRect lock_rect;
-    QRect active_rect;
 
     QWidget* _widget;
+    int _badge = 0;
 
-    int _badge;
+    QElapsedTimer press_time;
+    QPoint press_pos;
+    bool dragging = false;   // a long press toggles the lock (touchscreens have no hover)
 };
 
 #endif // LOCK_BUTTON_H

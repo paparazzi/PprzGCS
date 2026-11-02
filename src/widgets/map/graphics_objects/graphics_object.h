@@ -52,6 +52,7 @@ signals:
     void objectClicked(QPointF scene_pos);
     void objectDoubleClicked(QPointF scene_pos);
     void objectGainedHighlight();
+    void hoverChanged(bool hovered);
 
 private:
     bool highlighted;

@@ -18,6 +18,7 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/listcontainer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mini_strip.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mission_model.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/panels.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pfd.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/plotter.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pprzmap.cpp

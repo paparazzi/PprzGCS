@@ -6,80 +6,91 @@
 
 static const QString REF0 = "Flightplan ref0";
 static const QString WGS84 = "WGS84";
-static const QString WGS84_SEXA = "WGS84 sexagesimal";
 
 
-WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent) : QDialog(parent),
-    wi(wi), ac_id(ac_id)
+WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent) :
+    CardDialog("Move waypoint " + wi->waypoint()->getName(),
+               AircraftManager::get()->getAircraft(ac_id)->name(), parent,
+               AircraftManager::get()->getAircraft(ac_id)->getColor()),
+    wi(wi), ac_id(ac_id), original_pos(wi->getOriginalWaypoint()), original_alt(wi->getOriginalWaypoint()->getAlt())
 {
+    setObjectName("waypoint_editor");
+    auto ac = AircraftManager::get()->getAircraft(ac_id);
+    auto body = this;
+    auto infoLay = this->body();
 
-    setWindowTitle(QString(wi->waypoint()->getName()));
-
-    auto lay = new QVBoxLayout(this);
-    auto infoLay = new QVBoxLayout();
-    lay->addLayout(infoLay);
-
-    auto combo = new QComboBox(this);
+    // how far it moved, and the reference of the coordinates
+    auto moved_row = new QHBoxLayout();
+    moved_label = new QLabel(body);
+    moved_label->setObjectName("waypoint_editor_moved");
+    auto combo = new QComboBox(body);
+    combo->setObjectName("waypoint_editor_ref");
+    combo->setToolTip("Coordinates in WGS84 or relative to a waypoint");
     combo->addItem(WGS84);
-    combo->addItem(WGS84_SEXA);
     combo->addItem(REF0);
-    for(auto wp: AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoints()) {
+    for(auto wp: ac->getFlightPlan()->getWaypoints()) {
         combo->addItem(wp->getName());
     }
-    infoLay->addWidget(combo);
+    moved_row->addWidget(moved_label, 1);
+    moved_row->addWidget(combo);
+    infoLay->addLayout(moved_row);
 
-    auto latLay = new QHBoxLayout();
-    auto axis1_label = new QLabel("lat", this);
-    latLay->addWidget(axis1_label);
-    auto latEdit = new QLineEdit(QString::number(wi->waypoint()->getLat(), 'f', 7), this);
-    latLay->addWidget(latEdit);
+    auto coord_row = [&](QString label, QString value, QLabel*& l, QLineEdit*& e) {
+        auto row = new QHBoxLayout();
+        l = new QLabel(label, body);
+        l->setFixedWidth(32);
+        e = new QLineEdit(value, body);
+        e->setObjectName("waypoint_editor_coord");
+        row->addWidget(l);
+        row->addWidget(e, 1);
+        infoLay->addLayout(row);
+    };
+    QLabel *axis1_label, *axis2_label;
+    QLineEdit *latEdit, *lonEdit;
+    coord_row("lat", QString::number(wi->waypoint()->getLat(), 'f', 7), axis1_label, latEdit);
+    coord_row("lon", QString::number(wi->waypoint()->getLon(), 'f', 7), axis2_label, lonEdit);
 
-    auto lonLay = new QHBoxLayout();
-    auto axis2_label = new QLabel("lon", this);
-    lonLay->addWidget(axis2_label);
-    auto lonEdit = new QLineEdit(QString::number(wi->waypoint()->getLon(), 'f', 7), this);
-    lonLay->addWidget(lonEdit);
+    auto line = new QFrame(body);
+    line->setObjectName("waypoint_editor_line");
+    line->setFixedHeight(1);
+    infoLay->addWidget(line);
 
+    // altitude: value, old value, height above ground
     auto altLay = new QHBoxLayout();
-    altLay->addWidget(new QLabel("alt", this));
-    auto altSpin = new QDoubleSpinBox(this);
+    auto alt_title = new QLabel("alt", body);
+    alt_title->setFixedWidth(32);
+    altLay->addWidget(alt_title);
+    auto altSpin = new QDoubleSpinBox(body);
+    altSpin->setObjectName("waypoint_editor_coord");
     altSpin->setMinimum(-100);
     altSpin->setMaximum(5000);
+    altSpin->setDecimals(1);
+    altSpin->setSuffix(" m");
+    altSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     altSpin->setValue(wi->waypoint()->getAlt());
     altLay->addWidget(altSpin);
-
-    auto aglLabel =new QLabel(this);
-    altLay->addWidget(aglLabel);
+    altLay->addStretch(1);
+    was_label = new QLabel(body);
+    was_label->setObjectName("card_muted");
+    agl_label = new QLabel(body);
+    altLay->addWidget(was_label);
+    altLay->addWidget(agl_label);
+    infoLay->addLayout(altLay);
 
     auto butLay = new QHBoxLayout();
-    auto upButton = new QPushButton(this);
-    auto downButton = new QPushButton(this);
-    upButton->setText("+10");
-    downButton->setText("-10");
-    butLay->addWidget(downButton);
-    butLay->addWidget(upButton);
-
-    infoLay->addLayout(latLay);
-    infoLay->addLayout(lonLay);
-    infoLay->addLayout(altLay);
+    butLay->setSpacing(6);
+    for(int step: {-10, -1, 1, 10}) {
+        auto b = new QPushButton(QString("%1%2").arg(step > 0 ? "+" : QString::fromUtf8("\u2212")).arg(abs(step)), body);
+        b->setObjectName("waypoint_editor_step");
+        butLay->addWidget(b);
+        connect(b, &QPushButton::clicked, this, [=]() {
+            altSpin->setValue(altSpin->value() + step);
+        });
+    }
     infoLay->addLayout(butLay);
 
-    auto updateAgl = [=,this]() {
-        auto ele = SRTMManager::get()->get_elevation(wi->waypoint()->getLat(), wi->waypoint()->getLon());
-        double agl;
-        if(ele) {
-            agl = wi->waypoint()->getAlt() - ele.value();
-            aglLabel->setStyleSheet("color:black");
-        } else {
-            double ground_alt = AircraftManager::get()->getAircraft(wi->acId())->getFlightPlan()->getGroundAlt();
-            agl = wi->waypoint()->getAlt() - ground_alt;
-            aglLabel->setStyleSheet("color:red");
-        }
-        aglLabel->setText("AGL: " + QString::number(agl) + "m");
-    };
-
-
-    updateAgl();
+    auto updateAgl = [=,this]() { updateInfo(); };
+    updateInfo();
 
     auto updateLatLon = [=,this]() {
         bool ok_a = false;
@@ -92,9 +103,7 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
                 wi->waypoint()->setLon(b);
                 wi->setPosition(Point2DLatLon(a, b));
             }
-            else if(combo->currentText() == WGS84_SEXA) {
-                //TODO
-            } else {
+            else {
                 Waypoint* wp;
                 if(combo->currentText() == REF0) {
                     wp = wi->waypoint()->getOrigin();
@@ -130,18 +139,6 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
         updateAgl();
     });
 
-    connect(upButton, &QAbstractButton::clicked, [=,this]() {
-        wi->waypoint()->setAlt(wi->waypoint()->getAlt() + 10);
-        altSpin->setValue(wi->waypoint()->getAlt());
-        updateAgl();
-    });
-
-    connect(downButton, &QAbstractButton::clicked, [=,this]() {
-        wi->waypoint()->setAlt(wi->waypoint()->getAlt() - 10);
-        altSpin->setValue(wi->waypoint()->getAlt());
-        updateAgl();
-    });
-
 
     connect(combo, &QComboBox::currentTextChanged, this, [=,this](const QString &text) {
         if(text == WGS84) {
@@ -150,11 +147,7 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
             latEdit->setText(QString::number(wi->waypoint()->getLat(), 'f', 7));
             lonEdit->setText(QString::number(wi->waypoint()->getLon(), 'f', 7));
         }
-        else if(text == WGS84_SEXA) {
-            axis1_label->setText("lat");
-            axis2_label->setText("lon");
-            qDebug() << "TODO sexa";
-        } else {
+        else {
             axis1_label->setText("x");
             axis2_label->setText("y");
 
@@ -182,16 +175,39 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     });
 
 
-    auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-    lay->addWidget(buttonBox);
-
-    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [=,this](){
+    // Cancel (Esc) and Move (Enter)
+    auto cancel = addButton("Cancel", NORMAL, 1);
+    auto move = addButton("Move", PRIMARY, 2);
+    connect(move, &QPushButton::clicked, this, [=,this](){
         emit DispatcherUi::get()->move_waypoint_ui(wi->waypoint(), ac_id);
         accept();
-
     });
+    connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
+}
 
-    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=,this](){
-        reject();
-    });
+/// How far and which way it moved, the old altitude and the height above ground.
+void WaypointEditor::updateInfo() {
+    auto wp = wi->waypoint();
+    double distance = 0, azimut = 0;
+    CoordinatesTransform::get()->distance_azimut(original_pos, Point2DLatLon(wp), distance, azimut);
+    if(distance < 0.5) {
+        moved_label->setText("Not moved");
+    } else {
+        static const char* dirs[] = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
+        int d = static_cast<int>(round(fmod(fmod(azimut, 360.) + 360., 360.) / 45.)) % 8;
+        moved_label->setText(QString("Moved %1 m to the %2").arg(distance, 0, 'f', 0).arg(dirs[d]));
+    }
+
+    double alt = wp->getAlt();
+    was_label->setText(fabs(alt - original_alt) < 0.05 ? QString() : QString("was %1").arg(original_alt, 0, 'f', 0));
+
+    auto fp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan();
+    auto ele = SRTMManager::get()->get_elevation(wp->getLat(), wp->getLon());
+    double ground = ele ? ele.value() : fp->getGroundAlt();
+    double agl = alt - ground;
+    double safe = fp->getSecurityHeight() > 0 ? fp->getSecurityHeight() : 20.;
+    bool low = agl < safe;
+    agl_label->setText(QString("AGL %1 m%2").arg(agl, 0, 'f', 0).arg(low ? " \u00b7 low" : ""));
+    agl_label->setToolTip(ele ? "Above the SRTM ground height" : "Above the flight plan ground altitude (no SRTM data here)");
+    agl_label->setStyleSheet(QString("font-weight: bold; color: %1;").arg(low ? "#b42318" : "#1f7a3f"));
 }

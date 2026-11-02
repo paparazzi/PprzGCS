@@ -32,6 +32,7 @@ public:
     };
 
     explicit Papget(struct DataDef datadef, QPoint pos_view, QObject *parent = nullptr);
+    ~Papget();
 
     QRectF boundingRect() const override;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
@@ -41,6 +42,7 @@ public:
 
 signals:
     void moved(QPointF);
+    void removeRequested();
 
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) override;

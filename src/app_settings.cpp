@@ -1,3 +1,4 @@
+#include "card_dialog.h"
 #include "app_settings.h"
 #include <QApplication>
 #include <QFile>
@@ -143,7 +144,25 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     auto app_layout_files = getLayoutFiles("APP_DATA_PATH");
     cb = addSetting("Layout", "APP_LAYOUT_FILE", w_general, l_general, row, Type::STRING_COMBO, user_layout_files + app_layout_files);
     callbacks.append(cb);
-    cb = addSetting("Style", "APP_STYLE_FILE", w_general, l_general, row, Type::PATH_FILE);
+    // the style sheets in the user and application data folders (e.g. default and night),
+    // plus the current one if it is elsewhere
+    QStringList style_files;
+    for(auto location: {"USER_DATA_PATH", "APP_DATA_PATH"}) {
+        auto path = appConfig()->value(location).toString();
+        if(!path.isEmpty()) {
+            for(auto &fn: QDir(path).entryList({"*.qss"})) {
+                if(!style_files.contains(fn)) {
+                    style_files.append(fn);
+                }
+            }
+        }
+    }
+    auto current_style = getAppSettings().value("APP_STYLE_FILE").toString();
+    if(!current_style.isEmpty() && !style_files.contains(current_style)) {
+        style_files.append(current_style);
+    }
+    cb = addSetting("Style", "APP_STYLE_FILE", w_general, l_general, row, Type::STRING_COMBO, style_files);
+    callbacks.append(cb);
     callbacks.append(cb);
     tabWidget->addTab(w_general, "General");
 
@@ -156,9 +175,11 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
             cb();
         }
 
-        auto res = QMessageBox::question(nullptr, "Restart application?", "PprzGCS need to be restarted to update settings. Do you want to restart now?");
+        bool restart = CardDialog::ask(this, "Restart PprzGCS?",
+                                       "The new settings are used after a restart.", "Restart now",
+                                       CardDialog::PRIMARY, "Later");
         accept();
-        if(res == QMessageBox::Yes) {
+        if(restart) {
             qDebug() << "Restarting application...";
             PprzMain::launch_type = NORMAL;
             qApp->exit( PprzMain::EXIT_CODE_REBOOT );
@@ -271,6 +292,15 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
             settings.setValue(key, combo->currentText());
         };
 
+        return cb;
+    } else if(type == Type::BOOL) {
+        auto check = new QCheckBox(w);
+        check->setChecked(settings.value(key).toBool());
+        gl->addWidget(check, r, 1);
+        auto cb = [=,this]() {
+            auto settings = getAppSettings();
+            settings.setValue(key, check->isChecked());
+        };
         return cb;
     }
     else {

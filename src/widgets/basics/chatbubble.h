@@ -3,33 +3,40 @@
 
 #include <QWidget>
 #include <QTime>
+#include <QLabel>
 
-namespace Ui {
-class ChatBubble;
-}
-
+/**
+ * One chat message: a tag with the full sender name in its aircraft color, and the text, which
+ * wraps under itself. The time is the tooltip. Warnings (low, lost, fail, ...) are highlighted.
+ */
 class ChatBubble : public QWidget
 {
     Q_OBJECT
 
 public:
     explicit ChatBubble(QString source, QString dest, QString msg, bool sent=false, QWidget *parent = nullptr);
-    ~ChatBubble();
 
     QString getSource() {return source;}
     QString getDest() {return dest;}
     QTime getTime() {return chat_time;}
+    /// For the filter: the aircraft id, "server" or "me"
+    QString category() {return _category;}
     void addText(QString text);
-
-protected:
-    bool eventFilter(QObject *obj, QEvent *ev) override;
+    /// "alarm", "warning" or "" from the words in the text
+    static QString level(QString text);
+    QString currentLevel() {return _level;}
 
 private:
-    Ui::ChatBubble *ui;
+    void updateLevel();
 
     QString source;
     QString dest;
+    QString _category;
     QTime chat_time;
+    QLabel* tag;
+    QLabel* message;
+    QStringList lines;
+    QString _level;
 };
 
 #endif // CHATBUBBLE_H

@@ -6,9 +6,6 @@
 #include "graphics_text.h"
 #include "QGraphicsTextItem"
 #include "graphics_line.h"
-#include "graphics_icon.h"
-#include "aircraft_watcher.h"
-#include "graphics_group.h"
 
 
 class AircraftItem : public MapItem
@@ -28,22 +25,21 @@ public:
     void setPosition(Point2DLatLon pt);
     void setHeading(double h);
     void clearTrack();
+    GraphicsText* label() {return graphics_text;}
+    QGraphicsItem* icon() {return graphics_aircraft;}
+    bool isHovered() {return hovered;}
 
 signals:
+    void hoverChanged();
 
 public slots:
 
 protected:
     virtual void updateGraphics(MapWidget* map, uint32_t update_event);
-    void handle_bat_alarm(AircraftWatcher::BatStatus bs);
-    void handle_link_alarm(AircraftWatcher::LinkStatus ls);
 
 private:
     GraphicsAircraft* graphics_aircraft;
     GraphicsText* graphics_text;
-    GraphicsGroup* alarms;
-    GraphicsIcon* bat_alarm;
-    GraphicsIcon* link_alarm;
 
     Point2DLatLon latlon;
     double heading;
@@ -53,6 +49,7 @@ private:
     QColor color_unfocused;
 
     QList<Point2DLatLon> track_points;
+    bool hovered = false;
 };
 
 #endif // AIRCRAFT_ITEM_H

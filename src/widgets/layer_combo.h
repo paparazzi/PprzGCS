@@ -12,7 +12,9 @@ public:
     explicit LayerCombo(QWidget *parent = nullptr);
 
     void addLayerControl(MapLayerControl* mlc);
-    void makeLayerControl(QString name, bool initialState, int z);
+    /// above the layers (e.g. the map brightness)
+    void addTopWidget(QWidget* w) {content_layout->insertWidget(0, w);}
+    void makeLayerControl(QString name, bool initialState, int z, QString title = QString());
     bool eventFilter(QObject *object, QEvent *event);
 
     void setPopo(QPoint p) {_pos = p;}

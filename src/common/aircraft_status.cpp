@@ -39,6 +39,8 @@ AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent)
             orig->setLat(lat0/1e7);
             orig->setLon(lon0/1e7);
             orig->setAlt(alt0/1e3);
+            ins_ref_origin = InsRef{lat0/1e7, lon0/1e7};
+            emit ins_ref();
         }
     });
 

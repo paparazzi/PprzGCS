@@ -39,6 +39,10 @@ Papget::Papget(struct DataDef datadef, QPoint pos_view, QObject *parent) : QObje
 }
 
 
+Papget::~Papget() {
+    PprzDispatcher::get()->unBind(bindRet);
+}
+
 void Papget::callback(QString sender, pprzlink::Message msg) {
     QString msg_name = msg.getDefinition().getName();
     if(QString(sender) == datadef.ac_id && msg_name == datadef.msg_name) {
@@ -147,21 +151,29 @@ void Papget::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
     emit moved(pos());
 }
 void Papget::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
-    (void)event;
     Params old_params = params;
-    auto pc = new PapgetConfig(datadef, params);
+    QWidget* view = event->widget() ? event->widget()->window() : nullptr;
+    auto pc = new PapgetConfig(datadef, params, view);
 
+    // the changes show on the map while editing
     connect(pc, &PapgetConfig::paramsChanged, this, [=,this](Params new_params) mutable {
-            params = new_params;
+        prepareGeometryChange();
+        params = new_params;
+        update();
     });
 
     connect(pc, &QDialog::finished, this, [=,this](int result) mutable {
         if(!result) {
+            prepareGeometryChange();
             params = old_params;
+            update();
         }
     });
 
-    pc->open();
+    connect(pc, &PapgetConfig::removeRequested, this, &Papget::removeRequested);
+
+    pc->placeNear(event->screenPos());
+    pc->showMovable();
 }
 
 QRectF Papget::boundingRect() const {
