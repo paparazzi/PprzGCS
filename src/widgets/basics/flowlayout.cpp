@@ -49,6 +49,7 @@
 ****************************************************************************/
 
 #include <QtWidgets>
+#include <utility>
 
 #include "flowlayout.h"
 //! [1]
@@ -161,7 +162,7 @@ QSize FlowLayout::minimumSize() const {
 
     //return minSize;
     QSize size;
-    for (const QLayoutItem *item : qAsConst(itemList))
+    for (const QLayoutItem *item : std::as_const(itemList))
         size = size.expandedTo(item->minimumSize());
 
     const QMargins margins = contentsMargins();

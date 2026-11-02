@@ -6,6 +6,7 @@
 #include <QGraphicsScene>
 #include "map_item.h"
 #include <iostream>
+#include <utility>
 #include <QPushButton>
 #include <QLayout>
 #include <QHBoxLayout>
@@ -819,19 +820,19 @@ void MapWidget::removeItem(MapItem* item) {
 }
 
 void MapWidget::itemsForbidHighlight(bool fh) {
-    for(auto item: qAsConst(_items)) {
+    for(auto item: std::as_const(_items)) {
         item->setForbidHighlight(fh);
     }
 }
 
 void MapWidget::itemsEditable(bool ed) {
-    for(auto item: qAsConst(_items)) {
+    for(auto item: std::as_const(_items)) {
         item->setEditable(ed);
     }
 }
 
 void MapWidget::updateHighlights(QString ac_id) {
-    for(auto item: qAsConst(_items)) {
+    for(auto item: std::as_const(_items)) {
         if(item->acId() == ac_id || item->acId() == "__NO_AC__") {
             item->setHighlighted(true);
         } else {
@@ -983,10 +984,10 @@ bool MapWidget::viewportEvent(QEvent *event) {
 }
 
 void MapWidget::updateGraphics(uint32_t update_events) {
-    for(auto item: qAsConst(_items)) {
+    for(auto item: std::as_const(_items)) {
         item->updateGraphics(this, update_events);
     }
-    for(auto papget: qAsConst(papgets)) {
+    for(auto papget: std::as_const(papgets)) {
         papget->updateGraphics(this);
     }
     for(auto wpi: pending_moves.keys()) {

@@ -2,6 +2,7 @@
 #include <QPixmap>
 #include <QGraphicsPixmapItem>
 #include <iostream>
+#include <utility>
 #include "point2dlatlon.h"
 #include "point2dtile.h"
 #include <QtXml>
@@ -55,7 +56,7 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
 }
 
 Map2D::~Map2D() {
-    for(auto tp:qAsConst(tile_providers)) {
+    for(auto tp:std::as_const(tile_providers)) {
         tp->removeFromScene(_scene);
     }
 }
@@ -197,7 +198,7 @@ double Map2D::getRotation() {
 }
 
 void Map2D::changeZoomTiles(int zoom_level) {
-    for(auto elt: qAsConst(tile_providers)) {
+    for(auto elt: std::as_const(tile_providers)) {
         elt->setZoomLevel(zoom_level);
     }
     updateTiles();
