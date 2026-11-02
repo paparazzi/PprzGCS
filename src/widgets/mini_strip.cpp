@@ -158,9 +158,20 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     auto bat_cell = makeCell(bat_caption, bat_label, true);
     bat_caption->setText("Battery");
     bat_cell->setFocusPolicy(Qt::NoFocus);
-    bat_cell->setAttribute(Qt::WA_TransparentForMouseEvents);
     auto bnbc = ac->getAirframe()->getDefine("BAT_NB_CELLS");
     bat_nb_cells = bnbc.has_value() ? bnbc->value.toInt() : 0;
+    if(bat_nb_cells != 0) {
+        // per cell or the total voltage (click)
+        bat_cell->setToolTip("Battery voltage per cell (click: total)");
+        connect(bat_cell, &QPushButton::clicked, this, [=,this]() {
+            bat_per_cell = !bat_per_cell;
+            bat_cell->setToolTip(bat_per_cell ? "Battery voltage per cell (click: total)" :
+                                                "Battery voltage, total (click: per cell)");
+            updateData();
+        });
+    } else {
+        bat_cell->setAttribute(Qt::WA_TransparentForMouseEvents);
+    }
     row2->addWidget(bat_cell, 0, 0);
 
     QLabel* alt_caption;
@@ -520,22 +531,31 @@ void MiniStrip::updateData() {
 
 
     // battery
-    if(bat_nb_cells != 0) {
+    if(bat_nb_cells != 0 && bat_per_cell) {
         bat_label->setText(QString("%1 V/c").arg(bat/bat_nb_cells, 0, 'f', 2));
-        bat_label->setToolTip(QString("%1 V").arg(bat, 0, 'f', 2));
     } else {
         bat_label->setText(QString("%1 V").arg(bat, 0, 'f', 1));
     }
 
     // throttle, and kill
     throttle_label->setText(QString("%1 %").arg(throttle, 0, 'f', 0));
-    throttle_caption->setText(kill_mode == "OFF" || kill_mode.isEmpty() ? "Throttle" : "Throttle (kill)");
+    bool throttle_killed = !(kill_mode == "OFF" || kill_mode.isEmpty());
+    throttle_caption->setText("Throttle");
+    if(throttle_killed) {
+        throttle_label->setText("KILLED");
+    }
+    if(throttle_label->property("killed").toBool() != throttle_killed) {
+        throttle_label->setProperty("killed", throttle_killed);
+        throttle_label->setStyleSheet(throttle_killed ? "color: #d92d20; font-weight: bold;" : "");
+    }
     if(kill_button != nullptr) {
         bool killed = !(kill_mode == "OFF" || kill_mode.isEmpty());
         if(kill_button->property("killed").toBool() != killed || !kill_button->property("killed").isValid()) {
             kill_button->setProperty("killed", killed);
-            kill_button->setIcon(QIcon(user_or_app_path(killed ? "pictures/strip_resurrect.svg" : "pictures/strip_kill.svg")));
-            kill_button->setToolTip(killed ? "The throttle is killed: resurrect it (asks first)" : "Kill the throttle (asks first)");
+            // the state: green while the throttle is on, red while it is killed
+            kill_button->setIcon(QIcon(user_or_app_path(killed ? "pictures/strip_kill.svg" : "pictures/strip_resurrect.svg")));
+            kill_button->setToolTip(killed ? "Throttle killed (click: resurrect it, asks first)" :
+                                             "Throttle on (click: kill it, asks first)");
             kill_button->style()->unpolish(kill_button);
             kill_button->style()->polish(kill_button);
         }
@@ -543,6 +563,7 @@ void MiniStrip::updateData() {
 
     // flight time
     updateFlightTime(flight_time, block_time, stage_time);
+    fitCells();
 
     // mode
     updateAp(ap_mode);
@@ -706,4 +727,16 @@ void MiniStrip::setCompact(bool c) {
         lay->setSpacing(compact ? 0 : 4);
     }
     updateStatusRow();
+    fitCells();
+}
+
+/// The value cells not narrower than their caption and value (they were cut off when the panel
+/// is made narrow); a button does not take the size of its layout by itself.
+void MiniStrip::fitCells() {
+    for(auto cell: value_cells) {
+        if(cell->layout()) {
+            cell->layout()->activate();
+            cell->setMinimumWidth(cell->layout()->minimumSize().width());
+        }
+    }
 }

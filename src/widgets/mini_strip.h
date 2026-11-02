@@ -65,6 +65,8 @@ private:
     QHBoxLayout* status_layout;
     QHBoxLayout* compact_icons;     // the status icons on the first line, when compact
     bool compact = false;
+    bool bat_per_cell = true;   // with BAT_NB_CELLS: per cell or the total (click)
+    void fitCells();
     bool all_icons = false;     // GCS setting: the status icons always, also when ok
 
     QPushButton* time_button;

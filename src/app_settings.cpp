@@ -75,7 +75,7 @@ void set_app_settings() {
     default_setting("map/aircraft/track_size", 20);
     default_setting("map/aircraft_status_icons", false);
     default_setting("settings/rows_open", false);
-    default_setting("strips/status_icons", false);
+    default_setting("strips/status_icons", true);
     default_setting("map/aircraft/track_width", 1);
 
     default_setting("aircraft_default_color", "red");
