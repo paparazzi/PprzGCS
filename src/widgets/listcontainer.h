@@ -16,7 +16,12 @@ public:
 
 signals:
 
+protected:
+    // a click on a widget selects its aircraft, a double click also centers the map on it
+    bool eventFilter(QObject* obj, QEvent* event) override;
+
 private:
+    void showSelected();
     void handleNewAC(QString ac_id);
     void removeAC(QString ac_id);
     void fitInSplitter();

@@ -49,6 +49,9 @@ ListContainer::ListContainer(std::function<QWidget*(QString, QWidget*)> construc
         QTimer::singleShot(0, this, &ListContainer::fitInSplitter);
     });
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &ListContainer::removeAC);
+    connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, [this](QString) {
+        QTimer::singleShot(0, this, &ListContainer::showSelected);
+    });
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, [this](QString id) {
         selected_ac = id;
         updateCompact();
@@ -103,7 +106,7 @@ void ListContainer::handleNewAC(QString ac_id) {
     select_ac_button->setFixedWidth(8);
     select_ac_button->setMinimumHeight(20);
     select_ac_button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-    select_ac_button->setStyleSheet("QToolButton {background: " + ac->getColor().name() + "; border: 0; border-radius: 3px;}");
+    select_ac_button->setProperty("ac_color", ac->getColor().name());
     select_ac_button->setToolTip(ac->name());
     header_vbox->addWidget(select_ac_button, 0, Qt::AlignHCenter);
     if(alt_constructor != nullptr) {
@@ -152,6 +155,42 @@ void ListContainer::handleNewAC(QString ac_id) {
             emit DispatcherUi::get()->ac_selected(ac_id);
         });
 
+    pageWidget->setProperty("ac_id", ac_id);
+    pageWidget->installEventFilter(this);
+    showSelected();
+
+}
+
+bool ListContainer::eventFilter(QObject* obj, QEvent* event) {
+    if(event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonDblClick) {
+        QString ac_id = obj->property("ac_id").toString();
+        if(!ac_id.isEmpty() && AircraftManager::get()->aircraftExists(ac_id)) {
+            emit DispatcherUi::get()->ac_selected(ac_id);
+            auto ac = AircraftManager::get()->getAircraft(ac_id);
+            if(event->type() == QEvent::MouseButtonDblClick && ac->isReal()) {
+                emit DispatcherUi::get()->centerMap(ac->getPosition());
+            }
+        }
+    }
+    return QScrollArea::eventFilter(obj, event);
+}
+
+/// The bar of the selected aircraft solid and wider, the others faded.
+void ListContainer::showSelected() {
+    QString selected = DispatcherUi::get()->getSelectedAcId();
+    for(auto it = buttons.begin(); it != buttons.end(); ++it) {
+        auto b = qobject_cast<QToolButton*>(it.key());
+        if(b == nullptr) {
+            continue;
+        }
+        bool sel = it.value() == selected;
+        QColor c(b->property("ac_color").toString());
+        if(!sel) {
+            c.setAlpha(110);
+        }
+        b->setFixedWidth(sel ? 10 : 6);
+        b->setStyleSheet(QString("QToolButton {background: %1; border: 0; border-radius: 3px;}").arg(c.name(QColor::HexArgb)));
+    }
 }
 
 void ListContainer::removeAC(QString ac_id) {
