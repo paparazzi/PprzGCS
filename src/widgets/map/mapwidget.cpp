@@ -109,8 +109,14 @@ private:
 /// Moving a rail card over the map by its title bar; a double click puts it back by the rail.
 class CardMover : public QObject {
 public:
-    CardMover(QWidget* header, QWidget* card, std::function<void(QPoint)> moved) :
-        QObject(header), card(card), moved(moved) {
+    /// moved: while dragging (at most once per frame); finished: after it (to save it)
+    CardMover(QWidget* header, QWidget* card, std::function<void(QPoint)> moved, std::function<void()> finished) :
+        QObject(header), card(card), moved(moved), finished(finished) {
+        frame_timer.setSingleShot(true);
+        frame_timer.setInterval(16);
+        connect(&frame_timer, &QTimer::timeout, this, [this]() {
+            this->moved(target);
+        });
         header->installEventFilter(this);
         header->setCursor(Qt::SizeAllCursor);
         header->setToolTip("Drag to move the panel over the map (double click: back by the rail)");
@@ -138,14 +144,23 @@ protected:
                 return true;
             }
             dragging = true;
-            moved(start + d);
+            target = start + d;
+            if(!frame_timer.isActive()) {
+                frame_timer.start();
+            }
             return true;
         }
         case QEvent::MouseButtonRelease:
+            if(dragging) {
+                frame_timer.stop();
+                moved(target);
+                finished();
+            }
             dragging = false;
             return true;
         case QEvent::MouseButtonDblClick:
             moved(QPoint(-1, -1));
+            finished();
             return true;
         default:
             return false;
@@ -154,6 +169,9 @@ protected:
 private:
     QWidget* card;
     std::function<void(QPoint)> moved;
+    std::function<void()> finished;
+    QTimer frame_timer;
+    QPoint target;
     QPoint press;
     QPoint start;
     bool dragging = false;
@@ -2167,6 +2185,8 @@ void MapWidget::addRailPanel(QString id, QWidget* widget, QString title, QString
     card->setProperty("default_min_width", card->minimumWidth());
     new CardMover(header, card, [=,this](QPoint pos) {
         setRailCardPos(widget, pos);
+    }, [=,this]() {
+        // saved once, after the drag (not at each mouse move)
         emit railCardMoved(widget, card->property("floating").toBool() ? card->pos() : QPoint(-1, -1));
     });
     new CardGrip(card, [=,this](QSize size) {
