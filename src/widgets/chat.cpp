@@ -1,4 +1,5 @@
 #include "chat.h"
+#include <QTimer>
 #include "ui_chat.h"
 #include "pprz_dispatcher.h"
 #include "gcs_utils.h"
@@ -83,13 +84,20 @@ Chat::Chat(QWidget *parent) :
     ui->verticalLayout->addLayout(input_row);
     updateDestButton();
     setFrameShape(QFrame::NoFrame);
-    setMinimumWidth(320);
-    ui->scrollArea->setMinimumHeight(300);     // a few messages visible
+    setMinimumSize(320, 0);     // (the .ui file has a 300 px minimum height: the chat fits its messages)
+    ui->scrollArea->setMinimumHeight(120);     // a few messages visible; more fit (fitMessages)
+    ui->scrollArea->viewport()->installEventFilter(this);   // width changes: wrap again
     ui->scrollArea->setFrameShape(QFrame::NoFrame);
     ui->verticalLayout->setContentsMargins(0, 0, 0, 0);
     ui->verticalLayout->setSpacing(4);
     ui->scroll_widget->layout()->setContentsMargins(0, 0, 4, 0);
     ui->scroll_widget->layout()->setSpacing(3);
+    // the spacer above the messages (they stay at the bottom) takes no height of its own
+    for(int i=0; i<ui->scroll_widget->layout()->count(); i++) {
+        if(auto sp = ui->scroll_widget->layout()->itemAt(i)->spacerItem()) {
+            sp->changeSize(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);
+        }
+    }
 
     auto settings_path = appConfig()->value("SETTINGS_PATH").toString();
     QSettings settings(settings_path, QSettings::IniFormat);
@@ -172,6 +180,7 @@ Chat::~Chat()
 
 void Chat::showEvent(QShowEvent *event) {
     QFrame::showEvent(event);
+    QTimer::singleShot(0, this, &Chat::fitMessages);
     if(unread != 0) {
         unread = 0;
         emit unreadChanged(unread);
@@ -292,12 +301,14 @@ void Chat::addMessage(QString txt, QString source, QString dst, bool sent) {
         if(cb != nullptr && cb->getSource() == source && cb->getDest() == dst && cb->getTime().secsTo(QTime::currentTime()) < 5 &&
            cb->currentLevel() == ChatBubble::level(txt)){   // a warning gets its own row
             cb->addText(txt);
+            QTimer::singleShot(0, this, &Chat::fitMessages);
             return;
         }
     }
 
     auto cb = new ChatBubble(source, dst, txt, sent, this);
     ui->scroll_widget->layout()->addWidget(cb);
+    QTimer::singleShot(0, this, &Chat::fitMessages);
     cb->setVisible(current_filter == "all" || cb->category() == current_filter);
 
     // delay scroll to bottom to wait for the x=widget to be repainted.
@@ -305,4 +316,46 @@ void Chat::addMessage(QString txt, QString source, QString dst, bool sent) {
         ui->scrollArea->verticalScrollBar()->setSliderPosition(ui->scrollArea->verticalScrollBar()->maximum());
     });
 
+}
+
+bool Chat::eventFilter(QObject* obj, QEvent* event) {
+    if((obj == ui->scrollArea->viewport() || obj->objectName() == "rail_card") && event->type() == QEvent::Resize) {
+        QTimer::singleShot(0, this, &Chat::fitMessages);
+    }
+    return QFrame::eventFilter(obj, event);
+}
+
+void Chat::fitMessages() {
+    // a scroll area does not use heightForWidth: with word wrapped messages the list was shorter
+    // than its messages, the last lines hidden and out of reach of the scroll bar
+    auto lay = ui->scroll_widget->layout();
+    int w = ui->scrollArea->viewport()->width();
+    int h = lay->hasHeightForWidth() ? lay->totalHeightForWidth(w) : lay->totalSizeHint().height();
+    ui->scroll_widget->setMinimumHeight(h);
+
+    // the chat as tall as its messages (120 to 400 px), unless the user gave its card a size
+    bool user_sized = false;
+    for(auto p = parentWidget(); p != nullptr; p = p->parentWidget()) {
+        if(p->objectName() == "rail_card") {
+            user_sized = p->property("user_size").toSize().isValid();
+            if(!p->property("chat_watched").toBool()) {
+                p->setProperty("chat_watched", true);
+                p->installEventFilter(this);    // resized with its grip: fill it
+            }
+            break;
+        }
+    }
+    int wanted = user_sized ? 120 : qBound(120, h, 400);
+    // not resized by the user: exactly as tall as the messages (a scroll area asks for more)
+    int max = user_sized ? QWIDGETSIZE_MAX : wanted;
+    if(ui->scrollArea->minimumHeight() != wanted || ui->scrollArea->maximumHeight() != max) {
+        ui->scrollArea->setMinimumHeight(wanted);
+        ui->scrollArea->setMaximumHeight(max);
+        updateGeometry();
+    }
+    // at the newest message
+    auto bar = ui->scrollArea->verticalScrollBar();
+    if(bar->property("at_end").toBool() || !bar->property("at_end").isValid()) {
+        bar->setValue(bar->maximum());
+    }
 }

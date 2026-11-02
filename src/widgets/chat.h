@@ -27,8 +27,12 @@ signals:
 
 protected:
     void showEvent(QShowEvent *event) override;
+    bool eventFilter(QObject* obj, QEvent* event) override;
 
 private:
+    /// the message list as tall as its (wrapped) messages at the current width; the chat as tall
+    /// as the messages when it opens (not when the user resized its card)
+    void fitMessages();
 
     void onSend();
     //void onNewMessage();
