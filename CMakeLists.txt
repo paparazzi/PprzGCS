@@ -39,6 +39,12 @@ option(SPEECH "Enable speech" OFF)
 option(GRPC "Enable GRPC" OFF)
 
 add_subdirectory(ext/pprzlinkQt ${CMAKE_BINARY_DIR}/pprzlinkqt)
+# no warnings from the external code (and no -Werror in Debug builds)
+target_compile_options(pprzlinkQt PRIVATE -w)
+target_compile_options(IvyQt PRIVATE -w)
+
+# the data in the sources, for running build/pprzgcs without installing
+add_definitions(-DPPRZGCS_SOURCE_DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data")
 
 # minumum required Qt components
 set(QT_COMPONENTS Widgets Xml Network Svg)

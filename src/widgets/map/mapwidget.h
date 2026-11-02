@@ -46,8 +46,8 @@ class MapWidget : public Map2D, public Configurable
 {
     Q_OBJECT
     Q_PROPERTY(int ac_arrow_size MEMBER _ac_arrow_size WRITE setAcArrowSize)
-    Q_PROPERTY(bool show_hidden_waypoints WRITE showHiddenWaypoints)
-    Q_PROPERTY(bool show_crash_prediction WRITE showCrashPrediction)
+    Q_PROPERTY(bool show_hidden_waypoints READ hiddenWaypointsShown WRITE showHiddenWaypoints)
+    Q_PROPERTY(bool show_crash_prediction READ crashPredictionShown WRITE showCrashPrediction)
 public:
     explicit MapWidget(QWidget *parent = nullptr);
 
@@ -67,6 +67,8 @@ public:
     void rotateMap(double rot);
     void setAcArrowSize(int s);
     void showHiddenWaypoints(bool state);
+    bool hiddenWaypointsShown() {return show_hidden_wp_action->isChecked();}
+    bool crashPredictionShown() {return show_crash_prediction_action->isChecked();}
     void showCrashPrediction(bool state);
 
 signals:

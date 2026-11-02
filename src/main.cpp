@@ -126,6 +126,10 @@ int main(int argc, char *argv[])
         auto data_path = QString(qgetenv("PPRZGCS_DATA_PATH"));
         if(data_path == "") {
             data_path = QCoreApplication::applicationDirPath() + "/../share/pprzgcs";
+            if(!QDir(data_path).exists()) {
+                // not installed: run from the build directory with the data of the sources
+                data_path = PPRZGCS_SOURCE_DATA_PATH;
+            }
         }
         qDebug() << "DATA_PATH: " << data_path;
         gconfig->setValue("APP_DATA_PATH", data_path);
