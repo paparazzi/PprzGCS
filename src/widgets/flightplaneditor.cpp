@@ -3,6 +3,8 @@
 #include "AircraftManager.h"
 #include "gcs_utils.h"
 #include <libxml/tree.h>
+#include <libxml/valid.h>
+#include <vector>
 #include "dispatcher_ui.h"
 #include "ui_flightplaneditor.h"
 
@@ -818,26 +820,26 @@ void FlightPlanEditor::onNavStatus() {
 
 QStringList FlightPlanEditor::elementDefs(xmlElementContentPtr c) {
     QStringList list;
-    if(c == NULL) {
+    if(c == nullptr) {
         return list;
     }
 
-    switch(c->type) {
-    case XML_ELEMENT_CONTENT_PCDATA:
-        list.append("#PCDATA");
-        break;
-    case XML_ELEMENT_CONTENT_ELEMENT:
-        list.append((char*)c->name);
-        break;
-    case XML_ELEMENT_CONTENT_SEQ:
-    case XML_ELEMENT_CONTENT_OR:
-        list.append(elementDefs(c->c1));
-        list.append(elementDefs(c->c2));
-        break;
+    std::vector<const xmlChar*> names(16);
+    while(true) {
+        int count = 0;
+        const int capacity = static_cast<int>(names.size());
+        if(xmlValidGetPotentialChildren(c, names.data(), &count, capacity) < 0) {
+            return list;
+        }
+        if(count < capacity) {
+            for(int i = 0; i < count; ++i) {
+                list.append(QString::fromUtf8(reinterpret_cast<const char*>(names[i])));
+            }
+            return list;
+        }
+        // A full buffer may omit children, so retry with more space.
+        names.resize(names.size() * 2);
     }
-
-    list.removeDuplicates();
-    return list;
 }
 
 QList<struct AttributeDef> FlightPlanEditor::attributeDefs(const xmlChar* nodeName) {
