@@ -1,3 +1,4 @@
+#include "card_dialog.h"
 #include "flightplaneditor.h"
 #include "AircraftManager.h"
 #include "gcs_utils.h"
@@ -49,9 +50,9 @@ FlightPlanEditor::FlightPlanEditor(QString ac_id, QWidget *parent) : QWidget(par
         connect(ui->validate_button, &QPushButton::clicked, this, [=,this]() {
             bool result = validate();
             if(result) {
-                QMessageBox::information(this, "DTD Validation", "XML is valid!");
+                CardDialog::inform(this, "Flight plan is valid", "Checked against the flight plan DTD.");
             } else {
-                QMessageBox::critical(this, "DTD Validation", "XML not valid! Try check stderr for more information.");
+                CardDialog::inform(this, "Flight plan is not valid", "Not valid against the flight plan DTD: the details are in the terminal (stderr).", false);
             }
         });
 
@@ -772,16 +773,14 @@ void FlightPlanEditor::onItemDoubleClicked(QTreeWidgetItem *item, int column) {
 }
 
 void FlightPlanEditor::onNavStatus() {
-    auto last = blocks[last_block];
-    if(last == nullptr) {
-        return;
+    auto last = blocks.value(last_block, nullptr);
+    if(last != nullptr) {
+        applyRecursive(last, [=,this](QTreeWidgetItem* item){
+            for(int i=0; i<item->columnCount(); ++i) {
+                item->setBackground(i, Qt::transparent);
+            }
+        });
     }
-
-    applyRecursive(last, [=,this](QTreeWidgetItem* item){
-        for(int i=0; i<item->columnCount(); ++i) {
-            item->setBackground(i, Qt::transparent);
-        }
-    });
 
     auto msg = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getMessage("NAV_STATUS");
     if(msg) {
@@ -791,7 +790,12 @@ void FlightPlanEditor::onNavStatus() {
         msg->getField("cur_block", cur_block);
         msg->getField("cur_stage", cur_stage);
 
-        applyRecursive(blocks[cur_block], [=,this](QTreeWidgetItem* item){
+        // a block that is not in this flight plan (e.g. another build): nothing to highlight
+        auto current = blocks.value(cur_block, nullptr);
+        if(current == nullptr) {
+            return;
+        }
+        applyRecursive(current, [=,this](QTreeWidgetItem* item){
             QColor color = Qt::darkGreen;
             auto node = nodes[item];
             auto cno = xmlGetProp(node, BAD_CAST "no");
