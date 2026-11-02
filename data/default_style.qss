@@ -701,17 +701,17 @@ QComboBox#waypoint_editor_ref {
 /* Scroll bars: thin and rounded */
 QScrollBar:vertical {
     background: transparent;
-    width: 10px;
+    width: 14px;
     margin: 0;
 }
 QScrollBar:horizontal {
     background: transparent;
-    height: 10px;
+    height: 14px;
     margin: 0;
 }
 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
     background-color: #c4ccd5;
-    border-radius: 3px;
+    border-radius: 4px;
     margin: 2px;
 }
 QScrollBar::handle:vertical {
