@@ -6,6 +6,9 @@
 #include "graphics_text.h"
 #include "QGraphicsTextItem"
 #include "graphics_line.h"
+#include "graphics_icon.h"
+#include "aircraft_watcher.h"
+#include "graphics_group.h"
 
 
 class AircraftItem : public MapItem
@@ -36,10 +39,16 @@ public slots:
 
 protected:
     virtual void updateGraphics(MapWidget* map, uint32_t update_event);
+    void handle_bat_alarm(AircraftWatcher::BatStatus bs);
+    void handle_link_alarm(AircraftWatcher::LinkStatus ls);
 
 private:
     GraphicsAircraft* graphics_aircraft;
     GraphicsText* graphics_text;
+    // battery and link icons above the aircraft (GCS setting, off: the notifications show them)
+    GraphicsGroup* alarms = nullptr;
+    GraphicsIcon* bat_alarm = nullptr;
+    GraphicsIcon* link_alarm = nullptr;
 
     Point2DLatLon latlon;
     double heading;

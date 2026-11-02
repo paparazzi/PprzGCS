@@ -35,6 +35,12 @@ QPushButton:hover, QToolButton:hover {
 QPushButton:checked, QToolButton:checked {
     background-color: #2d4a7a;
 }
+QSplitter::handle {
+    background: #2d333b;
+}
+QTabBar {
+    qproperty-drawBase: 0;
+}
 QTabWidget::pane {
     border: 0;
     border-top: 1px solid #3a424d;

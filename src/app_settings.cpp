@@ -73,6 +73,7 @@ void set_app_settings() {
     default_setting("map/tiles_path", appConfig()->value("USER_DATA_PATH").toString() + "/map");
 
     default_setting("map/aircraft/track_size", 20);
+    default_setting("map/aircraft_status_icons", false);
     default_setting("map/aircraft/track_width", 1);
 
     default_setting("aircraft_default_color", "red");
@@ -163,6 +164,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     }
     cb = addSetting("Style", "APP_STYLE_FILE", w_general, l_general, row, Type::STRING_COMBO, style_files);
     callbacks.append(cb);
+    cb = addSetting("Map: battery and link icons next to the aircraft", "map/aircraft_status_icons", w_general, l_general, row, Type::BOOL);
     callbacks.append(cb);
     tabWidget->addTab(w_general, "General");
 

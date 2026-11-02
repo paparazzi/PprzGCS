@@ -1005,6 +1005,15 @@ void MapWidget::arrangeWaypointLabels() {
             }
         }
     }
+    // the aircraft: a name under one is unreadable
+    QList<QRectF> aircraft;
+    for(auto mgr: ac_items_managers) {
+        auto ai = mgr->getAircraftItem();
+        if(ai != nullptr && ai->icon() != nullptr && ai->icon()->isVisible()) {
+            QRectF r = ai->icon()->sceneBoundingRect();
+            aircraft.append(r.adjusted(r.width() * 0.15, r.height() * 0.15, -r.width() * 0.15, -r.height() * 0.15));
+        }
+    }
     // top to bottom, left to right: stable from one update to the next
     std::sort(wps.begin(), wps.end(), [](const Wp& a, const Wp& b) {
         return a.center.y() < b.center.y() || (a.center.y() == b.center.y() && a.center.x() < b.center.x());
@@ -1034,6 +1043,9 @@ void MapWidget::arrangeWaypointLabels() {
                     continue;   // its own waypoint (or one at the same place)
                 }
                 free = free && !m.intersects(rr);
+            }
+            for(auto &a: aircraft) {
+                free = free && !a.intersects(rr);
             }
             if(free) {
                 chosen = o;
@@ -1573,6 +1585,9 @@ void MapWidget::setAircraftPose(QString ac_id, Point2DLatLon pos, double heading
         arrow->setAcPos(pos);
         ai->setHeading(heading);
         arrangeAircraftLabels();
+        if(wp_labels_timer) {
+            wp_labels_timer->start();     // the waypoint names away from the aircraft
+        }
         AircraftManager::get()->getAircraft(ac_id)->setPosition(pos);
 
         if(GlobalConfig::get()->value("MAP_TRACK_AC", false).toBool() && ac_id == current_ac) {
