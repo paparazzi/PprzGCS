@@ -6,6 +6,7 @@
 #include <QIcon>
 #include <QWheelEvent>
 #include <QPainterPath>
+#include <QSvgRenderer>
 #include "dispatcher_ui.h"
 
 WindIndicator::WindIndicator(QWidget *parent) : QWidget(parent),
@@ -16,14 +17,14 @@ WindIndicator::WindIndicator(QWidget *parent) : QWidget(parent),
 {
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &WindIndicator::setAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &WindIndicator::removeAC);
-    setToolTip("Wind speed (click to change unit)\nCompass: drag the north marker or scroll to rotate the map, double-click it to reset");
+    setToolTip("Wind speed (click to change unit)\nCompass: drag or scroll to rotate the map, double click to reset");
+    // no background of its own (themes give widgets one): the pill is drawn, anti-aliased
+    setAttribute(Qt::WA_NoSystemBackground);
+    setStyleSheet("WindIndicator {background: transparent;}");
 }
 
 void WindIndicator::resizeEvent(QResizeEvent *event) {
-    (void)event;
-    QPainterPath path;
-    path.addRoundedRect(rect(), height()/2.0, height()/2.0);
-    setMask(QRegion(path.toFillPolygon().toPolygon()));
+    QWidget::resizeEvent(event);
 }
 
 void WindIndicator::paintEvent(QPaintEvent *event) {
@@ -32,13 +33,20 @@ void WindIndicator::paintEvent(QPaintEvent *event) {
     painter.setRenderHint(QPainter::Antialiasing);
     int penWidth = 2;
 
-    // pill background
-    painter.setBrush(QBrush(m_background_color));
+    // pill background, with a soft shadow and a thin border (contrast on any imagery)
+    QRectF pill = QRectF(rect()).adjusted(2, 1, -2, -3);
+    double rad = pill.height() / 2.0;
     painter.setPen(Qt::NoPen);
-    painter.drawRoundedRect(rect(), height()/2.0, height()/2.0);
+    for(int i=3; i>=1; i--) {
+        painter.setBrush(QColor(0, 0, 0, 18));
+        painter.drawRoundedRect(pill.translated(0, i * 0.7).adjusted(-i * 0.5, -i * 0.3, i * 0.5, i * 0.5), rad, rad);
+    }
+    painter.setBrush(QBrush(m_background_color));
+    painter.setPen(QPen(m_border_color, 1));
+    painter.drawRoundedRect(pill, rad, rad);
 
     // compass on the left: ring with the north marker (drag it to rotate the map)
-    auto r_out = compassRect().marginsRemoved(QMargins(penWidth, penWidth, penWidth, penWidth));
+    auto r_out = compassRect().marginsRemoved(QMargins(penWidth + 4, penWidth + 3, penWidth + 4, penWidth + 5));
     painter.setPen(QPen(m_pen_color, penWidth));
     painter.setBrush(Qt::NoBrush);
     painter.drawEllipse(r_out);
@@ -70,17 +78,14 @@ void WindIndicator::paintEvent(QPaintEvent *event) {
         double wind_speed = wind_data[current_ac_id].wind_speed;
         double wind_dir = wind_data[current_ac_id].wind_dir;
 
-        QIcon windsock;
-        if(wind_speed > wind_threshold) {
-            windsock = QIcon(":/pictures/windsock.svg");
-        } else {
-            windsock = QIcon(":/pictures/windsock_no_wind.svg");
-        }
+        // the windsock drawn from the SVG at the angle (not a small image rotated: no jagged edges)
+        QSvgRenderer windsock(QString(wind_speed > wind_threshold ? ":/pictures/windsock.svg" : ":/pictures/windsock_no_wind.svg"));
         painter.save();
-        painter.translate(QPointF(r_out.center()) + QPointF(0.5, 0.5));
+        painter.setRenderHint(QPainter::SmoothPixmapTransform);
+        painter.translate(QRectF(r_out).center());
         painter.rotate(compass - 90 + wind_dir + 180);
-        int wsWidth = r_out.width()*0.6;
-        windsock.paint(&painter, QRect(-wsWidth/2, -wsWidth/2, wsWidth, wsWidth), Qt::AlignCenter);
+        double wsWidth = r_out.width() * 0.62;
+        windsock.render(&painter, QRectF(-wsWidth/2, -wsWidth/2, wsWidth, wsWidth));
         painter.restore();
 
         QString txt;
@@ -112,17 +117,16 @@ void WindIndicator::changeUnit() {
     update();
 }
 
+/// on the compass (the whole circle: easier to grab than the north marker, also with a trackpad)
 bool WindIndicator::onNorth(QMouseEvent* event) {
-    auto tr = QTransform();
-    auto translation = QPointF(compassRect().center()) + QPointF(0.5, 0.5);
-    tr.translate(translation.x(), translation.y());
-    tr.rotate(compass - 90);
-    return tr.mapRect(north_rect).contains(event->pos());
+    return compassRect().contains(event->pos());
 }
 
 void WindIndicator::mousePressEvent(QMouseEvent *event) {
     if(onNorth(event)) {
         rotate_state = PRESSED;
+        auto pos = event->pos() - compassRect().center();
+        drag_angle = qRadiansToDegrees(atan2(pos.x(), -pos.y()));
     } else {
         changeUnit();
     }
@@ -136,9 +140,14 @@ void WindIndicator::mouseDoubleClickEvent(QMouseEvent *event) {
 
 void WindIndicator::mouseMoveEvent(QMouseEvent *event) {
     if(rotate_state == PRESSED) {
+        // turn the map by the angle the pointer turned around the compass center
         auto pos = event->pos() - compassRect().center();
-        double angle = atan2(pos.x(), -pos.y());
-        emit requestRotation(qRadiansToDegrees(angle));
+        double angle = qRadiansToDegrees(atan2(pos.x(), -pos.y()));
+        double d = angle - drag_angle;
+        while(d > 180) d -= 360;
+        while(d < -180) d += 360;
+        drag_angle = angle;
+        emit requestRotation(compass + d);
     }
 }
 

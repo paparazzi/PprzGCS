@@ -13,10 +13,11 @@ LockButton {
 }
 
 WindIndicator {
-    qproperty-arrow_color: #ff0000;
-    qproperty-pen_color: #202020;
-    qproperty-background_color: #e6ffffff;
-    qproperty-size: 40;
+    qproperty-arrow_color: #d92d20;
+    qproperty-pen_color: #111418;
+    qproperty-background_color: #ffffff;
+    qproperty-border_color: #8c959f;
+    qproperty-size: 52;
 }
 
 MiniStrip {

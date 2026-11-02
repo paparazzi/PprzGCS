@@ -11,6 +11,7 @@ class WindIndicator : public QWidget
     Q_PROPERTY(QColor background_color MEMBER m_background_color)
     Q_PROPERTY(QColor arrow_color MEMBER m_arrow_color)
     Q_PROPERTY(QColor pen_color MEMBER m_pen_color)
+    Q_PROPERTY(QColor border_color MEMBER m_border_color)
 public:
 
     enum SpeedUnit {
@@ -32,7 +33,7 @@ public:
     explicit WindIndicator(QWidget *parent = nullptr);
 
     // size: the height; the widget is a pill with the compass on the left and the wind speed
-    void setSizeProperty(int s) {_size = QSize(s*7/2, s); updateGeometry(); update();}
+    void setSizeProperty(int s) {_size = QSize(s*3, s); updateGeometry(); update();}
     int getSizeProperty() {return _size.height();}
 
     void setWindData(QString ac_id, double dir, double speed) {
@@ -77,11 +78,13 @@ private:
     enum RotateState rotate_state;
 
     QRect north_rect;
+    double drag_angle = 0;
 
     QSize _size;
     QColor m_background_color;
     QColor m_arrow_color;
     QColor m_pen_color;
+    QColor m_border_color = QColor(0xc4, 0xcc, 0xd5);
 };
 
 #endif // WINDINDICATOR_H
