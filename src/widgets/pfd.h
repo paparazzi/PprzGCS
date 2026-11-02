@@ -30,6 +30,9 @@ public:
 
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
+    // the instrument is square with fixed tapes: its height follows its width (no white space)
+    bool hasHeightForWidth() const override {return true;}
+    int heightForWidth(int w) const override;
     void configure(QDomElement) override {};
 
 protected:

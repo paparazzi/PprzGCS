@@ -84,6 +84,16 @@ protected:
         int max_h = card->parentWidget() ? card->parentWidget()->height() - 30 : 2000;
         QSize s(qMax(min_size.width(), start_size.width() + d.x()),
                 qBound(min_size.height(), start_size.height() + d.y(), qMax(min_size.height(), max_h)));
+        // a panel with a fixed shape (e.g. the PFD): its height follows the width, no white space
+        if(card->layout() && card->layout()->hasHeightForWidth()) {
+            s.setHeight(qBound(min_size.height(), card->layout()->totalHeightForWidth(s.width()), qMax(min_size.height(), max_h)));
+            if(s.height() == max_h) {
+                // as tall as allowed: as wide as that height needs
+                for(int wd = s.width(); wd > min_size.width() && card->layout()->totalHeightForWidth(wd) > max_h; wd -= 4) {
+                    s.setWidth(wd);
+                }
+            }
+        }
         card->setMinimumSize(s);
         card->setMaximumSize(s);
     }

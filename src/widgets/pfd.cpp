@@ -482,6 +482,11 @@ QSize Pfd::sizeHint() const
     return QSize(380, 320);
 }
 
+int Pfd::heightForWidth(int w) const {
+    // the attitude is square: width - the speed and height tapes, + the heading tape and values
+    return qMax(minimumSizeHint().height(), w - 56);
+}
+
 QSize Pfd::minimumSizeHint() const
 {
     return QSize(320, 260);
