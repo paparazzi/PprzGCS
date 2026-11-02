@@ -23,7 +23,7 @@ A tile source is identified by an xml node of this form:
 .. code-block:: xml
 
     <source
-        name="OpenStreetMap" dir="OSM_CLASSIC"
+        name="OpenStreetMap" title="Street map" dir="OSM_CLASSIC"
         addr="http://tile.openstreetmap.org/{z}/{x}/{y}.png"
         zoomMin="0" zoomMax="19"
         tileSize="256"
@@ -31,6 +31,7 @@ A tile source is identified by an xml node of this form:
     />
 
 + **name** is the name of the layer in PprzGCS.
++ **title** (optional) is the name shown in the map layers panel, e.g. "Street map". Default: the name.
 + **dir** is the name of the directory in which the tiles will be saved. In this example, the tiles are saved in ``map/OSM_CLASSIC``.
 + **addr** is the address from which the tiles will be fetched.
     + Use ``{x}``, ``{y}`` and ``{z}`` as placeholders for tiles coordinates.

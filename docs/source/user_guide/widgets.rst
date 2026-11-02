@@ -15,6 +15,25 @@ This is a classic 2D map to display waypoints and aircrafts.
 A telemetry message can be dropped on it to display a papget.
 
 It can be configured to add buttons in a left and right columns to display other widgets over it.
+The left column is a rail along the edge of the map: a button opens its widget in a card over the map,
+a long press keeps it open, and dragging the button moves the widget (see :ref:`Layout/Tabs <layout_tabs>`).
+
+The cards can be moved over the map by their title bar (double click: back next to the rail) and
+resized with the grip in their bottom right corner.
+
+Messages from the aircraft, a low battery and lost links are shown as notifications at the top of the map.
+Messages disappear after a few seconds, warnings stay until fixed or dismissed. Click a notification to
+select its aircraft and open the chat.
+
++ Double click an aircraft to select it; with several aircraft their names show (in their color) when the
+  pointer is on them or when they overlap. *Aircrafts > Colors* changes the color of an aircraft; aircraft
+  with the same configured color get distinct ones.
++ Drag a waypoint to move it: a card next to it shows how far it moved and its height above ground, and its
+  old position stays on the map until the aircraft confirms the move.
++ *Map layers* has a brightness slider: a slightly darker map makes the aircraft and waypoints stand out.
++ *File > Settings > General* can show the battery and link icons next to the aircraft.
+
+.. image:: notifications.png
 
 .. figure:: map2d_configure.png
    :alt: map2d widget
@@ -44,22 +63,19 @@ From left to right, top to bottom:
 + status for Link, GPS, RC, IMU
 
 
-PDF
+PFD
 ---
 
 name: ``PFD``
 
-Display attitude of the aircraft
+Primary flight display of the selected aircraft: an attitude indicator (roll and pitch), the ground speed
+(air speed below) on the left, the height above ground on the right with a marker at the target height and the
+climb rate, the heading below, and the values as text.
 
-.. image:: strip.png
+Right click on it to choose the view: *pilot view* (the horizon moves, as in an aircraft) or
+*ground view* (the horizon stays level and the aircraft symbol banks and pitches, as seen from the ground).
 
-There are 3 views:
-
-+ from the rear
-+ from the left
-+ from the top
-
-Clicking on the small views make them switch with the main view.
+.. image:: PFD.png
 
 
 Commands
@@ -79,8 +95,8 @@ name: ``flightplan``
 
 Control the flight plan.
 
-The first tab show the blocks, the current block being highlighted in green.
-You can switch to a block by cliking on the arrow button.
+The first tab shows the blocks, the current block being highlighted in green with its time.
+Tap a block, then *Go*, or double click it to switch to it (amber until the aircraft is in it).
 
 .. image:: flightplan_blocks.png
 
@@ -99,6 +115,18 @@ name: ``settings``
 Aircraft settings. The search bar can be useful.
 
 .. image:: settings.png
+
+
+Chat
+----
+
+name: ``chat``
+
+Messages from the aircraft (``INFO_MSG``) and the ground, one row per message with the sender name in its color;
+the time is shown on hover. Messages about a problem (low, lost, fail, ...) are highlighted.
+With more than one aircraft, a filter shows the messages of one sender.
+
+.. image:: chat.png
 
 
 Plotter
