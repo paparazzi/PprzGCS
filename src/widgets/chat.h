@@ -15,6 +15,13 @@ public:
     explicit Chat(QWidget *parent = nullptr);
     ~Chat();
 
+signals:
+    /// Number of received messages not yet seen (the chat was hidden when they arrived).
+    void unreadChanged(int count);
+
+protected:
+    void showEvent(QShowEvent *event) override;
+
 private:
 
     void onSend();
@@ -25,6 +32,7 @@ private:
     void onAcDeleted(QString ac_id);
 
     QString chat_id;
+    int unread = 0;
 
     Ui::Chat *ui;
 };

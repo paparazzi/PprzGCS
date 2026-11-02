@@ -5,6 +5,7 @@
 + On `AIRCRAFT_REBOOT` the aircraft is reloaded (waypoints, settings, checklist), with a notice in the chat
 + Wind indicator and GVF config cleared on `AIRCRAFT_DIE`
 + Airframe: follow `<include>` for the checklist and defines (read-only)
++ Chat: unread-message bubble on the chat button when an `INFO_MSG` arrives while the chat is closed
 
 ## v1.0.13
 + Add Chat widget for `INFO_MSG`
