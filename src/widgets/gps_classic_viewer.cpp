@@ -92,7 +92,7 @@ void GPSClassicViewer::paintEvent(QPaintEvent *event) {
         p.setFont(caption);
         for(int i=0; i<n; i++) {
             auto &sv = infos[i];
-            double h = qBound(2.0, (sv.cno - 15) * bars_h / 35.0, static_cast<double>(bars_h));
+            double h = qBound(2.0, (sv.cno - 15) * bars_h / 35.0, qMax(2.0, static_cast<double>(bars_h)));
             QColor c = (sv.flags & 0x01) ? QColor(0x1f7a3f) : QColor(0x8c959f);
             if(sv.age > 4) {
                 c.setAlpha(90);

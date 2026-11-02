@@ -79,8 +79,11 @@ protected:
             return;
         }
         QPoint d = e->globalPosition().toPoint() - start_pos;
+        // not smaller than the panel needs (e.g. the PFD), not taller than the map
+        QSize min_size = card->minimumSizeHint().expandedTo(QSize(240, 120));
         int max_h = card->parentWidget() ? card->parentWidget()->height() - 30 : 2000;
-        QSize s(qMax(240, start_size.width() + d.x()), qBound(120, start_size.height() + d.y(), qMax(120, max_h)));
+        QSize s(qMax(min_size.width(), start_size.width() + d.x()),
+                qBound(min_size.height(), start_size.height() + d.y(), qMax(min_size.height(), max_h)));
         card->setMinimumSize(s);
         card->setMaximumSize(s);
     }
@@ -2271,7 +2274,9 @@ void MapWidget::fitRailCards() {
     for(auto card: rail_cards) {
         QSize user = card->property("user_size").toSize();
         if(user.isValid()) {
-            QSize s(user.width(), qMin(user.height(), qMax(120, height() - 30)));
+            // a saved size is not smaller than the panel needs now
+            user = user.expandedTo(card->minimumSizeHint());
+            QSize s(user.width(), qMin(user.height(), qMax(card->minimumSizeHint().height(), height() - 30)));
             card->setMinimumSize(s);
             card->setMaximumSize(s);
         } else {

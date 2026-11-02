@@ -168,8 +168,9 @@ void CardDialog::placeNear(QPoint global_pos, QRect avoid) {
         if(pos.x() + width() > r.right()) {
             pos.setX(keep.left() - width());
         }
-        pos.setY(qBound(r.top(), pos.y(), r.bottom() - height()));
-        pos.setX(qBound(r.left(), pos.x(), r.right() - width()));
+        // (larger than the screen: at its top left)
+        pos.setY(qBound(r.top(), pos.y(), qMax(r.top(), r.bottom() - height())));
+        pos.setX(qBound(r.left(), pos.x(), qMax(r.left(), r.right() - width())));
     }
     move(pos);
     placed = true;

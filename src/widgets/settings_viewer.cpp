@@ -612,7 +612,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
             }
             if(ok) {
                 QSignalBlocker b(slider);
-                slider->setDoubleValue(qBound(static_cast<double>(min), v, static_cast<double>(max)));
+                slider->setDoubleValue(qBound(static_cast<double>(min), v, static_cast<double>(qMax(min, max))));
             }
             (*changed)();
         });

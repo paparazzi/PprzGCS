@@ -233,7 +233,7 @@ void ListContainer::fitInSplitter() {
     }
     fitted_height = widget()->sizeHint().height();
     int content = fitted_height + 2 * frameWidth();
-    int wanted = qBound(minimumSizeHint().height(), content, total * 6 / 10);
+    int wanted = qBound(minimumSizeHint().height(), content, qMax(minimumSizeHint().height(), total * 6 / 10));
     int others = total - sizes[idx];
     int rest = total - wanted;
     for(int i=0; i<sizes.size(); i++) {
