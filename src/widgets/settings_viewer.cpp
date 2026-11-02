@@ -41,7 +41,7 @@ SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent)
 
     scroll = new QScrollArea();
     scroll_content = new QStackedWidget();
-    scroll_content->setContentsMargins(0, 0, 20, 0);
+    scroll_content->setContentsMargins(0, 0, 4, 0);     // next to the scroll bar
 
     main_layout->addWidget(scroll, 1);    // the list takes the extra height (e.g. in a tab)
     scroll->setWidget(scroll_content);
@@ -911,7 +911,10 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
                 break;
             }
         }
-        if(!found) {
+        // not in the airframe file (a module default, or an included file): only worth saying when
+        // it was changed since the start (nothing would be lost otherwise)
+        auto initial = setting->getInitialValue();
+        if(!found && initial.has_value() && abs(setting->getValue().value() - initial.value()) > 1e-4) {
             unsavable.append(param_name);
         }
     }
@@ -1007,9 +1010,15 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
     }
 
     if(!unsavable.isEmpty()) {
-        addText(QString("%1 not in the airframe file, can't be saved: %2")
-                .arg(unsavable.size() == 1 ? "1 setting is" : QString("%1 settings are").arg(unsavable.size()))
-                .arg(unsavable.join(", ")), "card_note");
+        // the names folded when there are many
+        QString head = QString("%1 not in the airframe file (a module default or an included file), "
+                               "so not saved:")
+                .arg(unsavable.size() == 1 ? "1 changed setting is" : QString("%1 changed settings are").arg(unsavable.size()));
+        auto note = addText(head + " " + unsavable.join(", "), "card_note");
+        if(unsavable.size() > 5) {
+            note->setText(head + " " + unsavable.mid(0, 5).join(", ") + QString::fromUtf8(", \u2026"));
+            note->setToolTip(unsavable.join("\n"));
+        }
     }
 
     // the airframe file, when it is a local file
