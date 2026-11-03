@@ -91,6 +91,7 @@ private:
     QMap<QObject*, Setting*> name_labels;                  // click: slider, double click: ask the value
     std::map<Setting*, std::function<void()>> toggle_slider;
     std::map<Setting*, QPushButton*> ask_buttons;
+    std::map<QObject*, std::function<void(Qt::FocusReason)>> field_focus;   // a number field gets the focus
     std::map<Setting*, std::function<void()>> refresh_actions;   // the buttons of a row
     bool rows_open = false;     // GCS setting: every row open (slider and buttons), as the old layout
     std::map<Setting*, float> pending;      // sent values not yet confirmed by the aircraft

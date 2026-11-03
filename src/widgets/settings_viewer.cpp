@@ -62,6 +62,12 @@ SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent)
             }
         }
         scroll->horizontalScrollBar()->setValue(0);
+        // the stack gives the focus to the first field of the new page: not wanted (a blue field)
+        auto f = QApplication::focusWidget();
+        if(f != nullptr && scroll_content->currentWidget() != nullptr &&
+           scroll_content->currentWidget()->isAncestorOf(f)) {
+            scroll->setFocus(Qt::OtherFocusReason);
+        }
         fitContent();
     });
 
@@ -128,6 +134,14 @@ void SettingsViewer::fitContent() {
 
 bool SettingsViewer::eventFilter(QObject *object, QEvent *event)
 {
+    if(event->type() == QEvent::FocusIn && field_focus.count(object)) {
+        field_focus[object](static_cast<QFocusEvent*>(event)->reason());
+        return false;
+    }
+    if(event->type() == QEvent::MouseButtonPress && field_focus.count(object)) {
+        field_focus[object](Qt::MouseFocusReason);     // a tap in a field that has the focus
+        return false;
+    }
     if(event->type() == QEvent::MouseButtonDblClick && name_labels.contains(object)) {
         // every row open: ask the aircraft its value (as the old GCS); folded: two clicks open
         // and close again, nothing more
@@ -625,14 +639,20 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         connect(edit, &QLineEdit::returnPressed, send_btn, &QPushButton::click);
         // using the field opens the whole row (slider and buttons), as a click on the name; it
         // closes again when leaving it without a change
-        connect(qApp, &QApplication::focusChanged, edit, [=,this](QWidget*, QWidget* now) {
-            if(now == edit && !*expanded) {
+        // only for a tap, Tab or a shortcut: opening a group gives the focus to its first field
+        field_focus[edit] = [=,this](Qt::FocusReason reason) {
+            if(!*expanded && (reason == Qt::MouseFocusReason || reason == Qt::TabFocusReason ||
+                              reason == Qt::BacktabFocusReason || reason == Qt::ShortcutFocusReason)) {
                 *expanded = true;
                 *opened_by_field = true;
                 refresh_actions[setting]();
                 show_editor(false);
                 fitContent();
-            } else if(now != edit && *opened_by_field && !dirty[setting] &&
+            }
+        };
+        edit->installEventFilter(this);
+        connect(qApp, &QApplication::focusChanged, edit, [=,this](QWidget*, QWidget* now) {
+            if(now != edit && *opened_by_field && !dirty[setting] &&
                       !(now != nullptr && widget->isAncestorOf(now))) {
                 *expanded = false;
                 *opened_by_field = false;
