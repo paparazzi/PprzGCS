@@ -4,6 +4,7 @@
 #include "card_dialog.h"
 
 #include <QWidget>
+#include <QPushButton>
 #include <QtWidgets>
 #include <QBoxLayout>
 #include "configurable.h"
@@ -89,6 +90,7 @@ private:
     std::map<Setting*, int> asking;                        // the attempt waiting for an answer
     QMap<QObject*, Setting*> name_labels;                  // click: slider, double click: ask the value
     std::map<Setting*, std::function<void()>> toggle_slider;
+    std::map<Setting*, QPushButton*> ask_buttons;
     std::map<Setting*, std::function<void()>> refresh_actions;   // the buttons of a row
     bool rows_open = false;     // GCS setting: every row open (slider and buttons), as the old layout
     std::map<Setting*, float> pending;      // sent values not yet confirmed by the aircraft

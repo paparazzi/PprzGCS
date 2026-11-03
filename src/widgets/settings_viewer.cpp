@@ -129,7 +129,12 @@ void SettingsViewer::fitContent() {
 bool SettingsViewer::eventFilter(QObject *object, QEvent *event)
 {
     if(event->type() == QEvent::MouseButtonDblClick && name_labels.contains(object)) {
-        return true;    // two clicks: open and close again, nothing more
+        // every row open: ask the aircraft its value (as the old GCS); folded: two clicks open
+        // and close again, nothing more
+        if(rows_open && ask_buttons.count(name_labels[object])) {
+            ask_buttons[name_labels[object]]->click();
+        }
+        return true;
     }
     if(event->type() == QEvent::MouseButtonRelease && name_labels.contains(object)) {
         auto setting = name_labels[object];
@@ -233,6 +238,7 @@ void SettingsViewer::create_widgets(SettingMenu* setting_menu, QList<SettingMenu
     // the groups in one block, the settings below it without space between them
     menu_layout->setSpacing(0);
     menu_layout->setContentsMargins(0, 4, 0, 4);
+    menu_layout->setSpacing(8);     // room between two settings
     QFrame* groups_box = nullptr;
     QVBoxLayout* groups_lay = nullptr;
     QPushButton* last_group = nullptr;
@@ -357,8 +363,8 @@ void SettingsViewer::populate_search_results(QString searched) {
  * One setting on one line: its name and its control (a few choices as buttons, more as a list,
  * on/off as a switch, a number as a field with a slider below while editing). The control shows
  * the value on the aircraft; changing it marks the row and shows Undo / Send. A sent value stays
- * marked until the aircraft confirms it. The menu (⋯) asks the value again, or sends the previous
- * or the initial value.
+ * marked until the aircraft confirms it. Open (click on the name), the row also has Previous and
+ * Initial (sent at once), Ask (drops a change, asks the aircraft its value) and Send.
  */
 QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     QWidget* widget = new QWidget(parent);
@@ -366,7 +372,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     widget->setAttribute(Qt::WA_StyledBackground);
     rows[setting] = widget;
     QVBoxLayout* vLay = new QVBoxLayout(widget);
-    vLay->setContentsMargins(6, 2, 2, 2);
+    vLay->setContentsMargins(8, 2, 2, 2);     // after the bar at the left
     vLay->setSpacing(2);
     widget->setMinimumHeight(38);     // touch
     QHBoxLayout* hlay = new QHBoxLayout();
@@ -377,7 +383,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     label->setObjectName("setting_name");
     label->setMinimumWidth(30);
     label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
-    label->setToolTip(rows_open ? setting->getName() :
+    label->setToolTip(rows_open ? setting->getName() + " (double click: ask the aircraft its value)" :
                       setting->getName() + " (click: open, with the slider and the buttons)");
     label->installEventFilter(this);
     name_labels[label] = setting;
@@ -406,14 +412,6 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     QString unit = setting->getDisplayUnit();
     QLabel* unit_label = nullptr;
 
-    auto menu_btn = new QToolButton(widget);
-    menu_btn->setObjectName("setting_action");
-    menu_btn->setText(QString::fromUtf8("⋯"));
-    menu_btn->setToolTip("Ask the value again, send the previous or the initial value");
-    menu_btn->setPopupMode(QToolButton::InstantPopup);
-    auto menu = new QMenu(menu_btn);
-    menu_btn->setMenu(menu);
-
     // second line (numbers): the slider; last line: Undo / Send while changed
     QHBoxLayout* slider_lay = new QHBoxLayout();
     vLay->addLayout(slider_lay);
@@ -424,23 +422,19 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     // the previous and the initial value, sent at once
     auto prev_btn = new QPushButton(QString::fromUtf8("\u21A9 Previous"), actions);
     prev_btn->setObjectName("setting_undo");
-    prev_btn->setToolTip("Send the previous value");
     auto init_btn = new QPushButton(QString::fromUtf8("\u21BA Initial"), actions);
     init_btn->setObjectName("setting_undo");
     init_btn->setToolTip("Send the initial value (at the start of the flight)");
     auto ask_btn = new QPushButton(QString::fromUtf8("\u21BB Ask"), actions);
     ask_btn->setObjectName("setting_undo");
-    ask_btn->setToolTip("Ask the aircraft its value (again after 3 s without answer)");
-    actions_lay->addWidget(ask_btn);
+    ask_buttons[setting] = ask_btn;
+    ask_btn->setToolTip("Drop a change and ask the aircraft its value (again after 3 s without answer)");
     actions_lay->addWidget(prev_btn);
     actions_lay->addWidget(init_btn);
     actions_lay->addStretch(1);
-    auto undo_btn = new QPushButton("Undo", actions);
-    undo_btn->setObjectName("setting_undo");
-    undo_btn->setToolTip("Back to the value on the aircraft");
     auto send_btn = new QPushButton("Send", actions);
     send_btn->setObjectName("setting_send");
-    actions_lay->addWidget(undo_btn);
+    actions_lay->addWidget(ask_btn);
     actions_lay->addWidget(send_btn);
     actions->hide();
     vLay->addWidget(actions);
@@ -459,7 +453,18 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     auto opened_by_field = std::make_shared<bool>(false);
     auto update_actions = [=,this]() {
         actions->setVisible(dirty[setting] || *expanded);
-        undo_btn->setEnabled(dirty[setting]);
+        if(widget->property("open").toBool() != *expanded) {     // the bar at the left in blue
+            widget->setProperty("open", *expanded);
+            widget->style()->unpolish(widget);
+            widget->style()->polish(widget);
+        }
+        // the previous value: the one before the last send from here (once there was a send)
+        auto previous = setting->getPreviousValue();
+        prev_btn->setEnabled(previous.has_value());
+        prev_btn->setToolTip(previous.has_value() ?
+            QString("Send the previous value: %1 (the value before the last one sent)")
+                .arg(previous.value() * setting->getAltUnitCoef()) :
+            QString("No previous value yet (nothing sent from here)"));
         // the initial value: the first value received from the aircraft (once it is known)
         auto initial = setting->getInitialValue();
         init_btn->setEnabled(initial.has_value());
@@ -642,8 +647,6 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         unit_label->setObjectName("setting_unit");
         control_lay->addWidget(unit_label);
     }
-    hlay->addWidget(menu_btn);
-    menu_btn->setVisible(!rows_open);    // every row open: its buttons are always there
 
     // a click on the name opens the row: the slider and the buttons
     if(!rows_open) {
@@ -661,7 +664,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     };
     update_actions();
 
-    // changed here: mark the row, show the aircraft's value and Undo / Send
+    // changed here: mark the row, show the aircraft's value and Ask / Send
     set_dirty[setting] = [=,this](bool d) {
         dirty[setting] = d;
         update_actions();
@@ -694,16 +697,12 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         range_note->hide();
         set_dirty[setting](false);
     });
-    connect(undo_btn, &QPushButton::clicked, this, [=,this]() {
+    // Ask: a change here is dropped (back to the last known value), the control shows the answer
+    connect(ask_btn, &QPushButton::clicked, this, [=,this]() {
         range_note->hide();
         if(aircraft_values.count(setting)) {
             setters[setting](aircraft_values[setting]);
         }
-        set_dirty[setting](false);
-    });
-
-    // Ask: a change here is dropped, the control shows the answer of the aircraft
-    connect(ask_btn, &QPushButton::clicked, this, [=,this]() {
         set_dirty[setting](false);
         requestValue(setting);
     });
@@ -714,7 +713,10 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         send(setting, value);
     };
     connect(prev_btn, &QPushButton::clicked, this, [=,this]() {
-        send_shown(setting->getPreviousValue());
+        auto previous = setting->getPreviousValue();
+        if(previous.has_value()) {
+            send_shown(previous.value());
+        }
     });
     connect(init_btn, &QPushButton::clicked, this, [=,this]() {
         auto initial_value = setting->getInitialValue();
@@ -722,10 +724,6 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
             send_shown(initial_value.value());
         }
     });
-
-    menu->addAction("Ask the value again", ask_btn, &QPushButton::click);
-    menu->addAction("Send the previous value", prev_btn, &QPushButton::click);
-    menu->addAction("Send the initial value", init_btn, &QPushButton::click);
 
     return widget;
 }
@@ -787,6 +785,9 @@ void SettingsViewer::send(Setting* setting, float value) {
     setting->setUserValue(value);
     pending[setting] = value;
     markPending(setting, true);
+    if(refresh_actions.count(setting)) {
+        refresh_actions[setting]();     // the previous value changed
+    }
 }
 
 void SettingsViewer::markPending(Setting* setting, bool is_pending) {

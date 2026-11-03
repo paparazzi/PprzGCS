@@ -37,9 +37,11 @@ public:
     QString getFullName() {return var;}
     QList<QString>& getValues() {return values;}
     tuple<float, float, float> getBounds() {return make_tuple(min, max, step);}
+    /// a value sent from this app; the value before it (sent before, or else the one the aircraft
+    /// had) becomes the previous value
     void setUserValue(float v) {
-        last_set_values[1] = last_set_values[0];
-        last_set_values[0] = v;
+        previous_value = user_value.has_value() ? user_value : value;
+        user_value = v;
     }
 
     void setValue(float v) {
@@ -47,8 +49,9 @@ public:
     }
 
     optional<float> getValue() {return value;}
-    float getUserValue() {return last_set_values[0];}
-    float getPreviousValue() {return last_set_values[1];}
+    float getUserValue() {return user_value.value_or(min);}
+    /// the value before the last one sent from this app (none before a first send)
+    optional<float> getPreviousValue() {return previous_value;}
     float getMin() {return  min;}
     float getMax() {return  max;}
     optional<float> getInitialValue(){return initial_value;}
@@ -86,7 +89,8 @@ private:
     QList<shared_ptr<KeyPress>> key_presses;
     QList<shared_ptr<StripButton>> strip_buttons;
 
-    float last_set_values[2];   // last values set by the user from this app.
+    optional<float> user_value;           // last value sent from this app
+    optional<float> previous_value;       // the value before it
     optional<float> value;                // last known value (not necessarily set from the app)
     optional<float> initial_value;
 };
