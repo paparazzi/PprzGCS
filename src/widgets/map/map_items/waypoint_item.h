@@ -1,6 +1,7 @@
 #ifndef WAYPOINTITEM_H
 #define WAYPOINTITEM_H
 #include <QGraphicsLineItem>
+#include <QGraphicsSimpleTextItem>
 
 #include "map_item.h"
 #include <QBrush>
@@ -22,6 +23,14 @@ public:
     void setHoverMark(bool h);
     /// its name faded (the mouse over another waypoint or name)
     void setDimmed(bool d);
+    /// a small line under its name (e.g. the altitude, while hovered); empty: none
+    void setHoverInfo(QString text);
+    /// its altitude, and above the ground (SRTM, else the flight plan ground)
+    QString altitudeText();
+    /// the line under (or over) its name placed for where the name is (call when it moved)
+    void placeHoverInfo();
+    /// GCS setting: its altitude under its name "On hover", "Always" or "Off"
+    QString altitudeMode() {return altitude_mode;}
     /// where its name is, next to it (unscaled; chosen so that names do not overlap)
     QPointF labelOffset() {return label_offset;}
     void setLabelOffset(QPointF o) {label_offset = o;}
@@ -82,7 +91,10 @@ private:
     int altitude;
     bool moving;
     bool raised = false;
-    QGraphicsLineItem* label_leader = nullptr;   // child of the name: shown with it
+    QGraphicsLineItem* label_leader = nullptr;
+    QGraphicsSimpleTextItem* hover_info = nullptr;  // child of the name
+    QString altitude_mode;
+    QString altitude_always;    // "Height" or "MSL": the value shown   // child of the name: shown with it
     int m_size;
 };
 

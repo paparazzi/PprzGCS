@@ -20,6 +20,7 @@
 #include "aircraft_item.h"
 #include "dispatcher_ui.h"
 #include "AircraftManager.h"
+#include "srtm_manager.h"
 #include "widget_utils.h"
 #include "layer_combo.h"
 #include "lock_button.h"
@@ -197,6 +198,12 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton),
     _ac_arrow_size(30)
 {
+    hover_timer = new QTimer(this);
+    hover_timer->setSingleShot(true);
+    hover_timer->setInterval(200);
+    connect(hover_timer, &QTimer::timeout, this, [=,this]() {
+        markWaypointHover(hover_pending, hover_pending_on_name);
+    });
 
     auto settings = getAppSettings();
 
@@ -575,9 +582,45 @@ void MapWidget::chooseStackedWaypoint(WaypointItem* wpi, QPointF scene_pos) {
     menu.exec(mapToGlobal(mapFromScene(scene_pos)) + QPoint(8, 8));
 }
 
+/// The marking for the waypoint (or its name) under the mouse: what belongs to it in blue, the
+/// other names faded (options)
+void MapWidget::markWaypointHover(WaypointItem* wpi, bool on_name) {
+    clearWaypointHover();
+    if(QGuiApplication::mouseButtons() != Qt::NoButton) {
+        return;     // dragging: not the waypoints it passes over
+    }
+    auto settings = getAppSettings();
+    if(wpi == nullptr || !settings.value("map/waypoint_hover_mark").toBool()) {
+        return;
+    }
+    if(settings.value("map/waypoint_hover_dim").toBool()) {
+        hover_dimmed = true;
+        for(auto mgr: ac_items_managers) {
+            for(auto w: mgr->getWaypointsItems()) {
+                w->setDimmed(true);
+            }
+        }
+    }
+    hover_marked = on_name ? QList<WaypointItem*>{wpi} : waypointsAt(wpi->scenePos());
+    if(!hover_marked.contains(wpi)) {
+        hover_marked.append(wpi);
+    }
+    for(auto w: hover_marked) {
+        w->setHoverMark(true);
+        w->setDimmed(false);
+        if(w->altitudeMode() != "Off") {
+            w->setHoverInfo(w->altitudeText());     // its altitude by its name (option)
+        }
+    }
+}
+
 void MapWidget::clearWaypointHover() {
+    hover_timer->stop();
     for(auto w: hover_marked) {
         w->setHoverMark(false);
+        if(w->altitudeMode() == "On hover") {
+            w->setHoverInfo(QString());
+        }
     }
     hover_marked.clear();
     if(hover_dimmed) {
@@ -990,6 +1033,11 @@ void MapWidget::rotateMap(double rot) {
 
 
 bool MapWidget::viewportEvent(QEvent *event) {
+    // no tooltip while a button is held (dragging a waypoint): on Wayland a tooltip is a popup
+    // that takes the pointer, the drag ended without letting go (and its window flashed white)
+    if(event->type() == QEvent::ToolTip && QGuiApplication::mouseButtons() != Qt::NoButton) {
+        return true;
+    }
     switch (event->type()) {
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
@@ -1173,6 +1221,7 @@ void MapWidget::arrangeWaypointLabels() {
         }
         wp.item->setLabelOffset(chosen / s);
         wp.item->label()->setPos(wp.center + rot.map(chosen));
+        wp.item->placeHoverInfo();
         placed.append(chosen_rect);
         // further away, or several waypoints at the same place: a thin line to its waypoint
         // (which name is whose)
@@ -1485,6 +1534,7 @@ void MapWidget::handleNewAC(QString ac_id) {
 }
 
 void MapWidget::removeAC(QString ac_id) {
+    clearWaypointHover();
     hover_marked.removeIf([=](WaypointItem* w) { return w->acId() == ac_id; });
     for(auto k: waypoint_editors.keys()) {
         if(k->acId() == ac_id) {
@@ -1591,28 +1641,13 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
 
     // the mouse over a name: its waypoint marked; over a waypoint: the names of the waypoints at
     // that place (which name is whose)
+    // marked after a short delay: sweeping the mouse over the map does not flicker
     connect(wpi, &WaypointItem::waypointHovered, this, [=,this](bool hovered, bool on_name) {
         clearWaypointHover();
-        auto settings = getAppSettings();
-        if(!hovered || !settings.value("map/waypoint_hover_mark").toBool()) {
-            return;
-        }
-        // the other names faded while the mouse is over one (option)
-        if(settings.value("map/waypoint_hover_dim").toBool()) {
-            hover_dimmed = true;
-            for(auto mgr: ac_items_managers) {
-                for(auto w: mgr->getWaypointsItems()) {
-                    w->setDimmed(true);
-                }
-            }
-        }
-        hover_marked = on_name ? QList<WaypointItem*>{wpi} : waypointsAt(wpi->scenePos());
-        if(!hover_marked.contains(wpi)) {
-            hover_marked.append(wpi);
-        }
-        for(auto w: hover_marked) {
-            w->setHoverMark(true);
-            w->setDimmed(false);
+        if(hovered) {
+            hover_pending = wpi;
+            hover_pending_on_name = on_name;
+            hover_timer->start();
         }
     });
 

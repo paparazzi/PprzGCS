@@ -5,6 +5,7 @@
 #include <QGraphicsItem>
 #include <QList>
 #include <QPointer>
+#include <QTimer>
 #include <QDialog>
 #include <QLayout>
 #include <QHBoxLayout>
@@ -150,6 +151,10 @@ private:
     QList<WaypointItem*> hover_marked;     // marked as linked to the waypoint or name under the mouse
     bool hover_dimmed = false;             // the other names faded (option)
     void clearWaypointHover();
+    void markWaypointHover(WaypointItem* wpi, bool on_name);
+    QTimer* hover_timer;                   // the marking after a short delay
+    QPointer<WaypointItem> hover_pending;
+    bool hover_pending_on_name = false;
     QMap<WaypointItem*, QPointer<QDialog>> waypoint_editors;   // the open card of each waypoint
     int drawState;
     ItemEditStateMachine* fp_edit_sm;

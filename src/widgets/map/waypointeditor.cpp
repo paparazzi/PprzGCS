@@ -259,7 +259,8 @@ void WaypointEditor::updateInfo() {
     double agl = alt - ground;
     double safe = fp->getSecurityHeight() > 0 ? fp->getSecurityHeight() : 20.;
     bool low = agl < safe;
-    agl_label->setText(QString("AGL %1 m%2").arg(agl, 0, 'f', 0).arg(low ? " \u00b7 low" : ""));
-    agl_label->setToolTip(ele ? "Above the SRTM ground height" : "Above the flight plan ground altitude (no SRTM data here)");
+    // AGL above the terrain (SRTM); H above the flight plan ground altitude without SRTM data
+    agl_label->setText(QString("%1 %2 m%3").arg(ele ? "AGL" : "H").arg(agl, 0, 'f', 0).arg(low ? " \u00b7 low" : ""));
+    agl_label->setToolTip(ele ? "AGL: above the terrain (SRTM)" : "H: above the flight plan ground altitude (no SRTM data here)");
     agl_label->setStyleSheet(QString("font-weight: bold; color: %1;").arg(low ? "#b42318" : "#1f7a3f"));
 }

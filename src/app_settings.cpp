@@ -77,6 +77,8 @@ void set_app_settings() {
     default_setting("map/aircraft_status_icons", false);
     default_setting("map/waypoint_hover_mark", true);
     default_setting("map/waypoint_hover_dim", false);
+    default_setting("map/waypoint_altitude", "On hover");
+    default_setting("map/waypoint_altitude_always", "Height");
     default_setting("settings/rows_open", false);
     default_setting("strips/status_icons", true);
     default_setting("window/menu_title_bar", false);
@@ -146,6 +148,10 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     cb = addSetting("Waypoints: under the mouse, their names marked in blue", "map/waypoint_hover_mark", w_map, l_map, row, Type::BOOL);
     callbacks.append(cb);
     cb = addSetting("Waypoints: under the mouse, the other names faded", "map/waypoint_hover_dim", w_map, l_map, row, Type::BOOL);
+    callbacks.append(cb);
+    cb = addSetting("Waypoints: altitude by the name", "map/waypoint_altitude", w_map, l_map, row, Type::STRING_COMBO, QStringList{"On hover", "Always", "Off"});
+    callbacks.append(cb);
+    cb = addSetting("Waypoints: altitude shown as (height: AGL with SRTM, else H)", "map/waypoint_altitude_always", w_map, l_map, row, Type::STRING_COMBO, QStringList{"Height", "MSL"});
     callbacks.append(cb);
     finishTab(l_map, row);
     tabWidget->addTab(w_map, "Map");
