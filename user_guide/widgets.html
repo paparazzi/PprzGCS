@@ -125,18 +125,21 @@ old position stays on the map until the aircraft confirms the move.</p></li>
 <p>name: <code class="docutils literal notranslate"><span class="pre">strips</span></code></p>
 <p>Display some data about the drone status.</p>
 <img alt="../_images/strip.png" src="../_images/strip.png" />
-<p>From left to right, top to bottom:</p>
+<p>First row: aircraft name, AP mode, current block and flight time (click the time to show the block or stage time).</p>
+<p>Second row, with a caption above each value:</p>
 <ul class="simple">
-<li><p>aircraft name</p></li>
-<li><p>flight time</p></li>
-<li><p>current block</p></li>
-<li><p>battery</p></li>
-<li><p>altitude AMSL or AGL (click on the icon to change) | altitude diff to target</p></li>
-<li><p>AP mode</p></li>
+<li><p>battery (amber when low, red when critical)</p></li>
+<li><p>altitude AGL or AMSL (click to change) | altitude difference to the target</p></li>
+<li><p>ground speed / air speed / vertical speed (click to change)</p></li>
 <li><p>throttle</p></li>
-<li><p>ground speed / air speed / vertical speed (click on the icon to change)</p></li>
-<li><p>status for Link, GPS, RC, IMU</p></li>
 </ul>
+<p>Link, GPS, RC and IMU are only shown when they are not ok. When links are lost the strip gets an amber or red frame.
+Click on a strip to select the aircraft for the other widgets, double click it to center the map on it.
+With more than 3 aircraft, the strips of the aircraft that are not selected are compact (two lines).
+The round icon next to the throttle shows its state: green while the throttle is on, red (and <em>KILLED</em>)
+while it is killed; clicking it kills or resurrects the throttle, after a confirmation.
+Click the battery to show the voltage per cell or the total (with <code class="docutils literal notranslate"><span class="pre">BAT_NB_CELLS</span></code> in the airframe).
+The link, GPS, RC and IMU icons are shown by default; <em>File &gt; Settings &gt; General</em> can hide them when ok.</p>
 </section>
 <section id="pfd">
 <h2>PFD<a class="headerlink" href="#pfd" title="Permalink to this heading"></a></h2>
