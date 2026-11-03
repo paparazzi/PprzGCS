@@ -40,6 +40,19 @@ AtcPanel::AtcPanel(QWidget *parent) : QWidget(parent)
         msg.getField("pressure", ad.pressure);
         msg.getField("qnh", ad.qnh);
         ad.last.start();
+        // own QNH estimate, for aircraft that don't send one: the QNH for which the pressure
+        // altitude is the GPS altitude (MSL), low-pass filtered
+        if(ad.pressure > 0 && AircraftManager::get()->aircraftExists(sender)) {
+            auto fp = AircraftManager::get()->getAircraft(sender)->getStatus()->getMessage("FLIGHT_PARAM");
+            if(fp) {
+                float alt_msl;
+                fp->getField("alt", alt_msl);
+                double q = ad.pressure / std::pow(1. - alt_msl * FT / 145366.45, 1. / 0.190284) / 100.;
+                if(q > 800 && q < 1100) {
+                    ad.qnh_est = ad.qnh_est > 0 ? ad.qnh_est + 0.05 * (q - ad.qnh_est) : q;
+                }
+            }
+        }
     });
     PprzDispatcher::get()->bindOptional("INS_REF", this, [=,this](QString sender, pprzlink::Message msg) {
         msg.getField("baro_qfe", air_data[sender].qfe);
@@ -160,6 +173,7 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
     // values ("---" without data)
     QString name = "---", heading = "---", speed = "---", alt = "---", alt_unit = "ft", alt_info, time = "---", bat;
     QString home = "---";
+    QString ref_name = "HOME";      // ARP waypoint if the flight plan has one
     bool have_ac = AircraftManager::get()->aircraftExists(current_ac);
     if(have_ac) {
         auto ac = AircraftManager::get()->getAircraft(current_ac);
@@ -175,7 +189,7 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
             fp->getField("agl", agl);
             fp->getField("lat", lat);
             fp->getField("long", lon);
-            int hdg = (int)std::lround(course / 10.f) * 10;
+            int hdg = (int)std::lround(course / 5.f) * 5;
             hdg = ((hdg % 360) + 360) % 360;
             heading = QString("%1").arg(hdg, 3, 10, QChar('0'));
             speed = QString::number(std::lround(gspeed * KT));
@@ -184,12 +198,20 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
             AirData ad;
             if(air_data.count(current_ac)) ad = air_data[current_ac];
             bool baro = ad.last.isValid() && ad.last.elapsed() < 5000 && ad.pressure > 0;
-            double qnh = qnh_set > 0 ? qnh_set : (ad.qnh > 0 ? ad.qnh : STD_P / 100.);
+            double qnh = STD_P / 100.;
+            QString qnh_src = "std";
+            if(qnh_set > 0) {
+                qnh = qnh_set; qnh_src = "set";
+            } else if(ad.qnh > 0) {
+                qnh = ad.qnh; qnh_src = "aircraft";
+            } else if(ad.qnh_est > 0) {
+                qnh = ad.qnh_est; qnh_src = "estimated";
+            }
             double ft = NAN;
             switch(alt_ref) {
             case QNH:
                 ft = baro ? pressureAltFt(ad.pressure, qnh * 100.) : alt_msl * FT;
-                alt_info = QString("QNH %1 hPa%2").arg(qnh, 0, 'f', 0).arg(baro ? "" : ", GPS");
+                alt_info = baro ? QString("QNH %1 hPa, %2").arg(qnh, 0, 'f', 0).arg(qnh_src) : "GPS altitude (MSL)";
                 break;
             case QFE:
                 if(baro && ad.qfe > 0) {
@@ -219,7 +241,20 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
 
             // bearing and distance from HOME
             auto fpl = ac->getFlightPlan();
-            Waypoint* wp = fpl ? fpl->getWaypoint("HOME") : nullptr;
+            auto find_wp = [fpl](QString n) -> Waypoint* {
+                if(fpl) {
+                    for(auto w: fpl->getWaypoints()) {
+                        if(w->getName() == n) return w;
+                    }
+                }
+                return nullptr;
+            };
+            Waypoint* wp = find_wp("ARP");
+            if(wp) {
+                ref_name = "ARP";
+            } else {
+                wp = find_wp("HOME");
+            }
             if(wp) {
                 double dn = (lat - wp->getLat()) * M_PI / 180. * 6371000.;
                 double de = (lon - wp->getLon()) * M_PI / 180. * 6371000. * std::cos(wp->getLat() * M_PI / 180.);
@@ -344,7 +379,7 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
     p.drawLine(QPointF(m, y), QPointF(w - m, y));
     p.setPen(caption);
     p.setFont(font(16, false));
-    p.drawText(QPointF(m, y + 24 * s), "FROM HOME");
+    p.drawText(QPointF(m, y + 24 * s), "FROM " + ref_name);
     p.setPen(text);
     p.setFont(font(24, false));
     p.drawText(QPointF(m, y + 54 * s), home);
