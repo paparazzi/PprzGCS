@@ -18,6 +18,9 @@ Map2D::Map2D(QWidget *parent) : QGraphicsView(parent),
     numericZoom(0.0), _zoom(5.0), tile_size(256), minZoom(0.0), maxZoom(25.0), wheelAccumulator(0),
     m_color_background(0x151515)
 {
+    // smooth lines, circles and paths (only some items turned it on themselves); not the tiles
+    // (pixmaps: SmoothPixmapTransform stays off, they stay sharp)
+    setRenderHint(QPainter::Antialiasing, true);
     auto settings = getAppSettings();
     QString configFile = user_or_app_path("tile_sources.xml");
     auto configs = loadConfig(configFile);
