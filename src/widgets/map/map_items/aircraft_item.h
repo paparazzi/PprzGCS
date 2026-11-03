@@ -61,6 +61,7 @@ private:
     QColor color_unfocused;
 
     QList<Point2DLatLon> track_points;
+    QList<qint64> track_times;      // ms since epoch, of each track point
     bool hovered = false;
     double label_shift = 0;
 };

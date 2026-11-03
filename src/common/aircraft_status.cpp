@@ -39,8 +39,13 @@ AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent)
             orig->setLat(lat0/1e7);
             orig->setLon(lon0/1e7);
             orig->setAlt(alt0/1e3);
+            // sent again every few seconds: only a new reference is news (e.g. after a reboot)
+            bool changed = !ins_ref_origin.has_value() ||
+                           ins_ref_origin->lat != lat0/1e7 || ins_ref_origin->lon != lon0/1e7;
             ins_ref_origin = InsRef{lat0/1e7, lon0/1e7};
-            emit ins_ref();
+            if(changed) {
+                emit ins_ref();
+            }
         }
     });
 

@@ -1,6 +1,7 @@
 #include "chatbubble.h"
 #include "AircraftManager.h"
-#include <QHBoxLayout>
+#include <QVBoxLayout>
+#include <QFrame>
 #include <QRegularExpression>
 #include <QStyle>
 
@@ -11,9 +12,10 @@ ChatBubble::ChatBubble(QString source, QString dest, QString msg, bool sent, QWi
 {
     setObjectName(sent ? "chat_row_sent" : "chat_row");
     setAttribute(Qt::WA_StyledBackground);
-    auto h = new QHBoxLayout(this);
-    h->setContentsMargins(8, 2, 8, 2);
-    h->setSpacing(8);
+    // the name once, the messages below it at full width with a bar in the aircraft color
+    auto v = new QVBoxLayout(this);
+    v->setContentsMargins(6, 4, 6, 2);
+    v->setSpacing(2);
 
     QString name = source;
     QColor color(0x6e7781);
@@ -42,17 +44,17 @@ ChatBubble::ChatBubble(QString source, QString dest, QString msg, bool sent, QWi
     tag->setText(QFontMetrics(f).elidedText(name, Qt::ElideRight, 100));
     tag->setToolTip(name);
     tag->setAlignment(Qt::AlignCenter);
-    tag->setMinimumWidth(56);
     tag->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     tag->setStyleSheet(QString("background: %1; color: white; border-radius: 4px; padding: 1px 6px;").arg(color.name()));
-    h->addWidget(tag, 0, Qt::AlignTop);
+    v->addWidget(tag, 0, Qt::AlignLeft);
 
-    message = new QLabel(this);
-    message->setObjectName("chat_text");
-    message->setWordWrap(true);
-    message->setTextFormat(Qt::RichText);
-    message->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    h->addWidget(message, 1);
+    auto body = new QFrame(this);
+    body->setObjectName("chat_body");
+    body->setStyleSheet(QString("#chat_body {border: 0; border-left: 3px solid %1;}").arg(color.name()));
+    lines_layout = new QVBoxLayout(body);
+    lines_layout->setContentsMargins(5, 0, 0, 0);
+    lines_layout->setSpacing(0);
+    v->addWidget(body);
 
     chat_time = QTime::currentTime();
     addText(msg);
@@ -82,10 +84,16 @@ void ChatBubble::addText(QString text) {
     text = text.toHtmlEscaped();
     static const QRegularExpression re(QStringLiteral("\\*([^*]+)\\*"));
     text.replace(re, "<b>\\1</b>");
-    lines.append(text);
-    message->setText(lines.join("<br>"));
+    // a line per message: a warning or error is tinted on its own line
+    auto message = new QLabel(text, this);
+    message->setObjectName("chat_text");
+    message->setWordWrap(true);
+    message->setTextFormat(Qt::RichText);
+    message->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    message->setProperty("level", lvl);
     chat_time = QTime::currentTime();
-    setToolTip(chat_time.toString("HH:mm:ss"));
+    message->setToolTip(chat_time.toString("HH:mm:ss"));
+    lines_layout->addWidget(message);
     updateLevel();
 }
 
@@ -94,7 +102,5 @@ void ChatBubble::updateLevel() {
         setProperty("level", _level);
         style()->unpolish(this);
         style()->polish(this);
-        message->style()->unpolish(message);
-        message->style()->polish(message);
     }
 }

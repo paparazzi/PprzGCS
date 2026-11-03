@@ -366,11 +366,7 @@ QLabel#setting_path_sep {
     color: #aab3bd;
 }
 
-/* Checklist: progress of the required items, the open ones in amber */
-*[checklist_open="true"] {
-    color: #f2c46d;
-    font-weight: bold;
-}
+/* Checklist: progress of the required items */
 QProgressBar#checklist_progress {
     border: 0;
     border-radius: 4px;
@@ -561,18 +557,18 @@ QPushButton#notification_more {
     font-weight: bold;
 }
 
-/* Chat: a row per message, warnings highlighted, own messages in blue */
-#chat_row[level="warning"] {
-    background-color: #2a2214;
+/* Chat: a row per sender, warnings and errors tinted lines, own messages in blue */
+QLabel#chat_text {
+    padding: 0 4px;
+    border-radius: 4px;
 }
-#chat_row[level="warning"] QLabel#chat_text {
+QLabel#chat_text[level="warning"] {
+    background-color: #2a2214;
     color: #f2c46d;
     font-weight: bold;
 }
-#chat_row[level="alarm"] {
+QLabel#chat_text[level="alarm"] {
     background-color: #3a1a18;
-}
-#chat_row[level="alarm"] QLabel#chat_text {
     color: #ff8a80;
     font-weight: bold;
 }
@@ -702,17 +698,17 @@ QComboBox#waypoint_editor_ref {
 /* Scroll bars: thin and rounded */
 QScrollBar:vertical {
     background: transparent;
-    width: 10px;
+    width: 14px;
     margin: 0;
 }
 QScrollBar:horizontal {
     background: transparent;
-    height: 10px;
+    height: 14px;
     margin: 0;
 }
 QScrollBar::handle:vertical, QScrollBar::handle:horizontal {
     background-color: #3a424d;
-    border-radius: 3px;
+    border-radius: 4px;
     margin: 2px;
 }
 QScrollBar::handle:vertical {

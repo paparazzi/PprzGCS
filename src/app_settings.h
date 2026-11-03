@@ -27,6 +27,7 @@ private:
         BOOL,
     };
 
+    void finishTab(QGridLayout* gl, int row);
     std::function<void()> addSetting(QString name, QString key, QWidget* w, QGridLayout* gl, int &row, Type type, QVariant data = QVariant());
 
     QList<std::function<void()>> callbacks;

@@ -1,5 +1,6 @@
 #include "card_dialog.h"
 #include "app_settings.h"
+#include "switch.h"
 #include <QApplication>
 #include <QFile>
 #include <QTextStream>
@@ -72,11 +73,11 @@ void set_app_settings() {
 
     default_setting("map/tiles_path", appConfig()->value("USER_DATA_PATH").toString() + "/map");
 
-    default_setting("map/aircraft/track_size", 20);
+    default_setting("map/aircraft/track_seconds", 60);
     default_setting("map/aircraft_status_icons", false);
-    default_setting("window/menu_title_bar", false);
     default_setting("settings/rows_open", false);
     default_setting("strips/status_icons", true);
+    default_setting("window/menu_title_bar", false);
     default_setting("map/aircraft/track_width", 1);
 
     default_setting("aircraft_default_color", "red");
@@ -106,6 +107,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     cb = addSetting("Pprzlink ID", "pprzlink/id", w_ivy, l_ivy, row, Type::STRING);
     callbacks.append(cb);
+    finishTab(l_ivy, row);
     tabWidget->addTab(w_ivy, "Ivy");
 
     // Tab Map
@@ -121,22 +123,25 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
         cb = addSetting("Default tiles", "map/default_tiles", w_map, l_map, row, Type::STRING);
         callbacks.append(cb);
     }
-    cb = addSetting("Waypoint Size", "map/waypoint/size", w_map, l_map, row, Type::INT);
+    cb = addSetting("Waypoint size", "map/waypoint/size", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
-    cb = addSetting("Items Font", "map/items_font", w_map, l_map, row, Type::INT);
+    cb = addSetting("Font size of the names", "map/items_font", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
     cb = addSetting("Tiles path", "map/tiles_path", w_map, l_map, row, Type::PATH_DIR);
     callbacks.append(cb);
-    cb = addSetting("Move Hysteresis", "map/move_hyteresis", w_map, l_map, row, Type::INT);
+    cb = addSetting("Move threshold (px)", "map/move_hyteresis", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
     cb = addSetting("Size highlight factor", "map/size_highlight_factor", w_map, l_map, row, Type::DOUBLE);
     callbacks.append(cb);
-    cb = addSetting("Aircraft Size", "map/aircraft/size", w_map, l_map, row, Type::INT);
+    cb = addSetting("Aircraft size", "map/aircraft/size", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
-    cb = addSetting("Track size", "map/aircraft/track_size", w_map, l_map, row, Type::INT);
+    cb = addSetting("Track length (s)", "map/aircraft/track_seconds", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
     cb = addSetting("Track width", "map/aircraft/track_width", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
+    cb = addSetting("Battery and link icons next to the aircraft", "map/aircraft_status_icons", w_map, l_map, row, Type::BOOL);
+    callbacks.append(cb);
+    finishTab(l_map, row);
     tabWidget->addTab(w_map, "Map");
 
     // Tab General
@@ -167,21 +172,41 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     }
     cb = addSetting("Style", "APP_STYLE_FILE", w_general, l_general, row, Type::STRING_COMBO, style_files);
     callbacks.append(cb);
-    cb = addSetting("Map: battery and link icons next to the aircraft", "map/aircraft_status_icons", w_general, l_general, row, Type::BOOL);
+    cb = addSetting("Menu bar as the title bar (no window frame)", "window/menu_title_bar", w_general, l_general, row, Type::BOOL);
     callbacks.append(cb);
-    cb = addSetting("Window: menu bar as the title bar (no window frame)", "window/menu_title_bar", w_general, l_general, row, Type::BOOL);
+    finishTab(l_general, row);
+    tabWidget->insertTab(0, w_general, "General");
+
+    // Tab Panels
+    auto w_panels = new QWidget(tabWidget);
+    auto l_panels = new QGridLayout(w_panels);
+    row = 0;
+    cb = addSetting("Strips: status icons always shown", "strips/status_icons", w_panels, l_panels, row, Type::BOOL);
     callbacks.append(cb);
-    cb = addSetting("Settings: every setting open (slider and buttons)", "settings/rows_open", w_general, l_general, row, Type::BOOL);
+    cb = addSetting("Settings: every setting open (slider and buttons)", "settings/rows_open", w_panels, l_panels, row, Type::BOOL);
     callbacks.append(cb);
-    cb = addSetting("Strips: status icons always shown", "strips/status_icons", w_general, l_general, row, Type::BOOL);
-    callbacks.append(cb);
-    tabWidget->addTab(w_general, "General");
+    finishTab(l_panels, row);
+    tabWidget->addTab(w_panels, "Panels");
+    tabWidget->tabBar()->moveTab(tabWidget->indexOf(w_ivy), tabWidget->count() - 1);   // Ivy last
+    tabWidget->setCurrentIndex(0);
 
 
-    auto buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, this);
-    lay->addWidget(buttonBox);
+    // Cancel and Save, as in the card dialogs
+    auto buttons = new QHBoxLayout();
+    buttons->addStretch(1);
+    auto cancel_button = new QPushButton("Cancel", this);
+    cancel_button->setObjectName("card_button");
+    auto save_button = new QPushButton("Save", this);
+    save_button->setObjectName("card_button_primary");
+    save_button->setDefault(true);
+    cancel_button->setMinimumWidth(110);
+    save_button->setMinimumWidth(110);
+    buttons->addWidget(cancel_button);
+    buttons->addWidget(save_button);
+    lay->addLayout(buttons);
+    setMinimumWidth(560);
 
-    connect(buttonBox->button(QDialogButtonBox::Ok), &QPushButton::clicked, this, [this](){
+    connect(save_button, &QPushButton::clicked, this, [this](){
         for(auto &cb:callbacks) {
             cb();
         }
@@ -197,7 +222,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
         }
     });
 
-    connect(buttonBox->button(QDialogButtonBox::Cancel), &QPushButton::clicked, this, [=,this](){
+    connect(cancel_button, &QPushButton::clicked, this, [=,this](){
         reject();
         if(standalone) {
             qDebug() << "Restarting application...";
@@ -207,6 +232,15 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     });
 }
 
+
+/// the rows at the top with even spacing, the fields taking the width
+void SettingsEditor::finishTab(QGridLayout* gl, int row) {
+    gl->setContentsMargins(16, 16, 16, 16);
+    gl->setHorizontalSpacing(16);
+    gl->setVerticalSpacing(10);
+    gl->setColumnStretch(1, 1);
+    gl->setRowStretch(row, 1);
+}
 
 std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWidget* w, QGridLayout* gl, int &row, Type type, QVariant data) {
     auto settings = getAppSettings();
@@ -305,9 +339,9 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
 
         return cb;
     } else if(type == Type::BOOL) {
-        auto check = new QCheckBox(w);
+        auto check = new Switch(w);
         check->setChecked(settings.value(key).toBool());
-        gl->addWidget(check, r, 1);
+        gl->addWidget(check, r, 1, Qt::AlignLeft);
         auto cb = [=,this]() {
             auto settings = getAppSettings();
             settings.setValue(key, check->isChecked());

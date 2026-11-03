@@ -13,7 +13,7 @@ public:
 
     void addLayerControl(MapLayerControl* mlc);
     /// above the layers (e.g. the map brightness)
-    void addTopWidget(QWidget* w) {content_layout->insertWidget(0, w);}
+    void addTopWidget(QWidget* w) {w->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed); content_layout->insertWidget(0, w);}
     void makeLayerControl(QString name, bool initialState, int z, QString title = QString());
     bool eventFilter(QObject *object, QEvent *event);
 

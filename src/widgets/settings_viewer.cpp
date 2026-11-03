@@ -41,7 +41,7 @@ SettingsViewer::SettingsViewer(QString ac_id, QWidget *parent) : QWidget(parent)
 
     scroll = new QScrollArea();
     scroll_content = new QStackedWidget();
-    scroll_content->setContentsMargins(0, 0, 20, 0);
+    scroll_content->setContentsMargins(0, 0, 4, 0);     // next to the scroll bar
 
     main_layout->addWidget(scroll, 1);    // the list takes the extra height (e.g. in a tab)
     scroll->setWidget(scroll_content);
@@ -911,7 +911,10 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
                 break;
             }
         }
-        if(!found) {
+        // not in the airframe file (a module default, or an included file): only worth saying when
+        // it was changed since the start (nothing would be lost otherwise)
+        auto initial = setting->getInitialValue();
+        if(!found && initial.has_value() && abs(setting->getValue().value() - initial.value()) > 1e-4) {
             unsavable.append(param_name);
         }
     }
@@ -974,9 +977,33 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    scroll->setMinimumWidth(380);
     body()->addWidget(scroll);
+    // as wide as the longest name with both values and the scroll bar: each column measured over
+    // all its rows (also the hidden unchanged ones), with the style of the card (monospace values)
+    auto fit_width = [=]() {
+        grid_widget->ensurePolished();
+        int w = 0;
+        for(int c = 0; c < grid->columnCount(); c++) {
+            int cw = 0;
+            for(int rr = 0; rr < grid->rowCount(); rr++) {
+                auto item = grid->itemAtPosition(rr, c);
+                if(item != nullptr && item->widget() != nullptr) {
+                    item->widget()->ensurePolished();
+                    cw = qMax(cw, item->widget()->sizeHint().width());
+                }
+            }
+            w += cw;
+        }
+        w += grid->horizontalSpacing() * (grid->columnCount() - 1);
+        w += scroll->verticalScrollBar()->sizeHint().width() + 12;
+        // at most the main window (not the settings panel it is opened from)
+        int max_w = parentWidget() != nullptr ? qMax(380, parentWidget()->window()->width() - 60) : 900;
+        scroll->setMinimumWidth(qBound(380, w, max_w));
+    };
+    fit_width();
+    QTimer::singleShot(0, this, fit_width);    // again once shown (the final style)
     auto fit = [=,this]() {
+        fit_width();
         grid->invalidate();
         grid->activate();
         scroll->setFixedHeight(qMin(grid->sizeHint().height() + 2, 360));
@@ -1007,9 +1034,15 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
     }
 
     if(!unsavable.isEmpty()) {
-        addText(QString("%1 not in the airframe file, can't be saved: %2")
-                .arg(unsavable.size() == 1 ? "1 setting is" : QString("%1 settings are").arg(unsavable.size()))
-                .arg(unsavable.join(", ")), "card_note");
+        // the names folded when there are many
+        QString head = QString("%1 not in the airframe file (a module default or an included file), "
+                               "so not saved:")
+                .arg(unsavable.size() == 1 ? "1 changed setting is" : QString("%1 changed settings are").arg(unsavable.size()));
+        auto note = addText(head + " " + unsavable.join(", "), "card_note");
+        if(unsavable.size() > 5) {
+            note->setText(head + " " + unsavable.mid(0, 5).join(", ") + QString::fromUtf8(", \u2026"));
+            note->setToolTip(unsavable.join("\n"));
+        }
     }
 
     // the airframe file, when it is a local file
