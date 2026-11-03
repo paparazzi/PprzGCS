@@ -980,7 +980,7 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
     body()->addWidget(scroll);
     // as wide as the longest name with both values and the scroll bar: each column measured over
     // all its rows (also the hidden unchanged ones), with the style of the card (monospace values)
-    auto fit_width = [=]() {
+    auto fit_width = [=,this]() {
         grid_widget->ensurePolished();
         int w = 0;
         for(int c = 0; c < grid->columnCount(); c++) {
