@@ -892,6 +892,7 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
         QString airframe_value;
         QString value;
         bool changed;
+        QString file;   // an included file (href); empty: the airframe file
     };
     QList<Row> rows;
     QStringList unsavable;
@@ -906,13 +907,13 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
             if(p.name == param_name) {
                 auto val = setting->getValue().value() * setting->getAltUnitCoef(p.unit);
                 bool changed = abs(val - p.value.toFloat()) > 0.0001;
-                rows.append({param_name, p.value, QString::number(val), changed});
+                rows.append({param_name, p.value, QString::number(val), changed, p.file});
                 found = true;
                 break;
             }
         }
-        // not in the airframe file (a module default, or an included file): only worth saying when
-        // it was changed since the start (nothing would be lost otherwise)
+        // not in the airframe file or its included files (a module default): only worth saying
+        // when it was changed since the start (nothing would be lost otherwise)
         auto initial = setting->getInitialValue();
         if(!found && initial.has_value() && abs(setting->getValue().value() - initial.value()) > 1e-4) {
             unsavable.append(param_name);
@@ -953,6 +954,12 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
         ck->setProperty("value", row.value);
         checks.append(ck);
         auto name = new QLabel(row.name, grid_widget);
+        if(!row.file.isEmpty()) {
+            // in an included file: its name after the setting (saved in that file)
+            name->setText(row.name + QString(" <span style='color:#57606a; font-size:11px;'>%1</span>")
+                          .arg(QFileInfo(row.file).fileName().toHtmlEscaped()));
+            name->setToolTip("In the included file " + row.file + " (saved there)");
+        }
         auto af = new QLabel(row.airframe_value, grid_widget);
         af->setObjectName("card_muted");
         auto now = new QLabel(row.value, grid_widget);
@@ -1051,9 +1058,18 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
     if(uri.startsWith("file://")) {
         path = uri.mid(QString("file://").size());
     }
+    // the included files, when they are local files (their settings are saved in them)
+    QMap<QString, QString> include_paths;
+    auto include_uris = ac->getConfig()->getAirframeIncludeUris();
+    for(auto it = include_uris.begin(); it != include_uris.end(); ++it) {
+        if(it.value().startsWith("file://")) {
+            include_paths[it.key()] = it.value().mid(QString("file://").size());
+        }
+    }
+    bool any_include = std::any_of(rows.begin(), rows.end(), [](const Row& r) {return !r.file.isEmpty();});
     QCheckBox* keep_copy = nullptr;
     if(!path.isEmpty()) {
-        keep_copy = new QCheckBox("Keep a copy of the old file", this);
+        keep_copy = new QCheckBox(any_include ? "Keep a copy of the old files" : "Keep a copy of the old file", this);
         keep_copy->setChecked(true);
         body()->addWidget(keep_copy);
         auto path_label = addText(path);
@@ -1097,6 +1113,9 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
         }
         airframe->setParams(changed_params());
         airframe->saveSettings(file, path);     // only the values change in the file
+        // the settings of the included files: in those files, in place (also with Save as: the
+        // new airframe file includes the same files)
+        airframe->saveIncludes(include_paths, keep_copy == nullptr || keep_copy->isChecked());
         accept();
     };
 

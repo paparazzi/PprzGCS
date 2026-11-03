@@ -3,6 +3,7 @@
 #include <QRegularExpression>
 #include <QFile>
 #include <QDebug>
+#include <QDateTime>
 #include <iostream>
 #include <algorithm>
 
@@ -16,7 +17,7 @@ QString getAttribute(QDomElement ele, QString name) {
 }
 
 Airframe::Airframe(QDomDocument doc, QMap<QString, QDomDocument> includes, QObject* parent):
-    QObject(parent), doc(doc)
+    QObject(parent), doc(doc), includes(includes)
 {
     // Like the airframe expansion of Paparazzi: the children of an included <airframe>
     // replace its <include> node.
@@ -42,119 +43,178 @@ Airframe::Airframe(QDomDocument doc, QMap<QString, QDomDocument> includes, QObje
     firmware = getAttribute(firmware_node, "name");
 }
 
-// Only the params of the airframe file itself, as these are the ones setParams can save.
-QList<Param> Airframe::getParams() {
+// The defines of the sections of a document (the root's <section>s), with the given file.
+static QList<Param> sectionParams(const QDomDocument& d, const QString& file) {
     QList<Param> params;
-
-    for(auto section=doc.firstChildElement().firstChildElement("section");
+    for(auto section=d.firstChildElement().firstChildElement("section");
         !section.isNull();
         section=section.nextSiblingElement("section")) {
         for(auto define=section.firstChildElement("define");
             !define.isNull();
             define=define.nextSiblingElement("define")) {
             auto full_name = section.attribute("prefix", "") + define.attribute("name");
-            auto value = define.attribute("value");
-            auto unit = define.attribute("unit", "");
-            params.append({full_name, unit, value});
+            params.append({full_name, define.attribute("unit", ""), define.attribute("value"), file});
         }
     }
     return params;
 }
 
-void Airframe::setParams(QMap<QString, QString> changed_params) {
-    for(auto section=doc.firstChildElement().firstChildElement("section");
+// The params of the airframe file, then those of its included files (the ones setParams can save).
+QList<Param> Airframe::getParams() {
+    QList<Param> params = sectionParams(doc, "");
+    for(auto it = includes.begin(); it != includes.end(); ++it) {
+        params.append(sectionParams(it.value(), it.key()));
+    }
+    return params;
+}
+
+// Set the values in a document: the defines of its sections with these full names.
+static void setSectionValues(QDomDocument& d, const QMap<QString, QString>& values) {
+    for(auto section=d.firstChildElement().firstChildElement("section");
         !section.isNull();
         section=section.nextSiblingElement("section")) {
         for(auto define=section.firstChildElement("define");
             !define.isNull();
             define=define.nextSiblingElement("define")) {
             auto full_name = section.attribute("prefix", "") + define.attribute("name");
-
-            for(auto it = changed_params.begin(); it!=changed_params.end(); ++it) {
-                if(full_name == it.key()) {
-                    define.setAttribute("value", it.value());
-                }
+            if(values.contains(full_name)) {
+                define.setAttribute("value", values[full_name]);
             }
         }
     }
 }
 
-void Airframe::saveSettings(QString filename, QString source) {
-    QString text;
-    QFile src(source);
-    if(!source.isEmpty() && src.open(QIODevice::ReadOnly)) {
-        text = QString::fromUtf8(src.readAll());
-        src.close();
-        // the values to write: the defines of the document (setParams changed them)
-        QMap<QString, QString> values;
-        for(auto &p: getParams()) {
-            values[p.name] = p.value;
-        }
-        // the defines of the sections of the root, found in the text with their offsets; the
-        // value attribute replaced in the text of their start tag (from the end: offsets stay valid)
-        struct Edit { qsizetype start; qsizetype end; QString value; };
-        QList<Edit> edits;
-        QXmlStreamReader xml(text);
-        int depth = 0;
-        QString prefix;
-        bool in_section = false;
-        while(!xml.atEnd()) {
-            auto t = xml.readNext();
-            if(t == QXmlStreamReader::StartElement) {
-                depth++;
-                if(depth == 2 && xml.name() == QStringLiteral("section")) {
-                    in_section = true;
-                    prefix = xml.attributes().value("prefix").toString();
-                } else if(depth == 3 && in_section && xml.name() == QStringLiteral("define")) {
-                    auto full_name = prefix + xml.attributes().value("name").toString();
-                    auto old_value = xml.attributes().value("value").toString();
-                    if(values.contains(full_name) && values[full_name] != old_value) {
-                        qsizetype end = xml.characterOffset();          // just after the start tag
-                        qsizetype start = text.lastIndexOf('<', end - 1);
-                        edits.append({start, end, values[full_name]});
-                    }
-                }
-            } else if(t == QXmlStreamReader::EndElement) {
-                if(depth == 2) {
-                    in_section = false;
-                }
-                depth--;
-            }
-        }
-        if(xml.hasError()) {
-            qDebug() << "Airframe file not read, written from the document:" << xml.errorString();
-            text.clear();
-        } else {
-            static const QRegularExpression value_re("(\\bvalue\\s*=\\s*)([\"'])(.*?)\\2",
-                                                     QRegularExpression::DotMatchesEverythingOption);
-            for(int i = edits.size() - 1; i >= 0; i--) {
-                auto &e = edits[i];
-                QString tag = text.mid(e.start, e.end - e.start);
-                auto m = value_re.match(tag);
-                if(!m.hasMatch()) {
-                    continue;
-                }
-                QString v = e.value.toHtmlEscaped();
-                if(m.captured(2) == "'") {
-                    v.replace("&quot;", "\"");
-                }
-                tag.replace(m.capturedStart(3), m.capturedLength(3), v);
-                text.replace(e.start, e.end - e.start, tag);
-            }
-        }
+// A param of the airframe file is set there; one only in an included file, in that file.
+void Airframe::setParams(QMap<QString, QString> changed_params) {
+    QSet<QString> in_doc;
+    for(auto &p: sectionParams(doc, "")) {
+        in_doc.insert(p.name);
     }
-    if(text.isEmpty()) {
-        text = doc.toString();
+    QMap<QString, QString> doc_values, inc_values;
+    for(auto it = changed_params.begin(); it != changed_params.end(); ++it) {
+        (in_doc.contains(it.key()) ? doc_values : inc_values)[it.key()] = it.value();
     }
+    setSectionValues(doc, doc_values);
+    for(auto it = includes.begin(); it != includes.end(); ++it) {
+        setSectionValues(it.value(), inc_values);
+    }
+}
 
-    QFile file(filename);
-    if( !file.open( QIODevice::WriteOnly ) )
-    {
-        qDebug( "Failed to open file for writing." );
-        return;
+// In the text of an airframe (or included) file, the value attributes of the defines of its
+// sections set to these values; everything else stays as it is. Empty when the text is not read.
+static QString replaceValues(const QString& source_text, const QMap<QString, QString>& values) {
+    QString text = source_text;
+    struct Edit { qsizetype start; qsizetype end; QString value; };
+    QList<Edit> edits;
+    QXmlStreamReader xml(text);
+    int depth = 0;
+    QString prefix;
+    bool in_section = false;
+    while(!xml.atEnd()) {
+        auto t = xml.readNext();
+        if(t == QXmlStreamReader::StartElement) {
+            depth++;
+            if(depth == 2 && xml.name() == QStringLiteral("section")) {
+                in_section = true;
+                prefix = xml.attributes().value("prefix").toString();
+            } else if(depth == 3 && in_section && xml.name() == QStringLiteral("define")) {
+                auto full_name = prefix + xml.attributes().value("name").toString();
+                auto old_value = xml.attributes().value("value").toString();
+                if(values.contains(full_name) && values[full_name] != old_value) {
+                    qsizetype end = xml.characterOffset();          // just after the start tag
+                    qsizetype start = text.lastIndexOf('<', end - 1);
+                    edits.append({start, end, values[full_name]});
+                }
+            }
+        } else if(t == QXmlStreamReader::EndElement) {
+            if(depth == 2) {
+                in_section = false;
+            }
+            depth--;
+        }
+    }
+    if(xml.hasError()) {
+        qDebug() << "Airframe file not read:" << xml.errorString();
+        return QString();
+    }
+    static const QRegularExpression value_re("(\\bvalue\\s*=\\s*)([\"'])(.*?)\\2",
+                                             QRegularExpression::DotMatchesEverythingOption);
+    for(int i = edits.size() - 1; i >= 0; i--) {     // from the end: the offsets stay valid
+        auto &e = edits[i];
+        QString tag = text.mid(e.start, e.end - e.start);
+        auto m = value_re.match(tag);
+        if(!m.hasMatch()) {
+            continue;
+        }
+        QString v = e.value.toHtmlEscaped();
+        if(m.captured(2) == "'") {
+            v.replace("&quot;", "\"");
+        }
+        tag.replace(m.capturedStart(3), m.capturedLength(3), v);
+        text.replace(e.start, e.end - e.start, tag);
+    }
+    return text;
+}
+
+static QString readText(const QString& path) {
+    QFile f(path);
+    if(path.isEmpty() || !f.open(QIODevice::ReadOnly)) {
+        return QString();
+    }
+    return QString::fromUtf8(f.readAll());
+}
+
+static bool writeText(const QString& path, const QString& text) {
+    QFile file(path);
+    if(!file.open(QIODevice::WriteOnly)) {
+        qDebug() << "Failed to open" << path << "for writing.";
+        return false;
     }
     file.write(text.toUtf8());
-    file.close();
+    return true;
+}
+
+QStringList Airframe::saveIncludes(QMap<QString, QString> paths, bool keep_copy) {
+    QStringList written;
+    for(auto it = includes.begin(); it != includes.end(); ++it) {
+        QString path = paths.value(it.key());
+        QString source = readText(path);
+        if(source.isEmpty()) {
+            continue;
+        }
+        QMap<QString, QString> values;
+        for(auto &p: sectionParams(it.value(), it.key())) {
+            values[p.name] = p.value;
+        }
+        QString text = replaceValues(source, values);
+        if(text.isEmpty() || text == source) {
+            continue;   // not read, or nothing changed in it
+        }
+        if(keep_copy) {
+            auto suffix = QDateTime::currentDateTime().toString("_yy_MM_dd__hh_mm_ss") + ".xml";
+            QFile::copy(path, path.left(path.length() - 4) + suffix);
+        }
+        if(writeText(path, text)) {
+            written.append(path);
+        }
+    }
+    return written;
+}
+
+void Airframe::saveSettings(QString filename, QString source) {
+    QString text;
+    QString source_text = readText(source);
+    if(!source_text.isEmpty()) {
+        QMap<QString, QString> values;
+        for(auto &p: sectionParams(doc, "")) {
+            values[p.name] = p.value;
+        }
+        text = replaceValues(source_text, values);
+    }
+    if(text.isEmpty()) {
+        text = doc.toString();      // not read: written from the document
+    }
+    writeText(filename, text);
 }
 
 QString Airframe::getIconName() {
@@ -231,7 +291,7 @@ std::optional<Param> Airframe::getDefine(QString def_name, QString section_name)
             if(full_name == def_name) {
                 auto value = define.attribute("value");
                 auto unit = define.attribute("unit", "");
-                struct Param ret =  {full_name, unit, value};
+                struct Param ret =  {full_name, unit, value, QString()};
                 return ret;
             }
         }
