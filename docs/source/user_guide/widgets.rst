@@ -50,17 +50,22 @@ Display some data about the drone status.
 
 .. image:: strip.png
 
-From left to right, top to bottom:
+First row: aircraft name, AP mode, current block and flight time (click the time to show the block or stage time).
 
-+ aircraft name
-+ flight time
-+ current block
-+ battery
-+ altitude AMSL or AGL (click on the icon to change) | altitude diff to target
-+ AP mode
+Second row, with a caption above each value:
+
++ battery (amber when low, red when critical)
++ altitude AGL or AMSL (click to change) | altitude difference to the target
++ ground speed / air speed / vertical speed (click to change)
 + throttle
-+ ground speed / air speed / vertical speed (click on the icon to change)
-+ status for Link, GPS, RC, IMU
+
+Link, GPS, RC and IMU are only shown when they are not ok. When links are lost the strip gets an amber or red frame.
+Click on a strip to select the aircraft for the other widgets, double click it to center the map on it.
+With more than 3 aircraft, the strips of the aircraft that are not selected are compact (two lines).
+The round icon next to the throttle shows its state: green while the throttle is on, red (and *KILLED*)
+while it is killed; clicking it kills or resurrects the throttle, after a confirmation.
+Click the battery to show the voltage per cell or the total (with ``BAT_NB_CELLS`` in the airframe).
+The link, GPS, RC and IMU icons are shown by default; *File > Settings > General* can hide them when ok.
 
 
 PFD

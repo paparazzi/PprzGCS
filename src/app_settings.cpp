@@ -75,6 +75,7 @@ void set_app_settings() {
     default_setting("map/aircraft/track_size", 20);
     default_setting("map/aircraft_status_icons", false);
     default_setting("settings/rows_open", false);
+    default_setting("strips/status_icons", true);
     default_setting("map/aircraft/track_width", 1);
 
     default_setting("aircraft_default_color", "red");
@@ -168,6 +169,8 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     cb = addSetting("Map: battery and link icons next to the aircraft", "map/aircraft_status_icons", w_general, l_general, row, Type::BOOL);
     callbacks.append(cb);
     cb = addSetting("Settings: every setting open (slider and buttons)", "settings/rows_open", w_general, l_general, row, Type::BOOL);
+    callbacks.append(cb);
+    cb = addSetting("Strips: status icons always shown", "strips/status_icons", w_general, l_general, row, Type::BOOL);
     callbacks.append(cb);
     tabWidget->addTab(w_general, "General");
 

@@ -15,8 +15,15 @@ public:
     void setSizeProperty(int s) {icons_size = QSize(s, s);}
     int getSizeProperty() {return icons_size.width();}
 
+public slots:
+    /// smaller: the values without their captions (e.g. for the aircraft not selected, when there
+    /// are many)
+    void setCompact(bool compact);
+
 protected:
     bool eventFilter(QObject *obj, QEvent *ev) override;
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;     // center the map on it
 
 
 signals:
@@ -46,42 +53,42 @@ private:
     void updateGps(QString gps_mode);
     void updateImu(QString state_filter_mode);
     void updateCurrentBlock(uint8_t cur_block);
+    void updateStatusRow();
+    void centerOnAircraft();
+    QPushButton* makeCell(QLabel*& caption, QLabel*& value, bool vertical);
 
     QString ac_id;
     QSize icons_size;
+    QList<QLabel*> captions;
+    QPushButton* kill_button = nullptr;    // kill / resurrect, with a confirmation
+    QList<QPushButton*> value_cells;
+    QHBoxLayout* status_layout;
+    QHBoxLayout* compact_icons;     // the status icons on the first line, when compact
+    bool compact = false;
+    bool bat_per_cell = true;   // with BAT_NB_CELLS: per cell or the total (click)
+    void fitCells();
+    bool all_icons = false;     // GCS setting: the status icons always, also when ok
 
-    QToolButton* time_button;
+    QPushButton* time_button;
     QLabel* flight_time_label;
     TimeMode time_mode;
-    QIcon time_flight;
-    QIcon time_block;
-    QIcon time_stage;
 
-    QToolButton* alt_button;
-    QIcon agl_icon;
-    QIcon msl_icon;
+    QPushButton* alt_button;
     QLabel* alt_label;
     bool alt_mode;
 
-    QToolButton* speed_button;
-    QIcon ground_speed_icon;
-    QIcon air_speed_icon;
-    QIcon vertical_speed_icon;
+    QPushButton* speed_button;
     QLabel* speed_label;
     SpeedMode speed_mode;
 
     QLabel* block_label;
     QLabel* block_icon;
 
-    QLabel* bat_icon;
-    QIcon bat_ok, bat_low, bat_critic, bat_catastrophic;
     QLabel* bat_label;
     int bat_nb_cells;
 
-    QLabel* throttle_icon;
+    QLabel* throttle_caption;
     QLabel* throttle_label;
-    QIcon throttle_on;
-    QIcon throttle_killed;
 
     QPushButton* ap_mode_button;
 
@@ -103,6 +110,9 @@ private:
     QLabel* imu_icon;
     QIcon imu_ok;
     QIcon imu_lost;
+
+    QWidget* status_row;    // the status icons that are not ok
+    QLabel* status_text;
 
 };
 
