@@ -183,8 +183,13 @@ QPushButton#block_go {
 }
 
 /* Settings: a row per setting, the value on the aircraft (amber until a sent value is confirmed) */
+/* a bar at the left of each setting, blue while open */
 #setting_row {
     border: 0;
+    border-left: 3px solid #3a424d;
+}
+#setting_row[open="true"] {
+    border-left-color: #3b74d6;
 }
 #setting_row QLabel#setting_name {
     font-weight: normal;

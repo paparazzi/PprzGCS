@@ -17,8 +17,6 @@ Setting::Setting(QDomElement setel, uint8_t& setting_no, QObject* parent) : QObj
     max = setel.attribute("max").toDouble();
     step = setel.attribute("step").toDouble();
 
-    last_set_values[0] = min;
-    last_set_values[1] = min;
 
     //shortname
     shortname= setel.attribute("shortname", var);
