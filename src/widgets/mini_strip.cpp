@@ -216,10 +216,13 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     auto th_cell = makeCell(throttle_caption, throttle_label, true);
     throttle_caption->setText("Throttle");
     th_cell->setAttribute(Qt::WA_TransparentForMouseEvents);
-    row2->addWidget(th_cell, 0, 3);
-    // the values next to each other with the same small gap; the spare width after them, the
-    // kill button on the right edge
-    row2->setColumnStretch(4, 1);
+    // the values next to each other with the same small gap; the spare width after them, then
+    // the throttle aligned right, close to the kill button on the right edge
+    row2->setColumnStretch(3, 1);
+    row2->addWidget(th_cell, 0, 4);
+    for(auto l: {throttle_caption, throttle_label}) {
+        l->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    }
     if(kill_button != nullptr) {
         row2->addWidget(kill_button, 0, 5, Qt::AlignRight | Qt::AlignVCenter);
     }
