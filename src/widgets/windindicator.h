@@ -11,6 +11,7 @@ class WindIndicator : public QWidget
     Q_PROPERTY(QColor background_color MEMBER m_background_color)
     Q_PROPERTY(QColor arrow_color MEMBER m_arrow_color)
     Q_PROPERTY(QColor pen_color MEMBER m_pen_color)
+    Q_PROPERTY(QColor border_color MEMBER m_border_color)
 public:
 
     enum SpeedUnit {
@@ -31,11 +32,13 @@ public:
 
     explicit WindIndicator(QWidget *parent = nullptr);
 
-    void setSizeProperty(int s) {_size = QSize(s,s); update();}
-    int getSizeProperty() {return _size.width();}
+    // size: the height; the widget is a pill with the compass on the left and the wind speed
+    void setSizeProperty(int s) {_size = QSize(s*3, s); updateGeometry(); update();}
+    int getSizeProperty() {return _size.height();}
 
     void setWindData(QString ac_id, double dir, double speed) {
         wind_data[ac_id] = {dir, speed};
+        updateGeometry();   // the speed shows next to the compass
         update();
     }
     void setCompass(double c) {compass = c; update();}
@@ -50,6 +53,7 @@ signals:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    bool event(QEvent* e) override;
     virtual void mousePressEvent(QMouseEvent *event) override;
     virtual void mouseMoveEvent(QMouseEvent *event) override;
     virtual void mouseReleaseEvent(QMouseEvent *event) override;
@@ -58,11 +62,12 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private slots:
-    void setAC(QString ac_id) {current_ac_id = ac_id; update();}
-    void removeAC(QString ac_id) {wind_data.remove(ac_id); update();}
+    void setAC(QString ac_id) {current_ac_id = ac_id; updateGeometry(); update();}
+    void removeAC(QString ac_id) {wind_data.remove(ac_id); updateGeometry(); update();}
 
 private:
     bool onNorth(QMouseEvent* event);
+    QRect compassRect() const {return QRect(0, 0, height(), height());}
 
     QString current_ac_id;
     double compass;
@@ -74,11 +79,13 @@ private:
     enum RotateState rotate_state;
 
     QRect north_rect;
+    double drag_angle = 0;
 
     QSize _size;
     QColor m_background_color;
     QColor m_arrow_color;
     QColor m_pen_color;
+    QColor m_border_color = QColor(0xc4, 0xcc, 0xd5);
 };
 
 #endif // WINDINDICATOR_H
