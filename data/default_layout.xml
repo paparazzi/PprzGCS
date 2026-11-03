@@ -12,6 +12,7 @@
                 <widget name="video" icon="rail_video.svg" title="Video">
                     <configure source="udp://:5600" width="320"/>
                 </widget>
+                <widget name="atc" icon="rail_atc.svg" title="ATC"/>
             </columnLeft>
           </configure>
         </widget>
