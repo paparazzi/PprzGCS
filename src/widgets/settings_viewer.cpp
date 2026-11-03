@@ -438,11 +438,10 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     prev_btn->setObjectName("setting_undo");
     auto init_btn = new QPushButton(QString::fromUtf8("\u21BA Initial"), actions);
     init_btn->setObjectName("setting_undo");
-    init_btn->setToolTip("Send the initial value (at the start of the flight)");
     auto ask_btn = new QPushButton(QString::fromUtf8("\u21BB Ask"), actions);
     ask_btn->setObjectName("setting_undo");
     ask_buttons[setting] = ask_btn;
-    ask_btn->setToolTip("Drop a change and ask the aircraft its value (again after 3 s without answer)");
+    ask_btn->setToolTip("Request current value");
     actions_lay->addWidget(prev_btn);
     actions_lay->addWidget(init_btn);
     actions_lay->addStretch(1);
@@ -476,16 +475,14 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         auto previous = setting->getPreviousValue();
         prev_btn->setEnabled(previous.has_value());
         prev_btn->setToolTip(previous.has_value() ?
-            QString("Send the previous value: %1 (the value before the last one sent)")
-                .arg(previous.value() * setting->getAltUnitCoef()) :
-            QString("No previous value yet (nothing sent from here)"));
+            QString("Previous: %1").arg(previous.value() * setting->getAltUnitCoef()) :
+            QString("No previous value"));
         // the initial value: the first value received from the aircraft (once it is known)
         auto initial = setting->getInitialValue();
         init_btn->setEnabled(initial.has_value());
         init_btn->setToolTip(initial.has_value() ?
-            QString("Send the initial value: %1 (the first value received from the aircraft)")
-                .arg(initial.value() * setting->getAltUnitCoef()) :
-            QString("The initial value is not known yet (no value received from the aircraft)"));
+            QString("Initial: %1").arg(initial.value() * setting->getAltUnitCoef()) :
+            QString("Initial value unknown"));
     };
     refresh_actions[setting] = update_actions;
 
