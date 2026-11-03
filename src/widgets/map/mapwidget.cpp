@@ -529,6 +529,51 @@ void MapWidget::changeCurrentAC(QString id) {
     updateHighlights(id);
 }
 
+/// The waypoints at a place of the map (their markers overlap there), of all aircraft.
+QList<WaypointItem*> MapWidget::waypointsAt(QPointF scene_pos) {
+    QList<WaypointItem*> stack;
+    for(auto mgr: ac_items_managers) {
+        for(auto w: mgr->getWaypointsItems()) {
+            auto m = w->marker();
+            // its shape: none for hidden waypoints (shown as a dot)
+            if(m->isVisible() && !w->isMoving() && m->contains(m->mapFromScene(scene_pos))) {
+                stack.append(w);
+            }
+        }
+    }
+    return stack;
+}
+
+/// Ctrl+click on waypoints at the same place: a menu to choose the one to move (raised over the
+/// others). Ctrl+drag moves them all together.
+void MapWidget::chooseStackedWaypoint(WaypointItem* wpi, QPointF scene_pos) {
+    auto stack = waypointsAt(scene_pos);
+    if(!stack.contains(wpi)) {
+        stack.prepend(wpi);
+    }
+    if(stack.size() < 2) {
+        return;
+    }
+    QMenu menu(this);
+    auto title = menu.addAction("Waypoints here: choose one, then drag it (Ctrl+drag: all together)");
+    title->setEnabled(false);
+    for(auto w: stack) {
+        QString name = w->waypoint()->getName();
+        if(AircraftManager::get()->aircraftExists(w->acId())) {
+            name += "  (" + AircraftManager::get()->getAircraft(w->acId())->name() + ")";
+        }
+        auto a = menu.addAction(name);
+        connect(a, &QAction::triggered, this, [=,this]() {
+            for(auto mgr: ac_items_managers) {
+                for(auto o: mgr->getWaypointsItems()) {
+                    o->setRaised(o == w);
+                }
+            }
+        });
+    }
+    menu.exec(mapToGlobal(mapFromScene(scene_pos)) + QPoint(8, 8));
+}
+
 void MapWidget::registerWaypoint(WaypointItem* waypoint) {
     connect(waypoint, &WaypointItem::itemClicked, this,
         [=,this](QPointF pos) {
@@ -1056,10 +1101,17 @@ void MapWidget::arrangeWaypointLabels() {
     for(auto &wp: wps) {
         double s = wp.item->label()->scale();     // the waypoint scale (set with its label)
         double w = wp.size.width(), h = wp.size.height();
-        // upper right (the default), lower right, upper left, lower left, above, below
+        // upper right (the default), lower right, upper left, lower left, above, below, right,
+        // left; then further away, one name height at a time, on the four sides (many
+        // waypoints at the same place: a name each)
         QList<QPointF> offsets = {
             {4*s, -26*s}, {4*s, 0}, {-w - 4*s, -26*s}, {-w - 4*s, 0}, {-w/2, -h - 6*s}, {-w/2, 8*s},
+            {10*s, -h/2}, {-w - 10*s, -h/2},
         };
+        for(int k = 1; k <= 6; k++) {
+            double dy = k * h * 0.8;
+            offsets.append({{4*s, -26*s - dy}, {4*s, dy}, {-w - 4*s, -26*s - dy}, {-w - 4*s, dy}});
+        }
         // the place it has now first: it stays there while that is free (no jumping around)
         offsets.prepend(wp.item->labelOffset() * s);
         QPointF chosen = offsets[0];
@@ -1426,9 +1478,14 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
 
     auto dialog_move_waypoint = [=,this]() {
         wpi->setMoving(true);
-        auto we = new WaypointEditor(wpi, ac_id, this);
+        auto followers = wp_followers.value(wpi);
+        auto we = new WaypointEditor(wpi, ac_id, this, followers);
         // the old position: kept until the aircraft confirms the move (also over several moves)
         showPendingMove(wpi);
+        for(auto f: followers) {
+            f->setMoving(true);
+            showPendingMove(f);
+        }
 
         // the card next to the waypoint, not over it, its old position or the line between them
         auto view_pos = mapFromScene(wpi->scenePos());
@@ -1440,13 +1497,19 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
         we->placeNear(mapToGlobal(view_pos), avoid);
 
         connect(we, &QDialog::finished, wpi, [=,this](int result) {
-            wpi->setMoving(false);
-            if(!result) {
-                // back to the confirmed position
-                wpi->update();
-                wpi->setAnimate(false);
-                clearPendingMove(wpi);
+            QList<WaypointItem*> all = {wpi};
+            all.append(followers);
+            for(auto w: all) {
+                w->setMoving(false);
+                w->setRaised(false);
+                if(!result) {
+                    // back to the confirmed position
+                    w->update();
+                    w->setAnimate(false);
+                    clearPendingMove(w);
+                }
             }
+            wp_followers.remove(wpi);
         });
         we->showMovable();
     };
@@ -1455,8 +1518,40 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
 
     connect(wpi, &WaypointItem::itemDoubleClicked, this, dialog_move_waypoint);
 
-    connect(wpi, &WaypointItem::waypointMoved, this, [=,this](){
+    // Ctrl held when pressed: the waypoints at the same place (of all aircraft) move along
+    connect(wpi, &WaypointItem::waypointPressed, this, [=,this](QPointF scene_pos, bool ctrl) {
+        if(wpi->isMoving()) {
+            return;     // its card is open: keep what moves with it
+        }
+        wp_followers.remove(wpi);
+        if(ctrl && interaction_state != PMIS_FLIGHT_PLAN_EDIT) {
+            auto stack = waypointsAt(scene_pos);
+            stack.removeAll(wpi);
+            if(!stack.isEmpty()) {
+                wp_followers[wpi] = stack;
+            }
+        }
+    });
+
+    connect(wpi, &WaypointItem::waypointMoved, this, [=,this](Point2DLatLon ll){
         wpi->setAnimate(true);
+        showPendingMove(wpi);     // the old position and the dashed line, already while dragging
+        for(auto f: wp_followers.value(wpi)) {     // moved together
+            f->setPosition(ll);
+            f->setAnimate(true);
+            showPendingMove(f);
+        }
+    });
+
+    // Ctrl+click on waypoints at the same place: choose which one to move
+    connect(wpi, &WaypointItem::itemClicked, this, [=,this](QPointF scene_pos) {
+        bool ctrl = wp_followers.contains(wpi) && !wpi->isMoving();
+        if(ctrl) {
+            wp_followers.remove(wpi);   // not moved: nothing moves along
+            if(interaction_state != PMIS_FLIGHT_PLAN_EDIT) {
+                chooseStackedWaypoint(wpi, scene_pos);
+            }
+        }
     });
 
     if(wp->getName().startsWith('_') && !show_hidden_wp_action->isChecked()) {

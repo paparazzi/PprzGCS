@@ -136,9 +136,39 @@ void GraphicsPoint::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         return;
     }
     GraphicsObject::mousePressEvent(event);
-    pressPos = QPointF(event->pos().x() * scale(), event->pos().y() * scale());
+    // in the scene: also right when pressed on its name, away from the point
+    pressPos = event->scenePos() - scenePos();
+    pressScreen = event->screenPos();
     move_state = PMS_PRESSED;
     changeFocus();
+    emit pointPressed(event->scenePos(), event->modifiers() & Qt::ControlModifier);
+}
+
+bool GraphicsPoint::sceneEventFilter(QGraphicsItem* watched, QEvent* event) {
+    (void)watched;
+    if(ignore_events) {
+        return false;
+    }
+    auto me = static_cast<QGraphicsSceneMouseEvent*>(event);
+    switch(event->type()) {
+    case QEvent::GraphicsSceneMousePress:
+        if(me->button() != Qt::LeftButton) {
+            return false;
+        }
+        mousePressEvent(me);
+        return true;
+    case QEvent::GraphicsSceneMouseMove:
+        mouseMoveEvent(me);
+        return true;
+    case QEvent::GraphicsSceneMouseRelease:
+        mouseReleaseEvent(me);
+        return true;
+    case QEvent::GraphicsSceneMouseDoubleClick:
+        mouseDoubleClickEvent(me);
+        return true;
+    default:
+        return false;
+    }
 }
 
 void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
@@ -148,7 +178,7 @@ void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     }
     auto settings = getAppSettings();
     if(move_state == PMS_PRESSED) {
-        QPointF dp = event->pos() - pressPos;
+        QPointF dp = event->screenPos() - pressScreen;
         double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());
         if(d > settings.value("map/move_hyteresis").toInt() && editable) {
             move_state = PMS_MOVED;

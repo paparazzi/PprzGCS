@@ -8,11 +8,34 @@ static const QString REF0 = "Flightplan ref0";
 static const QString WGS84 = "WGS84";
 
 
-WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent) :
-    CardDialog("Move waypoint " + wi->waypoint()->getName(),
+static QString editorTitle(WaypointItem* wi, const QList<WaypointItem*>& followers) {
+    if(followers.isEmpty()) {
+        return "Move waypoint " + wi->waypoint()->getName();
+    }
+    // of several aircraft: their names too
+    bool several = false;
+    for(auto f: followers) {
+        several = several || f->acId() != wi->acId();
+    }
+    auto label = [=](WaypointItem* w) {
+        QString n = w->waypoint()->getName();
+        if(several && AircraftManager::get()->aircraftExists(w->acId())) {
+            n += " (" + AircraftManager::get()->getAircraft(w->acId())->name() + ")";
+        }
+        return n;
+    };
+    QStringList names = {label(wi)};
+    for(auto f: followers) {
+        names.append(label(f));
+    }
+    return "Move waypoints " + names.join(", ");
+}
+
+WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent, QList<WaypointItem*> followers) :
+    CardDialog(editorTitle(wi, followers),
                AircraftManager::get()->getAircraft(ac_id)->name(), parent,
                AircraftManager::get()->getAircraft(ac_id)->getColor()),
-    wi(wi), ac_id(ac_id), original_pos(wi->getOriginalWaypoint()), original_alt(wi->getOriginalWaypoint()->getAlt())
+    wi(wi), followers(followers), ac_id(ac_id), original_pos(wi->getOriginalWaypoint()), original_alt(wi->getOriginalWaypoint()->getAlt())
 {
     setObjectName("waypoint_editor");
     auto ac = AircraftManager::get()->getAircraft(ac_id);
@@ -136,6 +159,9 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
 
     connect(altSpin, qOverload<double>(&QDoubleSpinBox::valueChanged), [=,this](double alt){
         wi->waypoint()->setAlt(alt);
+        for(auto f: this->followers) {
+            f->waypoint()->setAlt(alt);
+        }
         updateAgl();
     });
 
@@ -180,6 +206,9 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent)
     auto move = addButton("Move", PRIMARY, 2);
     connect(move, &QPushButton::clicked, this, [=,this](){
         emit DispatcherUi::get()->move_waypoint_ui(wi->waypoint(), ac_id);
+        for(auto f: this->followers) {
+            emit DispatcherUi::get()->move_waypoint_ui(f->waypoint(), f->acId());
+        }
         accept();
     });
     connect(cancel, &QPushButton::clicked, this, &QDialog::reject);

@@ -76,6 +76,9 @@ void WaypointItem::init() {
 void WaypointItem::addToMap(MapWidget* map) {
     map->scene()->addItem(point);
     map->scene()->addItem(graphics_text);
+    // the name can be grabbed too: dragged, clicked and double clicked as the point
+    graphics_text->installSceneEventFilter(point);
+    connect(point, &GraphicsPoint::pointPressed, this, &WaypointItem::waypointPressed);
 
     connect(
         point, &GraphicsPoint::pointMoved, this,
@@ -115,8 +118,13 @@ void WaypointItem::setEditable(bool ed) {
 }
 
 void WaypointItem::updateZValue() {
-    point->setZValue(z_value);
-    graphics_text->setZValue(z_value);
+    point->setZValue(z_value + (raised ? 0.5 : 0.));
+    graphics_text->setZValue(z_value + (raised ? 0.5 : 0.));
+}
+
+void WaypointItem::setRaised(bool r) {
+    raised = r;
+    updateZValue();
 }
 
 void WaypointItem::setVisible(bool visible) {

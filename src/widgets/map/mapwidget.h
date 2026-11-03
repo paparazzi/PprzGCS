@@ -142,6 +142,9 @@ private:
 
     QMap<QString, ACItemManager*> ac_items_managers;
     InteractionState interaction_state;
+    QMap<WaypointItem*, QList<WaypointItem*>> wp_followers;   // waypoints at the same place moved together
+    void chooseStackedWaypoint(WaypointItem* wpi, QPointF scene_pos);
+    QList<WaypointItem*> waypointsAt(QPointF scene_pos);
     int drawState;
     ItemEditStateMachine* fp_edit_sm;
     QString current_ac;

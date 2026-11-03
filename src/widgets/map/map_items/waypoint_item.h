@@ -46,6 +46,8 @@ public:
     void setAnimation(GraphicsObject::Animation a);
     void setMoving(bool m){moving = m;}
     void setAnimate(bool animate);
+    /// over the waypoints at the same place (chosen among them), until lowered
+    void setRaised(bool r);
     void setSize(int s) {
         m_size = s;
         point->setProperty("size", m_size);
@@ -53,6 +55,7 @@ public:
     GraphicsPoint* getGraphicsPoint() {return point;}
 
 signals:
+    void waypointPressed(QPointF scene_pos, bool ctrl);
     void waypointMoved(Point2DLatLon latlon_pos);
     void waypointMoveFinished();
     void waypointDoubleClicked();
@@ -68,6 +71,7 @@ private:
     Waypoint* _waypoint;
     int altitude;
     bool moving;
+    bool raised = false;
     int m_size;
 };
 
