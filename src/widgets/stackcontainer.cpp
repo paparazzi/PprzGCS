@@ -15,6 +15,7 @@ StackContainer::StackContainer(std::function<QWidget*(QString, QWidget*)> constr
     constructor(constructor)
 {
     vLayout = new QVBoxLayout(this);
+    vLayout->setContentsMargins(0, 0, 0, 0);    // the card or tab around it has its own margins
     vLayout->setSpacing(0);
     auto contentWidget = new QWidget(this);
     stackLayout = new QVBoxLayout(contentWidget);
