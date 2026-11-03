@@ -92,11 +92,14 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent,
     altSpin->setButtonSymbols(QAbstractSpinBox::NoButtons);
     altSpin->setValue(wi->waypoint()->getAlt());
     altLay->addWidget(altSpin);
-    altLay->addStretch(1);
+    // the old altitude next to the field, in a place of its own (always there: nothing moves)
     was_label = new QLabel(body);
     was_label->setObjectName("card_muted");
-    agl_label = new QLabel(body);
+    was_label->setStyleSheet("font-size: 11px;");
+    was_label->setFixedWidth(was_label->fontMetrics().horizontalAdvance("was 0000 m") + 4);
     altLay->addWidget(was_label);
+    altLay->addStretch(1);
+    agl_label = new QLabel(body);
     altLay->addWidget(agl_label);
     infoLay->addLayout(altLay);
 
@@ -204,6 +207,17 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent,
     // Cancel (Esc) and Move (Enter)
     auto cancel = addButton("Cancel", NORMAL, 1);
     auto move = addButton("Move", PRIMARY, 2);
+    // the focus on Move, not in the lat field: no text cursor there (with an input method, e.g.
+    // IBus on Ubuntu, a small window of it flashed next to the card); Enter moves, Esc cancels
+    move->setDefault(true);
+    move_button = move;
+    // numbers only: no input method (its small window flashed next to the card)
+    for(auto w: findChildren<QLineEdit*>()) {
+        w->setAttribute(Qt::WA_InputMethodEnabled, false);
+    }
+    for(auto w: findChildren<QAbstractSpinBox*>()) {
+        w->setAttribute(Qt::WA_InputMethodEnabled, false);
+    }
     connect(move, &QPushButton::clicked, this, [=,this](){
         emit DispatcherUi::get()->move_waypoint_ui(wi->waypoint(), ac_id);
         for(auto f: this->followers) {
@@ -212,6 +226,16 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent,
         accept();
     });
     connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
+}
+
+void WaypointEditor::showEvent(QShowEvent* event) {
+    CardDialog::showEvent(event);
+    // once shown (showing gives the focus to the first field): on Move, no text cursor in lat
+    QTimer::singleShot(0, this, [this]() {
+        if(move_button != nullptr) {
+            move_button->setFocus(Qt::OtherFocusReason);
+        }
+    });
 }
 
 /// How far and which way it moved, the old altitude and the height above ground.
@@ -226,9 +250,8 @@ void WaypointEditor::updateInfo() {
         int d = static_cast<int>(round(fmod(fmod(azimut, 360.) + 360., 360.) / 45.)) % 8;
         moved_label->setText(QString("Moved %1 m to the %2").arg(distance, 0, 'f', 0).arg(dirs[d]));
     }
-
     double alt = wp->getAlt();
-    was_label->setText(fabs(alt - original_alt) < 0.05 ? QString() : QString("was %1").arg(original_alt, 0, 'f', 0));
+    was_label->setText(fabs(alt - original_alt) < 0.05 ? QString() : QString("was %1 m").arg(original_alt, 0, 'f', 0));
 
     auto fp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan();
     auto ele = SRTMManager::get()->get_elevation(wp->getLat(), wp->getLon());

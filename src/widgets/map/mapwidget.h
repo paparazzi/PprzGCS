@@ -4,6 +4,8 @@
 #include <QElapsedTimer>
 #include <QGraphicsItem>
 #include <QList>
+#include <QPointer>
+#include <QDialog>
 #include <QLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -146,6 +148,9 @@ private:
     void chooseStackedWaypoint(WaypointItem* wpi, QPointF scene_pos);
     QList<WaypointItem*> waypointsAt(QPointF scene_pos);
     QList<WaypointItem*> hover_marked;     // marked as linked to the waypoint or name under the mouse
+    bool hover_dimmed = false;             // the other names faded (option)
+    void clearWaypointHover();
+    QMap<WaypointItem*, QPointer<QDialog>> waypoint_editors;   // the open card of each waypoint
     int drawState;
     ItemEditStateMachine* fp_edit_sm;
     QString current_ac;

@@ -575,6 +575,21 @@ void MapWidget::chooseStackedWaypoint(WaypointItem* wpi, QPointF scene_pos) {
     menu.exec(mapToGlobal(mapFromScene(scene_pos)) + QPoint(8, 8));
 }
 
+void MapWidget::clearWaypointHover() {
+    for(auto w: hover_marked) {
+        w->setHoverMark(false);
+    }
+    hover_marked.clear();
+    if(hover_dimmed) {
+        hover_dimmed = false;
+        for(auto mgr: ac_items_managers) {
+            for(auto w: mgr->getWaypointsItems()) {
+                w->setDimmed(false);
+            }
+        }
+    }
+}
+
 void MapWidget::registerWaypoint(WaypointItem* waypoint) {
     connect(waypoint, &WaypointItem::itemClicked, this,
         [=,this](QPointF pos) {
@@ -1471,6 +1486,11 @@ void MapWidget::handleNewAC(QString ac_id) {
 
 void MapWidget::removeAC(QString ac_id) {
     hover_marked.removeIf([=](WaypointItem* w) { return w->acId() == ac_id; });
+    for(auto k: waypoint_editors.keys()) {
+        if(k->acId() == ac_id) {
+            waypoint_editors.remove(k);
+        }
+    }
     for(auto k: wp_followers.keys()) {
         if(k->acId() == ac_id) {
             wp_followers.remove(k);
@@ -1518,9 +1538,16 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
     ac_items_managers[ac_id]->addWaypointItem(wpi);
 
     auto dialog_move_waypoint = [=,this]() {
+        // its card already open (moved again): replaced by a new one, with the new position
+        if(!waypoint_editors.value(wpi).isNull()) {
+            auto old = waypoint_editors[wpi];
+            old->setProperty("replaced", true);
+            old->reject();
+        }
         wpi->setMoving(true);
         auto followers = wp_followers.value(wpi);
         auto we = new WaypointEditor(wpi, ac_id, this, followers);
+        waypoint_editors[wpi] = we;
         // the old position: kept until the aircraft confirms the move (also over several moves)
         showPendingMove(wpi);
         for(auto f: followers) {
@@ -1538,6 +1565,9 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
         we->placeNear(mapToGlobal(view_pos), avoid);
 
         connect(we, &QDialog::finished, wpi, [=,this](int result) {
+            if(we->property("replaced").toBool()) {
+                return;     // the new card goes on with the move
+            }
             QList<WaypointItem*> all = {wpi};
             all.append(followers);
             for(auto w: all) {
@@ -1562,18 +1592,19 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
     // the mouse over a name: its waypoint marked; over a waypoint: the names of the waypoints at
     // that place (which name is whose)
     connect(wpi, &WaypointItem::waypointHovered, this, [=,this](bool hovered, bool on_name) {
-        for(auto w: hover_marked) {
-            w->setHoverMark(false);
-        }
-        hover_marked.clear();
-        // the other names faded while the mouse is over one (which is whose stands out)
-        for(auto mgr: ac_items_managers) {
-            for(auto w: mgr->getWaypointsItems()) {
-                w->setDimmed(hovered);
-            }
-        }
-        if(!hovered) {
+        clearWaypointHover();
+        auto settings = getAppSettings();
+        if(!hovered || !settings.value("map/waypoint_hover_mark").toBool()) {
             return;
+        }
+        // the other names faded while the mouse is over one (option)
+        if(settings.value("map/waypoint_hover_dim").toBool()) {
+            hover_dimmed = true;
+            for(auto mgr: ac_items_managers) {
+                for(auto w: mgr->getWaypointsItems()) {
+                    w->setDimmed(true);
+                }
+            }
         }
         hover_marked = on_name ? QList<WaypointItem*>{wpi} : waypointsAt(wpi->scenePos());
         if(!hover_marked.contains(wpi)) {
@@ -1587,6 +1618,7 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
 
     // Ctrl held when pressed: the waypoints at the same place (of all aircraft) move along
     connect(wpi, &WaypointItem::waypointPressed, this, [=,this](QPointF scene_pos, bool ctrl) {
+        clearWaypointHover();     // dragged: no hover leave may come
         if(wpi->isMoving()) {
             return;     // its card is open: keep what moves with it
         }

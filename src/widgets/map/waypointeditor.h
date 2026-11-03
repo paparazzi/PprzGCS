@@ -22,8 +22,12 @@ public:
     explicit WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent = nullptr,
                             QList<WaypointItem*> followers = {});
 
+protected:
+    void showEvent(QShowEvent* event) override;
+
 private:
     void updateInfo();
+    QPushButton* move_button = nullptr;
 
     WaypointItem* wi;
     QList<WaypointItem*> followers;

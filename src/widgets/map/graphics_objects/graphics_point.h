@@ -54,7 +54,8 @@ private:
     int halfSize;
     QPointF pressPos;       // from the point to the mouse, in the scene
     QPointF pressScreen;
-    bool hover_mark = false;    // where it was pressed on the screen (move threshold)
+    bool hover_mark = false;
+    bool double_pressed = false;    // the press is the second of a double click    // where it was pressed on the screen (move threshold)
     PointMoveState move_state;
 
     int current_color;

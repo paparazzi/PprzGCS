@@ -219,21 +219,29 @@ void GraphicsPoint::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
         return;
     }
     if(move_state == PMS_PRESSED) {
-        emit objectClicked(event->scenePos());
+        if(double_pressed) {
+            emit objectDoubleClicked(event->scenePos());
+        } else {
+            emit objectClicked(event->scenePos());
+        }
     }
     else if(move_state == PMS_MOVED) {
         emit pointMoveFinished(event->scenePos() - pressPos);
     }
     move_state = PMS_IDLE;
+    double_pressed = false;
     changeFocus();
 }
 
+/// The second press of a double click: the card once released without moving (a quick second
+/// press that drags is a drag, the card opens when it is released)
 void GraphicsPoint::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
     if(ignore_events) {
         event->ignore();
         return;
     }
-    emit objectDoubleClicked(event->scenePos());
+    mousePressEvent(event);
+    double_pressed = true;
 }
 
 void GraphicsPoint::changeFocus() {
