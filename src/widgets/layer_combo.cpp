@@ -33,7 +33,8 @@ bool LayerCombo::eventFilter(QObject *object, QEvent *event)
 
     if (object == scroll_content && event->type() == QEvent::Resize) {
         // at least as wide as its content, wider with its card (no fixed size: it did not follow the card)
-        setMinimumWidth(scroll_content->minimumSizeHint().width() + scroll->verticalScrollBar()->sizeHint().width() + 4);
+        // (the preferred width of the rows: their minimum lets the names and the switches be cut)
+        setMinimumWidth(scroll_content->sizeHint().width() + scroll->verticalScrollBar()->sizeHint().width() + 4);
     }
     return false;
 }
@@ -43,6 +44,8 @@ void LayerCombo::addLayerControl(MapLayerControl* mlc) {
     mlc->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);    // a taller card: no taller rows
     content_layout->addWidget(mlc);
     map_layer_controls.append(mlc);
+    // known before the card is first shown (a smaller saved card size is widened to it)
+    setMinimumWidth(scroll_content->sizeHint().width() + scroll->verticalScrollBar()->sizeHint().width() + 4);
 }
 
 void LayerCombo::mousePressEvent(QMouseEvent* e) {

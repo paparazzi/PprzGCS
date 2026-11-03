@@ -977,7 +977,10 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    scroll->setMinimumWidth(380);
+    // as wide as the longest name with both values (measured with every row shown: no column
+    // cut off behind the scroll bar when the unchanged ones are shown)
+    int content_w = grid_widget->sizeHint().width() + scroll->verticalScrollBar()->sizeHint().width() + 8;
+    scroll->setMinimumWidth(qBound(380, content_w, parent != nullptr ? qMax(380, parent->width() - 60) : 900));
     body()->addWidget(scroll);
     auto fit = [=,this]() {
         grid->invalidate();
