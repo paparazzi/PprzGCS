@@ -11,6 +11,61 @@
 #include <QDebug>
 #include <ostream>
 
+namespace {
+/// A checklist item: a 24 px box (easy to hit on a touch screen), the whole row can be tapped,
+/// a line above it; done items in grey.
+class ChecklistCheck : public QCheckBox {
+public:
+    explicit ChecklistCheck(const QString& text, QWidget* parent = nullptr) : QCheckBox(text, parent) {
+        setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        setCursor(Qt::PointingHandCursor);
+    }
+    QSize sizeHint() const override {
+        return QSize(BOX + GAP + fontMetrics().horizontalAdvance(text()) + 8, 40);
+    }
+    QSize minimumSizeHint() const override { return QSize(BOX + GAP + 40, 40); }
+
+protected:
+    bool hitButton(const QPoint& pos) const override { return rect().contains(pos); }
+    void paintEvent(QPaintEvent*) override {
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        QColor text_color = palette().color(QPalette::WindowText);
+        QColor line = text_color;
+        line.setAlphaF(0.10f);
+        p.setPen(QPen(line, 1));
+        p.drawLine(0, 0, width(), 0);
+        QRectF box(2.5, (height() - BOX) / 2.0 + 0.5, BOX - 1, BOX - 1);
+        if(isChecked()) {
+            p.setPen(Qt::NoPen);
+            p.setBrush(QColor(0x1f7a3f));
+            p.drawRoundedRect(box, 5, 5);
+            p.setPen(QPen(Qt::white, 2.6, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+            QPointF o = box.topLeft();
+            p.drawPolyline(QPolygonF({o + QPointF(6, 12.5), o + QPointF(10, 16.5), o + QPointF(17.5, 7.5)}));
+        } else {
+            QColor border = text_color;
+            border.setAlphaF(0.45f);
+            p.setPen(QPen(hasFocus() ? palette().color(QPalette::Highlight) : border, 2));
+            p.setBrush(Qt::NoBrush);
+            p.drawRoundedRect(box.adjusted(0.5, 0.5, -0.5, -0.5), 5, 5);
+        }
+        QColor c = text_color;
+        if(isChecked()) {
+            c.setAlphaF(0.5f);     // done: grey
+        }
+        p.setPen(c);
+        QRect tr = rect().adjusted(BOX + GAP, 0, 0, 0);
+        p.drawText(tr, Qt::AlignVCenter | Qt::AlignLeft,
+                   fontMetrics().elidedText(text(), Qt::ElideRight, tr.width()));
+    }
+
+private:
+    static constexpr int BOX = 24;
+    static constexpr int GAP = 10;
+};
+}
+
 Checklist::Checklist(QString ac_id, QWidget *parent) :
     QFrame(parent),
     ui(new Ui::Checklist)
@@ -52,16 +107,14 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
     ui->verticalLayout->insertLayout(0, header);
     ui->verticalLayout->setSpacing(8);
 
-    // Required items that are not done are shown in amber; these colors when the application
-    // style sheet does not style them
-    if(!qApp->styleSheet().contains("checklist_open")) {
+    // these colors when the application style sheet does not style them
+    if(!qApp->styleSheet().contains("checklist_progress")) {
         setStyleSheet(
-            "*[checklist_open=\"true\"] {color: #8a4b00; font-weight: bold;}"
             "QProgressBar#checklist_progress {border: 0; border-radius: 4px; background: #e3e7ec;}"
             "QProgressBar#checklist_progress::chunk {border-radius: 4px; background: #1f7a3f;}"
             "QLabel#checklist_count {font-family: \"Monospace\";}");
     }
-    auto markers = std::make_shared<QMap<ChecklistItem*, QWidget*>>();  // the widget that shows an item is open
+    auto markers = std::make_shared<QMap<ChecklistItem*, QWidget*>>();  // the items counted in the progress
 
     auto refresh_progress = [=,this]() {
         int total = 0, done = 0;
@@ -72,12 +125,6 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
             total += 1;
             bool is_done = item->type == "checkbox" ? item->value == "true" : !item->value.isEmpty();
             done += is_done ? 1 : 0;
-            auto w = (*markers)[item];
-            if(w->property("checklist_open").toBool() != !is_done) {
-                w->setProperty("checklist_open", !is_done);
-                w->style()->unpolish(w);
-                w->style()->polish(w);
-            }
         }
         progress->setMaximum(qMax(total, 1));
         progress->setValue(done);
@@ -126,6 +173,7 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
     // Label and input on one row, with the help text as tooltip
     auto add_row = [=,this](ChecklistItem* item, QWidget* input) {
         auto row = new QHBoxLayout();
+        row->setContentsMargins(0, 3, 0, 3);
         auto label = new QLabel(item->description);
         label->setToolTip(item->help);
         label->setMinimumWidth(110);
@@ -146,9 +194,8 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
         }
 
         if(item->type == "checkbox") {
-            auto widget_item = new QCheckBox(item->description);
-            widget_item->setToolTip(item->help);
-            widget_item->setMinimumHeight(30);
+            auto widget_item = new ChecklistCheck(item->description);
+            widget_item->setToolTip(item->help.isEmpty() ? item->description : item->help);
             (*markers)[item] = widget_item;
             if(item->value == "true") {
                 widget_item->setChecked(true);
@@ -231,7 +278,7 @@ Checklist::Checklist(QString ac_id, QWidget *parent) :
     items->setObjectName("checklist_items");
     auto items_lay = new QVBoxLayout(items);
     items_lay->setContentsMargins(0, 0, 0, 0);
-    items_lay->setSpacing(ui->verticalLayout->spacing());
+    items_lay->setSpacing(0);     // the checks are rows with a line between them
     while(ui->verticalLayout->count() > 1) {
         auto item = ui->verticalLayout->takeAt(1);
         if(item->widget()) {

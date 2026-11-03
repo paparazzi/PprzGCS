@@ -365,11 +365,7 @@ QLabel#setting_path_sep {
     color: #57606a;
 }
 
-/* Checklist: progress of the required items, the open ones in amber */
-*[checklist_open="true"] {
-    color: #8a4b00;
-    font-weight: bold;
-}
+/* Checklist: progress of the required items */
 QProgressBar#checklist_progress {
     border: 0;
     border-radius: 4px;
