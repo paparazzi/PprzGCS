@@ -377,7 +377,8 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
     label->setObjectName("setting_name");
     label->setMinimumWidth(30);
     label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
-    label->setToolTip(setting->getName() + " (click: open, with the slider and the buttons)");
+    label->setToolTip(rows_open ? setting->getName() :
+                      setting->getName() + " (click: open, with the slider and the buttons)");
     label->installEventFilter(this);
     name_labels[label] = setting;
     hlay->addWidget(label, 1);
@@ -642,10 +643,16 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
         control_lay->addWidget(unit_label);
     }
     hlay->addWidget(menu_btn);
+    menu_btn->setVisible(!rows_open);    // every row open: its buttons are always there
 
     // a click on the name opens the row: the slider and the buttons
-    label->setCursor(Qt::PointingHandCursor);
+    if(!rows_open) {
+        label->setCursor(Qt::PointingHandCursor);
+    }
     toggle_slider[setting] = [=,this]() {
+        if(rows_open) {
+            return;     // every row open: nothing to fold
+        }
         *expanded = !*expanded;
         *opened_by_field = false;
         show_editor(false);
