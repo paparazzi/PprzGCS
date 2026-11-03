@@ -66,10 +66,13 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
 
     connect(&server_check_timer, &QTimer::timeout, this, [this]() {
         auto now = QDateTime::currentMSecsSinceEpoch();
-        if(now - time_msg_server > 1000) {
-            pprzApp()->mainWindow()->setServerStatus(false);
-        } else {
-            pprzApp()->mainWindow()->setServerStatus(true);
+        bool ok = now - time_msg_server <= 1000;
+        pprzApp()->mainWindow()->setServerStatus(ok);
+        server_seen = server_seen || ok;
+        // on a change, and once at the start without a server (after a few seconds)
+        if(ok != server_ok || (!ok && !server_seen && ++server_checks == 3)) {
+            server_ok = ok;
+            emit serverStatusChanged(ok);
         }
     });
 

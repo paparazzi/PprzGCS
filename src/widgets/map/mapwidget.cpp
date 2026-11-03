@@ -759,6 +759,18 @@ void MapWidget::configure(QDomElement ele) {
         });
     }
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &MapWidget::watchAircraftStates);
+    // the server: lost (alarm, until it answers again), or none at the start
+    connect(PprzDispatcher::get(), &PprzDispatcher::serverStatusChanged, this, [=,this](bool ok) {
+        if(ok) {
+            notifications->setState("server", "ground", "", MapNotifications::INFO);
+        } else if(PprzDispatcher::get()->serverSeen()) {
+            notifications->setState("server", "ground", "Connection with the server lost: no aircraft data",
+                                    MapNotifications::ALARM);
+        } else {
+            notifications->setState("server", "ground", "No connection with the server (is it running?)",
+                                    MapNotifications::WARNING);
+        }
+    });
     // an aircraft that is removed: its states go
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, [=,this](QString id) {
         notifications->setState("bat:" + id, id, "", MapNotifications::INFO);
