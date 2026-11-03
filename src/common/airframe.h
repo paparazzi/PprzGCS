@@ -41,7 +41,10 @@ public:
     float getAltShiftMinus();
     std::optional<struct Param> getDefine(QString name, QString section="");
 
-    void saveSettings(QString filename);
+    /// Write the airframe file with the values set by setParams. From the text of source (the file
+    /// it was loaded from), only the changed value attributes replaced: the layout, comments and
+    /// the rest of the file stay as they are. Without source: the whole document is written.
+    void saveSettings(QString filename, QString source = "");
     void setParams(QMap<QString, QString> changed_params);
     QList<Param> getParams();
     QList<ChecklistItem*> getChecklistItems();

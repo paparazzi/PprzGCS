@@ -1,4 +1,8 @@
 #include "airframe.h"
+#include <QXmlStreamReader>
+#include <QRegularExpression>
+#include <QFile>
+#include <QDebug>
 #include <iostream>
 #include <algorithm>
 
@@ -75,15 +79,81 @@ void Airframe::setParams(QMap<QString, QString> changed_params) {
     }
 }
 
-void Airframe::saveSettings(QString filename) {
+void Airframe::saveSettings(QString filename, QString source) {
+    QString text;
+    QFile src(source);
+    if(!source.isEmpty() && src.open(QIODevice::ReadOnly)) {
+        text = QString::fromUtf8(src.readAll());
+        src.close();
+        // the values to write: the defines of the document (setParams changed them)
+        QMap<QString, QString> values;
+        for(auto &p: getParams()) {
+            values[p.name] = p.value;
+        }
+        // the defines of the sections of the root, found in the text with their offsets; the
+        // value attribute replaced in the text of their start tag (from the end: offsets stay valid)
+        struct Edit { qsizetype start; qsizetype end; QString value; };
+        QList<Edit> edits;
+        QXmlStreamReader xml(text);
+        int depth = 0;
+        QString prefix;
+        bool in_section = false;
+        while(!xml.atEnd()) {
+            auto t = xml.readNext();
+            if(t == QXmlStreamReader::StartElement) {
+                depth++;
+                if(depth == 2 && xml.name() == QStringLiteral("section")) {
+                    in_section = true;
+                    prefix = xml.attributes().value("prefix").toString();
+                } else if(depth == 3 && in_section && xml.name() == QStringLiteral("define")) {
+                    auto full_name = prefix + xml.attributes().value("name").toString();
+                    auto old_value = xml.attributes().value("value").toString();
+                    if(values.contains(full_name) && values[full_name] != old_value) {
+                        qsizetype end = xml.characterOffset();          // just after the start tag
+                        qsizetype start = text.lastIndexOf('<', end - 1);
+                        edits.append({start, end, values[full_name]});
+                    }
+                }
+            } else if(t == QXmlStreamReader::EndElement) {
+                if(depth == 2) {
+                    in_section = false;
+                }
+                depth--;
+            }
+        }
+        if(xml.hasError()) {
+            qDebug() << "Airframe file not read, written from the document:" << xml.errorString();
+            text.clear();
+        } else {
+            static const QRegularExpression value_re("(\\bvalue\\s*=\\s*)([\"'])(.*?)\\2",
+                                                     QRegularExpression::DotMatchesEverythingOption);
+            for(int i = edits.size() - 1; i >= 0; i--) {
+                auto &e = edits[i];
+                QString tag = text.mid(e.start, e.end - e.start);
+                auto m = value_re.match(tag);
+                if(!m.hasMatch()) {
+                    continue;
+                }
+                QString v = e.value.toHtmlEscaped();
+                if(m.captured(2) == "'") {
+                    v.replace("&quot;", "\"");
+                }
+                tag.replace(m.capturedStart(3), m.capturedLength(3), v);
+                text.replace(e.start, e.end - e.start, tag);
+            }
+        }
+    }
+    if(text.isEmpty()) {
+        text = doc.toString();
+    }
+
     QFile file(filename);
-    if( !file.open( QIODevice::WriteOnly | QIODevice::Text ) )
+    if( !file.open( QIODevice::WriteOnly ) )
     {
         qDebug( "Failed to open file for writing." );
         return;
     }
-    QTextStream stream( &file );
-    stream << doc.toString();
+    file.write(text.toUtf8());
     file.close();
 }
 

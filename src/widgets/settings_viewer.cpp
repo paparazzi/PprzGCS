@@ -1096,7 +1096,7 @@ SettingSaver::SettingSaver(QString ac_id, QWidget *parent) :
             QFile::copy(path, path.left(path.length() - 4) + suffix);
         }
         airframe->setParams(changed_params());
-        airframe->saveSettings(file);
+        airframe->saveSettings(file, path);     // only the values change in the file
         accept();
     };
 
