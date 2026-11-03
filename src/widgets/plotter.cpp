@@ -6,7 +6,7 @@
 #include <QDebug>
 
 namespace {
-const qint64 KEEP_MS = 16 * 60 * 1000;      // the values kept: the longest time window, and a bit
+const qint64 KEEP_MS = 61 * 60 * 1000;      // the values kept: the longest time window (60 min), and a bit
 const QColor BLUE(0x1d5fc9), GREEN(0x1f7a3f), ORANGE(0xb54708), RED(0xb42318), GREY(0x8c959f),
              PURPLE(0x6639ba), MAGENTA(0xbf3989);
 
@@ -19,6 +19,26 @@ const QString SPEED = "ground:FLIGHT_PARAM:speed";
 const QString AIRSPEED = "ground:FLIGHT_PARAM:airspeed";
 const QString AGL = "ground:FLIGHT_PARAM:agl";
 const QString TARGET_AGL = "ground:NAV_STATUS:target_agl";  // target_alt (MSL) above the ground
+const QString ROLL = "attitude:roll", PITCH = "attitude:pitch", YAW = "attitude:yaw";     // deg
+
+/// The telemetry messages received from each aircraft (for "Other message field"): one listener
+/// for all the plotters
+QHash<QString, QSet<QString>>& seenTelemetry() {
+    static QHash<QString, QSet<QString>> seen;
+    static bool bound = false;
+    if(!bound) {
+        bound = true;
+        auto dict = PprzDispatcher::get()->getDict();
+        for(auto &def: dict->getMsgsForClass("telemetry")) {
+            QString name = def.getName();
+            PprzDispatcher::get()->bind(name, qApp, [name](QString sender, pprzlink::Message msg) {
+                (void)msg;
+                seen[sender].insert(name);
+            });
+        }
+    }
+    return seen;
+}
 
 /// A numeric field of a message (an element of an array field with index >= 0)
 std::optional<double> fieldValue(pprzlink::Message& msg, const QString& field, int index) {
@@ -220,6 +240,41 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
         top->addWidget(b);
         window_buttons.append(b);
     }
+    // a time window of choice (1 to 60 min)
+    custom_button = new QPushButton("Custom", this);
+    custom_button->setObjectName("plot_window");
+    custom_button->setCheckable(true);
+    custom_button->setCursor(Qt::PointingHandCursor);
+    custom_button->setToolTip("Another time window (1 to 60 min)");
+    connect(custom_button, &QPushButton::clicked, this, [=, this]() {
+        custom_button->setChecked(!window_is_preset());
+        auto menu = new QMenu(this);
+        menu->setAttribute(Qt::WA_DeleteOnClose);
+        auto w = new QWidget(menu);
+        auto h = new QHBoxLayout(w);
+        h->setContentsMargins(10, 6, 10, 6);
+        auto spin = new QSpinBox(w);
+        spin->setRange(1, 60);
+        spin->setSuffix(" min");
+        spin->setValue(static_cast<int>(window_ms / 60000));
+        auto ok = new QPushButton("Show", w);
+        h->addWidget(spin);
+        h->addWidget(ok);
+        auto wa = new QWidgetAction(menu);
+        wa->setDefaultWidget(w);
+        menu->addAction(wa);
+        auto apply = [=, this]() {
+            setWindow(spin->value() * 60000LL);
+            save();
+            menu->close();
+        };
+        connect(ok, &QPushButton::clicked, menu, apply);
+        connect(spin, &QSpinBox::editingFinished, menu, [=]() { if(spin->hasFocus()) apply(); });
+        menu->popup(custom_button->mapToGlobal(QPoint(0, custom_button->height())));
+        spin->setFocus();
+        spin->selectAll();
+    });
+    top->addWidget(custom_button);
     lay->addLayout(top);
 
     // the plots, then + Add plot
@@ -242,6 +297,11 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
     add_row->setContentsMargins(4, 6, 4, 4);
     add_row->addWidget(add);
     add_row->addStretch(1);
+    cursor_label = new QLabel(content);
+    cursor_label->setObjectName("card_muted");
+    cursor_label->setMinimumWidth(cursor_label->fontMetrics().horizontalAdvance("at 00:00:00") + 4);
+    cursor_label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    add_row->addWidget(cursor_label);
     outer->addLayout(add_row);
     lay->addWidget(content, 1);
 
@@ -253,6 +313,7 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
         "QToolButton#plot_title::menu-indicator {image: none; width: 0;}"
         "QToolButton#plot_close {border: 0; background: transparent;}");
 
+    seenTelemetry();     // (listens to the telemetry, for "Other message field")
     // the presets: recorded from the start
     PprzDispatcher::get()->bind("ENGINE_STATUS", this, [=, this](QString, pprzlink::Message msg) {
         QString id;
@@ -269,24 +330,55 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
         record(BAT, bat, t);
         record(AMP, amp, t);
         record(THROTTLE, throttle, t);
-        if(!energy_msg) {
-            record(POWER, bat * amp, t);    // without the ENERGY message
-        }
+        record(POWER, bat * amp, t);    // (the ENERGY message, when sent, replaces it)
         record(ENERGY, charge * 1000., t);
     });
-    // the power measured by the aircraft (telemetry ENERGY, with the energy module): used when sent
-    PprzDispatcher::get()->bind("ENERGY", this, [=, this](QString sender, pprzlink::Message msg) {
-        if(sender != this->ac_id) {     // (telemetry: from the aircraft itself)
-            return;
-        }
-        float power;
-        try {
-            msg.getField("power", power);
-        } catch(std::exception&) {
-            return;
-        }
-        energy_msg = true;
-        record(POWER, power, QDateTime::currentMSecsSinceEpoch());
+    // telemetry, when the aircraft sends it: faster than the ground messages (1 Hz)
+    auto telemetry = [=, this](QString name, std::function<void(pprzlink::Message&, qint64)> cb) {
+        PprzDispatcher::get()->bindOptional(name, this, [=, this](QString sender, pprzlink::Message msg) {
+            if(sender == this->ac_id) {
+                try {
+                    cb(msg, QDateTime::currentMSecsSinceEpoch());
+                } catch(std::exception&) {
+                }
+            }
+        });
+    };
+    telemetry("ENERGY", [=, this](pprzlink::Message& msg, qint64 t) {
+        float voltage, current, power;
+        msg.getField("voltage", voltage);
+        msg.getField("current", current);
+        msg.getField("power", power);
+        record(BAT, voltage, t, 1);
+        record(AMP, current, t, 1);
+        record(POWER, power, t, 1);
+    });
+    telemetry("ATTITUDE", [=, this](pprzlink::Message& msg, qint64 t) {
+        float phi, theta, psi;
+        msg.getField("phi", phi);
+        msg.getField("theta", theta);
+        msg.getField("psi", psi);
+        record(ROLL, qRadiansToDegrees(phi), t, 2);
+        record(PITCH, qRadiansToDegrees(theta), t, 2);
+        record(YAW, fmod(qRadiansToDegrees(psi) + 360., 360.), t, 2);
+    });
+    telemetry("ROTORCRAFT_FP", [=, this](pprzlink::Message& msg, qint64 t) {
+        int32_t phi, theta, psi, veast, vnorth;
+        msg.getField("phi", phi);
+        msg.getField("theta", theta);
+        msg.getField("psi", psi);
+        msg.getField("veast", veast);
+        msg.getField("vnorth", vnorth);
+        const double att = 0.0139882, spd = 0.0000019;
+        record(ROLL, phi * att, t, 1);
+        record(PITCH, theta * att, t, 1);
+        record(YAW, fmod(psi * att + 360., 360.), t, 1);
+        record(SPEED, std::hypot(veast * spd, vnorth * spd), t, 1);
+    });
+    telemetry("AIRSPEED", [=, this](pprzlink::Message& msg, qint64 t) {
+        float airspeed;
+        msg.getField("airspeed", airspeed);
+        record(AIRSPEED, airspeed, t, 1);
     });
     PprzDispatcher::get()->bind("FLIGHT_PARAM", this, [=, this](QString, pprzlink::Message msg) {
         QString id;
@@ -295,7 +387,13 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
             return;
         }
         qint64 t = QDateTime::currentMSecsSinceEpoch();
-        float speed, airspeed, agl, alt;
+        float speed, airspeed, agl, alt, roll, pitch, heading;
+        msg.getField("roll", roll);
+        msg.getField("pitch", pitch);
+        msg.getField("heading", heading);
+        record(ROLL, roll, t);
+        record(PITCH, pitch, t);
+        record(YAW, fmod(heading + 360., 360.), t);
         msg.getField("speed", speed);
         msg.getField("airspeed", airspeed);
         msg.getField("agl", agl);
@@ -318,9 +416,9 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
         record(TARGET_AGL, target_alt - (last_alt - last_agl), QDateTime::currentMSecsSinceEpoch());
     });
 
-    // the plots move along with the time, once a second
+    // the plots move along with the time
     refresh = new QTimer(this);
-    refresh->setInterval(1000);
+    refresh->setInterval(200);     // smooth enough, for the telemetry rates
     connect(refresh, &QTimer::timeout, this, [=, this]() {
         if(isVisible()) {
             for(auto &r: rows) {
@@ -340,7 +438,13 @@ Plotter::Plotter(QString ac_id, QWidget *parent) : QWidget(parent),
     });
 }
 
-void Plotter::record(QString series, double v, qint64 t) {
+/// A value from a source of a level: the ground messages 0, telemetry higher (faster). Once a
+/// higher level was received for a series, the lower ones are not used anymore.
+void Plotter::record(QString series, double v, qint64 t, int level) {
+    if(level < best_level.value(series, 0)) {
+        return;
+    }
+    best_level[series] = level;
     auto &d = data[series];
     d.append({t, v});
     while(!d.isEmpty() && d.first().t < t - KEEP_MS) {
@@ -389,6 +493,11 @@ PlotDef Plotter::preset(QString id) {
         d.title = "Speed";
         d.unit = "m/s";
         d.lines = {{SPEED, "ground", BLUE, false, 1}, {AIRSPEED, "air", GREEN, false, 1}};
+    } else if(id == "attitude") {
+        d.title = "Attitude";
+        d.unit = QString::fromUtf8("\u00b0");
+        d.lines = {{ROLL, "roll", BLUE, false, 0}, {PITCH, "pitch", GREEN, false, 0},
+                   {YAW, "yaw", GREY, true, 0, true, 0, 360}};
     } else if(id == "height") {
         d.title = "Height";
         d.unit = "m";
@@ -503,6 +612,10 @@ void Plotter::setWindow(qint64 ms) {
     for(auto b: window_buttons) {
         b->setChecked(b->property("ms").toLongLong() == ms);
     }
+    if(custom_button != nullptr) {
+        custom_button->setChecked(!window_is_preset());
+        custom_button->setText(window_is_preset() ? QString("Custom") : QString("%1 min").arg(ms / 60000));
+    }
     for(auto &r: rows) {
         r.chart->update();
     }
@@ -542,14 +655,43 @@ QMenu* Plotter::plotMenu(std::function<void(QString)> chosen) {
         connect(a, &QAction::triggered, this, [=]() { chosen(id); });
     }
     menu->addSeparator();
+    // the fields of the telemetry messages received from this aircraft
     auto other = menu->addMenu("Other message field");
+    auto names = seenTelemetry().value(ac_id).values();
+    std::sort(names.begin(), names.end());
+    if(names.isEmpty()) {
+        other->addAction("No telemetry received yet")->setEnabled(false);
+    }
     auto msg_dict = PprzDispatcher::get()->getDict();
-    for(auto &def: msg_dict->getMsgsForClass("ground")) {
-        auto msg_menu = other->addMenu(def.getName());
-        for(size_t i = 0; i < def.getNbFields(); ++i) {
-            auto f = def.getField(static_cast<int>(i));
+    for(auto &name: names) {
+        std::optional<pprzlink::MessageDefinition> def;
+        try {
+            def = msg_dict->getDefinition(name);
+        } catch(std::exception&) {
+            continue;
+        }
+        QMenu* msg_menu = nullptr;
+        for(size_t i = 0; i < def->getNbFields(); ++i) {
+            auto f = def->getField(static_cast<int>(i));
+            auto t = f.getType();
+            if(t.getBaseType() == pprzlink::BaseType::STRING || t.getBaseType() == pprzlink::BaseType::CHAR) {
+                continue;
+            }
+            if(msg_menu == nullptr) {
+                msg_menu = other->addMenu(name);
+            }
+            QString series = "telemetry:" + name + ":" + f.getName();
+            if(t.isArray()) {
+                // the elements of a fixed array (up to 16)
+                size_t n = t.getArraySize();
+                for(size_t k = 0; k < n && k < 16; k++) {
+                    QString se = series + QString("[%1]").arg(k);
+                    auto a = msg_menu->addAction(QString("%1[%2]").arg(f.getName()).arg(k));
+                    connect(a, &QAction::triggered, this, [=]() { chosen(se); });
+                }
+                continue;
+            }
             auto a = msg_menu->addAction(f.getName());
-            QString series = "ground:" + def.getName() + ":" + f.getName();
             connect(a, &QAction::triggered, this, [=]() { chosen(series); });
         }
     }
@@ -582,6 +724,7 @@ void Plotter::rebuildRows() {
         head->addStretch(1);
         auto value = new QLabel(w);
         value->setTextFormat(Qt::RichText);
+        value->setFixedHeight(QFontMetrics(value->font()).height() + 8);     // the same with or without a value
         head->addWidget(value);
         if(plot_ids.size() > 1) {
             auto close = new QToolButton(w);
@@ -614,7 +757,9 @@ void Plotter::rebuildRows() {
 /// The values shown: at the moment under the mouse, or the last ones
 void Plotter::updateValues() {
     QString name = AircraftManager::get()->aircraftExists(ac_id) ? AircraftManager::get()->getAircraft(ac_id)->name() : ac_id;
-    status->setText(cursor_time >= 0 ? name + QString::fromUtf8(" · at ") + QDateTime::fromMSecsSinceEpoch(cursor_time).toString("HH:mm:ss") : name);
+    status->setText(name);
+    // the moment under the mouse: below the plots, in its own place (nothing moves)
+    cursor_label->setText(cursor_time >= 0 ? "at " + QDateTime::fromMSecsSinceEpoch(cursor_time).toString("HH:mm:ss") : QString());
     for(auto &r: rows) {
         QStringList parts;
         for(auto &l: r.def.lines) {

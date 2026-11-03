@@ -40,7 +40,8 @@ StackContainer::StackContainer(std::function<QWidget*(QString, QWidget*)> constr
                 }
             });
 
-    setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    // its preferred size by default, larger with the card or tab around it (resized): not fixed
+    setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
 }
 
 void StackContainer::handleNewAC(QString ac_id) {

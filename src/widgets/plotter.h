@@ -81,7 +81,8 @@ protected:
 
 private:
     PlotDef preset(QString id);
-    QStringList presetIds() const { return {"battery", "current", "power", "energy", "speed", "height"}; }
+    QStringList presetIds() const { return {"battery", "current", "power", "energy", "speed", "height", "attitude"}; }
+    bool window_is_preset() const { return window_ms == 60000 || window_ms == 300000 || window_ms == 900000; }
     PlotDef fieldPlot(QString series, int index = -1);
     void addPlot(QString id, int at = -1);
     void setPlot(int row, QString id);
@@ -90,7 +91,7 @@ private:
     void updateValues();
     void setWindow(qint64 ms);
     void save();
-    void record(QString series, double v, qint64 t);
+    void record(QString series, double v, qint64 t, int level = 0);
     void listen(QString series, int index = -1);
     QMenu* plotMenu(std::function<void(QString)> chosen);
 
@@ -100,7 +101,7 @@ private:
     QMap<QString, double> scales;           // of the message fields (layout or dropped)
     double last_alt = 0, last_agl = 0;      // for the target height (target_alt is MSL)
     bool has_alt = false;
-    bool energy_msg = false;                // the power from the ENERGY message (not bat * amp)
+    QHash<QString, int> best_level;         // the fastest source received for each series
 
     QStringList plot_ids;                   // the plots shown, top to bottom
     struct Row { QWidget* widget; QToolButton* title; QLabel* value; PlotChart* chart; PlotDef def; };
@@ -109,6 +110,8 @@ private:
     qint64 window_ms = 5 * 60 * 1000;
     qint64 cursor_time = -1;
     QLabel* status;
+    QLabel* cursor_label;
+    QPushButton* custom_button = nullptr;
     QList<QPushButton*> window_buttons;
     QVBoxLayout* rows_layout;
     QTimer* refresh;
