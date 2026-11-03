@@ -151,7 +151,7 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
 
     /////////// second row: values ///////////
     auto row2 = new QGridLayout();
-    row2->setHorizontalSpacing(4);
+    row2->setHorizontalSpacing(10);
     row2->setVerticalSpacing(0);
 
     QLabel* bat_caption;
@@ -217,16 +217,11 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     throttle_caption->setText("Throttle");
     th_cell->setAttribute(Qt::WA_TransparentForMouseEvents);
     row2->addWidget(th_cell, 0, 3);
+    // the values next to each other with the same small gap; the spare width after them, the
+    // kill button on the right edge
+    row2->setColumnStretch(4, 1);
     if(kill_button != nullptr) {
-        // next to the throttle: the first line keeps its room for the block name
-        row2->addWidget(kill_button, 0, 4, Qt::AlignRight | Qt::AlignVCenter);
-    }
-    // the last column on the right edge, under the time
-    for(auto l: {throttle_caption, throttle_label}) {
-        l->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-    }
-    for(int i=0; i<4; i++) {
-        row2->setColumnStretch(i, 1);
+        row2->addWidget(kill_button, 0, 5, Qt::AlignRight | Qt::AlignVCenter);
     }
     compact_icons = new QHBoxLayout();
     compact_icons->setSpacing(2);
