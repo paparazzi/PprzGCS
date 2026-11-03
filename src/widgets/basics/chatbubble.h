@@ -4,10 +4,11 @@
 #include <QWidget>
 #include <QTime>
 #include <QLabel>
+#include <QVBoxLayout>
 
 /**
- * One chat message: a tag with the full sender name in its aircraft color, and the text, which
- * wraps under itself. The time is the tooltip. Warnings (low, lost, fail, ...) are highlighted.
+ * The messages of one sender in a row: a tag with the name in its aircraft color, the messages
+ * below it, a line each. The time is the tooltip. Warnings (low, lost, fail, ...) are tinted lines.
  */
 class ChatBubble : public QWidget
 {
@@ -34,8 +35,7 @@ private:
     QString _category;
     QTime chat_time;
     QLabel* tag;
-    QLabel* message;
-    QStringList lines;
+    QVBoxLayout* lines_layout;
     QString _level;
 };
 

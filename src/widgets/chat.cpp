@@ -298,8 +298,7 @@ void Chat::addMessage(QString txt, QString source, QString dst, bool sent) {
     if(ui->scroll_widget->layout()->count() > 0) {
         auto last = ui->scroll_widget->layout()->itemAt(ui->scroll_widget->layout()->count()-1);
         auto cb = dynamic_cast<ChatBubble*>(last->widget());
-        if(cb != nullptr && cb->getSource() == source && cb->getDest() == dst && cb->getTime().secsTo(QTime::currentTime()) < 5 &&
-           cb->currentLevel() == ChatBubble::level(txt)){   // a warning gets its own row
+        if(cb != nullptr && cb->getSource() == source && cb->getDest() == dst){   // the name only again when the sender changes
             cb->addText(txt);
             QTimer::singleShot(0, this, &Chat::fitMessages);
             return;

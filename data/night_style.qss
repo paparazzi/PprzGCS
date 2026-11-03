@@ -561,18 +561,18 @@ QPushButton#notification_more {
     font-weight: bold;
 }
 
-/* Chat: a row per message, warnings highlighted, own messages in blue */
-#chat_row[level="warning"] {
-    background-color: #2a2214;
+/* Chat: a row per sender, warnings and errors tinted lines, own messages in blue */
+QLabel#chat_text {
+    padding: 0 4px;
+    border-radius: 4px;
 }
-#chat_row[level="warning"] QLabel#chat_text {
+QLabel#chat_text[level="warning"] {
+    background-color: #2a2214;
     color: #f2c46d;
     font-weight: bold;
 }
-#chat_row[level="alarm"] {
+QLabel#chat_text[level="alarm"] {
     background-color: #3a1a18;
-}
-#chat_row[level="alarm"] QLabel#chat_text {
     color: #ff8a80;
     font-weight: bold;
 }
