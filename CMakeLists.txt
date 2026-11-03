@@ -33,7 +33,17 @@ execute_process(
     OUTPUT_VARIABLE PPRZGCS_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 message("PPRZGCS_VERSION set to ${PPRZGCS_VERSION}")
-add_definitions(-DPPRZGCS_VERSION="${PPRZGCS_VERSION}")
+# in a header only main.cpp includes, rewritten only when the version changes (as a definition
+# for all files, every new commit compiled everything again)
+configure_file(${CMAKE_SOURCE_DIR}/src/pprzgcs_version.h.in ${CMAKE_BINARY_DIR}/version/pprzgcs_version.h @ONLY)
+
+# ccache when installed: a file built before (e.g. after switching branches) comes from its cache
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    message("ccache: ${CCACHE_PROGRAM}")
+    set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+endif()
 
 option(SPEECH "Enable speech" OFF)
 option(GRPC "Enable GRPC" OFF)
@@ -96,6 +106,7 @@ include_directories(
 
 
 add_executable(${PROJECT_NAME} ${SOURCE})
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_BINARY_DIR}/version)
 
 if(${GRPC})
     add_dependencies(
