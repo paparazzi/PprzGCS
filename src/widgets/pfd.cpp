@@ -18,6 +18,7 @@ static const QColor SYMBOL(0xffc400);
 Pfd::Pfd(QWidget *parent) : QWidget(parent), current_ac("")
 {
     earth_view = getAppSettings().value("pfd/ground_view", false).toBool();
+    setMinimumSize(minimumSizeHint());     // the tapes and the horizon need room (also in a splitter)
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &Pfd::changeCurrentAC);
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &Pfd::updateEulers);
 
@@ -180,7 +181,8 @@ void Pfd::paintAttitude(QPainter& p, QRectF r, float roll, float pitch, QColor a
     p.save();
     p.translate(c);
     if(earth_view) {
-        double dy = qBound(-r.height() / 2 + 10, -pitch * px_per_deg, r.height() / 2 - 10);
+        double lim = qMax(0.0, r.height() / 2 - 10);
+        double dy = qBound(-lim, -pitch * px_per_deg, lim);
         p.translate(0, dy);
         p.rotate(roll);
     }
@@ -319,7 +321,7 @@ void Pfd::paintAltitude(QPainter& p, QRectF r, const Eulers& e, bool valid) {
             float target_alt = 0;
             nav->getField("target_alt", target_alt);
             double target_agl = target_alt - (e.alt - e.agl);
-            double ty = qBound(r.top() + 4, cy - (target_agl - h) * px_per_m, r.bottom() - 4);
+            double ty = qBound(r.top() + 4, cy - (target_agl - h) * px_per_m, qMax(r.top() + 4, r.bottom() - 4));
             QPolygonF tri;
             tri << QPointF(r.right(), ty - 6) << QPointF(r.right() - 9, ty) << QPointF(r.right(), ty + 6);
             p.setPen(Qt::NoPen);
@@ -478,6 +480,11 @@ void Pfd::contextMenuEvent(QContextMenuEvent* event) {
 QSize Pfd::sizeHint() const
 {
     return QSize(380, 320);
+}
+
+int Pfd::heightForWidth(int w) const {
+    // the attitude is square: width - the speed and height tapes, + the heading tape and values
+    return qMax(minimumSizeHint().height(), w - 56);
 }
 
 QSize Pfd::minimumSizeHint() const
