@@ -73,7 +73,7 @@ void set_app_settings() {
 
     default_setting("map/tiles_path", appConfig()->value("USER_DATA_PATH").toString() + "/map");
 
-    default_setting("map/aircraft/track_size", 20);
+    default_setting("map/aircraft/track_seconds", 60);
     default_setting("map/aircraft_status_icons", false);
     default_setting("settings/rows_open", false);
     default_setting("strips/status_icons", true);
@@ -135,7 +135,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     cb = addSetting("Aircraft size", "map/aircraft/size", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
-    cb = addSetting("Track length (points)", "map/aircraft/track_size", w_map, l_map, row, Type::INT);
+    cb = addSetting("Track length (s)", "map/aircraft/track_seconds", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
     cb = addSetting("Track width", "map/aircraft/track_width", w_map, l_map, row, Type::INT);
     callbacks.append(cb);

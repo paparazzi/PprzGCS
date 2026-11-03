@@ -1,3 +1,4 @@
+#include <QDateTime>
 #include "coordinatestransform.h"
 #include "aircraft_item.h"
 #include "mapwidget.h"
@@ -120,11 +121,23 @@ void AircraftItem::setPosition(Point2DLatLon pt) {
         CoordinatesTransform::get()->distance_azimut(track_points.last(), pt, distance, azimut);
         if(distance > 1000) {
             track_points.clear();
+            track_times.clear();
         }
     }
-    track_points.append(pt);
-    if(track_points.size() > settings.value("map/aircraft/track_size").toInt()) {
+    // the track over the last seconds; a point every half second at most (the position comes
+    // at the telemetry rate), the newest one follows the aircraft
+    qint64 now = QDateTime::currentMSecsSinceEpoch();
+    if(track_times.size() >= 2 && now - track_times[track_times.size()-2] < 500) {
+        track_points.last() = pt;
+        track_times.last() = now;
+    } else {
+        track_points.append(pt);
+        track_times.append(now);
+    }
+    qint64 keep_ms = static_cast<qint64>(settings.value("map/aircraft/track_seconds").toDouble() * 1000);
+    while(track_times.size() > 2 && now - track_times.first() > keep_ms) {
         track_points.removeFirst();
+        track_times.removeFirst();
     }
 
     emit itemChanged();
@@ -132,6 +145,7 @@ void AircraftItem::setPosition(Point2DLatLon pt) {
 
 void AircraftItem::clearTrack() {
     track_points.clear();
+    track_times.clear();
     emit itemChanged();
 }
 
