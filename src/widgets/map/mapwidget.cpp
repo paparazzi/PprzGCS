@@ -1,4 +1,5 @@
 #include "mapwidget.h"
+#include <QTextDocument>
 #include "panels.h"
 #include <cmath>
 #include "map_notifications.h"
@@ -1102,21 +1103,33 @@ void MapWidget::arrangeWaypointLabels() {
         double s = wp.item->label()->scale();     // the waypoint scale (set with its label)
         double w = wp.size.width(), h = wp.size.height();
         // upper right (the default), lower right, upper left, lower left, above, below, right,
-        // left; then further away, one name height at a time, on the four sides (many
-        // waypoints at the same place: a name each)
+        // left; then a row further away on the four corners (many waypoints at the same place:
+        // a name each). None free: the first place, next to the waypoint
         QList<QPointF> offsets = {
             {4*s, -26*s}, {4*s, 0}, {-w - 4*s, -26*s}, {-w - 4*s, 0}, {-w/2, -h - 6*s}, {-w/2, 8*s},
             {10*s, -h/2}, {-w - 10*s, -h/2},
         };
-        for(int k = 1; k <= 6; k++) {
-            double dy = k * h * 0.8;
+        // (two rows at most: further away it is no longer clear which name is whose)
+        for(int k = 1; k <= 2; k++) {
+            double dy = k * h * 0.75;
             offsets.append({{4*s, -26*s - dy}, {4*s, dy}, {-w - 4*s, -26*s - dy}, {-w - 4*s, dy}});
         }
-        // the place it has now first: it stays there while that is free (no jumping around)
-        offsets.prepend(wp.item->labelOffset() * s);
+        const int near = 8;     // the places next to the waypoint (the others: further away)
+        // the place it has now first, if it is next to the waypoint: it stays there while that
+        // is free (no jumping around); a name placed further away comes back once there is room
+        QPointF current = wp.item->labelOffset() * s;
+        bool current_near = false;
+        for(int i = 0; i < near; i++) {
+            current_near = current_near || QLineF(current, offsets[i]).length() < 0.5;
+        }
+        if(current_near) {
+            offsets.prepend(current);
+        }
         QPointF chosen = offsets[0];
         QRectF chosen_rect;
-        for(auto &o: offsets) {
+        bool chosen_far = false;
+        for(int i = 0; i < offsets.size(); i++) {
+            auto &o = offsets[i];
             QRectF r(wp.center + rot.map(o), wp.size);
             QRectF rr = r.adjusted(w * 0.08, h * 0.15, -w * 0.08, -h * 0.15);   // the text, not its margins
             bool free = true;
@@ -1135,6 +1148,7 @@ void MapWidget::arrangeWaypointLabels() {
             if(free) {
                 chosen = o;
                 chosen_rect = rr;
+                chosen_far = i >= near + (current_near ? 1 : 0);
                 break;
             }
         }
@@ -1145,6 +1159,27 @@ void MapWidget::arrangeWaypointLabels() {
         wp.item->setLabelOffset(chosen / s);
         wp.item->label()->setPos(wp.center + rot.map(chosen));
         placed.append(chosen_rect);
+        // further away, or several waypoints at the same place: a thin line to its waypoint
+        // (which name is whose)
+        // (the waypoints with their name shown: not those of the other aircraft, without names)
+        int at_same_place = 0;
+        for(auto &o: wps) {
+            at_same_place += QLineF(o.center, wp.center).length() < 2 * s ? 1 : 0;
+        }
+        if(chosen_far || at_same_place > 1) {
+            // to the text itself (its box has a margin around it)
+            double dm = wp.item->label()->document()->documentMargin() * s;
+            QRectF text_rect = QRectF(wp.center + rot.map(chosen), wp.size).adjusted(dm, dm * 0.8, -dm, -dm * 0.8);
+            QPointF to(qBound(text_rect.left(), wp.center.x(), text_rect.right()),
+                       qBound(text_rect.top(), wp.center.y(), text_rect.bottom()));
+            QLineF line(wp.center, to);
+            if(line.length() > 6 * s) {
+                line.setP1(line.pointAt(5 * s / line.length()));   // from the edge of the marker
+            }
+            wp.item->setLabelLeader(line);
+        } else {
+            wp.item->setLabelLeader(QLineF());
+        }
     }
 }
 
@@ -1435,6 +1470,12 @@ void MapWidget::handleNewAC(QString ac_id) {
 }
 
 void MapWidget::removeAC(QString ac_id) {
+    hover_marked.removeIf([=](WaypointItem* w) { return w->acId() == ac_id; });
+    for(auto k: wp_followers.keys()) {
+        if(k->acId() == ac_id) {
+            wp_followers.remove(k);
+        }
+    }
     for(auto wpi: pending_moves.keys()) {
         if(wpi->acId() == ac_id) {
             clearPendingMove(wpi);
@@ -1517,6 +1558,32 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
     connect(wpi, &WaypointItem::waypointMoveFinished, this, dialog_move_waypoint);
 
     connect(wpi, &WaypointItem::itemDoubleClicked, this, dialog_move_waypoint);
+
+    // the mouse over a name: its waypoint marked; over a waypoint: the names of the waypoints at
+    // that place (which name is whose)
+    connect(wpi, &WaypointItem::waypointHovered, this, [=,this](bool hovered, bool on_name) {
+        for(auto w: hover_marked) {
+            w->setHoverMark(false);
+        }
+        hover_marked.clear();
+        // the other names faded while the mouse is over one (which is whose stands out)
+        for(auto mgr: ac_items_managers) {
+            for(auto w: mgr->getWaypointsItems()) {
+                w->setDimmed(hovered);
+            }
+        }
+        if(!hovered) {
+            return;
+        }
+        hover_marked = on_name ? QList<WaypointItem*>{wpi} : waypointsAt(wpi->scenePos());
+        if(!hover_marked.contains(wpi)) {
+            hover_marked.append(wpi);
+        }
+        for(auto w: hover_marked) {
+            w->setHoverMark(true);
+            w->setDimmed(false);
+        }
+    });
 
     // Ctrl held when pressed: the waypoints at the same place (of all aircraft) move along
     connect(wpi, &WaypointItem::waypointPressed, this, [=,this](QPointF scene_pos, bool ctrl) {

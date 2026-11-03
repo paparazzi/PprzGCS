@@ -72,6 +72,17 @@ void GraphicsText::setPill(bool p) {
     update();
 }
 
+void GraphicsText::setHoverMark(bool h) {
+    if(hover_mark == h) {
+        return;
+    }
+    if(!hover_mark) {
+        normal_color = defaultTextColor();
+    }
+    hover_mark = h;
+    setDefaultTextColor(h ? QColor(0xcfe6ff) : normal_color);
+}
+
 void GraphicsText::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
     if(!pill) {
         QGraphicsTextItem::paint(painter, option, widget);

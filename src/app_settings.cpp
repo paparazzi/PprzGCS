@@ -75,6 +75,8 @@ void set_app_settings() {
 
     default_setting("map/aircraft/track_seconds", 60);
     default_setting("map/aircraft_status_icons", false);
+    default_setting("map/waypoint_hover_mark", true);
+    default_setting("map/waypoint_hover_dim", false);
     default_setting("settings/rows_open", false);
     default_setting("strips/status_icons", true);
     default_setting("window/menu_title_bar", false);
@@ -140,6 +142,10 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     cb = addSetting("Track width", "map/aircraft/track_width", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
     cb = addSetting("Battery and link icons next to the aircraft", "map/aircraft_status_icons", w_map, l_map, row, Type::BOOL);
+    callbacks.append(cb);
+    cb = addSetting("Waypoints: under the mouse, their names marked in blue", "map/waypoint_hover_mark", w_map, l_map, row, Type::BOOL);
+    callbacks.append(cb);
+    cb = addSetting("Waypoints: under the mouse, the other names faded", "map/waypoint_hover_dim", w_map, l_map, row, Type::BOOL);
     callbacks.append(cb);
     finishTab(l_map, row);
     tabWidget->addTab(w_map, "Map");

@@ -1,5 +1,6 @@
 #ifndef WAYPOINTITEM_H
 #define WAYPOINTITEM_H
+#include <QGraphicsLineItem>
 
 #include "map_item.h"
 #include <QBrush>
@@ -14,6 +15,13 @@ class WaypointItem : public MapItem
     Q_PROPERTY(int size MEMBER m_size WRITE setSize)
 public:
     GraphicsText* label() {return graphics_text;}
+    /// a thin line from the name to the waypoint (the name placed further away), in the scene;
+    /// a null line: none
+    void setLabelLeader(QLineF scene_line);
+    /// its name and line in blue (linked to the waypoint under the mouse)
+    void setHoverMark(bool h);
+    /// its name faded (the mouse over another waypoint or name)
+    void setDimmed(bool d);
     /// where its name is, next to it (unscaled; chosen so that names do not overlap)
     QPointF labelOffset() {return label_offset;}
     void setLabelOffset(QPointF o) {label_offset = o;}
@@ -56,6 +64,8 @@ public:
 
 signals:
     void waypointPressed(QPointF scene_pos, bool ctrl);
+    /// the mouse over the point (on_name: over its name)
+    void waypointHovered(bool hovered, bool on_name);
     void waypointMoved(Point2DLatLon latlon_pos);
     void waypointMoveFinished();
     void waypointDoubleClicked();
@@ -72,6 +82,7 @@ private:
     int altitude;
     bool moving;
     bool raised = false;
+    QGraphicsLineItem* label_leader = nullptr;   // child of the name: shown with it
     int m_size;
 };
 

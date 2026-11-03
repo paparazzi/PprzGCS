@@ -78,6 +78,10 @@ void WaypointItem::addToMap(MapWidget* map) {
     map->scene()->addItem(graphics_text);
     // the name can be grabbed too: dragged, clicked and double clicked as the point
     graphics_text->installSceneEventFilter(point);
+    graphics_text->setAcceptHoverEvents(true);
+    // the mouse over the point or its name (the map marks what is linked to it)
+    connect(point, &GraphicsObject::hoverChanged, this, [=,this](bool h) { emit waypointHovered(h, false); });
+    connect(point, &GraphicsPoint::nameHoverChanged, this, [=,this](bool h) { emit waypointHovered(h, true); });
     connect(point, &GraphicsPoint::pointPressed, this, &WaypointItem::waypointPressed);
 
     connect(
@@ -120,6 +124,40 @@ void WaypointItem::setEditable(bool ed) {
 void WaypointItem::updateZValue() {
     point->setZValue(z_value + (raised ? 0.5 : 0.));
     graphics_text->setZValue(z_value + (raised ? 0.5 : 0.));
+}
+
+void WaypointItem::setLabelLeader(QLineF scene_line) {
+    if(scene_line.isNull()) {
+        if(label_leader != nullptr) {
+            label_leader->setVisible(false);
+        }
+        return;
+    }
+    if(label_leader == nullptr) {
+        label_leader = new QGraphicsLineItem(graphics_text);
+        QPen pen(QColor(255, 255, 255, 230), 1.5);
+        pen.setCosmetic(true);
+        label_leader->setPen(pen);
+    }
+    label_leader->setLine(QLineF(graphics_text->mapFromScene(scene_line.p1()),
+                                 graphics_text->mapFromScene(scene_line.p2())));
+    label_leader->setVisible(true);
+}
+
+void WaypointItem::setDimmed(bool d) {
+    graphics_text->setOpacity(d ? 0.6 : 1.0);    // its line too (a child of the name)
+}
+
+void WaypointItem::setHoverMark(bool h) {
+    graphics_text->setHoverMark(h);
+    point->setHoverMark(h);
+    graphics_text->setZValue(z_value + (h ? 1.0 : raised ? 0.5 : 0.));
+    if(label_leader != nullptr) {
+        QPen pen = label_leader->pen();
+        pen.setColor(h ? QColor(0x4da3ff) : QColor(255, 255, 255, 230));
+        pen.setWidthF(h ? 2.0 : 1.5);
+        label_leader->setPen(pen);
+    }
 }
 
 void WaypointItem::setRaised(bool r) {

@@ -19,6 +19,7 @@ GraphicsPoint::GraphicsPoint(int size, PprzPalette palette, QObject *parent) :
     halfSize(size), move_state(PMS_IDLE), animation_couter(0)
 {
     current_color = COLOR_IDLE;
+    setAcceptHoverEvents(true);     // its name marked while hovering
 
     animation_timer->setInterval(500);
     connect(animation_timer, &QTimer::timeout, this, [=,this]()
@@ -39,6 +40,14 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
     (void)widget;
     auto settings = getAppSettings();
 
+    if(hover_mark && style == DEFAULT) {
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        painter->setPen(QPen(QColor(0x4da3ff), 2.5));
+        painter->setBrush(Qt::NoBrush);
+        painter->drawEllipse(QPointF(0, 0), halfSize + 2, halfSize + 2);
+        painter->restore();
+    }
     if(animation == WP_MOVING) {
         painter->rotate(animation_couter * 45 + 1);
     }
@@ -144,8 +153,22 @@ void GraphicsPoint::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     emit pointPressed(event->scenePos(), event->modifiers() & Qt::ControlModifier);
 }
 
+void GraphicsPoint::hoverEnterEvent(QGraphicsSceneHoverEvent* event) {
+    QGraphicsItem::hoverEnterEvent(event);
+    emit hoverChanged(true);
+}
+
+void GraphicsPoint::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
+    QGraphicsItem::hoverLeaveEvent(event);
+    emit hoverChanged(false);
+}
+
 bool GraphicsPoint::sceneEventFilter(QGraphicsItem* watched, QEvent* event) {
     (void)watched;
+    if(event->type() == QEvent::GraphicsSceneHoverEnter || event->type() == QEvent::GraphicsSceneHoverLeave) {
+        emit nameHoverChanged(event->type() == QEvent::GraphicsSceneHoverEnter);
+        return false;
+    }
     if(ignore_events) {
         return false;
     }
