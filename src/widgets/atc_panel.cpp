@@ -158,7 +158,7 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
     };
 
     // values ("---" without data)
-    QString name = "---", heading = "---", speed = "---", alt = "---", alt_info, time = "---", bat;
+    QString name = "---", heading = "---", speed = "---", alt = "---", alt_unit = "ft", alt_info, time = "---", bat;
     QString home = "---";
     bool have_ac = AircraftManager::get()->aircraftExists(current_ac);
     if(have_ac) {
@@ -203,13 +203,17 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
             case FL:
                 if(baro) {
                     ft = pressureAltFt(ad.pressure, STD_P);
-                    alt_info = QString("FL%1").arg(std::lround(ft / 100.), 3, 10, QChar('0'));
+                    alt_info = QString("%1 ft on 1013 hPa").arg(std::lround(ft / 10.) * 10);
                 } else {
                     alt_info = "no pressure";
                 }
                 break;
             }
-            if(!std::isnan(ft)) {
+            if(!std::isnan(ft) && alt_ref == FL) {
+                // flight level: hundreds of ft on the standard pressure, 3 digits
+                alt = QString("FL%1").arg(qMax(0L, std::lround(ft / 100.)), 3, 10, QChar('0'));
+                alt_unit = "";
+            } else if(!std::isnan(ft)) {
                 alt = QString::number(std::lround(ft / 10.) * 10);   // what is said on the radio
             }
 
@@ -276,7 +280,7 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
 
     row("HEADING (track)", heading, "");
     row("SPEED (ground)", speed, "kt");
-    QRectF alt_row = row("ALTITUDE", alt, "ft");
+    QRectF alt_row = row("ALTITUDE", alt, alt_unit);
 
     // altitude reference chips
     {
