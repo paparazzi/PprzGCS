@@ -768,3 +768,17 @@ QMenuBar QToolButton#window_close:hover {
     background: #d92d20;
     color: white;
 }
+
+/* The level of a notification in the settings (as at the top of the map) */
+QLabel#settings_level_alarm {
+    color: #b42318; background-color: rgb(253,232,230);
+    border: 1px solid #b42318; border-radius: 4px; padding: 0px 6px; font-size: 11px; font-weight: bold;
+}
+QLabel#settings_level_warning {
+    color: #8a4b00; background-color: rgb(255,244,224);
+    border: 1px solid #c27c0e; border-radius: 4px; padding: 0px 6px; font-size: 11px; font-weight: bold;
+}
+QLabel#settings_level_info {
+    color: #30363d; background-color: rgb(255,255,255);
+    border: 1px solid rgb(196,204,213); border-radius: 4px; padding: 0px 6px; font-size: 11px; font-weight: bold;
+}

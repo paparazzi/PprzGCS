@@ -158,6 +158,7 @@ private:
         QMetaObject::Connection conn;
     };
     QMap<WaypointItem*, PendingMove> pending_moves;
+    void watchWaypointMove(WaypointItem* wpi);
 
     // a dark layer over the imagery (map brightness), below everything drawn on the map
     QGraphicsRectItem* dim_rect = nullptr;

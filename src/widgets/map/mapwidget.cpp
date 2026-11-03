@@ -759,6 +759,18 @@ void MapWidget::configure(QDomElement ele) {
         });
     }
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, &MapWidget::watchAircraftStates);
+    // a rebooted aircraft (reloaded meanwhile: after that), until dismissed
+    PprzDispatcher::get()->bindOptional("AIRCRAFT_REBOOT", this, [=,this](QString sender, pprzlink::Message msg) {
+        (void)sender;
+        QString id, reason;
+        msg.getField("ac_id", id);
+        msg.getField("reason", reason);
+        QTimer::singleShot(500, this, [=,this]() {
+            notifications->setState("reboot:" + id, id, "Rebooted (" + reason.toLower().replace('_', ' ') + ")",
+                                    MapNotifications::ALARM);
+        });
+    });
+
     // the server: lost (alarm, until it answers again), or none at the start
     connect(PprzDispatcher::get(), &PprzDispatcher::serverStatusChanged, this, [=,this](bool ok) {
         if(ok) {
@@ -773,8 +785,9 @@ void MapWidget::configure(QDomElement ele) {
     });
     // an aircraft that is removed: its states go
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, [=,this](QString id) {
-        notifications->setState("bat:" + id, id, "", MapNotifications::INFO);
-        notifications->setState("link:" + id, id, "", MapNotifications::INFO);
+        for(auto kind: {"bat", "link", "gps", "mode", "kill", "rc", "home", "height"}) {
+            notifications->setState(QString(kind) + ":" + id, id, "", MapNotifications::INFO);
+        }
     });
     for(auto ac: AircraftManager::get()->getAircrafts()) {
         watchAircraftStates(ac->getId());
@@ -1200,6 +1213,18 @@ void MapWidget::showPendingMove(WaypointItem* wpi) {
     updatePendingMove(wpi);
 }
 
+/// The move of a waypoint sent: a warning when the aircraft did not confirm it after 5 s
+void MapWidget::watchWaypointMove(WaypointItem* wpi) {
+    QPointer<WaypointItem> w = wpi;
+    QString key = "wp:" + wpi->acId() + ":" + wpi->waypoint()->getName();
+    QTimer::singleShot(5000, this, [=,this]() {
+        if(w && pending_moves.contains(w) && !w->isMoving()) {
+            notifications->setState(key, w->acId(), "Waypoint " + w->waypoint()->getName() + ": move not confirmed",
+                                    MapNotifications::WARNING);
+        }
+    });
+}
+
 void MapWidget::updatePendingMove(WaypointItem* wpi) {
     if(!pending_moves.contains(wpi)) {
         return;
@@ -1214,6 +1239,8 @@ void MapWidget::clearPendingMove(WaypointItem* wpi) {
     if(!pending_moves.contains(wpi)) {
         return;
     }
+    notifications->setState("wp:" + wpi->acId() + ":" + wpi->waypoint()->getName(), wpi->acId(), "",
+                            MapNotifications::INFO);
     auto pm = pending_moves.take(wpi);
     disconnect(pm.conn);
     scene()->removeItem(pm.marker);
@@ -1494,6 +1521,15 @@ void MapWidget::onMoveWaypointUi(Waypoint* wp, QString ac_id) {
                 wpi->setAnimate(false);
                 clearPendingMove(wpi);
                 emit AircraftManager::get()->waypoint_changed(wpi->getOriginalWaypoint(), ac_id);
+            }
+        }
+        return;
+    }
+    // sent to the aircraft: watched until it confirms it
+    if(ac_items_managers.contains(ac_id)) {
+        for(auto wpi: ac_items_managers[ac_id]->getWaypointsItems()) {
+            if(wpi->waypoint() == wp) {
+                watchWaypointMove(wpi);
             }
         }
     }
@@ -2395,6 +2431,91 @@ void MapWidget::watchAircraftStates(QString ac_id) {
         case AircraftWatcher::BatStatus::OK:
             n->setState("bat:" + ac_id, ac_id, "", MapNotifications::INFO);
             break;
+        }
+    });
+    // from the status messages: GPS fix, autopilot mode, kill, RC, distance from HOME, height
+    struct Seen { bool fix = false; bool rc = false; bool high = false; };
+    auto seen = std::make_shared<Seen>();
+    auto status = ac->getStatus();
+    auto agl_now = [=]() -> std::optional<float> {
+        auto fp = status->getMessage("FLIGHT_PARAM");
+        if(!fp) {
+            return std::nullopt;
+        }
+        float agl;
+        fp->getField("agl", agl);
+        return agl;
+    };
+    connect(status, &AircraftStatus::ap_status, this, [=]() {
+        auto msg = status->getMessage("AP_STATUS");
+        if(!n || !msg) {
+            return;
+        }
+        QString gps_mode, ap_mode, kill_mode;
+        msg->getField("gps_mode", gps_mode);
+        msg->getField("ap_mode", ap_mode);
+        msg->getField("kill_mode", kill_mode);
+        bool fix = gps_mode == "3D" || gps_mode == "DGPS" || gps_mode == "RTK";
+        if(fix) {
+            seen->fix = true;
+            n->setState("gps:" + ac_id, ac_id, "", MapNotifications::INFO);
+        } else if(seen->fix) {     // lost (not: no fix yet at the start)
+            n->setState("gps:" + ac_id, ac_id, "GPS fix lost (" + gps_mode + ")", MapNotifications::ALARM);
+        }
+        static const QStringList safety = {"HOME", "FAILSAFE", "KILL", "NOGPS"};
+        n->setState("mode:" + ac_id, ac_id, "Autopilot in " + ap_mode,
+                    safety.contains(ap_mode) ? MapNotifications::ALARM : MapNotifications::INFO);
+        auto agl = agl_now();
+        bool killed = !(kill_mode == "OFF" || kill_mode.isEmpty());
+        n->setState("kill:" + ac_id, ac_id, QString("Throttle killed at %1 m").arg(agl.value_or(0), 0, 'f', 0),
+                    killed && agl.value_or(0) > 3 ? MapNotifications::ALARM : MapNotifications::INFO);
+    });
+    connect(status, &AircraftStatus::fly_by_wire, this, [=]() {
+        auto msg = status->getMessage("FLY_BY_WIRE");
+        if(!n || !msg) {
+            return;
+        }
+        QString rc_status;
+        msg->getField("rc_status", rc_status);
+        if(rc_status == "OK") {
+            seen->rc = true;
+            n->setState("rc:" + ac_id, ac_id, "", MapNotifications::INFO);
+        } else if(seen->rc) {      // lost (not: an aircraft flown without RC)
+            n->setState("rc:" + ac_id, ac_id, "RC lost", MapNotifications::WARNING);
+        }
+    });
+    connect(status, &AircraftStatus::flight_param, this, [=]() {
+        auto msg = status->getMessage("FLIGHT_PARAM");
+        if(!n || !msg || !AircraftManager::get()->aircraftExists(ac_id)) {
+            return;
+        }
+        auto fp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan();
+        double lat, lon;
+        float agl;
+        msg->getField("lat", lat);
+        msg->getField("long", lon);
+        msg->getField("agl", agl);
+        // further from HOME than the flight plan allows
+        auto home = fp->getWaypoint("HOME");
+        double max = fp->getMaxDistFromHome();
+        if(home != nullptr && max > 0) {
+            double d = 0, az = 0;
+            CoordinatesTransform::get()->distance_azimut(Point2DLatLon(home), Point2DLatLon(lat, lon), d, az);
+            n->setState("home:" + ac_id, ac_id, QString("%1 m from HOME (max %2 m)").arg(d, 0, 'f', 0).arg(max, 0, 'f', 0),
+                        d > max ? MapNotifications::WARNING : MapNotifications::INFO);
+        }
+        // below the safety height, once it flew above it
+        double safe = fp->getSecurityHeight();
+        if(safe > 0) {
+            if(agl > safe + 5) {
+                seen->high = true;
+            }
+            bool low = seen->high && agl < safe && agl > 0.5;
+            n->setState("height:" + ac_id, ac_id, QString("Height %1 m, below the safety height (%2 m)").arg(agl, 0, 'f', 0).arg(safe, 0, 'f', 0),
+                        low ? MapNotifications::WARNING : MapNotifications::INFO);
+            if(agl <= 0.5) {
+                seen->high = false;    // landed
+            }
         }
     });
     connect(watcher, &AircraftWatcher::link_status, this, [=](AircraftWatcher::LinkStatus ls) {

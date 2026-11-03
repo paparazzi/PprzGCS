@@ -1,5 +1,6 @@
 #include "map_notifications.h"
 #include "AircraftManager.h"
+#include "gcs_utils.h"
 
 static const int MAX_ROWS = 3;
 static const int MESSAGE_MS = 6000;
@@ -44,7 +45,36 @@ QString MapNotifications::senderName(QString sender, QColor* color) {
     return sender.left(1).toUpper() + sender.mid(1);
 }
 
+QList<MapNotifications::Kind> MapNotifications::kinds() {
+    return {
+        {"server", "Connection", "Server lost", "None at the start, or lost until it answers again", {"Warning", "Alarm"}, true},
+        {"link", "Connection", "Link lost", "Partly lost, then lost", {"Warning", "Alarm"}, true},
+        {"bat", "Aircraft", "Battery low", "Low, then critical", {"Warning", "Alarm"}, true},
+        {"gps", "Aircraft", "GPS fix lost", "After there was a 3D fix", {"Alarm"}, true},
+        {"mode", "Aircraft", "Safety mode", "HOME, FAILSAFE, KILL or NOGPS", {"Alarm"}, true},
+        {"kill", "Aircraft", "Throttle killed", "While flying, above 3 m", {"Alarm"}, true},
+        {"rc", "Aircraft", "RC lost", "Only after it was received", {"Warning"}, true},
+        {"reboot", "Aircraft", "Rebooted", "Until it is dismissed", {"Alarm"}, true},
+        {"home", "Flight", "Too far from HOME", "Beyond the max distance of the flight plan", {"Warning"}, true},
+        {"height", "Flight", "Below safety height", "While flying; also shows when landing", {"Warning"}, false},
+        {"wp", "Flight", "Waypoint not confirmed", "A move not confirmed after 5 s", {"Warning"}, true},
+        {"messages", "Other", "Messages", "From the aircraft and the server", {"Info"}, true},
+    };
+}
+
+bool MapNotifications::enabled(QString kind) {
+    for(auto &k: kinds()) {
+        if(k.key == kind) {
+            return getAppSettings().value("notify/" + kind, k.on).toBool();
+        }
+    }
+    return true;
+}
+
 void MapNotifications::message(QString sender, QString text) {
+    if(!enabled("messages")) {
+        return;
+    }
     auto now = QDateTime::currentDateTime();
     recent.append(now);
     while(!recent.isEmpty() && recent.first().msecsTo(now) > 5000) {
@@ -75,6 +105,9 @@ void MapNotifications::message(QString sender, QString text) {
 }
 
 void MapNotifications::setState(QString key, QString sender, QString text, Level level) {
+    if(level != INFO && !enabled(key.section(':', 0, 0))) {
+        level = INFO;   // switched off: as cleared
+    }
     for(int i=0; i<items.size(); i++) {
         auto &it = items[i];
         if(it.key != key) {

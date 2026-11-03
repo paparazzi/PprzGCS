@@ -20,10 +20,16 @@ public:
 
     /// A message (key: the sender, to merge repeats)
     void message(QString sender, QString text);
-    /// A warning or alarm that stays until cleared (key: e.g. "bat:5"); level INFO clears it
+    /// A warning or alarm that stays until cleared (key: e.g. "bat:5"); level INFO clears it.
+    /// Not shown when its kind (the key before ':') is switched off in the settings.
     void setState(QString key, QString sender, QString text, Level level);
 
     void reposition();
+    /// The kinds of notifications: their setting (notify/<kind>), their name, on by default
+    /// detail: when it shows (a line in the settings); levels: how it shows (Info, Warning, Alarm)
+    struct Kind { QString key; QString group; QString name; QString detail; QStringList levels; bool on; };
+    static QList<Kind> kinds();
+    static bool enabled(QString kind);
     /// Keep clear of this panel over the map (moves when it is shown, hidden or resized)
     void avoid(QWidget* panel);
 
