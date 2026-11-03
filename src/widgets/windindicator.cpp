@@ -21,6 +21,14 @@ WindIndicator::WindIndicator(QWidget *parent) : QWidget(parent),
     // no background of its own (themes give widgets one): the pill is drawn, anti-aliased
     setAttribute(Qt::WA_NoSystemBackground);
     setStyleSheet("WindIndicator {background: transparent;}");
+    setAttribute(Qt::WA_Hover);     // full opacity under the mouse, also without wind
+}
+
+bool WindIndicator::event(QEvent* e) {
+    if(e->type() == QEvent::HoverEnter || e->type() == QEvent::HoverLeave) {
+        update();
+    }
+    return QWidget::event(e);
 }
 
 void WindIndicator::resizeEvent(QResizeEvent *event) {
@@ -32,6 +40,12 @@ void WindIndicator::paintEvent(QPaintEvent *event) {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     int penWidth = 2;
+    // no wind known (yet) and the map not rotated: faded, until the mouse is over it
+    bool rotated = fabs(fmod(fmod(compass, 360.) + 360., 360.)) > 0.5 &&
+                   fabs(fmod(fmod(compass, 360.) + 360., 360.) - 360.) > 0.5;
+    if(!wind_data.contains(current_ac_id) && !rotated && !underMouse()) {
+        painter.setOpacity(0.35);
+    }
 
     // pill background, with a soft shadow and a thin border (contrast on any imagery)
     QRectF pill = QRectF(rect()).adjusted(2, 1, -2, -3);
