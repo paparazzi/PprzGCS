@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QMap>
+#include <QSet>
 #include "pprz_dispatcher.h"
 #include <optional>
 #include "aircraft_watcher.h"
@@ -26,6 +27,9 @@ public:
         double lon;     // deg
     };
     std::optional<InsRef> getInsRef() {return ins_ref_origin;}
+
+    /// a waypoint position received from the aircraft (WAYPOINT_MOVED) since it was loaded
+    void markWaypointReported(uint8_t wp_id) {reported_wps.insert(wp_id);}
 
 signals:
     void flight_param();
@@ -51,6 +55,11 @@ private:
 
     AircraftWatcher* watcher;
     std::optional<InsRef> ins_ref_origin;
+    QSet<uint8_t> reported_wps;     // waypoints whose position came from the aircraft
+
+    /// the flight plan waypoints defined relative to the origin (x/y), not yet reported by
+    /// the aircraft, placed from the new origin (they move with it onboard)
+    void placeLocalWaypoints();
 };
 
 #endif // AIRCRAFTSTATUS_H

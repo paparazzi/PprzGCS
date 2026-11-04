@@ -44,6 +44,7 @@ AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent)
                            ins_ref_origin->lat != lat0/1e7 || ins_ref_origin->lon != lon0/1e7;
             ins_ref_origin = InsRef{lat0/1e7, lon0/1e7};
             if(changed) {
+                placeLocalWaypoints();
                 emit ins_ref();
             }
         }
@@ -113,5 +114,43 @@ std::optional<pprzlink::Message> AircraftStatus::getMessage(QString name) {
         return last_messages[name];
     } else {
         return std::nullopt;
+    }
+}
+
+/// Onboard (rotorcraft, rover), the waypoints defined with x/y in the flight plan keep their local
+/// coordinates when the reference changes (a new INS_REF, e.g. after a reboot at another place):
+/// they move with it. Those defined with lat/lon stay where they are. Until the aircraft reports a
+/// waypoint (WAYPOINT_MOVED), it is placed here from the new reference. (Its altitude is left as
+/// in the flight plan.)
+void AircraftStatus::placeLocalWaypoints() {
+    if(!AircraftManager::get()->aircraftExists(ac_id)) {
+        return;
+    }
+    auto fp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan();
+    auto orig = fp->getOrigin();
+    if(orig == nullptr) {
+        return;
+    }
+    for(auto wp: fp->getWaypoints()) {
+        if(wp == orig || wp->getId() == 0 || reported_wps.contains(wp->getId())) {
+            continue;
+        }
+        auto &attr = wp->getXmlAttributes();
+        if(attr.contains("lat") || !attr.contains("x") || !attr.contains("y")) {
+            continue;
+        }
+        double x = attr["x"].toDouble();
+        double y = attr["y"].toDouble();
+        Point2DLatLon pos(0, 0);
+        if(wp->getType() == Waypoint::LTP) {
+            pos = CoordinatesTransform::get()->ltp_to_wgs84(Point2DLatLon(orig), x, y);
+        } else if(wp->getType() == Waypoint::UTM) {
+            pos = CoordinatesTransform::get()->relative_utm_to_wgs84(Point2DLatLon(orig), x, y);
+        } else {
+            continue;
+        }
+        wp->setLat(pos.lat());
+        wp->setLon(pos.lon());
+        emit AircraftManager::get()->waypoint_changed(wp, ac_id);
     }
 }
