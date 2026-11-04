@@ -206,13 +206,47 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     lay->addLayout(buttons);
     setMinimumWidth(560);
 
-    connect(save_button, &QPushButton::clicked, this, [this](){
+    connect(save_button, &QPushButton::clicked, this, [=,this](){
+        // what changed: a restart only for the settings that are not used right away
+        auto values = [](QSettings& st) {
+            QMap<QString, QVariant> v;
+            for(auto &k: st.allKeys()) {
+                v[k] = st.value(k);
+            }
+            return v;
+        };
+        auto before_settings = getAppSettings();
+        auto before = values(before_settings);
         for(auto &cb:callbacks) {
             cb();
         }
+        auto after_settings = getAppSettings();
+        auto after = values(after_settings);
+        bool needs_restart = false;
+        for(auto it = after.cbegin(); it != after.cend(); ++it) {
+            if(before.value(it.key()) == it.value()) {
+                continue;
+            }
+            bool live = false;
+            for(auto &prefix: live_settings) {
+                live = live || it.key().startsWith(prefix);
+            }
+            needs_restart = needs_restart || !live;
+        }
+        if(standalone) {
+            // (pprzgcs -c) the GCS starts with them
+            accept();
+            PprzMain::launch_type = NORMAL;
+            qApp->exit( PprzMain::EXIT_CODE_REBOOT );
+            return;
+        }
+        if(!needs_restart) {
+            accept();
+            return;
+        }
 
         bool restart = CardDialog::ask(this, "Restart PprzGCS?",
-                                       "The new settings are used after a restart.", "Restart now",
+                                       "Some of the new settings are used after a restart.", "Restart now",
                                        CardDialog::PRIMARY, "Later");
         accept();
         if(restart) {

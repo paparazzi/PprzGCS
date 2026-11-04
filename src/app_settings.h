@@ -30,6 +30,8 @@ private:
     void finishTab(QGridLayout* gl, int row);
     void addSection(QString title, QWidget* w, QGridLayout* gl, int &row);
     void addHelp(QString text, QWidget* w, QGridLayout* gl, int &row);
+    /// the settings used right away (keys, or the start of keys): no restart for them
+    QStringList live_settings;
     std::function<void()> addSetting(QString name, QString key, QWidget* w, QGridLayout* gl, int &row, Type type, QVariant data = QVariant());
 
     QList<std::function<void()>> callbacks;
