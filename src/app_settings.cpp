@@ -233,6 +233,44 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
 }
 
 
+/// A heading for the rows below it (e.g. "Waypoints")
+void SettingsEditor::addSection(QString title, QWidget* w, QGridLayout* gl, int &row) {
+    auto label = new QLabel(title, w);
+    label->setStyleSheet(QString("font-weight: bold; %1").arg(row > 0 ? "margin-top: 10px;" : ""));
+    gl->addWidget(label, row, 0, 1, 3);
+    row += 1;
+}
+
+/// A "?" next to the setting above: its help, shown when clicked
+void SettingsEditor::addHelp(QString text, QWidget* w, QGridLayout* gl, int &row) {
+    auto button = new QToolButton(w);
+    button->setText("?");
+    button->setAutoRaise(true);
+    button->setCursor(Qt::WhatsThisCursor);
+    button->setStyleSheet("QToolButton { font-weight: bold; color: palette(placeholder-text); "
+                          "border: 1px solid palette(mid); border-radius: 9px; min-width: 16px; max-width: 16px; "
+                          "min-height: 16px; max-height: 16px; padding: 0px; }");
+    // right after a switch (it does not take the width), else after the field
+    auto item = gl->itemAtPosition(row - 1, 1);
+    auto sw = item != nullptr ? qobject_cast<Switch*>(item->widget()) : nullptr;
+    if(sw != nullptr) {
+        gl->removeWidget(sw);
+        auto box = new QWidget(w);
+        auto hl = new QHBoxLayout(box);
+        hl->setContentsMargins(0, 0, 0, 0);
+        hl->setSpacing(10);
+        hl->addWidget(sw);
+        hl->addWidget(button);
+        hl->addStretch(1);
+        gl->addWidget(box, row - 1, 1);
+    } else {
+        gl->addWidget(button, row - 1, 2, Qt::AlignLeft | Qt::AlignVCenter);
+    }
+    connect(button, &QToolButton::clicked, button, [=]() {
+        QWhatsThis::showText(button->mapToGlobal(QPoint(button->width() / 2, button->height())), text, button);
+    });
+}
+
 /// the rows at the top with even spacing, the fields taking the width
 void SettingsEditor::finishTab(QGridLayout* gl, int row) {
     gl->setContentsMargins(16, 16, 16, 16);
