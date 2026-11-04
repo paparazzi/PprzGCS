@@ -32,6 +32,8 @@ public:
     QDomDocument getFlightPlan() {return flight_plan;}
     QDomDocument getAirframe() {return airframe;}
     QMap<QString, QDomDocument> getAirframeIncludes() {return airframe_includes;}
+    /// the uri each include was loaded from, by href
+    QMap<QString, QString> getAirframeIncludeUris() {return airframe_include_uris;}
     QDomDocument getSettings() {return settings;}
 
     QString getFlightPlanUri() {return uri_flight_plan;}
@@ -68,6 +70,7 @@ private:
     QDomDocument flight_plan;
     QDomDocument airframe;
     QMap<QString, QDomDocument> airframe_includes;  // by href
+    QMap<QString, QString> airframe_include_uris;   // by href
     int pending_includes = 0;
     bool ready_sent = false;
     // QDomDocument radio;

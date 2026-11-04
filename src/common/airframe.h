@@ -9,6 +9,7 @@ struct Param {
     QString name;
     QString unit;
     QString value;
+    QString file;   // the href of the included file it is in; empty: the airframe file itself
 };
 
 struct ChecklistItem {
@@ -41,7 +42,13 @@ public:
     float getAltShiftMinus();
     std::optional<struct Param> getDefine(QString name, QString section="");
 
-    void saveSettings(QString filename);
+    /// Write the airframe file with the values set by setParams. From the text of source (the file
+    /// it was loaded from), only the changed value attributes replaced: the layout, comments and
+    /// the rest of the file stay as they are. Without source: the whole document is written.
+    void saveSettings(QString filename, QString source = "");
+    /// Write the included files whose values setParams changed, in place (path: by href), the same
+    /// way (only the values change). Returns the paths written.
+    QStringList saveIncludes(QMap<QString, QString> paths, bool keep_copy);
     void setParams(QMap<QString, QString> changed_params);
     QList<Param> getParams();
     QList<ChecklistItem*> getChecklistItems();
@@ -51,6 +58,7 @@ private:
     QString firmware;
 
     QDomDocument doc;       // the airframe file itself: the one saved by saveSettings
+    QMap<QString, QDomDocument> includes;     // its included files, by href (saveIncludes)
     QDomDocument expanded;  // with the <include> nodes replaced by the included content
 
     static constexpr float ALT_PLUS_FW = 10;

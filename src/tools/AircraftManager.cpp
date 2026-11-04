@@ -251,6 +251,7 @@ void ConfigData::loadAirframeIncludes() {
                 QDomDocument inc_doc;
                 inc_doc.setContent(data);
                 airframe_includes[href] = inc_doc;
+                airframe_include_uris[href] = uri;
                 pending_includes -= 1;
                 checkComplete();
             }, [=,this]() {
