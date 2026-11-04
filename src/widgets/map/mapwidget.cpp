@@ -366,7 +366,8 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
             MapItem* item = fp_edit_sm->update(FPEE_CANCEL, nullptr, nullptr, current_ac);
             (void)item;
         }
-        setMouseTracking(false);
+        // (the mouse tracking stays on: the waypoint hover, the coordinates and the aircraft names
+        // follow the mouse; turned off here it broke them until a restart)
         scene()->setShortcutItems(false);
         setFrozen(false);
         drawState = 0;
