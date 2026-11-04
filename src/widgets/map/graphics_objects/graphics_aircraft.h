@@ -19,6 +19,8 @@ public:
 protected:
     virtual void changeFocus() override;
     void hoverEnterEvent(QGraphicsSceneHoverEvent* event) override;
+    /// a double click on its name (installSceneEventFilter): as on the aircraft
+    bool sceneEventFilter(QGraphicsItem* watched, QEvent* event) override;
     void hoverLeaveEvent(QGraphicsSceneHoverEvent* event) override;
     void mousePressEvent(QGraphicsSceneMouseEvent* event) override;
     void mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) override;     // select the aircraft

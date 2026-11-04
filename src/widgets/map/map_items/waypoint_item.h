@@ -1,5 +1,7 @@
 #ifndef WAYPOINTITEM_H
 #define WAYPOINTITEM_H
+#include <QGraphicsLineItem>
+#include <QGraphicsSimpleTextItem>
 
 #include "map_item.h"
 #include <QBrush>
@@ -14,10 +16,28 @@ class WaypointItem : public MapItem
     Q_PROPERTY(int size MEMBER m_size WRITE setSize)
 public:
     GraphicsText* label() {return graphics_text;}
+    /// a thin line from the name to the waypoint (the name placed further away), in the scene;
+    /// a null line: none
+    void setLabelLeader(QLineF scene_line);
+    /// its name and line in blue (linked to the waypoint under the mouse); ring: a blue ring
+    /// around the waypoint too
+    void setHoverMark(bool h, bool ring = true);
+    /// its name faded (the mouse over another waypoint or name)
+    void setDimmed(bool d);
+    /// a small line under its name (e.g. the altitude, while hovered); empty: none
+    void setHoverInfo(QString text);
+    /// its altitude, and above the ground (SRTM, else the flight plan ground)
+    QString altitudeText();
+    /// the line under (or over) its name placed for where the name is (call when it moved)
+    void placeHoverInfo();
+    /// GCS setting: its altitude under its name "On hover", "Always" or "Off"
+    QString altitudeMode() {return altitude_mode;}
     /// where its name is, next to it (unscaled; chosen so that names do not overlap)
     QPointF labelOffset() {return label_offset;}
     void setLabelOffset(QPointF o) {label_offset = o;}
     QGraphicsItem* marker();
+    /// its name and what belongs to it (the altitude line, the line to the waypoint)
+    bool isLabelPart(QGraphicsItem* item) {return item == graphics_text || item->parentItem() == graphics_text;}
     WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     WaypointItem(Point2DLatLon pt, QString ac_id, PprzPalette palette, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     WaypointItem(Waypoint* wp, QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
@@ -46,6 +66,12 @@ public:
     void setAnimation(GraphicsObject::Animation a);
     void setMoving(bool m){moving = m;}
     void setAnimate(bool animate);
+    /// over the waypoints at the same place (chosen among them), until lowered
+    void setRaised(bool r);
+    /// it follows the mouse until a click places it (right click, cancelCarry: put back)
+    void startCarry() {point->startCarry();}
+    void cancelCarry() {point->cancelCarry();}
+    bool isCarried() {return point->isCarried();}
     void setSize(int s) {
         m_size = s;
         point->setProperty("size", m_size);
@@ -53,8 +79,13 @@ public:
     GraphicsPoint* getGraphicsPoint() {return point;}
 
 signals:
+    void waypointPressed(QPointF scene_pos, bool ctrl);
     void waypointMoved(Point2DLatLon latlon_pos);
     void waypointMoveFinished();
+    /// dragged again right after waypointMoveFinished (the button was not really released)
+    void waypointMoveResumed();
+    /// carried, then put back
+    void waypointMoveCancelled();
     void waypointDoubleClicked();
 
 
@@ -68,6 +99,12 @@ private:
     Waypoint* _waypoint;
     int altitude;
     bool moving;
+    bool raised = false;
+    bool hover_marked = false;
+    QGraphicsLineItem* label_leader = nullptr;
+    QGraphicsSimpleTextItem* hover_info = nullptr;  // child of the name
+    QString altitude_mode;
+    QString altitude_always;    // "Height" or "MSL": the value shown   // child of the name: shown with it
     int m_size;
 };
 

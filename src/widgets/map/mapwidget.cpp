@@ -1,4 +1,5 @@
 #include "mapwidget.h"
+#include <QTextDocument>
 #include "panels.h"
 #include <cmath>
 #include "map_notifications.h"
@@ -19,6 +20,8 @@
 #include "aircraft_item.h"
 #include "dispatcher_ui.h"
 #include "AircraftManager.h"
+#include "srtm_manager.h"
+#include "smooth_item.h"
 #include "widget_utils.h"
 #include "layer_combo.h"
 #include "lock_button.h"
@@ -196,6 +199,12 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     pan_state(PAN_IDLE), pan_mouse_mask(Qt::MiddleButton | Qt::LeftButton),
     _ac_arrow_size(30)
 {
+    hover_timer = new QTimer(this);
+    hover_timer->setSingleShot(true);
+    hover_timer->setInterval(200);
+    connect(hover_timer, &QTimer::timeout, this, [=,this]() {
+        markWaypointHover(hover_pending, hover_pending_on_name);
+    });
 
     auto settings = getAppSettings();
 
@@ -348,11 +357,17 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
         setFrozen(interaction_state != PMIS_FROZEN);
     });
     add_shortcut("Unfreeze / cancel", QKeySequence(Qt::Key_Escape), [=,this](){
+        for(auto mgr: std::as_const(ac_items_managers)) {
+            for(auto w: mgr->getWaypointsItems()) {
+                w->cancelCarry();   // a waypoint picked up with Ctrl+click: put back
+            }
+        }
         if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
             MapItem* item = fp_edit_sm->update(FPEE_CANCEL, nullptr, nullptr, current_ac);
             (void)item;
         }
-        setMouseTracking(false);
+        // (the mouse tracking stays on: the waypoint hover, the coordinates and the aircraft names
+        // follow the mouse; turned off here it broke them until a restart)
         scene()->setShortcutItems(false);
         setFrozen(false);
         drawState = 0;
@@ -527,6 +542,157 @@ void MapWidget::setEditorMode() {
 void MapWidget::changeCurrentAC(QString id) {
     current_ac = id;
     updateHighlights(id);
+}
+
+/// The waypoints at a place of the map (their markers overlap there), of all aircraft.
+QList<WaypointItem*> MapWidget::waypointsAt(QPointF scene_pos) {
+    QList<WaypointItem*> stack;
+    for(auto mgr: ac_items_managers) {
+        for(auto w: mgr->getWaypointsItems()) {
+            auto m = w->marker();
+            // its shape: none for hidden waypoints (shown as a dot)
+            if(m->isVisible() && !w->isMoving() && m->contains(m->mapFromScene(scene_pos))) {
+                stack.append(w);
+            }
+        }
+    }
+    return stack;
+}
+
+/// Ctrl+click on waypoints at the same place: a menu to choose the one to move (raised over the
+/// others). Ctrl+drag moves them all together.
+void MapWidget::chooseStackedWaypoint(WaypointItem* wpi, QPointF scene_pos) {
+    auto stack = waypointsAt(scene_pos);
+    if(!stack.contains(wpi)) {
+        stack.prepend(wpi);
+    }
+    if(stack.size() < 2) {
+        return;
+    }
+    QMenu menu(this);
+    auto title = menu.addAction("Waypoints here: choose one, it follows the mouse, click to place it (right click: back)");
+    title->setEnabled(false);
+    for(auto w: stack) {
+        QString name = w->waypoint()->getName();
+        if(AircraftManager::get()->aircraftExists(w->acId())) {
+            name += "  (" + AircraftManager::get()->getAircraft(w->acId())->name() + ")";
+        }
+        auto a = menu.addAction(name);
+        connect(a, &QAction::triggered, this, [=,this]() {
+            // its aircraft selected: its waypoints can be dragged (those of the others not)
+            if(w->acId() != current_ac) {
+                emit DispatcherUi::get()->ac_selected(w->acId());
+            }
+            for(auto mgr: ac_items_managers) {
+                for(auto o: mgr->getWaypointsItems()) {
+                    o->setRaised(o == w);
+                }
+            }
+            // picked up: it follows the mouse, a click places it (and opens its card)
+            w->startCarry();
+        });
+    }
+    menu.exec(mapToGlobal(mapFromScene(scene_pos)) + QPoint(8, 8));
+}
+
+/// The marking for the waypoint (or its name) under the mouse: what belongs to it in blue, the
+/// other names faded (options)
+void MapWidget::markWaypointHover(WaypointItem* wpi, bool on_name) {
+    clearWaypointHover();
+    if(QGuiApplication::mouseButtons() != Qt::NoButton) {
+        return;     // dragging: not the waypoints it passes over
+    }
+    auto settings = getAppSettings();
+    QString highlight = settings.value("map/waypoint_hover_highlight").toString();
+    if(wpi == nullptr || highlight == "Off") {
+        return;
+    }
+    bool ring = highlight != "Name only";
+    if(settings.value("map/waypoint_hover_dim").toBool()) {
+        hover_dimmed = true;
+        for(auto mgr: ac_items_managers) {
+            for(auto w: mgr->getWaypointsItems()) {
+                w->setDimmed(true);
+            }
+        }
+    }
+    hover_marked = on_name ? QList<WaypointItem*>{wpi} : waypointsAt(wpi->scenePos());
+    if(!hover_marked.contains(wpi)) {
+        hover_marked.append(wpi);
+    }
+    for(auto w: hover_marked) {
+        w->setHoverMark(true, ring);
+        w->setDimmed(false);
+        if(w->altitudeMode() != "Off") {
+            w->setHoverInfo(w->altitudeText());     // its altitude by its name (option)
+        }
+    }
+}
+
+/// The waypoint (or name) under the mouse, followed here from the mouse moves (not from the hover
+/// events of each item: those change with what is on top, which changes with the marking). A
+/// waypoint wins over a name; among them the one on top. Marked after a short delay: sweeping
+/// the mouse over the map does not flicker.
+void MapWidget::updateWaypointHover(QPoint view_pos, bool inside) {
+    WaypointItem* target = nullptr;
+    bool on_name = false;
+    if(inside && QGuiApplication::mouseButtons() == Qt::NoButton && scene()->mouseGrabberItem() == nullptr) {
+        QList<WaypointItem*> wps;
+        for(auto mgr: std::as_const(ac_items_managers)) {
+            wps.append(mgr->getWaypointsItems());
+        }
+        auto under = items(view_pos);   // the topmost first
+        for(auto it: under) {
+            for(auto w: wps) {
+                if(w->marker() == it) {
+                    target = w;
+                    break;
+                }
+            }
+            if(target != nullptr) {
+                break;
+            }
+        }
+        for(int i = 0; target == nullptr && i < under.size(); i++) {
+            for(auto w: wps) {
+                if(w->isLabelPart(under[i]) && w->label()->isVisible()) {
+                    target = w;
+                    on_name = true;
+                    break;
+                }
+            }
+        }
+    }
+    if(target == hover_target && on_name == hover_target_on_name) {
+        return;
+    }
+    clearWaypointHover();
+    hover_target = target;
+    hover_target_on_name = on_name;
+    if(target != nullptr) {
+        hover_pending = target;
+        hover_pending_on_name = on_name;
+        hover_timer->start();
+    }
+}
+
+void MapWidget::clearWaypointHover() {
+    hover_timer->stop();
+    for(auto w: hover_marked) {
+        w->setHoverMark(false);
+        if(w->altitudeMode() == "On hover") {
+            w->setHoverInfo(QString());
+        }
+    }
+    hover_marked.clear();
+    if(hover_dimmed) {
+        hover_dimmed = false;
+        for(auto mgr: ac_items_managers) {
+            for(auto w: mgr->getWaypointsItems()) {
+                w->setDimmed(false);
+            }
+        }
+    }
 }
 
 void MapWidget::registerWaypoint(WaypointItem* waypoint) {
@@ -865,6 +1031,20 @@ void MapWidget::setZoom(double z) {
 }
 
 void MapWidget::mousePressEvent(QMouseEvent *event) {
+    if(event->button() == Qt::RightButton) {
+        // a waypoint picked up with Ctrl+click: put back (no map menu)
+        bool cancelled = false;
+        for(auto mgr: std::as_const(ac_items_managers)) {
+            for(auto w: mgr->getWaypointsItems()) {
+                cancelled = cancelled || w->isCarried();
+                w->cancelCarry();
+            }
+        }
+        if(cancelled) {
+            event->accept();
+            return;
+        }
+    }
     Map2D::mousePressEvent(event);
     if(event->buttons() & pan_mouse_mask && !event->isAccepted()) {
         pan_state = PAN_PRESSED;
@@ -877,6 +1057,7 @@ void MapWidget::mousePressEvent(QMouseEvent *event) {
 
 void MapWidget::mouseMoveEvent(QMouseEvent *event) {
     Map2D::mouseMoveEvent(event);
+    updateWaypointHover(event->pos(), event->buttons() == Qt::NoButton);
     auto settings = getAppSettings();
     if(event->buttons() & pan_mouse_mask) {
         if(pan_state == PAN_PRESSED) {
@@ -929,6 +1110,14 @@ void MapWidget::rotateMap(double rot) {
 
 
 bool MapWidget::viewportEvent(QEvent *event) {
+    // no tooltip while a button is held (dragging a waypoint): on Wayland a tooltip is a popup
+    // that takes the pointer, the drag ended without letting go (and its window flashed white)
+    if(event->type() == QEvent::ToolTip && QGuiApplication::mouseButtons() != Qt::NoButton) {
+        return true;
+    }
+    if(event->type() == QEvent::Leave) {
+        updateWaypointHover(QPoint(), false);   // no waypoint under the mouse any more
+    }
     switch (event->type()) {
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
@@ -1056,15 +1245,34 @@ void MapWidget::arrangeWaypointLabels() {
     for(auto &wp: wps) {
         double s = wp.item->label()->scale();     // the waypoint scale (set with its label)
         double w = wp.size.width(), h = wp.size.height();
-        // upper right (the default), lower right, upper left, lower left, above, below
+        // upper right (the default), lower right, upper left, lower left, above, below, right,
+        // left; then a row further away on the four corners (many waypoints at the same place:
+        // a name each). None free: the first place, next to the waypoint
         QList<QPointF> offsets = {
             {4*s, -26*s}, {4*s, 0}, {-w - 4*s, -26*s}, {-w - 4*s, 0}, {-w/2, -h - 6*s}, {-w/2, 8*s},
+            {10*s, -h/2}, {-w - 10*s, -h/2},
         };
-        // the place it has now first: it stays there while that is free (no jumping around)
-        offsets.prepend(wp.item->labelOffset() * s);
+        // (two rows at most: further away it is no longer clear which name is whose)
+        for(int k = 1; k <= 2; k++) {
+            double dy = k * h * 0.75;
+            offsets.append({{4*s, -26*s - dy}, {4*s, dy}, {-w - 4*s, -26*s - dy}, {-w - 4*s, dy}});
+        }
+        const int near = 8;     // the places next to the waypoint (the others: further away)
+        // the place it has now first, if it is next to the waypoint: it stays there while that
+        // is free (no jumping around); a name placed further away comes back once there is room
+        QPointF current = wp.item->labelOffset() * s;
+        bool current_near = false;
+        for(int i = 0; i < near; i++) {
+            current_near = current_near || QLineF(current, offsets[i]).length() < 0.5;
+        }
+        if(current_near) {
+            offsets.prepend(current);
+        }
         QPointF chosen = offsets[0];
         QRectF chosen_rect;
-        for(auto &o: offsets) {
+        bool chosen_far = false;
+        for(int i = 0; i < offsets.size(); i++) {
+            auto &o = offsets[i];
             QRectF r(wp.center + rot.map(o), wp.size);
             QRectF rr = r.adjusted(w * 0.08, h * 0.15, -w * 0.08, -h * 0.15);   // the text, not its margins
             bool free = true;
@@ -1083,6 +1291,7 @@ void MapWidget::arrangeWaypointLabels() {
             if(free) {
                 chosen = o;
                 chosen_rect = rr;
+                chosen_far = i >= near + (current_near ? 1 : 0);
                 break;
             }
         }
@@ -1092,7 +1301,29 @@ void MapWidget::arrangeWaypointLabels() {
         }
         wp.item->setLabelOffset(chosen / s);
         wp.item->label()->setPos(wp.center + rot.map(chosen));
+        wp.item->placeHoverInfo();
         placed.append(chosen_rect);
+        // further away, or several waypoints at the same place: a thin line to its waypoint
+        // (which name is whose)
+        // (the waypoints with their name shown: not those of the other aircraft, without names)
+        int at_same_place = 0;
+        for(auto &o: wps) {
+            at_same_place += QLineF(o.center, wp.center).length() < 2 * s ? 1 : 0;
+        }
+        if(chosen_far || at_same_place > 1) {
+            // to the text itself (its box has a margin around it)
+            double dm = wp.item->label()->document()->documentMargin() * s;
+            QRectF text_rect = QRectF(wp.center + rot.map(chosen), wp.size).adjusted(dm, dm * 0.8, -dm, -dm * 0.8);
+            QPointF to(qBound(text_rect.left(), wp.center.x(), text_rect.right()),
+                       qBound(text_rect.top(), wp.center.y(), text_rect.bottom()));
+            QLineF line(wp.center, to);
+            if(line.length() > 6 * s) {
+                line.setP1(line.pointAt(5 * s / line.length()));   // from the edge of the marker
+            }
+            wp.item->setLabelLeader(line);
+        } else {
+            wp.item->setLabelLeader(QLineF());
+        }
     }
 }
 
@@ -1177,11 +1408,16 @@ void MapWidget::showPendingMove(WaypointItem* wpi) {
     pen.setCosmetic(true);
     PendingMove pm;
     pm.from = Point2DLatLon(wpi->getOriginalWaypoint());
-    pm.marker = scene()->addPolygon(QPolygonF({QPointF(0, -8), QPointF(8, 0), QPointF(0, 8), QPointF(-8, 0)}), pen);
+    pm.marker = new SmoothItem<QGraphicsPolygonItem>(QPolygonF({QPointF(0, -8), QPointF(8, 0), QPointF(0, 8), QPointF(-8, 0)}));
+    pm.marker->setPen(pen);
+    pm.marker->setAcceptedMouseButtons(Qt::NoButton);
+    scene()->addItem(pm.marker);
     pm.marker->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     pm.marker->setZValue(900);
-    pm.marker->setToolTip("Position before the move, until the aircraft confirms it");
-    pm.line = scene()->addLine(QLineF(), pen);
+    pm.line = new SmoothItem<QGraphicsLineItem>();
+    pm.line->setPen(pen);
+    pm.line->setAcceptedMouseButtons(Qt::NoButton);
+    scene()->addItem(pm.line);
     pm.line->setZValue(899);
     pm.conn = connect(wpi, &WaypointItem::itemChanged, this, [=,this]() { updatePendingMove(wpi); });
     pending_moves[wpi] = pm;
@@ -1383,6 +1619,18 @@ void MapWidget::handleNewAC(QString ac_id) {
 }
 
 void MapWidget::removeAC(QString ac_id) {
+    clearWaypointHover();
+    hover_marked.removeIf([=](WaypointItem* w) { return w->acId() == ac_id; });
+    for(auto k: waypoint_editors.keys()) {
+        if(k->acId() == ac_id) {
+            waypoint_editors.remove(k);
+        }
+    }
+    for(auto k: wp_followers.keys()) {
+        if(k->acId() == ac_id) {
+            wp_followers.remove(k);
+        }
+    }
     for(auto wpi: pending_moves.keys()) {
         if(wpi->acId() == ac_id) {
             clearPendingMove(wpi);
@@ -1425,10 +1673,23 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
     ac_items_managers[ac_id]->addWaypointItem(wpi);
 
     auto dialog_move_waypoint = [=,this]() {
+        // its card already open (moved again): replaced by a new one, with the new position
+        if(!waypoint_editors.value(wpi).isNull()) {
+            auto old = waypoint_editors[wpi];
+            old->setProperty("replaced", true);
+            old->reject();
+        }
         wpi->setMoving(true);
-        auto we = new WaypointEditor(wpi, ac_id, this);
+        auto followers = wp_followers.value(wpi);
+        auto we = new WaypointEditor(wpi, ac_id, this, followers);
+        we->setAttribute(Qt::WA_DeleteOnClose);     // (closed cards were kept, hidden)
+        waypoint_editors[wpi] = we;
         // the old position: kept until the aircraft confirms the move (also over several moves)
         showPendingMove(wpi);
+        for(auto f: followers) {
+            f->setMoving(true);
+            showPendingMove(f);
+        }
 
         // the card next to the waypoint, not over it, its old position or the line between them
         auto view_pos = mapFromScene(wpi->scenePos());
@@ -1440,13 +1701,22 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
         we->placeNear(mapToGlobal(view_pos), avoid);
 
         connect(we, &QDialog::finished, wpi, [=,this](int result) {
-            wpi->setMoving(false);
-            if(!result) {
-                // back to the confirmed position
-                wpi->update();
-                wpi->setAnimate(false);
-                clearPendingMove(wpi);
+            if(we->property("replaced").toBool()) {
+                return;     // the new card goes on with the move
             }
+            QList<WaypointItem*> all = {wpi};
+            all.append(followers);
+            for(auto w: all) {
+                w->setMoving(false);
+                w->setRaised(false);
+                if(!result) {
+                    // back to the confirmed position
+                    w->update();
+                    w->setAnimate(false);
+                    clearPendingMove(w);
+                }
+            }
+            wp_followers.remove(wpi);
         });
         we->showMovable();
     };
@@ -1455,8 +1725,61 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
 
     connect(wpi, &WaypointItem::itemDoubleClicked, this, dialog_move_waypoint);
 
-    connect(wpi, &WaypointItem::waypointMoved, this, [=,this](){
+    // carried (chosen with Ctrl+click), then put back: at its confirmed position again
+    connect(wpi, &WaypointItem::waypointMoveCancelled, this, [=,this]() {
+        wpi->setMoving(false);
+        wpi->setRaised(false);
+        wpi->update();
+        wpi->setAnimate(false);
+        if(waypoint_editors.value(wpi).isNull()) {
+            clearPendingMove(wpi);
+        }
+    });
+
+    // the drag goes on (the button was not really released): its card closed, a new one at the end
+    connect(wpi, &WaypointItem::waypointMoveResumed, this, [=,this]() {
+        auto we = waypoint_editors.value(wpi);
+        if(!we.isNull()) {
+            we->setProperty("replaced", true);
+            we->reject();
+        }
+    });
+
+    // Ctrl held when pressed: the waypoints at the same place (of all aircraft) move along
+    connect(wpi, &WaypointItem::waypointPressed, this, [=,this](QPointF scene_pos, bool ctrl) {
+        updateWaypointHover(QPoint(), false);     // pressed: not marked while dragged
+        if(wpi->isMoving()) {
+            return;     // its card is open: keep what moves with it
+        }
+        wp_followers.remove(wpi);
+        if(ctrl && interaction_state != PMIS_FLIGHT_PLAN_EDIT) {
+            auto stack = waypointsAt(scene_pos);
+            stack.removeAll(wpi);
+            if(!stack.isEmpty()) {
+                wp_followers[wpi] = stack;
+            }
+        }
+    });
+
+    connect(wpi, &WaypointItem::waypointMoved, this, [=,this](Point2DLatLon ll){
         wpi->setAnimate(true);
+        showPendingMove(wpi);     // the old position and the dashed line, already while dragging
+        for(auto f: wp_followers.value(wpi)) {     // moved together
+            f->setPosition(ll);
+            f->setAnimate(true);
+            showPendingMove(f);
+        }
+    });
+
+    // Ctrl+click on waypoints at the same place: choose which one to move
+    connect(wpi, &WaypointItem::itemClicked, this, [=,this](QPointF scene_pos) {
+        bool ctrl = wp_followers.contains(wpi) && !wpi->isMoving();
+        if(ctrl) {
+            wp_followers.remove(wpi);   // not moved: nothing moves along
+            if(interaction_state != PMIS_FLIGHT_PLAN_EDIT) {
+                chooseStackedWaypoint(wpi, scene_pos);
+            }
+        }
     });
 
     if(wp->getName().startsWith('_') && !show_hidden_wp_action->isChecked()) {

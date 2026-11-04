@@ -7,6 +7,8 @@
 #include <QColor>
 #include <QPainter>
 #include <QPainterPath>
+#include <QStyleOptionGraphicsItem>
+#include <algorithm>
 #include "gcs_utils.h"
 
 #define COLOR_IDLE 0
@@ -24,6 +26,9 @@ GraphicsCircle::GraphicsCircle(double radius, PprzPalette palette, int stroke, Q
         base_stroke(stroke), stroke(stroke), text(), display_radius(true), filled(false)
 {
     font_radius.setWeight(QFont::DemiBold);
+    items_font = getAppSettings().value("map/items_font").toInt();
+    // the part to draw in paint (option->exposedRect): skipped where none of the ring is
+    setFlag(QGraphicsItem::ItemUsesExtendedStyleOption);
 }
 
 QRectF GraphicsCircle::boundingRect() const {
@@ -40,22 +45,11 @@ QRectF GraphicsCircle::boundingRect() const {
 
 
 void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) {
-    (void)option;
     (void)widget;
-    path_draw = QPainterPath();
-    auto settings = getAppSettings();
-
     double out_draw = radius + stroke*scale_factor;
     QRectF outter_draw = QRectF(-out_draw, -out_draw, 2*out_draw, 2*out_draw);
     double in_draw = radius - stroke*scale_factor;
     QRectF inner_draw = QRectF(-in_draw, -in_draw, 2*in_draw, 2*in_draw);
-
-    if(style == DEFAULT) {
-        path_draw.addEllipse(outter_draw);
-        path_draw.addEllipse(inner_draw);
-    } else if (style == CURRENT_NAV) {
-        path_draw.addEllipse(QRectF(-radius, -radius, 2*radius, 2*radius));
-    }
 
     path_shape = QPainterPath();
     path_shape.addEllipse(outter_draw);
@@ -63,31 +57,56 @@ void GraphicsCircle::paint(QPainter *painter, const QStyleOptionGraphicsItem *op
         path_shape.addEllipse(inner_draw);
     }
 
-    if(style == DEFAULT) {
-        painter->setBrush(QBrush(palette.getVariant(current_color)));
-        painter->setPen(Qt::NoPen);
-        painter->drawPath(path_draw);
-    } else if (style == CURRENT_NAV) {
-        painter->setPen(QPen(Qt::green));
-        painter->drawPath(path_draw);
+    // Only a part of the map is repainted (e.g. where an aircraft moved): a large circle around it
+    // was drawn again each time (most of the drawing time of the map). Not when that part is
+    // inside the ring or outside the circle.
+    QRectF ex = option->exposedRect;
+    double margin = 2 * stroke * scale_factor + 2;
+    double near = 0, far = 0;
+    {
+        double nx = qBound(ex.left(), 0., ex.right());
+        double ny = qBound(ex.top(), 0., ex.bottom());
+        near = sqrt(nx*nx + ny*ny);
+        double fx = std::max(fabs(ex.left()), fabs(ex.right()));
+        double fy = std::max(fabs(ex.top()), fabs(ex.bottom()));
+        far = sqrt(fx*fx + fy*fy);
     }
+    bool ring_exposed = ex.isEmpty() ||
+        (near <= out_draw + margin && (filled || far >= in_draw - margin));
 
-    if(filled) {
-        auto fillpath = QPainterPath();
-        fillpath.addEllipse(inner_draw);
-        auto brush = palette.getBrush();
-        painter->setBrush(QBrush(brush));
-        painter->setPen(Qt::NoPen);
-        painter->drawPath(fillpath);
-    }
-
-    if(display_radius) {
-        font_radius.setPointSize (settings.value("map/items_font").toInt()*scale_factor);
+    if(ring_exposed) {
         path_draw = QPainterPath();
-        path_draw.addText(textPos.x(), textPos.y(), font_radius, text);
-        painter->setBrush(QBrush(palette.getVariant(COLOR_IDLE)));
-        painter->setPen(Qt::NoPen);
-        painter->drawPath(path_draw);
+        if(style == DEFAULT) {
+            path_draw.addEllipse(outter_draw);
+            path_draw.addEllipse(inner_draw);
+            painter->setBrush(QBrush(palette.getVariant(current_color)));
+            painter->setPen(Qt::NoPen);
+            painter->drawPath(path_draw);
+        } else if (style == CURRENT_NAV) {
+            path_draw.addEllipse(QRectF(-radius, -radius, 2*radius, 2*radius));
+            painter->setPen(QPen(Qt::green));
+            painter->drawPath(path_draw);
+        }
+
+        if(filled) {
+            auto fillpath = QPainterPath();
+            fillpath.addEllipse(inner_draw);
+            auto brush = palette.getBrush();
+            painter->setBrush(QBrush(brush));
+            painter->setPen(Qt::NoPen);
+            painter->drawPath(fillpath);
+        }
+    }
+
+    if(display_radius && !text.isEmpty()) {
+        font_radius.setPointSize(std::max(1, static_cast<int>(items_font*scale_factor)));
+        QPainterPath text_path;
+        text_path.addText(textPos.x(), textPos.y(), font_radius, text);
+        if(ex.isEmpty() || text_path.boundingRect().intersects(ex)) {
+            painter->setBrush(QBrush(palette.getVariant(COLOR_IDLE)));
+            painter->setPen(Qt::NoPen);
+            painter->drawPath(text_path);
+        }
     }
 }
 

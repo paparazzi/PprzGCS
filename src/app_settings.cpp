@@ -75,6 +75,17 @@ void set_app_settings() {
 
     default_setting("map/aircraft/track_seconds", 60);
     default_setting("map/aircraft_status_icons", false);
+    // the waypoint under the mouse: its name in blue, with a ring around it (or not), or nothing
+    // (was the switch map/waypoint_hover_mark)
+    if(!settings.contains("map/waypoint_hover_highlight") && settings.contains("map/waypoint_hover_mark")) {
+        settings.setValue("map/waypoint_hover_highlight",
+                          settings.value("map/waypoint_hover_mark").toBool() ? "Name and ring" : "Off");
+        settings.remove("map/waypoint_hover_mark");
+    }
+    default_setting("map/waypoint_hover_highlight", "Name and ring");
+    default_setting("map/waypoint_hover_dim", false);
+    default_setting("map/waypoint_altitude", "On hover");
+    default_setting("map/waypoint_altitude_always", "Height");
     default_setting("settings/rows_open", false);
     default_setting("strips/status_icons", true);
     default_setting("window/menu_title_bar", false);
@@ -115,6 +126,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     auto l_map = new QGridLayout(w_map);
     row = 0;
 
+    addSection("Tiles", w_map, l_map, row);
     QVariant tpnv = GlobalConfig::get()->value("tile_providers_names");
     if(tpnv.isValid()) {
         cb = addSetting("Default tiles", "map/default_tiles", w_map, l_map, row, Type::STRING_COMBO, tpnv.toStringList());
@@ -123,26 +135,57 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
         cb = addSetting("Default tiles", "map/default_tiles", w_map, l_map, row, Type::STRING);
         callbacks.append(cb);
     }
-    cb = addSetting("Waypoint size", "map/waypoint/size", w_map, l_map, row, Type::INT);
+    cb = addSetting("Tiles folder", "map/tiles_path", w_map, l_map, row, Type::PATH_DIR);
     callbacks.append(cb);
-    cb = addSetting("Font size of the names", "map/items_font", w_map, l_map, row, Type::INT);
-    callbacks.append(cb);
-    cb = addSetting("Tiles path", "map/tiles_path", w_map, l_map, row, Type::PATH_DIR);
-    callbacks.append(cb);
-    cb = addSetting("Move threshold (px)", "map/move_hyteresis", w_map, l_map, row, Type::INT);
-    callbacks.append(cb);
-    cb = addSetting("Size highlight factor", "map/size_highlight_factor", w_map, l_map, row, Type::DOUBLE);
-    callbacks.append(cb);
+
+    addSection("Aircraft", w_map, l_map, row);
     cb = addSetting("Aircraft size", "map/aircraft/size", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
     cb = addSetting("Track length (s)", "map/aircraft/track_seconds", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
     cb = addSetting("Track width", "map/aircraft/track_width", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
-    cb = addSetting("Battery and link icons next to the aircraft", "map/aircraft_status_icons", w_map, l_map, row, Type::BOOL);
+    cb = addSetting("Battery and link icons", "map/aircraft_status_icons", w_map, l_map, row, Type::BOOL);
     callbacks.append(cb);
+    addHelp("Small battery and link status icons next to each aircraft on the map.", w_map, l_map, row);
+
+    addSection("Shapes and texts", w_map, l_map, row);
+    cb = addSetting("Other aircraft drawn smaller by", "map/size_highlight_factor", w_map, l_map, row, Type::DOUBLE);
+    callbacks.append(cb);
+    addHelp("The waypoints, lines and circles of the aircraft that are not selected are drawn smaller, so the selected one stands out. 1.5: two thirds of the size; 1: the same size.", w_map, l_map, row);
+    cb = addSetting("Text size (circles, papgets)", "map/items_font", w_map, l_map, row, Type::INT);
+    callbacks.append(cb);
+    cb = addSetting("Drag starts after (px)", "map/move_hyteresis", w_map, l_map, row, Type::INT);
+    callbacks.append(cb);
+    addHelp("How far the mouse moves, with the button held, before a press becomes a drag: of a waypoint, a circle or the map. A smaller move is a click.", w_map, l_map, row);
     finishTab(l_map, row);
     tabWidget->addTab(w_map, "Map");
+
+    // Tab Waypoints (on the map)
+    auto w_wp = new QWidget(tabWidget);
+    auto l_wp = new QGridLayout(w_wp);
+    row = 0;
+    cb = addSetting("Waypoint size", "map/waypoint/size", w_wp, l_wp, row, Type::INT);
+    callbacks.append(cb);
+    cb = addSetting("Highlight under the mouse", "map/waypoint_hover_highlight", w_wp, l_wp, row, Type::STRING_COMBO,
+                    QStringList{"Name and ring", "Name only", "Off"});
+    callbacks.append(cb);
+    addHelp("The waypoint or name under the mouse, after a short moment: its name in blue, and a blue ring around the waypoint (Name and ring). Over a waypoint, the names of all the waypoints at that place are highlighted.", w_wp, l_wp, row);
+    cb = addSetting("Fade the other names", "map/waypoint_hover_dim", w_wp, l_wp, row, Type::BOOL);
+    callbacks.append(cb);
+    addHelp("While a waypoint is highlighted, the names of the other waypoints are faded.", w_wp, l_wp, row);
+    cb = addSetting("Altitude by the name", "map/waypoint_altitude", w_wp, l_wp, row, Type::STRING_COMBO,
+                    QStringList{"On hover|When hovered", "Always|Always", "Off|Never"});
+    callbacks.append(cb);
+    cb = addSetting("Altitude as", "map/waypoint_altitude_always", w_wp, l_wp, row, Type::STRING_COMBO,
+                    QStringList{"Height|Height above the ground", "MSL|Above sea level (MSL)"});
+    callbacks.append(cb);
+    addHelp("The altitude shown by the names (and in the waypoint card).<br><b>Height above the ground</b>: AGL above the terrain where there is SRTM data, else H above the ground altitude of the flight plan.<br><b>Above sea level</b>: MSL.", w_wp, l_wp, row);
+
+    // used right away (read each time the mouse is over a waypoint, or a drag starts)
+    live_settings << "map/waypoint_hover_highlight" << "map/waypoint_hover_dim" << "map/move_hyteresis";
+    finishTab(l_wp, row);
+    tabWidget->addTab(w_wp, "Waypoints");
 
     // Tab General
     auto w_general = new QWidget(tabWidget);
@@ -206,13 +249,47 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     lay->addLayout(buttons);
     setMinimumWidth(560);
 
-    connect(save_button, &QPushButton::clicked, this, [this](){
+    connect(save_button, &QPushButton::clicked, this, [=,this](){
+        // what changed: a restart only for the settings that are not used right away
+        auto values = [](QSettings& st) {
+            QMap<QString, QVariant> v;
+            for(auto &k: st.allKeys()) {
+                v[k] = st.value(k);
+            }
+            return v;
+        };
+        auto before_settings = getAppSettings();
+        auto before = values(before_settings);
         for(auto &cb:callbacks) {
             cb();
         }
+        auto after_settings = getAppSettings();
+        auto after = values(after_settings);
+        bool needs_restart = false;
+        for(auto it = after.cbegin(); it != after.cend(); ++it) {
+            if(before.value(it.key()) == it.value()) {
+                continue;
+            }
+            bool live = false;
+            for(auto &prefix: live_settings) {
+                live = live || it.key().startsWith(prefix);
+            }
+            needs_restart = needs_restart || !live;
+        }
+        if(standalone) {
+            // (pprzgcs -c) the GCS starts with them
+            accept();
+            PprzMain::launch_type = NORMAL;
+            qApp->exit( PprzMain::EXIT_CODE_REBOOT );
+            return;
+        }
+        if(!needs_restart) {
+            accept();
+            return;
+        }
 
         bool restart = CardDialog::ask(this, "Restart PprzGCS?",
-                                       "The new settings are used after a restart.", "Restart now",
+                                       "Some of the new settings are used after a restart.", "Restart now",
                                        CardDialog::PRIMARY, "Later");
         accept();
         if(restart) {
@@ -232,6 +309,44 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     });
 }
 
+
+/// A heading for the rows below it (e.g. "Waypoints")
+void SettingsEditor::addSection(QString title, QWidget* w, QGridLayout* gl, int &row) {
+    auto label = new QLabel(title, w);
+    label->setStyleSheet(QString("font-weight: bold; %1").arg(row > 0 ? "margin-top: 10px;" : ""));
+    gl->addWidget(label, row, 0, 1, 3);
+    row += 1;
+}
+
+/// A "?" next to the setting above: its help, shown when clicked
+void SettingsEditor::addHelp(QString text, QWidget* w, QGridLayout* gl, int &row) {
+    auto button = new QToolButton(w);
+    button->setText("?");
+    button->setAutoRaise(true);
+    button->setCursor(Qt::WhatsThisCursor);
+    button->setStyleSheet("QToolButton { font-weight: bold; color: palette(placeholder-text); "
+                          "border: 1px solid palette(mid); border-radius: 9px; min-width: 16px; max-width: 16px; "
+                          "min-height: 16px; max-height: 16px; padding: 0px; }");
+    // right after a switch (it does not take the width), else after the field
+    auto item = gl->itemAtPosition(row - 1, 1);
+    auto sw = item != nullptr ? qobject_cast<Switch*>(item->widget()) : nullptr;
+    if(sw != nullptr) {
+        gl->removeWidget(sw);
+        auto box = new QWidget(w);
+        auto hl = new QHBoxLayout(box);
+        hl->setContentsMargins(0, 0, 0, 0);
+        hl->setSpacing(10);
+        hl->addWidget(sw);
+        hl->addWidget(button);
+        hl->addStretch(1);
+        gl->addWidget(box, row - 1, 1);
+    } else {
+        gl->addWidget(button, row - 1, 2, Qt::AlignLeft | Qt::AlignVCenter);
+    }
+    connect(button, &QToolButton::clicked, button, [=]() {
+        QWhatsThis::showText(button->mapToGlobal(QPoint(button->width() / 2, button->height())), text, button);
+    });
+}
 
 /// the rows at the top with even spacing, the fields taking the width
 void SettingsEditor::finishTab(QGridLayout* gl, int row) {
@@ -326,15 +441,21 @@ std::function<void()> SettingsEditor::addSetting(QString name, QString key, QWid
 
         return cb;
     } else if(type == Type::STRING_COMBO) {
+        // an item "value|text": the text shown, the value stored
         auto combo = new QComboBox(w);
-        combo->addItems(data.toStringList());
-        auto current = settings.value(key).toString();
-        combo->setCurrentText(current);
+        for(auto &item: data.toStringList()) {
+            auto parts = item.split('|');
+            combo->addItem(parts.value(1, parts[0]), parts[0]);
+        }
+        int current = combo->findData(settings.value(key).toString());
+        if(current >= 0) {
+            combo->setCurrentIndex(current);
+        }
         gl->addWidget(combo, r, 1);
 
         auto cb = [=,this]() {
             auto settings = getAppSettings();
-            settings.setValue(key, combo->currentText());
+            settings.setValue(key, combo->currentData().toString());
         };
 
         return cb;

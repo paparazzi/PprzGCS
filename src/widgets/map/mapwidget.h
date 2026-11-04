@@ -4,6 +4,9 @@
 #include <QElapsedTimer>
 #include <QGraphicsItem>
 #include <QList>
+#include <QPointer>
+#include <QTimer>
+#include <QDialog>
 #include <QLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -142,6 +145,20 @@ private:
 
     QMap<QString, ACItemManager*> ac_items_managers;
     InteractionState interaction_state;
+    QMap<WaypointItem*, QList<WaypointItem*>> wp_followers;   // waypoints at the same place moved together
+    void chooseStackedWaypoint(WaypointItem* wpi, QPointF scene_pos);
+    QList<WaypointItem*> waypointsAt(QPointF scene_pos);
+    QList<WaypointItem*> hover_marked;     // marked as linked to the waypoint or name under the mouse
+    bool hover_dimmed = false;             // the other names faded (option)
+    void clearWaypointHover();
+    void updateWaypointHover(QPoint view_pos, bool inside);
+    QPointer<WaypointItem> hover_target;   // the waypoint (or name) under the mouse
+    bool hover_target_on_name = false;
+    void markWaypointHover(WaypointItem* wpi, bool on_name);
+    QTimer* hover_timer;                   // the marking after a short delay
+    QPointer<WaypointItem> hover_pending;
+    bool hover_pending_on_name = false;
+    QMap<WaypointItem*, QPointer<QDialog>> waypoint_editors;   // the open card of each waypoint
     int drawState;
     ItemEditStateMachine* fp_edit_sm;
     QString current_ac;

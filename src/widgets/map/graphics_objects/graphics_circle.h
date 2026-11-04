@@ -49,6 +49,7 @@ private:
     double radius;
     CircleScaleState scale_state;
     QFont font_radius;
+    int items_font;     // map/items_font (read once, not on every paint)
 
     int current_color;
 

@@ -1,12 +1,15 @@
 #include "waypoint_item.h"
 #include "math.h"
 #include <QDebug>
+#include <QTextDocument>
 #include "maputils.h"
 #include <QGraphicsScene>
 #include "mapwidget.h"
 #include "AircraftManager.h"
+#include "srtm_manager.h"
 #include "coordinatestransform.h"
 #include "gcs_utils.h"
+#include "smooth_item.h"
 
 // create WaypointItem from position -> create corresponding Waypoint.
 WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom, QObject *parent) :
@@ -38,13 +41,15 @@ void WaypointItem::init() {
 
     _waypoint = new Waypoint(original_waypoint, this);
     m_size = settings.value("map/waypoint/size").toInt();
+    altitude_mode = settings.value("map/waypoint_altitude").toString();
+    altitude_always = settings.value("map/waypoint_altitude_always").toString();
 
     point = new GraphicsPoint(m_size, palette, this);
     point->setZValue(z_value);
 
 
     graphics_text = new GraphicsText(original_waypoint->getName(), QColor(Qt::white), this);
-    graphics_text->setZValue(z_value);
+    updateZValue();
 
 
     setZoomFactor(1.1);
@@ -76,6 +81,12 @@ void WaypointItem::init() {
 void WaypointItem::addToMap(MapWidget* map) {
     map->scene()->addItem(point);
     map->scene()->addItem(graphics_text);
+    // the name can be grabbed too: dragged, clicked and double clicked as the point
+    // (the mouse over the point or its name: followed by the map, see MapWidget::updateWaypointHover)
+    graphics_text->installSceneEventFilter(point);
+    connect(point, &GraphicsPoint::pointPressed, this, &WaypointItem::waypointPressed);
+    connect(point, &GraphicsPoint::pointMoveResumed, this, &WaypointItem::waypointMoveResumed);
+    connect(point, &GraphicsPoint::pointMoveCancelled, this, &WaypointItem::waypointMoveCancelled);
 
     connect(
         point, &GraphicsPoint::pointMoved, this,
@@ -114,9 +125,112 @@ void WaypointItem::setEditable(bool ed) {
     point->setIgnoreEvent(!ed);
 }
 
+/// The names always under the waypoints (of the same kind): a name never hides a waypoint, and
+/// the waypoint under the mouse is the one pressed. Among the names: the raised one, then the
+/// marked one on top.
 void WaypointItem::updateZValue() {
-    point->setZValue(z_value);
-    graphics_text->setZValue(z_value);
+    double r = raised ? 0.5 : 0.;
+    point->setZValue(z_value + r);
+    graphics_text->setZValue(z_value - 0.45 + (raised ? 0.2 : 0.) + (hover_marked ? 0.1 : 0.));
+}
+
+void WaypointItem::setLabelLeader(QLineF scene_line) {
+    if(scene_line.isNull()) {
+        if(label_leader != nullptr) {
+            label_leader->setVisible(false);
+        }
+        return;
+    }
+    if(label_leader == nullptr) {
+        label_leader = new SmoothItem<QGraphicsLineItem>(graphics_text);
+        QPen pen(QColor(255, 255, 255, 230), 1.5);
+        pen.setCosmetic(true);
+        label_leader->setPen(pen);
+    }
+    label_leader->setLine(QLineF(graphics_text->mapFromScene(scene_line.p1()),
+                                 graphics_text->mapFromScene(scene_line.p2())));
+    label_leader->setVisible(true);
+}
+
+/// Its altitude, as set: MSL, or the height above the ground: "AGL" above the terrain (SRTM), "H"
+/// above the flight plan ground altitude when there is no SRTM data there (the height of Paparazzi)
+QString WaypointItem::altitudeText() {
+    double msl = _waypoint->getAlt();
+    QString height;
+    if(AircraftManager::get()->aircraftExists(acId())) {
+        auto fp = AircraftManager::get()->getAircraft(acId())->getFlightPlan();
+        auto ele = SRTMManager::get()->get_elevation(_waypoint->getLat(), _waypoint->getLon());
+        double h = msl - (ele ? ele.value() : fp->getGroundAlt());
+        height = QString("%1 %2 m").arg(ele ? "AGL" : "H").arg(h, 0, 'f', 0);
+    }
+    // one value, as set (on hover and always the same)
+    if(altitude_always == "MSL" || height.isEmpty()) {
+        return QString("MSL %1 m").arg(msl, 0, 'f', 0);
+    }
+    return height;
+}
+
+void WaypointItem::placeHoverInfo() {
+    if(hover_info == nullptr || !hover_info->isVisible()) {
+        return;
+    }
+    // under the name, aligned on the side of the name away from the waypoint; moved sideways
+    // where it would touch the waypoint (a name above its waypoint)
+    double m = graphics_text->document()->documentMargin();
+    QRectF tr = graphics_text->boundingRect();
+    double w = hover_info->boundingRect().width();
+    bool left = label_offset.x() < 0;
+    double x = left ? tr.width() - m - w : m;
+    // right under the text of the name (its box has a margin and the line spacing below it)
+    double y = tr.height() - m - QFontMetricsF(graphics_text->font()).descent() - 1;
+    hover_info->setPos(x, y);
+    QRectF marker = graphics_text->mapFromScene(point->sceneBoundingRect()).boundingRect();
+    QRectF info = hover_info->mapRectToParent(hover_info->boundingRect());
+    if(info.intersects(marker)) {
+        x += left ? marker.left() - info.right() - 2 : marker.right() - info.left() + 2;
+        hover_info->setPos(x, y);
+    }
+}
+
+void WaypointItem::setHoverInfo(QString text) {
+    if(text.isEmpty()) {
+        if(hover_info != nullptr) {
+            hover_info->setVisible(false);
+        }
+        return;
+    }
+    if(hover_info == nullptr) {
+        hover_info = new QGraphicsSimpleTextItem(graphics_text);
+        QFont f = graphics_text->font();
+        f.setPointSizeF(f.pointSizeF() * 0.8);
+        hover_info->setFont(f);
+        hover_info->setBrush(QColor(0xcfe6ff));
+    }
+    hover_info->setText(text);
+    hover_info->setVisible(true);
+    placeHoverInfo();
+}
+
+void WaypointItem::setDimmed(bool d) {
+    graphics_text->setOpacity(d ? 0.6 : 1.0);    // its line too (a child of the name)
+}
+
+void WaypointItem::setHoverMark(bool h, bool ring) {
+    graphics_text->setHoverMark(h);
+    point->setHoverMark(h && ring);
+    hover_marked = h;
+    updateZValue();
+    if(label_leader != nullptr) {
+        QPen pen = label_leader->pen();
+        pen.setColor(h ? QColor(0x4da3ff) : QColor(255, 255, 255, 230));
+        pen.setWidthF(h ? 2.0 : 1.5);
+        label_leader->setPen(pen);
+    }
+}
+
+void WaypointItem::setRaised(bool r) {
+    raised = r;
+    updateZValue();
 }
 
 void WaypointItem::setVisible(bool visible) {
@@ -126,6 +240,9 @@ void WaypointItem::setVisible(bool visible) {
 
 void WaypointItem::updateGraphics(MapWidget* map, uint32_t update_event) {
     if(update_event & (UpdateEvent::ITEM_CHANGED | UpdateEvent::MAP_ZOOMED | UpdateEvent::MAP_ROTATED)) {
+        if(altitude_mode == "Always" && (update_event & UpdateEvent::ITEM_CHANGED)) {
+            setHoverInfo(altitudeText());
+        }
         QPointF scene_pos = scenePoint(Point2DLatLon(_waypoint), zoomLevel(map->zoom()), map->tileSize());
         double s = getScale(map->zoom(), map->scaleFactor());
         double r = map->getRotation();
@@ -134,7 +251,9 @@ void WaypointItem::updateGraphics(MapWidget* map, uint32_t update_event) {
         point->setRotation(-r);
 
         auto rot = QTransform().rotate(-r);
-        graphics_text->setPlainText(_waypoint->getName());
+        if(graphics_text->toPlainText() != _waypoint->getName()) {
+            graphics_text->setPlainText(_waypoint->getName());     // (a new layout: only when changed)
+        }
         graphics_text->setPos(scene_pos + rot.map(label_offset * s));
         graphics_text->setScale(s);
         graphics_text->setRotation(-r);
