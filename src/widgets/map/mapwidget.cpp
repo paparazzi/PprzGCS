@@ -591,9 +591,11 @@ void MapWidget::markWaypointHover(WaypointItem* wpi, bool on_name) {
         return;     // dragging: not the waypoints it passes over
     }
     auto settings = getAppSettings();
-    if(wpi == nullptr || !settings.value("map/waypoint_hover_mark").toBool()) {
+    QString highlight = settings.value("map/waypoint_hover_highlight").toString();
+    if(wpi == nullptr || highlight == "Off") {
         return;
     }
+    bool ring = highlight != "Name only";
     if(settings.value("map/waypoint_hover_dim").toBool()) {
         hover_dimmed = true;
         for(auto mgr: ac_items_managers) {
@@ -607,7 +609,7 @@ void MapWidget::markWaypointHover(WaypointItem* wpi, bool on_name) {
         hover_marked.append(wpi);
     }
     for(auto w: hover_marked) {
-        w->setHoverMark(true);
+        w->setHoverMark(true, ring);
         w->setDimmed(false);
         if(w->altitudeMode() != "Off") {
             w->setHoverInfo(w->altitudeText());     // its altitude by its name (option)

@@ -214,9 +214,9 @@ void WaypointItem::setDimmed(bool d) {
     graphics_text->setOpacity(d ? 0.6 : 1.0);    // its line too (a child of the name)
 }
 
-void WaypointItem::setHoverMark(bool h) {
+void WaypointItem::setHoverMark(bool h, bool ring) {
     graphics_text->setHoverMark(h);
-    point->setHoverMark(h);
+    point->setHoverMark(h && ring);
     hover_marked = h;
     updateZValue();
     if(label_leader != nullptr) {

@@ -19,8 +19,9 @@ public:
     /// a thin line from the name to the waypoint (the name placed further away), in the scene;
     /// a null line: none
     void setLabelLeader(QLineF scene_line);
-    /// its name and line in blue (linked to the waypoint under the mouse)
-    void setHoverMark(bool h);
+    /// its name and line in blue (linked to the waypoint under the mouse); ring: a blue ring
+    /// around the waypoint too
+    void setHoverMark(bool h, bool ring = true);
     /// its name faded (the mouse over another waypoint or name)
     void setDimmed(bool d);
     /// a small line under its name (e.g. the altitude, while hovered); empty: none
