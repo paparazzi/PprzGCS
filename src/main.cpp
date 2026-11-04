@@ -19,6 +19,7 @@
 #include "speaker.h"
 #endif
 
+#include "pprzgcs_version.h"
 #ifndef PPRZGCS_VERSION
 #error "you need to define PPRZGCS_VERSION!"
 #endif
