@@ -35,6 +35,8 @@ public:
     QPointF labelOffset() {return label_offset;}
     void setLabelOffset(QPointF o) {label_offset = o;}
     QGraphicsItem* marker();
+    /// its name and what belongs to it (the altitude line, the line to the waypoint)
+    bool isLabelPart(QGraphicsItem* item) {return item == graphics_text || item->parentItem() == graphics_text;}
     WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     WaypointItem(Point2DLatLon pt, QString ac_id, PprzPalette palette, double neutral_scale_zoom = 15, QObject *parent = nullptr);
     WaypointItem(Waypoint* wp, QString ac_id, double neutral_scale_zoom = 15, QObject *parent = nullptr);
@@ -73,10 +75,10 @@ public:
 
 signals:
     void waypointPressed(QPointF scene_pos, bool ctrl);
-    /// the mouse over the point (on_name: over its name)
-    void waypointHovered(bool hovered, bool on_name);
     void waypointMoved(Point2DLatLon latlon_pos);
     void waypointMoveFinished();
+    /// dragged again right after waypointMoveFinished (the button was not really released)
+    void waypointMoveResumed();
     void waypointDoubleClicked();
 
 
@@ -91,6 +93,7 @@ private:
     int altitude;
     bool moving;
     bool raised = false;
+    bool hover_marked = false;
     QGraphicsLineItem* label_leader = nullptr;
     QGraphicsSimpleTextItem* hover_info = nullptr;  // child of the name
     QString altitude_mode;

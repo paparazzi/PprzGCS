@@ -62,6 +62,8 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
 void AircraftItem::addToMap(MapWidget* map) {
     map->scene()->addItem(graphics_aircraft);
     map->scene()->addItem(graphics_text);
+    // a double click on its name selects it too
+    graphics_text->installSceneEventFilter(graphics_aircraft);
     if(alarms) {
         map->scene()->addItem(alarms);
     }

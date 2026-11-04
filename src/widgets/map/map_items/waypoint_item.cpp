@@ -49,7 +49,7 @@ void WaypointItem::init() {
 
 
     graphics_text = new GraphicsText(original_waypoint->getName(), QColor(Qt::white), this);
-    graphics_text->setZValue(z_value);
+    updateZValue();
 
 
     setZoomFactor(1.1);
@@ -82,12 +82,10 @@ void WaypointItem::addToMap(MapWidget* map) {
     map->scene()->addItem(point);
     map->scene()->addItem(graphics_text);
     // the name can be grabbed too: dragged, clicked and double clicked as the point
+    // (the mouse over the point or its name: followed by the map, see MapWidget::updateWaypointHover)
     graphics_text->installSceneEventFilter(point);
-    graphics_text->setAcceptHoverEvents(true);
-    // the mouse over the point or its name (the map marks what is linked to it)
-    connect(point, &GraphicsObject::hoverChanged, this, [=,this](bool h) { emit waypointHovered(h, false); });
-    connect(point, &GraphicsPoint::nameHoverChanged, this, [=,this](bool h) { emit waypointHovered(h, true); });
     connect(point, &GraphicsPoint::pointPressed, this, &WaypointItem::waypointPressed);
+    connect(point, &GraphicsPoint::pointMoveResumed, this, &WaypointItem::waypointMoveResumed);
 
     connect(
         point, &GraphicsPoint::pointMoved, this,
@@ -126,9 +124,13 @@ void WaypointItem::setEditable(bool ed) {
     point->setIgnoreEvent(!ed);
 }
 
+/// The names always under the waypoints (of the same kind): a name never hides a waypoint, and
+/// the waypoint under the mouse is the one pressed. Among the names: the raised one, then the
+/// marked one on top.
 void WaypointItem::updateZValue() {
-    point->setZValue(z_value + (raised ? 0.5 : 0.));
-    graphics_text->setZValue(z_value + (raised ? 0.5 : 0.));
+    double r = raised ? 0.5 : 0.;
+    point->setZValue(z_value + r);
+    graphics_text->setZValue(z_value - 0.45 + (raised ? 0.2 : 0.) + (hover_marked ? 0.1 : 0.));
 }
 
 void WaypointItem::setLabelLeader(QLineF scene_line) {
@@ -187,10 +189,6 @@ void WaypointItem::placeHoverInfo() {
         x += left ? marker.left() - info.right() - 2 : marker.right() - info.left() + 2;
         hover_info->setPos(x, y);
     }
-    QString t = hover_info->text();
-    hover_info->setToolTip(t.contains("AGL") ? "AGL: above the terrain (SRTM)" :
-                           t.contains("H ") ? "H: above the flight plan ground altitude (no SRTM data here)" :
-                                              "MSL: above sea level");
 }
 
 void WaypointItem::setHoverInfo(QString text) {
@@ -219,7 +217,8 @@ void WaypointItem::setDimmed(bool d) {
 void WaypointItem::setHoverMark(bool h) {
     graphics_text->setHoverMark(h);
     point->setHoverMark(h);
-    graphics_text->setZValue(z_value + (h ? 1.0 : raised ? 0.5 : 0.));
+    hover_marked = h;
+    updateZValue();
     if(label_leader != nullptr) {
         QPen pen = label_leader->pen();
         pen.setColor(h ? QColor(0x4da3ff) : QColor(255, 255, 255, 230));

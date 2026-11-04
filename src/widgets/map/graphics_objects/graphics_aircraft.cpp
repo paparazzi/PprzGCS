@@ -35,6 +35,15 @@ void GraphicsAircraft::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* event) {
     event->accept();
 }
 
+bool GraphicsAircraft::sceneEventFilter(QGraphicsItem* watched, QEvent* event) {
+    (void)watched;
+    if(event->type() == QEvent::GraphicsSceneMouseDoubleClick) {
+        mouseDoubleClickEvent(static_cast<QGraphicsSceneMouseEvent*>(event));
+        return true;
+    }
+    return false;
+}
+
 void GraphicsAircraft::hoverLeaveEvent(QGraphicsSceneHoverEvent* event) {
     QGraphicsItem::hoverLeaveEvent(event);
     emit hoverChanged(false);

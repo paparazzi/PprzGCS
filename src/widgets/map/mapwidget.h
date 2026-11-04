@@ -151,6 +151,9 @@ private:
     QList<WaypointItem*> hover_marked;     // marked as linked to the waypoint or name under the mouse
     bool hover_dimmed = false;             // the other names faded (option)
     void clearWaypointHover();
+    void updateWaypointHover(QPoint view_pos, bool inside);
+    QPointer<WaypointItem> hover_target;   // the waypoint (or name) under the mouse
+    bool hover_target_on_name = false;
     void markWaypointHover(WaypointItem* wpi, bool on_name);
     QTimer* hover_timer;                   // the marking after a short delay
     QPointer<WaypointItem> hover_pending;
