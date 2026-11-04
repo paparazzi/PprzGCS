@@ -10,7 +10,6 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/flowlayout.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mbpushbutton.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/lock_button.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/graphwidget.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/colorbar.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/chatbubble.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/card_dialog.cpp

@@ -9,6 +9,11 @@
                 <widget name="chat" icon="rail_chat.svg" title="Chat"/>
                 <widget name="PFD" icon="rail_pfd.svg" title="PFD"/>
                 <widget name="link_status" icon="rail_link.svg" title="Link status"/>
+                <widget name="plotter" icon="rail_plotter.svg" title="Plots">
+                    <configure>
+                        <plot preset="battery"/>
+                    </configure>
+                </widget>
                 <widget name="video" icon="rail_video.svg" title="Video">
                     <configure source="udp://:5600" width="320"/>
                 </widget>
@@ -21,11 +26,6 @@
                 <widget name="flightplan" title="Flight plan"/>
                 <widget name="settings" title="Settings"/>
                 <widget name="checklist" title="Checklist"/>
-                <widget name="plotter" title="Plot">
-                    <configure>
-                        <plot name="ground:ENGINE_STATUS:bat:1." min="9" max="13"/>
-                    </configure>
-                </widget>
             </tabs>
         </rows>
       </columns>
