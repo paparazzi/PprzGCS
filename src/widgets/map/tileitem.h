@@ -38,6 +38,10 @@ public:
     bool paintPixmapFromOffspring(QPixmap* altPixmap);
 
     virtual void setPixmap(const QPixmap &pixmap);
+    /// a bit larger than the tile (over the next one): no line of background between the tiles
+    /// at a zoom between two tile levels
+    QRectF boundingRect() const override;
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
     void setAltPixmap(const QPixmap &pixmap);
 
 

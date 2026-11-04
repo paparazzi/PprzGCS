@@ -9,6 +9,7 @@
 #include "srtm_manager.h"
 #include "coordinatestransform.h"
 #include "gcs_utils.h"
+#include "smooth_item.h"
 
 // create WaypointItem from position -> create corresponding Waypoint.
 WaypointItem::WaypointItem(Point2DLatLon pt, QString ac_id, double neutral_scale_zoom, QObject *parent) :
@@ -138,7 +139,7 @@ void WaypointItem::setLabelLeader(QLineF scene_line) {
         return;
     }
     if(label_leader == nullptr) {
-        label_leader = new QGraphicsLineItem(graphics_text);
+        label_leader = new SmoothItem<QGraphicsLineItem>(graphics_text);
         QPen pen(QColor(255, 255, 255, 230), 1.5);
         pen.setCosmetic(true);
         label_leader->setPen(pen);
@@ -250,7 +251,9 @@ void WaypointItem::updateGraphics(MapWidget* map, uint32_t update_event) {
         point->setRotation(-r);
 
         auto rot = QTransform().rotate(-r);
-        graphics_text->setPlainText(_waypoint->getName());
+        if(graphics_text->toPlainText() != _waypoint->getName()) {
+            graphics_text->setPlainText(_waypoint->getName());     // (a new layout: only when changed)
+        }
         graphics_text->setPos(scene_pos + rot.map(label_offset * s));
         graphics_text->setScale(s);
         graphics_text->setRotation(-r);

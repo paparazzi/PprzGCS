@@ -30,6 +30,23 @@ void TileItem::setPixmap(const QPixmap &pixmap) {
     _hasData = true;
 }
 
+static constexpr double TILE_OVERLAP = 1.5;    // in scene units (about a pixel on the screen)
+
+QRectF TileItem::boundingRect() const {
+    return QGraphicsPixmapItem::boundingRect().adjusted(0, 0, TILE_OVERLAP, TILE_OVERLAP);
+}
+
+void TileItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
+    if(pixmap().isNull() || painter->opacity() < 1.0) {
+        // a see-through layer: no overlap (it would show darker there)
+        QGraphicsPixmapItem::paint(painter, option, widget);
+        return;
+    }
+    QRectF src(pixmap().rect());
+    QRectF r = QGraphicsPixmapItem::boundingRect();
+    painter->drawPixmap(r.adjusted(0, 0, TILE_OVERLAP, TILE_OVERLAP), pixmap(), src);
+}
+
 void TileItem::setAltPixmap(const QPixmap &pixmap) {
     QGraphicsPixmapItem::setPixmap(pixmap);
     _hasData = true;

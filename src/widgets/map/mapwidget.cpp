@@ -21,6 +21,7 @@
 #include "dispatcher_ui.h"
 #include "AircraftManager.h"
 #include "srtm_manager.h"
+#include "smooth_item.h"
 #include "widget_utils.h"
 #include "layer_combo.h"
 #include "lock_button.h"
@@ -1328,11 +1329,16 @@ void MapWidget::showPendingMove(WaypointItem* wpi) {
     pen.setCosmetic(true);
     PendingMove pm;
     pm.from = Point2DLatLon(wpi->getOriginalWaypoint());
-    pm.marker = scene()->addPolygon(QPolygonF({QPointF(0, -8), QPointF(8, 0), QPointF(0, 8), QPointF(-8, 0)}), pen);
+    pm.marker = new SmoothItem<QGraphicsPolygonItem>(QPolygonF({QPointF(0, -8), QPointF(8, 0), QPointF(0, 8), QPointF(-8, 0)}));
+    pm.marker->setPen(pen);
+    pm.marker->setAcceptedMouseButtons(Qt::NoButton);
+    scene()->addItem(pm.marker);
     pm.marker->setFlag(QGraphicsItem::ItemIgnoresTransformations);
     pm.marker->setZValue(900);
-    pm.marker->setToolTip("Position before the move, until the aircraft confirms it");
-    pm.line = scene()->addLine(QLineF(), pen);
+    pm.line = new SmoothItem<QGraphicsLineItem>();
+    pm.line->setPen(pen);
+    pm.line->setAcceptedMouseButtons(Qt::NoButton);
+    scene()->addItem(pm.line);
     pm.line->setZValue(899);
     pm.conn = connect(wpi, &WaypointItem::itemChanged, this, [=,this]() { updatePendingMove(wpi); });
     pending_moves[wpi] = pm;
