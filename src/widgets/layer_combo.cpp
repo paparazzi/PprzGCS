@@ -163,7 +163,6 @@ void LayerCombo::makeLayerControl(QString name, bool initialState, int z, QStrin
     }
 
     MapLayerControl* layer_control = new MapLayerControl(title.isEmpty() ? name : title, thumbnail, initialState, z);
-    layer_control->setToolTip(name);
 
     connect(
         layer_control, &MapLayerControl::showLayer, this,

@@ -2544,7 +2544,6 @@ void MapWidget::addRailPanel(QString id, QWidget* widget, QString title, QString
     auto close_button = new QToolButton(header);
     close_button->setObjectName("rail_card_close");
     close_button->setText(QString::fromUtf8("\xE2\x9C\x95"));
-    close_button->setToolTip("Close");
     close_button->setCursor(Qt::ArrowCursor);   // not the move cursor of the title bar
     header_layout->addWidget(title_label, 1);
     header_layout->addWidget(close_button);

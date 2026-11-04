@@ -56,7 +56,6 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
         auto row = new QPushButton(widget);
         row->setObjectName("block_row");
         row->setCheckable(true);
-        row->setToolTip(name);
         group->addButton(row);
         auto hbox = new QHBoxLayout(row);
         hbox->setContentsMargins(4, 2, 4, 2);
@@ -82,7 +81,6 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
         auto time = new QLabel(row);
         auto go = new QPushButton("Go", row);
         go->setObjectName("block_go");
-        go->setToolTip("Jump to " + name);
         go->hide();
         for(auto l: {ll, lbl, det, time}) {
             l->setAttribute(Qt::WA_TransparentForMouseEvents);
