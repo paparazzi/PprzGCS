@@ -13,6 +13,7 @@ enum PointMoveState {
     PMS_PRESSED,
     PMS_MOVED,
     PMS_RELEASED,   // dragged, then released: finished after a short grace period (see below)
+    PMS_CARRIED,    // follows the mouse without a button held, until a click places it
 };
 
 class GraphicsPoint : public GraphicsObject, public QGraphicsItem
@@ -28,6 +29,11 @@ public:
     QPainterPath shape() const override;
     /// a blue ring: linked to the name under the mouse
     void setHoverMark(bool h) {if(hover_mark != h) {hover_mark = h; update();}}
+    /// it follows the mouse (no button held) until a click places it (as a drag released there);
+    /// a right click or cancelCarry puts it back (pointMoveCancelled)
+    void startCarry();
+    void cancelCarry();
+    bool isCarried() {return move_state == PMS_CARRIED;}
 
 signals:
     /// pressed (also on its name); ctrl: the Ctrl key held
@@ -37,6 +43,8 @@ signals:
     /// pressed again right after pointMoveFinished (the button was not really released): the
     /// same drag goes on, pointMoveFinished again at its end
     void pointMoveResumed();
+    /// carried, then put back (right click, Esc)
+    void pointMoveCancelled();
 
 protected:
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) override;

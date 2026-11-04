@@ -357,6 +357,11 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
         setFrozen(interaction_state != PMIS_FROZEN);
     });
     add_shortcut("Unfreeze / cancel", QKeySequence(Qt::Key_Escape), [=,this](){
+        for(auto mgr: std::as_const(ac_items_managers)) {
+            for(auto w: mgr->getWaypointsItems()) {
+                w->cancelCarry();   // a waypoint picked up with Ctrl+click: put back
+            }
+        }
         if(interaction_state == PMIS_FLIGHT_PLAN_EDIT && fp_edit_sm != nullptr) {
             MapItem* item = fp_edit_sm->update(FPEE_CANCEL, nullptr, nullptr, current_ac);
             (void)item;
@@ -564,7 +569,7 @@ void MapWidget::chooseStackedWaypoint(WaypointItem* wpi, QPointF scene_pos) {
         return;
     }
     QMenu menu(this);
-    auto title = menu.addAction("Waypoints here: choose one, then drag it (Ctrl+drag: all together)");
+    auto title = menu.addAction("Waypoints here: choose one, it follows the mouse, click to place it (right click: back)");
     title->setEnabled(false);
     for(auto w: stack) {
         QString name = w->waypoint()->getName();
@@ -573,11 +578,17 @@ void MapWidget::chooseStackedWaypoint(WaypointItem* wpi, QPointF scene_pos) {
         }
         auto a = menu.addAction(name);
         connect(a, &QAction::triggered, this, [=,this]() {
+            // its aircraft selected: its waypoints can be dragged (those of the others not)
+            if(w->acId() != current_ac) {
+                emit DispatcherUi::get()->ac_selected(w->acId());
+            }
             for(auto mgr: ac_items_managers) {
                 for(auto o: mgr->getWaypointsItems()) {
                     o->setRaised(o == w);
                 }
             }
+            // picked up: it follows the mouse, a click places it (and opens its card)
+            w->startCarry();
         });
     }
     menu.exec(mapToGlobal(mapFromScene(scene_pos)) + QPoint(8, 8));
@@ -1019,6 +1030,20 @@ void MapWidget::setZoom(double z) {
 }
 
 void MapWidget::mousePressEvent(QMouseEvent *event) {
+    if(event->button() == Qt::RightButton) {
+        // a waypoint picked up with Ctrl+click: put back (no map menu)
+        bool cancelled = false;
+        for(auto mgr: std::as_const(ac_items_managers)) {
+            for(auto w: mgr->getWaypointsItems()) {
+                cancelled = cancelled || w->isCarried();
+                w->cancelCarry();
+            }
+        }
+        if(cancelled) {
+            event->accept();
+            return;
+        }
+    }
     Map2D::mousePressEvent(event);
     if(event->buttons() & pan_mouse_mask && !event->isAccepted()) {
         pan_state = PAN_PRESSED;
@@ -1698,6 +1723,17 @@ void MapWidget::onWaypointAdded(Waypoint* wp, QString ac_id) {
     connect(wpi, &WaypointItem::waypointMoveFinished, this, dialog_move_waypoint);
 
     connect(wpi, &WaypointItem::itemDoubleClicked, this, dialog_move_waypoint);
+
+    // carried (chosen with Ctrl+click), then put back: at its confirmed position again
+    connect(wpi, &WaypointItem::waypointMoveCancelled, this, [=,this]() {
+        wpi->setMoving(false);
+        wpi->setRaised(false);
+        wpi->update();
+        wpi->setAnimate(false);
+        if(waypoint_editors.value(wpi).isNull()) {
+            clearPendingMove(wpi);
+        }
+    });
 
     // the drag goes on (the button was not really released): its card closed, a new one at the end
     connect(wpi, &WaypointItem::waypointMoveResumed, this, [=,this]() {

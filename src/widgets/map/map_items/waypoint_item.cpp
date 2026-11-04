@@ -86,6 +86,7 @@ void WaypointItem::addToMap(MapWidget* map) {
     graphics_text->installSceneEventFilter(point);
     connect(point, &GraphicsPoint::pointPressed, this, &WaypointItem::waypointPressed);
     connect(point, &GraphicsPoint::pointMoveResumed, this, &WaypointItem::waypointMoveResumed);
+    connect(point, &GraphicsPoint::pointMoveCancelled, this, &WaypointItem::waypointMoveCancelled);
 
     connect(
         point, &GraphicsPoint::pointMoved, this,

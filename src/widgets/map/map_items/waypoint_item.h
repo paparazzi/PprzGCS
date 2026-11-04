@@ -68,6 +68,10 @@ public:
     void setAnimate(bool animate);
     /// over the waypoints at the same place (chosen among them), until lowered
     void setRaised(bool r);
+    /// it follows the mouse until a click places it (right click, cancelCarry: put back)
+    void startCarry() {point->startCarry();}
+    void cancelCarry() {point->cancelCarry();}
+    bool isCarried() {return point->isCarried();}
     void setSize(int s) {
         m_size = s;
         point->setProperty("size", m_size);
@@ -80,6 +84,8 @@ signals:
     void waypointMoveFinished();
     /// dragged again right after waypointMoveFinished (the button was not really released)
     void waypointMoveResumed();
+    /// carried, then put back
+    void waypointMoveCancelled();
     void waypointDoubleClicked();
 
 

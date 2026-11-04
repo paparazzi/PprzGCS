@@ -162,6 +162,21 @@ void GraphicsPoint::mousePressEvent(QGraphicsSceneMouseEvent *event) {
         event->ignore();
         return;
     }
+    if(move_state == PMS_CARRIED) {
+        event->accept();
+        if(event->button() == Qt::LeftButton) {
+            // placed here: as a drag, released with this click (the card then)
+            setPos(event->scenePos());
+            emit pointMoved(event->scenePos());
+            pressPos = QPointF(0, 0);
+            pressScreen = event->screenPos();
+            move_state = PMS_MOVED;
+            changeFocus();
+        } else {
+            cancelCarry();
+        }
+        return;
+    }
     if(move_state == PMS_RELEASED) {
         // near where it was let go: the same drag (a press elsewhere is not for it)
         if(event->button() == Qt::LeftButton && (event->screenPos() - release_screen).manhattanLength() < 60) {
@@ -179,9 +194,10 @@ void GraphicsPoint::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     if(move_state == PMS_MOVED) {
         return;     // a second press during the drag (it goes on)
     }
-    if(!isHighlighted()) {
+    if(!isHighlighted() && !(event->modifiers() & Qt::ControlModifier)) {
         // a waypoint of another aircraft: a press goes on to the map (panning), a double click
-        // selects that aircraft (as on the aircraft); not moved, no card
+        // selects that aircraft (as on the aircraft); not moved, no card. With Ctrl: as the
+        // others (Ctrl+click: the menu of the waypoints at that place)
         bool second = other_press.isValid() &&
                       other_press.elapsed() < QApplication::doubleClickInterval() &&
                       (event->screenPos() - other_press_screen).manhattanLength() < 8;
@@ -248,6 +264,9 @@ void GraphicsPoint::mouseMoveEvent(QGraphicsSceneMouseEvent *event) {
     } else if(move_state == PMS_MOVED) {
         setPos(event->scenePos() - pressPos);
         emit pointMoved(event->scenePos() - pressPos);
+    } else if(move_state == PMS_CARRIED) {
+        setPos(event->scenePos());
+        emit pointMoved(event->scenePos());
     } else if(move_state == PMS_RELEASED && (event->buttons() & Qt::LeftButton) &&
               (event->screenPos() - release_screen).manhattanLength() < 60) {
         resumeMove(event);     // the button is held again (the release was not real)
@@ -318,8 +337,43 @@ bool GraphicsPoint::sceneEvent(QEvent* event) {
     return QGraphicsItem::sceneEvent(event);
 }
 
+void GraphicsPoint::startCarry() {
+    if(move_state != PMS_IDLE || ignore_events || !editable) {
+        return;
+    }
+    release_timer->stop();
+    move_state = PMS_CARRIED;
+    pressPos = QPointF(0, 0);   // under the mouse
+    if(!explicit_grab) {
+        explicit_grab = true;
+        grabMouse();    // the mouse moves (no button) and the click come here
+    }
+    changeFocus();
+}
+
+void GraphicsPoint::cancelCarry() {
+    if(move_state != PMS_CARRIED) {
+        return;
+    }
+    move_state = PMS_IDLE;
+    if(explicit_grab) {
+        explicit_grab = false;
+        if(scene() != nullptr && scene()->mouseGrabberItem() == this) {
+            ungrabMouse();
+        }
+    }
+    changeFocus();
+    emit pointMoveCancelled();
+}
+
 void GraphicsPoint::mouseUngrabbed() {
     explicit_grab = false;
+    if(move_state == PMS_CARRIED) {
+        move_state = PMS_IDLE;      // the mouse taken away: put back
+        changeFocus();
+        emit pointMoveCancelled();
+        return;
+    }
     if(move_state == PMS_PRESSED) {
         move_state = PMS_IDLE;
         double_pressed = false;
@@ -369,6 +423,7 @@ void GraphicsPoint::changeFocus() {
             break;
         case PMS_MOVED:
         case PMS_RELEASED:
+        case PMS_CARRIED:
             current_color = COLOR_MOVED;
             break;
         }
