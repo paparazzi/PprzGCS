@@ -1,5 +1,6 @@
 #include "card_dialog.h"
 #include "app_settings.h"
+#include "map_notifications.h"
 #include "switch.h"
 #include <QApplication>
 #include <QFile>
@@ -93,6 +94,9 @@ void set_app_settings() {
 
     default_setting("aircraft_default_color", "red");
 
+    for(auto &k: MapNotifications::kinds()) {
+        default_setting("notify/" + k.key, k.on);
+    }
     default_setting("APP_STYLE_FILE", "default_style.qss");
     default_setting("APP_LAYOUT_FILE", "default_layout.xml");
 
@@ -230,6 +234,57 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     finishTab(l_panels, row);
     tabWidget->addTab(w_panels, "Panels");
+
+    // Tab Notifications: which ones show at the top of the map
+    auto w_notify = new QWidget(tabWidget);
+    auto l_notify = new QGridLayout(w_notify);
+    row = 0;
+    // a section per group; per kind: its name, when it shows (in grey), how serious (a label
+    // per level, as on the map) and its switch
+    QString group;
+    QString muted = "#6e7781";     // a grey readable in the light and the night style
+    for(auto &k: MapNotifications::kinds()) {
+        if(k.group != group) {
+            group = k.group;
+            addSection(group, w_notify, l_notify, row);
+        }
+        QString name = k.name.toHtmlEscaped();
+        if(!k.detail.isEmpty()) {
+            name += QString("<br><span style='color:%1; font-size:11px;'>%2</span>").arg(muted, k.detail.toHtmlEscaped());
+        }
+        cb = addSetting(name, "notify/" + k.key, w_notify, l_notify, row, Type::BOOL);
+        callbacks.append(cb);
+        // the levels, then the switch (in line from row to row)
+        auto item = l_notify->itemAtPosition(row - 1, 1);
+        auto sw = item != nullptr ? item->widget() : nullptr;
+        if(sw != nullptr) {
+            l_notify->removeWidget(sw);
+            auto box = new QWidget(w_notify);
+            auto hl = new QHBoxLayout(box);
+            hl->setContentsMargins(0, 0, 0, 0);
+            hl->setSpacing(4);
+            auto levels = new QWidget(box);
+            auto ll = new QHBoxLayout(levels);
+            ll->setContentsMargins(0, 0, 0, 0);
+            ll->setSpacing(4);
+            for(auto &level: k.levels) {
+                auto badge = new QLabel(level, levels);
+                badge->setObjectName("settings_level_" + level.toLower());
+                badge->setFixedHeight(18);
+                badge->setAlignment(Qt::AlignCenter);
+                ll->addWidget(badge);
+            }
+            ll->addStretch(1);
+            levels->setFixedWidth(140);
+            hl->addWidget(levels);
+            hl->addWidget(sw);
+            hl->addStretch(1);
+            l_notify->addWidget(box, row - 1, 1);
+        }
+    }
+    live_settings << "notify/";     // read each time a notification comes
+    finishTab(l_notify, row);
+    tabWidget->addTab(w_notify, "Notifications");
     tabWidget->tabBar()->moveTab(tabWidget->indexOf(w_ivy), tabWidget->count() - 1);   // Ivy last
     tabWidget->setCurrentIndex(0);
 

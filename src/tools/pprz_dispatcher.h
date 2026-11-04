@@ -54,7 +54,12 @@ public:
         silent_mode = silent;
     }
 
+    /// messages were received from the server (since the start)
+    bool serverSeen() {return server_seen;}
+
 signals:
+    /// the server answers (again), or stopped answering (also: none at the start)
+    void serverStatusChanged(bool ok);
     void aircraft_die(pprzlink::Message);
     void flight_param(pprzlink::Message);
     void ap_status(pprzlink::Message);
@@ -91,6 +96,9 @@ private:
 
     qint64 time_msg_server;
     QTimer server_check_timer;
+    bool server_ok = false;
+    bool server_seen = false;
+    int server_checks = 0;
 };
 
 
