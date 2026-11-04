@@ -6,6 +6,7 @@
 #include <PprzApplication.h>
 #include <QDateTime>
 #include <QTimer>
+#include <QPointer>
 #include "pprzmain.h"
 #include <QSettings>
 #include "gcs_utils.h"
@@ -112,6 +113,7 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
             QString id;
             msg.getField("ac_id", id);
             // after the other handlers of this message (e.g. the chat notice)
+            settings_after_reload.insert(id);
             QTimer::singleShot(0, this, [=,this]() {reloadAircraft(id);});
         }
     );
@@ -144,6 +146,17 @@ void PprzDispatcher::setToolbox(PprzToolbox* toolbox) {
                 }
             }
         });
+
+    // an aircraft loaded: the values of its settings asked. After a reboot all of them; else, once
+    // the server had time to send those it knows, the ones still unknown (none for an aircraft
+    // the server has seen for a while: no traffic for nothing)
+    connect(DispatcherUi::get(), &DispatcherUi::new_ac_config, this, [=,this](QString id) {
+        if(settings_after_reload.remove(id)) {
+            requestSettings(id, false);
+        } else {
+            QTimer::singleShot(3000, this, [=,this]() {requestSettings(id, true);});
+        }
+    });
 
     bid = bindGuarded(link, dict->getDefinition("NEW_AIRCRAFT"), nullptr,
         [=,this](QString ac_id, pprzlink::Message msg) {
@@ -274,6 +287,61 @@ void PprzDispatcher::reloadAircraft(QString id) {
     }
     AircraftManager::get()->removeAircraft(id);
     requestConfig(id);
+}
+
+void PprzDispatcher::requestSettings(QString ac_id, bool only_unknown) {
+    if(!AircraftManager::get()->aircraftExists(ac_id) || !hasMessage("GET_DL_SETTING")) {
+        return;
+    }
+    // (an option: with a very slow datalink, they come one by one from the aircraft)
+    if(!getAppSettings().value("settings/request_values", true).toBool()) {
+        return;
+    }
+    auto ac = AircraftManager::get()->getAircraft(ac_id);
+    if(!ac->isReal() || ac->getSettingMenu() == nullptr) {
+        return;
+    }
+    QList<Setting*> todo;
+    QList<uint8_t> numbers;
+    for(auto s: ac->getSettingMenu()->getAllSettings()) {
+        if(!numbers.contains(s->getNo()) && (!only_unknown || !s->getValue().has_value())) {
+            numbers.append(s->getNo());
+            todo.append(s);
+        }
+    }
+    if(todo.isEmpty()) {
+        return;
+    }
+    // 10 per second (the uplink is shared with the commands); the answers come back as usual
+    auto timer = new QTimer(this);
+    timer->setInterval(100);
+    auto next = std::make_shared<int>(0);
+    QPointer<Aircraft> loaded = ac;
+    connect(timer, &QTimer::timeout, this, [=,this]() {
+        // stopped when done, or when the aircraft is gone (or reloaded again: a new request)
+        if(*next >= numbers.size() || loaded.isNull() || !AircraftManager::get()->aircraftExists(ac_id) ||
+           AircraftManager::get()->getAircraft(ac_id) != loaded) {
+            timer->stop();
+            timer->deleteLater();
+            return;
+        }
+        // (known meanwhile: not asked)
+        while(only_unknown && *next < todo.size() && todo[*next]->getValue().has_value()) {
+            *next += 1;
+        }
+        if(*next >= todo.size()) {
+            return;     // stopped at the next tick
+        }
+        pprzlink::Message msg(dict->getDefinition("GET_DL_SETTING"));
+        msg.setSenderId(pprzlink_id);
+        msg.addField("ac_id", ac_id);
+        msg.addField("index", numbers[*next]);
+        if(started) {
+            sendMessage(msg);
+        }
+        *next += 1;
+    });
+    timer->start();
 }
 
 void PprzDispatcher::unBind(long bid) {

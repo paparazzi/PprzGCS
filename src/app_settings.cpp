@@ -88,6 +88,7 @@ void set_app_settings() {
     default_setting("map/waypoint_altitude", "On hover");
     default_setting("map/waypoint_altitude_always", "Height");
     default_setting("settings/rows_open", false);
+    default_setting("settings/request_values", true);
     default_setting("strips/status_icons", true);
     default_setting("window/menu_title_bar", false);
     default_setting("map/aircraft/track_width", 1);
@@ -232,6 +233,12 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     cb = addSetting("Settings: every setting open (slider and buttons)", "settings/rows_open", w_panels, l_panels, row, Type::BOOL);
     callbacks.append(cb);
+    cb = addSetting("Settings: ask the aircraft for their values", "settings/request_values", w_panels, l_panels, row, Type::BOOL);
+    callbacks.append(cb);
+    addHelp("When an aircraft is loaded, the values of its settings that are still unknown are asked "
+            "(after a reboot: all of them), 10 per second, instead of waiting for the aircraft to send "
+            "them one by one (about one per second). Turn it off with a very slow datalink.", w_panels, l_panels, row);
+    live_settings << "settings/request_values";     // read when an aircraft is loaded
     finishTab(l_panels, row);
     tabWidget->addTab(w_panels, "Panels");
 
