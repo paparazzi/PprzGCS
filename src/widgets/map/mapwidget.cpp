@@ -1660,9 +1660,21 @@ void MapWidget::handleNewAC(QString ac_id) {
 void MapWidget::removeAC(QString ac_id) {
     clearWaypointHover();
     hover_marked.removeIf([=](WaypointItem* w) { return w->acId() == ac_id; });
+    // its open waypoint cards closed (their waypoints go; e.g. reloaded after a reboot: Move would
+    // use a removed waypoint)
     for(auto k: waypoint_editors.keys()) {
+        bool follower = false;     // a card of another aircraft moving one of its waypoints along
+        for(auto f: wp_followers.value(k)) {
+            follower = follower || f->acId() == ac_id;
+        }
         if(k->acId() == ac_id) {
-            waypoint_editors.remove(k);
+            auto we = waypoint_editors.take(k);
+            if(!we.isNull()) {
+                we->setProperty("replaced", true);  // nothing done with its waypoint when it closes
+                we->reject();
+            }
+        } else if(follower && !waypoint_editors.value(k).isNull()) {
+            waypoint_editors.value(k)->reject();    // canceled: the others back where they were
         }
     }
     for(auto k: wp_followers.keys()) {
