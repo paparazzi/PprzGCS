@@ -1,4 +1,6 @@
 #include "flightplan_viewerv2.h"
+#include <QKeyEvent>
+#include <QScrollArea>
 #include <QVBoxLayout>
 #include <QtWidgets>
 #include "AircraftManager.h"
@@ -35,7 +37,7 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
     widget->setObjectName("blocks");
     // colors from the application style sheet (light and night themes), these when it has none
     if(!qApp->styleSheet().contains("block_row")) widget->setStyleSheet(
-        "QPushButton#block_row { border: 0; border-radius: 0; padding: 0 8px; min-height: 40px; background: transparent; text-align: left; }"
+        "QPushButton#block_row { border: 0; border-radius: 0; padding: 0 8px; min-height: 40px; background: transparent; text-align: left; outline: none; }"
         "QLabel#block_detail { color: #57606a; }"
         "QPushButton#block_row:checked { background: #dde7f7; border-left: 4px solid #1d5fc9; }"
         "QPushButton#block_row[current=\"true\"] { background: #cfe9d6; border-left: 4px solid #1f7a3f; }"
@@ -125,6 +127,28 @@ QWidget* FlightPlanViewerV2::make_blocks_tab() {
 
 
 bool FlightPlanViewerV2::eventFilter(QObject* obj, QEvent* event) {
+    // a block chosen with the arrow keys: Enter jumps to it (as Go)
+    if(event->type() == QEvent::KeyPress) {
+        auto key = static_cast<QKeyEvent*>(event)->key();
+        auto row = qobject_cast<QPushButton*>(obj);
+        auto go = qobject_cast<QPushButton*>(obj->property("go_button").value<QObject*>());
+        if((key == Qt::Key_Return || key == Qt::Key_Enter) && row != nullptr && go != nullptr) {
+            if(row->isChecked()) {
+                go->click();
+            }
+            return true;
+        }
+    }
+    // and stays in view
+    if(event->type() == QEvent::FocusIn && obj->property("go_button").isValid()) {
+        auto row = qobject_cast<QWidget*>(obj);
+        for(auto p = row != nullptr ? row->parentWidget() : nullptr; p != nullptr; p = p->parentWidget()) {
+            if(auto scroll = qobject_cast<QScrollArea*>(p)) {
+                scroll->ensureWidgetVisible(row, 0, 0);
+                break;
+            }
+        }
+    }
     if(event->type() == QEvent::MouseButtonDblClick) {
         auto go = qobject_cast<QPushButton*>(obj->property("go_button").value<QObject*>());
         if(go != nullptr) {

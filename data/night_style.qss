@@ -146,6 +146,7 @@ QPushButton#block_row {
     min-height: 40px;
     background: transparent;
     text-align: left;
+    outline: none;      /* chosen with the arrow keys: the same as tapped (no focus frame) */
 }
 QPushButton#block_row QLabel {
     background: transparent;
