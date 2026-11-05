@@ -224,6 +224,10 @@ private:
     std::optional<Point2DLatLon> gcs_pos;
     std::optional<double> gcs_heading;  // only with a heading (ublox2ivy, two antennas)
     qint64 gcs_time = 0;
+    QString gcs_look;                   // style|color|size of the icon made (made again when changed)
+    QList<QPair<qint64, Point2DLatLon>> gcs_track;
+    QGraphicsPathItem* gcs_track_item = nullptr;
+    void updateGcsTrack();
     bool gcsFresh() {return gcs_pos && QDateTime::currentMSecsSinceEpoch() - gcs_time < 10000;}
 
     QList<LockButton*> buttonsLeft;
