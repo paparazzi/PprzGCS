@@ -133,6 +133,19 @@ bool FlightPlanViewerV2::eventFilter(QObject* obj, QEvent* event) {
         if((key == Qt::Key_Return || key == Qt::Key_Enter) && row != nullptr && go != nullptr) {
             if(row->isChecked()) {
                 go->click();
+                // the row is unchecked then (it becomes the current block): the keys stay on it
+                QTimer::singleShot(0, row, [row]() {row->setFocus(Qt::OtherFocusReason);});
+            }
+            return true;
+        }
+        // up and down: the previous or next block (Qt only moves within the group while a row is
+        // checked: after Enter, none is)
+        int index = row != nullptr ? block_rows.indexOf(row) : -1;
+        if((key == Qt::Key_Up || key == Qt::Key_Down) && index >= 0) {
+            int next = index + (key == Qt::Key_Down ? 1 : -1);
+            if(next >= 0 && next < block_rows.size()) {
+                block_rows[next]->setFocus(Qt::TabFocusReason);
+                block_rows[next]->setChecked(true);
             }
             return true;
         }
