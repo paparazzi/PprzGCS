@@ -1,6 +1,8 @@
 #include <QDateTime>
 #include "coordinatestransform.h"
 #include "aircraft_item.h"
+#include <QGraphicsSimpleTextItem>
+#include <QPainter>
 #include "mapwidget.h"
 #include "AircraftManager.h"
 #include <QApplication>
@@ -59,6 +61,49 @@ AircraftItem::AircraftItem(Point2DLatLon pt, QString ac_id, double neutral_scale
     setZoomFactor(1.1);
 }
 
+namespace {
+/// A short text on a dark see-through background: readable on any imagery
+class InfoText : public QGraphicsSimpleTextItem {
+public:
+    using QGraphicsSimpleTextItem::QGraphicsSimpleTextItem;
+    QRectF boundingRect() const override {
+        return QGraphicsSimpleTextItem::boundingRect().adjusted(-4, -1, 4, 1);
+    }
+    void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override {
+        painter->save();
+        painter->setRenderHint(QPainter::Antialiasing);
+        painter->setPen(Qt::NoPen);
+        painter->setBrush(QColor(0, 0, 0, 150));
+        painter->drawRoundedRect(boundingRect(), 4, 4);
+        painter->restore();
+        QGraphicsSimpleTextItem::paint(painter, option, widget);
+    }
+};
+}
+
+void AircraftItem::setInfo(QString text) {
+    if(info == nullptr) {
+        if(text.isEmpty()) {
+            return;
+        }
+        info = new InfoText();
+        QFont f = graphics_text->font();
+        f.setPointSizeF(f.pointSizeF() * 0.8);
+        info->setFont(f);
+        info->setBrush(Qt::white);
+        info->setZValue(z_value);
+        info->setVisible(graphics_aircraft->isVisible());
+        if(graphics_aircraft->scene() != nullptr) {
+            graphics_aircraft->scene()->addItem(info);
+        }
+    }
+    if(info->text() != text) {
+        info->setText(text);
+    }
+    info->setOpacity(text.isEmpty() ? 0 : 1);
+    emit itemChanged();     // placed with the aircraft
+}
+
 void AircraftItem::addToMap(MapWidget* map) {
     map->scene()->addItem(graphics_aircraft);
     map->scene()->addItem(graphics_text);
@@ -82,6 +127,13 @@ void AircraftItem::updateGraphics(MapWidget* map, uint32_t update_event) {
         graphics_text->setScale(s);
         graphics_text->setPos(scene_pos + rot.map(QPointF(18*s, (14 + label_shift)*s)));
         graphics_text->setRotation(-r);
+
+        if(info) {
+            // right of the aircraft, upwards from its middle (the name is below it)
+            info->setScale(s);
+            info->setPos(scene_pos + rot.map(s * QPointF(20, 8 - info->boundingRect().height())));
+            info->setRotation(-r);
+        }
 
         if(alarms) {
             auto dh = graphics_aircraft->boundingRect().height() / 2 + alarms->boundingRect().height();
@@ -178,6 +230,9 @@ void AircraftItem::updateZValue() {
     if(alarms) {
         alarms->setZValue(z_value);
     }
+    if(info) {
+        info->setZValue(z_value);
+    }
     double z_tracks = settings.value("map/z_values/aircraft").toDouble();
     for(auto &line: graphics_lines) {
         line->setZValue(z_tracks);
@@ -189,6 +244,9 @@ void AircraftItem::setVisible(bool visible) {
     graphics_text->setVisible(visible);
     if(alarms) {
         alarms->setVisible(visible);
+    }
+    if(info) {
+        info->setVisible(visible);
     }
     for(auto &line: graphics_lines) {
         line->setVisible(visible);
@@ -205,6 +263,11 @@ void AircraftItem::removeFromScene(MapWidget* map) {
     map->scene()->removeItem(graphics_text);
     if(alarms) {
         map->scene()->removeItem(alarms);
+    }
+    if(info) {
+        map->scene()->removeItem(info);
+        delete info;
+        info = nullptr;
     }
 
     for(auto &line: graphics_lines) {

@@ -151,6 +151,7 @@ private:
     QList<WaypointItem*> hover_marked;     // marked as linked to the waypoint or name under the mouse
     bool hover_dimmed = false;             // the other names faded (option)
     void clearWaypointHover();
+    void updateAircraftInfo(QString ac_id, pprzlink::Message msg);
     void updateWaypointHover(QPoint view_pos, bool inside);
     QPointer<WaypointItem> hover_target;   // the waypoint (or name) under the mouse
     bool hover_target_on_name = false;
