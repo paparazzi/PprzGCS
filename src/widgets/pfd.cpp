@@ -19,6 +19,7 @@ Pfd::Pfd(QWidget *parent) : QWidget(parent), current_ac("")
 {
     earth_view = getAppSettings().value("pfd/ground_view", false).toBool();
     setMinimumSize(minimumSizeHint());     // the tapes and the horizon need room (also in a splitter)
+    setProperty("keeps_aspect", true);     // in a card over the map: its height follows its width
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &Pfd::changeCurrentAC);
     connect(PprzDispatcher::get(), &PprzDispatcher::flight_param, this, &Pfd::updateEulers);
 

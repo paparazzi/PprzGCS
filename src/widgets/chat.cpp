@@ -336,7 +336,9 @@ void Chat::fitMessages() {
     bool user_sized = false;
     for(auto p = parentWidget(); p != nullptr; p = p->parentWidget()) {
         if(p->objectName() == "rail_card") {
-            user_sized = p->property("user_size").toSize().isValid();
+            // given a size (also while its grip is dragged: fixed, the size is kept when let go)
+            user_sized = p->property("user_size").toSize().isValid() ||
+                         (p->minimumSize() == p->maximumSize() && p->minimumHeight() > 0);
             if(!p->property("chat_watched").toBool()) {
                 p->setProperty("chat_watched", true);
                 p->installEventFilter(this);    // resized with its grip: fill it
