@@ -641,6 +641,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
             (*changed)();
         });
         connect(edit, &QLineEdit::returnPressed, send_btn, &QPushButton::click);
+        connect(slider, &DoubleSlider::returnPressed, send_btn, &QPushButton::click);     // as in the field
         // using the field opens the whole row (slider and buttons), as a click on the name; it
         // closes again when leaving it without a change
         // only for a tap, Tab or a shortcut: opening a group gives the focus to its first field
