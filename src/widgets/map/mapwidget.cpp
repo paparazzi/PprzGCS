@@ -1259,6 +1259,10 @@ void MapWidget::arrangeWaypointLabels() {
         if(ai != nullptr && ai->icon() != nullptr && ai->icon()->isVisible()) {
             QRectF r = ai->icon()->sceneBoundingRect();
             aircraft.append(r.adjusted(r.width() * 0.15, r.height() * 0.15, -r.width() * 0.15, -r.height() * 0.15));
+            // and the line next to it (height, climb, speed)
+            if(ai->infoItem() != nullptr && ai->infoItem()->isVisible() && ai->infoItem()->opacity() > 0) {
+                aircraft.append(ai->infoItem()->sceneBoundingRect());
+            }
         }
     }
     // top to bottom, left to right: stable from one update to the next
@@ -1965,6 +1969,7 @@ void MapWidget::updateNavShape(pprzlink::Message msg) {
 void MapWidget::updateAircraftItem(pprzlink::Message msg) {
     QString ac_id;
     msg.getField("ac_id", ac_id);
+    updateAircraftInfo(ac_id, msg);
     double lat = getFloatingField(msg, "lat");
     double lon = getFloatingField(msg, "long");
     double heading = getFloatingField(msg, "heading");
@@ -1979,6 +1984,50 @@ void MapWidget::updateAircraftItem(pprzlink::Message msg) {
         return;
     }
     setAircraftPose(ac_id, Point2DLatLon(lat, lon), heading);
+}
+
+/// The line next to an aircraft (GCS settings, all off by default): its height (as the
+/// waypoints: AGL with SRTM, else H above the flight plan ground, or MSL), climb rate and speed
+void MapWidget::updateAircraftInfo(QString ac_id, pprzlink::Message msg) {
+    if(!AircraftManager::get()->aircraftExists(ac_id) || !ac_items_managers.contains(ac_id)) {
+        return;
+    }
+    auto ai = ac_items_managers[ac_id]->getAircraftItem();
+    if(ai == nullptr) {
+        return;
+    }
+    auto settings = getAppSettings();
+    QStringList parts;
+    if(settings.value("map/aircraft_info_height").toBool()) {
+        double msl = getFloatingField(msg, "alt");
+        double lat = getFloatingField(msg, "lat");
+        double lon = getFloatingField(msg, "long");
+        if(std::isfinite(msl)) {
+            if(settings.value("map/waypoint_altitude_always").toString() == "MSL") {
+                parts << QString("MSL %1 m").arg(msl, 0, 'f', 0);
+            } else {
+                auto fp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan();
+                auto ele = SRTMManager::get()->get_elevation(lat, lon);
+                double h = msl - (ele ? ele.value() : fp->getGroundAlt());
+                parts << QString("%1 %2 m").arg(ele ? "AGL" : "H").arg(h, 0, 'f', 0);
+            }
+        }
+    }
+    if(settings.value("map/aircraft_info_climb").toBool()) {
+        double climb = getFloatingField(msg, "climb");
+        if(std::isfinite(climb)) {
+            // always an arrow: not mistaken for the speed
+            QString arrow = climb > 0.05 ? QString::fromUtf8("\u2191") : climb < -0.05 ? QString::fromUtf8("\u2193") : QString::fromUtf8("\u2195");
+            parts << QString("%1%2 m/s").arg(arrow).arg(fabs(climb), 0, 'f', 1);
+        }
+    }
+    if(settings.value("map/aircraft_info_speed").toBool()) {
+        double speed = getFloatingField(msg, "speed");
+        if(std::isfinite(speed)) {
+            parts << QString("GS %1 m/s").arg(speed, 0, 'f', 1);
+        }
+    }
+    ai->setInfo(parts.join("  "));
 }
 
 void MapWidget::setAircraftPose(QString ac_id, Point2DLatLon pos, double heading) {

@@ -76,6 +76,9 @@ void set_app_settings() {
 
     default_setting("map/aircraft/track_seconds", 60);
     default_setting("map/aircraft_status_icons", false);
+    default_setting("map/aircraft_info_height", false);
+    default_setting("map/aircraft_info_climb", false);
+    default_setting("map/aircraft_info_speed", false);
     // the waypoint under the mouse: its name in blue, with a ring around it (or not), or nothing
     // (was the switch map/waypoint_hover_mark)
     if(!settings.contains("map/waypoint_hover_highlight") && settings.contains("map/waypoint_hover_mark")) {
@@ -152,6 +155,15 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     cb = addSetting("Battery and link icons", "map/aircraft_status_icons", w_map, l_map, row, Type::BOOL);
     callbacks.append(cb);
     addHelp("Small battery and link status icons next to each aircraft on the map.", w_map, l_map, row);
+    cb = addSetting("Height next to the aircraft", "map/aircraft_info_height", w_map, l_map, row, Type::BOOL);
+    callbacks.append(cb);
+    addHelp("As set for the waypoints (Waypoints tab): above the ground (AGL with SRTM data, else H "
+            "above the flight plan ground altitude) or above sea level (MSL).", w_map, l_map, row);
+    cb = addSetting("Climb rate next to the aircraft", "map/aircraft_info_climb", w_map, l_map, row, Type::BOOL);
+    callbacks.append(cb);
+    cb = addSetting("Ground speed next to the aircraft", "map/aircraft_info_speed", w_map, l_map, row, Type::BOOL);
+    callbacks.append(cb);
+    live_settings << "map/aircraft_info_";     // read at each position of the aircraft
 
     addSection("Shapes and texts", w_map, l_map, row);
     cb = addSetting("Other aircraft drawn smaller by", "map/size_highlight_factor", w_map, l_map, row, Type::DOUBLE);

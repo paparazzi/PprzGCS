@@ -33,6 +33,9 @@ public:
     double labelShift() {return label_shift;}
     void setLabelShift(double d) {label_shift = d;}
     QGraphicsItem* icon() {return graphics_aircraft;}
+    /// a short line next to it (e.g. its height, climb and speed: GCS settings); empty: none
+    void setInfo(QString text);
+    QGraphicsItem* infoItem() {return info;}
     bool isHovered() {return hovered;}
 
 signals:
@@ -52,6 +55,7 @@ private:
     GraphicsGroup* alarms = nullptr;
     GraphicsIcon* bat_alarm = nullptr;
     GraphicsIcon* link_alarm = nullptr;
+    QGraphicsSimpleTextItem* info = nullptr;    // the line next to it (setInfo)
 
     Point2DLatLon latlon;
     double heading;
