@@ -129,9 +129,9 @@ void AircraftItem::updateGraphics(MapWidget* map, uint32_t update_event) {
         graphics_text->setRotation(-r);
 
         if(info) {
-            // right of the aircraft, at its middle (the name is below)
+            // right of the aircraft, upwards from its middle (the name is below it)
             info->setScale(s);
-            info->setPos(scene_pos + rot.map(s * QPointF(20, -info->boundingRect().height() / 2)));
+            info->setPos(scene_pos + rot.map(s * QPointF(20, 8 - info->boundingRect().height())));
             info->setRotation(-r);
         }
 

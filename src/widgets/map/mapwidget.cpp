@@ -2027,7 +2027,7 @@ void MapWidget::updateAircraftInfo(QString ac_id, pprzlink::Message msg) {
             parts << QString("GS %1 m/s").arg(speed, 0, 'f', 1);
         }
     }
-    ai->setInfo(parts.join("  "));
+    ai->setInfo(parts.join("\n"));     // one per line, as on a HUD
 }
 
 void MapWidget::setAircraftPose(QString ac_id, Point2DLatLon pos, double heading) {
