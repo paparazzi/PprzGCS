@@ -40,7 +40,7 @@ Pfd::Pfd(QWidget *parent) : QWidget(parent), current_ac("")
         const float coef = 0.0139882f;   // ANGLE_BFP to deg
         updateAttitude(sender, phi * coef, theta * coef, psi * coef);
     });
-    setToolTip("Attitude (roll, pitch) and heading of the selected aircraft (right click: pilot or ground view)");
+    setToolTip("Right click: pilot or ground view");
 }
 
 void Pfd::paintEvent(QPaintEvent *event) {

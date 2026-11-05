@@ -17,7 +17,7 @@ WindIndicator::WindIndicator(QWidget *parent) : QWidget(parent),
 {
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, &WindIndicator::setAC);
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, &WindIndicator::removeAC);
-    setToolTip("Wind speed (click to change unit)\nCompass: drag or scroll to rotate the map, double click to reset");
+    setToolTip("Click: wind unit; drag or scroll: rotate the map; double click: north up");
     // no background of its own (themes give widgets one): the pill is drawn, anti-aliased
     setAttribute(Qt::WA_NoSystemBackground);
     setStyleSheet("WindIndicator {background: transparent;}");

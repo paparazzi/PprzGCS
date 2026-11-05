@@ -57,7 +57,7 @@ public:
     CardGrip(QWidget* card, std::function<void(QSize)> resized) : QWidget(card), card(card), resized(resized) {
         setFixedSize(16, 16);
         setCursor(Qt::SizeFDiagCursor);
-        setToolTip("Drag to resize (double click: back to the default size)");
+        setToolTip("Drag: resize; double click: default size");
         card->installEventFilter(this);
         place();
     }
@@ -136,7 +136,7 @@ public:
         });
         header->installEventFilter(this);
         header->setCursor(Qt::SizeAllCursor);
-        header->setToolTip("Drag to move the panel over the map (double click: back by the rail)");
+        header->setToolTip("Drag: move; double click: back by the rail");
     }
 protected:
     bool eventFilter(QObject*, QEvent* e) override {
@@ -873,7 +873,7 @@ void MapWidget::configure(QDomElement ele) {
                 auto icon = QIcon(user_or_app_path("pictures/" + icon_src));
                 auto button = new LockButton(icon, this);
                 button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-                button->setToolTip(title + " (long press or the lock in the corner: keep it open)");
+                button->setToolTip(title + " (long press: keep open)");
                 addWidget(widget, button, side);
             }
             installEventFilter(widget);
@@ -2526,7 +2526,7 @@ void MapWidget::showCrashPrediction(bool state) {
 void MapWidget::addRailPanel(QString id, QWidget* widget, QString title, QString icon, int index) {
     auto button = new LockButton(QIcon(user_or_app_path("pictures/" + icon)), this);
     button->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    button->setToolTip(title + " (long press: keep it open; drag: move it to the tabs or the bottom of the map)");
+    button->setToolTip(title + " (long press: keep open; drag: move)");
 
     // the panel in a card over the map: a title bar with a close button
     auto card = new QFrame(this);
@@ -2544,7 +2544,6 @@ void MapWidget::addRailPanel(QString id, QWidget* widget, QString title, QString
     auto close_button = new QToolButton(header);
     close_button->setObjectName("rail_card_close");
     close_button->setText(QString::fromUtf8("\xE2\x9C\x95"));
-    close_button->setToolTip("Close");
     close_button->setCursor(Qt::ArrowCursor);   // not the move cursor of the title bar
     header_layout->addWidget(title_label, 1);
     header_layout->addWidget(close_button);

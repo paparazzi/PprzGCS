@@ -83,7 +83,6 @@ void Commands::addFlightPlanButtons(QGridLayout* fp_buttons_layout) {
                 }
             } else if (txt != "") {
                 b = new QPushButton(txt, this);
-                b->setToolTip(txt);
             }
 
             if(b != nullptr) {
@@ -123,7 +122,6 @@ void Commands::addSettingsButtons(QGridLayout* settings_buttons_layout) {
                 }
             } else if (name != "") {
                 b = new QPushButton(name, this);
-                b->setToolTip(name);
             }
 
             if(b != nullptr) {

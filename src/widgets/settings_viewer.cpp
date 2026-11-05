@@ -294,7 +294,6 @@ void SettingsViewer::create_widgets(SettingMenu* setting_menu, QList<SettingMenu
         }
         auto count_label = new QLabel(what.join(", ") + "  \u203A", button);
         count_label->setObjectName("setting_unit");
-        button->setToolTip("Open " + sets->getName());
         button->setCursor(Qt::PointingHandCursor);
         for(auto l: {icon_label, name_label, count_label}) {
             l->setAttribute(Qt::WA_TransparentForMouseEvents);
