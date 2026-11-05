@@ -4,6 +4,7 @@
 #include "flowlayout.h"
 #include <QFrame>
 #include <QMap>
+#include <QHash>
 class QPushButton;
 class QToolButton;
 class QButtonGroup;
@@ -43,6 +44,7 @@ private:
 
     QString chat_id;
     int unread = 0;
+    QHash<QString, qint64> last_errors;     // TELEMETRY_ERROR shown, when
 
     // filter row (with more than one aircraft): All, each aircraft, Server, Mine
     void addFilter(QString category, QString name, QString color);

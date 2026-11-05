@@ -29,6 +29,7 @@ signals:
     void settingUpdated(QString ac_id, Setting*, float value);
     void mapRotated(double);    // map view rotation in degrees
     void centerMap(Point2DLatLon pos);
+    void alert(QString sender, QString text, bool alarm);   // a notification at the top of the map appeared or got worse
     //void create_waypoint(Waypoint*);
 
     // GVF viewer signals

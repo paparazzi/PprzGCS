@@ -55,6 +55,8 @@ private:
     };
 
     void rebuild();
+    void announce(QString key, QString sender, QString text, Level level);
+    QHash<QString, qint64> announced;   // key:level -> when it was put in the chat
     QWidget* makeRow(const Item& item);
     void expire();
     static QString senderName(QString sender, QColor* color);
