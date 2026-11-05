@@ -9,7 +9,8 @@
 #include <QGraphicsSceneMouseEvent>
 
 namespace {
-constexpr double TIP = 9;       // length of the point of the tag
+constexpr double TIP = 0;       // (nothing out of the pill)
+constexpr double ARROW = 16;    // room for the arrow in the tag
 constexpr double MARGIN = 8;    // from the edge of the visible map
 
 double distanceM(Point2DLatLon a, Point2DLatLon b) {
@@ -30,29 +31,14 @@ OffscreenTag::OffscreenTag() {
 
 QSizeF OffscreenTag::pillSize() const {
     QFontMetricsF fm(font);
-    return QSizeF(fm.horizontalAdvance(text) + 20, 24);
+    return QSizeF(fm.horizontalAdvance(text) + 20 + ARROW, 24);    // (the arrow before the text)
 }
 
-/// a pill with the text, and a point on its border towards the aircraft
 QPainterPath OffscreenTag::tagPath() const {
     QSizeF sz = pillSize();
-    QRectF pill(-sz.width() / 2, -sz.height() / 2, sz.width(), sz.height());
     QPainterPath path;
-    path.addRoundedRect(pill, sz.height() / 2, sz.height() / 2);
-    // where the direction leaves the pill (a rectangle is close enough), then the point beyond
-    double a = qDegreesToRadians(angle);
-    double dx = cos(a), dy = sin(a);
-    double t = std::min(fabs(dx) > 1e-6 ? (sz.width() / 2) / fabs(dx) : 1e9,
-                        fabs(dy) > 1e-6 ? (sz.height() / 2) / fabs(dy) : 1e9);
-    QPointF edge(dx * t, dy * t);
-    QPointF tip = edge + QPointF(dx, dy) * TIP;
-    QPointF n(-dy * 7, dx * 7);     // half the width of its base
-    QPainterPath point;
-    point.moveTo(edge - QPointF(dx, dy) * 6 + n);
-    point.lineTo(tip);
-    point.lineTo(edge - QPointF(dx, dy) * 6 - n);
-    point.closeSubpath();
-    return path.united(point);
+    path.addRoundedRect(QRectF(-sz.width() / 2, -sz.height() / 2, sz.width(), sz.height()), sz.height() / 2, sz.height() / 2);
+    return path;
 }
 
 QRectF OffscreenTag::boundingRect() const {
@@ -92,7 +78,16 @@ void OffscreenTag::paint(QPainter* painter, const QStyleOptionGraphicsItem* opti
     painter->setPen(color.lightnessF() > 0.7 ? QColor(0x1f2328) : QColor(Qt::white));
     painter->setFont(font);
     QSizeF sz = pillSize();
-    painter->drawText(QRectF(-sz.width() / 2, -sz.height() / 2, sz.width(), sz.height()), Qt::AlignCenter, text);
+    QColor ink = painter->pen().color();
+    painter->drawText(QRectF(-sz.width() / 2 + ARROW, -sz.height() / 2, sz.width() - ARROW, sz.height()), Qt::AlignCenter, text);
+    // the arrow before the name, towards the aircraft
+    painter->save();
+    painter->translate(-sz.width() / 2 + 6 + ARROW / 2, 0);
+    painter->rotate(angle + 90);
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(ink);
+    painter->drawPolygon(QPolygonF({QPointF(0, -7), QPointF(5.5, 6), QPointF(0, 2.5), QPointF(-5.5, 6)}));
+    painter->restore();
 }
 
 void OffscreenTag::mousePressEvent(QGraphicsSceneMouseEvent* event) {
