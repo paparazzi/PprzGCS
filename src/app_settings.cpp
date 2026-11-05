@@ -58,11 +58,17 @@ void set_app_settings() {
     default_setting("map/move_hyteresis", 20);
     default_setting("map/waypoint/size", 8);
     // the ground station: the yellow of the old icon (ring and cross) is orange for the new ones
-    if(!getAppSettings().contains("map/gcs_icon_style") && getAppSettings().value("map/gcs_icon_color").toString() == "#ffff00") {
-        getAppSettings().setValue("map/gcs_icon_color", "#e8a33d");
+    // (and its old size, 16: a bit smaller)
+    if(!getAppSettings().contains("map/gcs_icon_style")) {
+        if(getAppSettings().value("map/gcs_icon_color").toString() == "#ffff00") {
+            getAppSettings().setValue("map/gcs_icon_color", "#e8a33d");
+        }
+        if(getAppSettings().value("map/gcs_icon_size").toInt() == 16) {
+            getAppSettings().setValue("map/gcs_icon_size", 12);
+        }
     }
     default_setting("map/gcs_icon_style", "marker");
-    default_setting("map/gcs_icon_size", 16);
+    default_setting("map/gcs_icon_size", 12);
     default_setting("map/gcs_icon_color", "#e8a33d");
     default_setting("map/gcs_track", true);
     default_setting("map/gcs_track_seconds", 300);
