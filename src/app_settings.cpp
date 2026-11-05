@@ -101,6 +101,8 @@ void set_app_settings() {
     for(auto &k: MapNotifications::kinds()) {
         default_setting("notify/" + k.key, k.on);
     }
+    default_setting("notify/sound", true);
+    default_setting("notify/speech", false);
     default_setting("APP_STYLE_FILE", "default_style.qss");
     default_setting("APP_LAYOUT_FILE", "default_layout.xml");
 
@@ -260,6 +262,56 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     row = 0;
     // a section per group; per kind: its name, when it shows (in grey), how serious (a label
     // per level, as on the map) and its switch
+    // the levels (a label per level, as on the map), then the switch: in line from row to row
+    auto alignSwitch = [&](QStringList levels) {
+        auto item = l_notify->itemAtPosition(row - 1, 1);
+        auto sw = item != nullptr ? item->widget() : nullptr;
+        if(sw == nullptr) {
+            return;
+        }
+        l_notify->removeWidget(sw);
+        auto box = new QWidget(w_notify);
+        auto hl = new QHBoxLayout(box);
+        hl->setContentsMargins(0, 0, 0, 0);
+        hl->setSpacing(4);
+        auto badges = new QWidget(box);
+        auto ll = new QHBoxLayout(badges);
+        ll->setContentsMargins(0, 0, 0, 0);
+        ll->setSpacing(4);
+        for(auto &level: levels) {
+            auto badge = new QLabel(level, badges);
+            badge->setObjectName("settings_level_" + level.toLower());
+            badge->setFixedHeight(18);
+            badge->setAlignment(Qt::AlignCenter);
+            ll->addWidget(badge);
+        }
+        ll->addStretch(1);
+        badges->setFixedWidth(140);
+        hl->addWidget(badges);
+        hl->addWidget(sw);
+        hl->addStretch(1);
+        l_notify->addWidget(box, row - 1, 1);
+    };
+    // heard: a sound with each warning or alarm, the speech
+    addSection("Sound", w_notify, l_notify, row);
+    cb = addSetting("Alert sounds", "notify/sound", w_notify, l_notify, row, Type::BOOL);
+    callbacks.append(cb);
+    alignSwitch({});
+    addHelp("A chime when a warning below shows or gets worse. An alarm beeps, and again every 4 s until it clears "
+            "or is dismissed (\u00d7).", w_notify, l_notify, row);
+    cb = addSetting("Speech", "notify/speech", w_notify, l_notify, row, Type::BOOL);
+    callbacks.append(cb);
+    alignSwitch({});
+#if defined(SPEECH_ENABLED)
+    addHelp("Says the warnings and alarms, and the messages of the layout (e.g. the altitude, a new mode or block).",
+            w_notify, l_notify, row);
+#else
+    if(auto item = l_notify->itemAtPosition(row - 1, 1)) {
+        item->widget()->setEnabled(false);
+    }
+    addHelp("This PprzGCS is built without speech (cmake -DSPEECH=ON, with Qt 6.4 or later).", w_notify, l_notify, row);
+#endif
+
     QString group;
     QString muted = "#6e7781";     // a grey readable in the light and the night style
     for(auto &k: MapNotifications::kinds()) {
@@ -273,33 +325,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
         }
         cb = addSetting(name, "notify/" + k.key, w_notify, l_notify, row, Type::BOOL);
         callbacks.append(cb);
-        // the levels, then the switch (in line from row to row)
-        auto item = l_notify->itemAtPosition(row - 1, 1);
-        auto sw = item != nullptr ? item->widget() : nullptr;
-        if(sw != nullptr) {
-            l_notify->removeWidget(sw);
-            auto box = new QWidget(w_notify);
-            auto hl = new QHBoxLayout(box);
-            hl->setContentsMargins(0, 0, 0, 0);
-            hl->setSpacing(4);
-            auto levels = new QWidget(box);
-            auto ll = new QHBoxLayout(levels);
-            ll->setContentsMargins(0, 0, 0, 0);
-            ll->setSpacing(4);
-            for(auto &level: k.levels) {
-                auto badge = new QLabel(level, levels);
-                badge->setObjectName("settings_level_" + level.toLower());
-                badge->setFixedHeight(18);
-                badge->setAlignment(Qt::AlignCenter);
-                ll->addWidget(badge);
-            }
-            ll->addStretch(1);
-            levels->setFixedWidth(140);
-            hl->addWidget(levels);
-            hl->addWidget(sw);
-            hl->addStretch(1);
-            l_notify->addWidget(box, row - 1, 1);
-        }
+        alignSwitch(k.levels);
     }
     live_settings << "notify/";     // read each time a notification comes
     finishTab(l_notify, row);
