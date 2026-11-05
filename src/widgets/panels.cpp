@@ -524,7 +524,7 @@ void PanelTabs::tabRemoved(int index) {
 ////////////////////////////////// PanelTabBar //////////////////////////////////
 
 PanelTabBar::PanelTabBar(PanelTabs* tabs) : QTabBar(tabs), tabs(tabs) {
-    setToolTip("Drag a tab to move it: to another group, below a group, to the bottom of the map or to the rail");
+    setToolTip("Drag a tab to move it");
 }
 
 void PanelTabBar::mousePressEvent(QMouseEvent* e) {

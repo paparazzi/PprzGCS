@@ -136,7 +136,7 @@ void PprzMain::populate_menu() {
     });
 
     auto reset_panels = file_menu->addAction("Reset panels");
-    reset_panels->setToolTip("Put the panels (tabs, rail, bottom of the map) back as in the layout file");
+    reset_panels->setToolTip("Back to the panels of the layout file");
     connect(reset_panels, &QAction::triggered, this, [](){
         PanelManager::get()->reset();
     });

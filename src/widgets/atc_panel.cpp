@@ -62,7 +62,7 @@ AtcPanel::AtcPanel(QWidget *parent) : QWidget(parent)
     connect(t, &QTimer::timeout, this, &AtcPanel::tick);
     t->start(250);
 
-    setToolTip("What to tell ATC (click the altitude reference to change it, right click to set the QNH)");
+    setToolTip("Click the altitude reference to change it; right click: set the QNH");
 }
 
 QSize AtcPanel::sizeHint() const {
