@@ -80,6 +80,7 @@ void set_app_settings() {
     default_setting("map/aircraft_info_height", false);
     default_setting("map/aircraft_info_climb", false);
     default_setting("map/aircraft_info_speed", false);
+    default_setting("map/aircraft_info_gcs", false);
     // the waypoint under the mouse: its name in blue, with a ring around it (or not), or nothing
     // (was the switch map/waypoint_hover_mark)
     if(!settings.contains("map/waypoint_hover_highlight") && settings.contains("map/waypoint_hover_mark")) {
@@ -158,7 +159,8 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     cb = addSetting("Follow button", "map/follow_button", w_map, l_map, row, Type::BOOL);
     callbacks.append(cb);
     addHelp("The button left of the wind and compass, bottom right of the map. Click: the map follows the selected "
-            "aircraft; again: also heading up (as File \u2192 Track AC); again: off. Dragging the map stops it.", w_map, l_map, row);
+            "aircraft; again: also heading up (as File \u2192 Track AC); again: off. Right click or long press: follow the ground station, or keep the aircraft and the "
+            "ground station in view (with a ground GPS). Dragging the map stops it.", w_map, l_map, row);
     live_settings << "map/follow_button";
     cb = addSetting("Battery and link icons", "map/aircraft_status_icons", w_map, l_map, row, Type::BOOL);
     callbacks.append(cb);
@@ -171,6 +173,9 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     cb = addSetting("Ground speed next to the aircraft", "map/aircraft_info_speed", w_map, l_map, row, Type::BOOL);
     callbacks.append(cb);
+    cb = addSetting("Distance from the ground station", "map/aircraft_info_gcs", w_map, l_map, row, Type::BOOL);
+    callbacks.append(cb);
+    addHelp("With a ground GPS (ublox2ivy or gpsd2ivy): the distance and the bearing from the ground station to the aircraft.", w_map, l_map, row);
     live_settings << "map/aircraft_info_";     // read at each position of the aircraft
 
     addSection("Shapes and texts", w_map, l_map, row);

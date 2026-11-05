@@ -128,8 +128,22 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         painter->setBrush(Qt::NoBrush);
         painter->setPen(QPen(palette.getVariant(current_color), 3));
         painter->drawEllipse(QPoint(0,0), 2*halfSize/3, 2*halfSize/3);
-        painter->drawLine(0, -halfSize, 0, halfSize);
-        painter->drawLine(-halfSize, 0, halfSize, 0);
+        if(heading) {
+            // the heading (ublox2ivy with two antennas): an arrow on the ring, in place of the cross
+            // (the item turns against the map rotation: back to the north of the map, then the heading)
+            painter->save();
+            painter->setRenderHint(QPainter::Antialiasing);
+            painter->rotate(-rotation() + *heading);
+            painter->drawLine(QPointF(0, halfSize), QPointF(0, -halfSize / 3.));
+            QPolygonF arrow({QPointF(0, -halfSize - 2.), QPointF(halfSize / 2.5, -halfSize / 3.), QPointF(-halfSize / 2.5, -halfSize / 3.)});
+            painter->setPen(QPen(Qt::white, 1.5));
+            painter->setBrush(palette.getVariant(current_color));
+            painter->drawPolygon(arrow);
+            painter->restore();
+        } else {
+            painter->drawLine(0, -halfSize, 0, halfSize);
+            painter->drawLine(-halfSize, 0, halfSize, 0);
+        }
         }
         break;
     case DCSHOT: {

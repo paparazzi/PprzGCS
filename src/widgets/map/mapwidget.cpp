@@ -1002,7 +1002,8 @@ void MapWidget::configure(QDomElement ele) {
     // the follow button, left of the wind and compass
     auto view_row = new QWidget(this);
     view_row->setAttribute(Qt::WA_TranslucentBackground);
-    view_row->setStyleSheet("background: transparent;");
+    view_row->setObjectName("map_view_row");
+    view_row->setStyleSheet("#map_view_row {background: transparent;}");     // (not for the menu of the button)
     auto view_lay = new QHBoxLayout(view_row);
     view_lay->setContentsMargins(0, 0, 0, 0);
     view_lay->setSpacing(6);
@@ -1016,9 +1017,51 @@ void MapWidget::configure(QDomElement ele) {
     view_lay->addWidget(wind_indicator, 0, Qt::AlignVCenter);
     rightLayout->addWidget(view_row, 0, Qt::AlignRight);
     connect(follow_button, &QToolButton::clicked, this, [=,this]() {
-        setFollowMode((follow_mode + 1) % 3);   // follow, then also heading up, then off
+        // follow, then also heading up (not for both, nor a ground station without a heading), then off
+        int next = (follow_mode + 1) % 3;
+        if(next == FOLLOW_HEADING && (follow_target == TARGET_BOTH || (follow_target == TARGET_GCS && !gcs_heading))) {
+            next = FOLLOW_OFF;
+        }
+        setFollowMode(next);
     });
-    connect(DispatcherUi::get(), &DispatcherUi::followAircraft, this, &MapWidget::setFollowMode);
+    // what to follow: right click or long press (the ground station when its GPS is heard)
+    auto follow_menu = new QMenu(follow_button);
+    connect(follow_menu, &QMenu::aboutToShow, this, [=,this]() {
+        follow_menu->clear();
+        bool gcs = gcsFresh();
+        QString none = gcs ? QString() : QString(" (no ground GPS)");
+        auto add = [&](QString text, int target, bool enabled) {
+            auto a = follow_menu->addAction(text, this, [=,this]() {
+                follow_target = target;
+                setFollowMode(FOLLOW_OFF);
+                setFollowMode(FOLLOW);
+            });
+            a->setCheckable(true);
+            a->setChecked(follow_mode != FOLLOW_OFF && follow_target == target);
+            a->setEnabled(enabled);
+        };
+        add("Follow the selected aircraft", TARGET_AC, true);
+        add("Follow the ground station" + none, TARGET_GCS, gcs);
+        add("Aircraft and ground station in view" + none, TARGET_BOTH, gcs);
+        if(follow_mode != FOLLOW_OFF) {
+            follow_menu->addSeparator();
+            follow_menu->addAction("Stop following", this, [=,this]() { setFollowMode(FOLLOW_OFF); });
+        }
+    });
+    follow_button->setMenu(follow_menu);
+    follow_button->setPopupMode(QToolButton::DelayedPopup);
+    follow_button->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(follow_button, &QToolButton::customContextMenuRequested, this, [=](QPoint p) {
+        follow_menu->exec(follow_button->mapToGlobal(p));
+    });
+    // File > Track AC: the aircraft, heading up
+    connect(DispatcherUi::get(), &DispatcherUi::followAircraft, this, [=,this](int mode) {
+        if(follow_emitting) {
+            return;
+        }
+        follow_target = TARGET_AC;
+        setFollowMode(mode);
+    });
     auto show_follow = [=,this]() {
         bool on = getAppSettings().value("map/follow_button", true).toBool();
         follow_button->setVisible(on);
@@ -2108,6 +2151,20 @@ void MapWidget::updateAircraftInfo(QString ac_id, pprzlink::Message msg) {
             parts << QString("GS %1 m/s").arg(speed, 0, 'f', 1);
         }
     }
+    if(settings.value("map/aircraft_info_gcs").toBool() && gcsFresh()) {
+        double lat = getFloatingField(msg, "lat");
+        double lon = getFloatingField(msg, "long");
+        if(std::isfinite(lat) && std::isfinite(lon)) {
+            // from the ground station to the aircraft: distance and bearing (great circle)
+            double la1 = qDegreesToRadians(gcs_pos->lat()), la2 = qDegreesToRadians(lat);
+            double dla = la2 - la1, dlo = qDegreesToRadians(lon - gcs_pos->lon());
+            double h = sin(dla / 2) * sin(dla / 2) + cos(la1) * cos(la2) * sin(dlo / 2) * sin(dlo / 2);
+            double dist = 2 * 6371000.0 * atan2(sqrt(h), sqrt(1 - h));
+            double brg = fmod(qRadiansToDegrees(atan2(sin(dlo) * cos(la2), cos(la1) * sin(la2) - sin(la1) * cos(la2) * cos(dlo))) + 360, 360);
+            QString d = dist < 1000 ? QString("%1 m").arg(dist, 0, 'f', 0) : QString("%1 km").arg(dist / 1000, 0, 'f', 2);
+            parts << QString::fromUtf8("GCS %1 %2\u00b0").arg(d).arg(qRound(brg) % 360, 3, 10, QChar('0'));
+        }
+    }
     ai->setInfo(parts.join("\n"));     // one per line, as on a HUD
 }
 
@@ -2131,12 +2188,14 @@ void MapWidget::setAircraftPose(QString ac_id, Point2DLatLon pos, double heading
         }
         AircraftManager::get()->getAircraft(ac_id)->setPosition(pos);
 
-        if(follow_mode != FOLLOW_OFF && ac_id == current_ac) {
+        if(follow_mode != FOLLOW_OFF && ac_id == current_ac && follow_target == TARGET_AC) {
             auto scenePos = scenePoint(pos, zoomLevel(zoom()), tileSize());
             centerOn(scenePos);
             if(follow_mode == FOLLOW_HEADING) {
                 rotateMap(-heading - getRotation());
             }
+        } else if(follow_mode != FOLLOW_OFF && ac_id == current_ac && follow_target == TARGET_BOTH) {
+            fitAircraftAndGcs();
         }
 
     }
@@ -2369,24 +2428,75 @@ void MapWidget::onROTORCRAFT_FP(QString sender, pprzlink::Message msg) {
 }
 
 void MapWidget::onGCSPos(pprzlink::Message msg) {
-    if(gcsItem) {
-        removeItem(gcsItem);
-    }
-
     double lat = getFloatingField(msg, "lat");
     double lon = getFloatingField(msg, "long");
-    auto settings = getAppSettings();
-    QColor color(settings.value("map/gcs_icon_color").toString());
+    double heading = getFloatingField(msg, "heading");
+    if(!std::isfinite(lat) || !std::isfinite(lon) || fabs(lat) > 90 || fabs(lon) > 180 || (lat == 0 && lon == 0)) {
+        return;
+    }
+    Point2DLatLon pos(lat, lon);
+    // the icon moved (sent at the rate of the receiver: not made again each time)
+    if(auto wi = dynamic_cast<WaypointItem*>(gcsItem)) {
+        wi->setPosition(pos);
+    } else {
+        auto settings = getAppSettings();
+        QColor color(settings.value("map/gcs_icon_color").toString());
+        auto wcenter = new WaypointItem(pos, "__NO_AC__", PprzPalette(color));
+        wcenter->setEditable(false);
+        addItem(wcenter);
+        wcenter->setStyle(GraphicsObject::Style::GCS);
+        wcenter->setSize(settings.value("map/gcs_icon_size").toInt());
+        gcsItem = wcenter;
+    }
+    gcs_pos = pos;
+    gcs_time = QDateTime::currentMSecsSinceEpoch();
+    // a heading only from a receiver with two antennas (ublox2ivy: 361 without; gpsd2ivy: always 0)
+    if(std::isfinite(heading) && heading > 0 && heading < 360) {
+        gcs_heading = heading;
+    } else {
+        gcs_heading.reset();
+    }
+    if(auto wi = dynamic_cast<WaypointItem*>(gcsItem)) {
+        wi->getGraphicsPoint()->setHeading(gcs_heading);
+    }
 
-    auto wcenter = new WaypointItem(Point2DLatLon(lat, lon), "__NO_AC__", PprzPalette(color));
-    wcenter->setEditable(false);
-    //wcenter->setZValues(z, z);
-    addItem(wcenter);
-    wcenter->setStyle(GraphicsObject::Style::GCS);
+    if(follow_mode != FOLLOW_OFF && follow_target == TARGET_GCS) {
+        centerOn(scenePoint(pos, zoomLevel(zoom()), tileSize()));
+        if(follow_mode == FOLLOW_HEADING && gcs_heading) {
+            rotateMap(-*gcs_heading - getRotation());
+        }
+    } else if(follow_mode != FOLLOW_OFF && follow_target == TARGET_BOTH) {
+        fitAircraftAndGcs();
+    }
+}
 
-    int size = settings.value("map/gcs_icon_size").toInt();
-    wcenter->setSize(size);
-    gcsItem = wcenter;
+/// The selected aircraft and the ground station both in view: centered between them, zoomed out (or in)
+/// when they get near the edges (or close together)
+void MapWidget::fitAircraftAndGcs() {
+    if(!gcs_pos || !AircraftManager::get()->aircraftExists(current_ac)) {
+        return;
+    }
+    auto acp = AircraftManager::get()->getAircraft(current_ac)->getPosition();
+    if(acp.lat() == 0 && acp.lon() == 0) {
+        return;
+    }
+    int zl = zoomLevel(zoom());
+    QPointF a = scenePoint(acp, zl, tileSize());
+    QPointF g = scenePoint(*gcs_pos, zl, tileSize());
+    centerOn((a + g) / 2);
+    QPointF d = mapFromScene(a) - mapFromScene(g);      // in the view (rotated)
+    // 1: just fits, with a margin (the panels over the map)
+    double fill = std::max(fabs(d.x()) / (width() * 0.6), fabs(d.y()) / (height() * 0.7));
+    if(fill < 1e-3) {
+        return;     // at the same place
+    }
+    if(fill > 1 || fill < 0.4) {
+        double z = std::min(zoom() - log2(fill / 0.75), 19.0);
+        if(fabs(z - zoom()) > 0.05) {
+            setZoom(z);
+            centerOn((scenePoint(acp, zoomLevel(zoom()), tileSize()) + scenePoint(*gcs_pos, zoomLevel(zoom()), tileSize())) / 2);
+        }
+    }
 }
 
 void MapWidget::setAcArrowSize(int s) {
@@ -3055,12 +3165,13 @@ void MapWidget::placeFrozenBanner() {
     }
 }
 
-/// The map follows the selected aircraft (FOLLOW), also heading up (FOLLOW_HEADING), or not.
+/// The map follows the target (FOLLOW), also heading up (FOLLOW_HEADING), or not.
 void MapWidget::setFollowMode(int mode) {
     bool changed = mode != follow_mode;
     follow_mode = mode;
     bool on = mode != FOLLOW_OFF;
-    // the icon: a target to follow, an arrow for heading up; white on blue while on
+    // the icon: a target to follow (a square in it: the ground station; two points: both), an arrow
+    // for heading up; white on blue while on
     QPixmap pm(40, 40);
     pm.fill(Qt::transparent);
     {
@@ -3072,6 +3183,13 @@ void MapWidget::setFollowMode(int mode) {
             p.setPen(Qt::NoPen);
             p.setBrush(c);
             p.drawPolygon(arrow);
+        } else if(on && follow_target == TARGET_BOTH) {
+            p.setPen(QPen(c, 3));
+            p.drawLine(QPointF(11, 29), QPointF(29, 11));
+            p.setPen(Qt::NoPen);
+            p.setBrush(c);
+            p.drawEllipse(QPointF(29, 11), 6, 6);
+            p.drawRect(QRectF(5, 23, 12, 12));
         } else {
             p.setPen(QPen(c, 3));
             p.setBrush(Qt::NoBrush);
@@ -3081,27 +3199,46 @@ void MapWidget::setFollowMode(int mode) {
             }
             p.setPen(Qt::NoPen);
             p.setBrush(c);
-            p.drawEllipse(QPointF(20, 20), on ? 5 : 4, on ? 5 : 4);
+            if(on && follow_target == TARGET_GCS) {
+                p.drawRect(QRectF(15, 15, 10, 10));
+            } else {
+                p.drawEllipse(QPointF(20, 20), on ? 5 : 4, on ? 5 : 4);
+            }
         }
     }
     follow_button->setIcon(QIcon(pm));
-    follow_button->setStyleSheet(on ?
+    follow_button->setStyleSheet(QString(on ?
         "QToolButton#map_follow {background: #1d5fc9; border: 1px solid #1d5fc9; border-radius: 18px;}" :
         "QToolButton#map_follow {background: rgba(255, 255, 255, 230); border: 1px solid #c9ced6; border-radius: 18px;}"
-        "QToolButton#map_follow:hover {background: white; border-color: #8c959f;}");
-    static const char* tips[] = {"Follow the selected aircraft", "Following; click: also heading up",
-                                 "Following, heading up; click: stop"};
-    follow_button->setToolTip(tips[qBound(0, mode, 2)]);
+        "QToolButton#map_follow:hover {background: white; border-color: #8c959f;}") +
+        "QToolButton#map_follow::menu-indicator {image: none; width: 0;}");
+    QString what = follow_target == TARGET_GCS ? "the ground station" :
+                   follow_target == TARGET_BOTH ? "the aircraft and the ground station" : "the selected aircraft";
+    follow_button->setToolTip(!on ? "Follow the selected aircraft (right click: the ground station)" :
+                              mode == FOLLOW_HEADING ? "Following " + what + ", heading up; click: stop" :
+                              "Following " + what + "; click: " +
+                              ((follow_target == TARGET_BOTH || (follow_target == TARGET_GCS && !gcs_heading)) ?
+                               QString("stop") : QString("also heading up")));
     if(!changed) {
         return;
     }
-    // at once on the aircraft, not at its next position
-    if(on && AircraftManager::get()->aircraftExists(current_ac)) {
+    if(!on) {
+        follow_target = TARGET_AC;  // a click starts with the aircraft again
+    }
+    // at once on the target, not at its next position
+    if(on && follow_target == TARGET_BOTH) {
+        fitAircraftAndGcs();
+    } else if(on && follow_target == TARGET_GCS && gcs_pos) {
+        centerOn(scenePoint(*gcs_pos, zoomLevel(zoom()), tileSize()));
+    } else if(on && AircraftManager::get()->aircraftExists(current_ac)) {
         auto ac = AircraftManager::get()->getAircraft(current_ac);
         auto pos = ac->getPosition();
         if(ac->isReal() && (pos.lat() != 0 || pos.lon() != 0)) {     // (no position yet: at its first one)
             centerOn(scenePoint(pos, zoomLevel(zoom()), tileSize()));
         }
     }
-    emit DispatcherUi::get()->followAircraft(mode);     // (the menu: Track AC)
+    // the menu: Track AC (the aircraft, heading up)
+    follow_emitting = true;
+    emit DispatcherUi::get()->followAircraft(follow_target == TARGET_AC ? mode : FOLLOW_OFF);
+    follow_emitting = false;
 }
