@@ -1,4 +1,5 @@
 #include "waypointeditor.h"
+#include <algorithm>
 #include "srtm_manager.h"
 #include "AircraftManager.h"
 #include <QDebug>
@@ -10,7 +11,7 @@ static const QString WGS84 = "WGS84";
 
 static QString editorTitle(WaypointItem* wi, const QList<WaypointItem*>& followers) {
     if(followers.isEmpty()) {
-        return "Move waypoint " + wi->waypoint()->getName();
+        return wi->waypoint()->getName();     // (Move and the distance moved say what it is for)
     }
     // of several aircraft: their names too
     bool several = false;
@@ -28,7 +29,7 @@ static QString editorTitle(WaypointItem* wi, const QList<WaypointItem*>& followe
     for(auto f: followers) {
         names.append(label(f));
     }
-    return "Move waypoints " + names.join(", ");
+    return names.join(", ");
 }
 
 WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent, QList<WaypointItem*> followers) :
@@ -226,6 +227,31 @@ WaypointEditor::WaypointEditor(WaypointItem* wi, QString ac_id, QWidget *parent,
         accept();
     });
     connect(cancel, &QPushButton::clicked, this, &QDialog::reject);
+
+    // the same width for every waypoint: not the length of its name (a long one is shortened)
+    QString full_title = windowTitle();
+    setWindowTitle((followers.isEmpty() ? "Move waypoint " : "Move waypoints ") + full_title);
+    auto title_label = findChild<QLabel*>("card_title");
+    if(title_label != nullptr) {
+        title_label->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
+    }
+    int w = std::max(310, minimumSizeHint().width());
+    setFixedWidth(w);
+    if(title_label != nullptr) {
+        // the room left by the color mark and the aircraft name
+        int used = 0;
+        for(auto l: title_label->parentWidget()->findChildren<QLabel*>(QString(), Qt::FindDirectChildrenOnly)) {
+            if(l != title_label) {
+                used += l->sizeHint().width() + 8;
+            }
+        }
+        int room = std::max(60, w - used - 40);
+        QString shown = title_label->fontMetrics().elidedText(full_title, Qt::ElideRight, room);
+        title_label->setText(shown);
+        if(shown != full_title) {
+            title_label->setToolTip(full_title);   // (only when shortened)
+        }
+    }
 }
 
 void WaypointEditor::showEvent(QShowEvent* event) {
