@@ -1,4 +1,5 @@
 #include "mapwidget.h"
+#include "card_dialog.h"
 #include <QTextDocument>
 #include "panels.h"
 #include <cmath>
@@ -404,6 +405,23 @@ MapWidget::MapWidget(QWidget *parent) : Map2D(parent),
     frozen_banner->setToolTip("Click to unfreeze");
     frozen_banner->hide();
     connect(frozen_banner, &QPushButton::clicked, this, [=,this]() { setFrozen(false); });
+
+    // banner in silent mode: this GCS sends nothing (no waypoint moves, settings, blocks, chat)
+    silent_banner = new QPushButton("Silent mode \u00b7 nothing is sent", this);
+    silent_banner->setObjectName("map_mode_banner");
+    silent_banner->setCursor(Qt::PointingHandCursor);
+    silent_banner->setVisible(PprzDispatcher::get()->isSilent());
+    connect(silent_banner, &QPushButton::clicked, this, [=,this]() {
+        if(CardDialog::ask(this, "Leave silent mode?",
+                           "This GCS sends again: waypoint moves, settings, blocks and chat messages.",
+                           "Send again", CardDialog::PRIMARY, "Stay silent")) {
+            PprzDispatcher::get()->setSilent(false);
+        }
+    });
+    connect(PprzDispatcher::get(), &PprzDispatcher::silentChanged, this, [=,this](bool silent) {
+        silent_banner->setVisible(silent);
+        placeFrozenBanner();
+    });
 
     // Connect signals
     connect(AircraftManager::get(), &AircraftManager::waypoint_changed, this, &MapWidget::onWaypointChanged);
@@ -981,7 +999,36 @@ void MapWidget::configure(QDomElement ele) {
     wind_indicator->setObjectName("wind_indicator");
     wind_indicator->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     rightLayout->addStretch(1);  // at the bottom, also when there are no panels on the right
-    rightLayout->addWidget(wind_indicator, 0, Qt::AlignRight);
+    // the follow button, left of the wind and compass
+    auto view_row = new QWidget(this);
+    view_row->setAttribute(Qt::WA_TranslucentBackground);
+    view_row->setStyleSheet("background: transparent;");
+    auto view_lay = new QHBoxLayout(view_row);
+    view_lay->setContentsMargins(0, 0, 0, 0);
+    view_lay->setSpacing(6);
+    follow_button = new QToolButton(view_row);
+    follow_button->setObjectName("map_follow");
+    follow_button->setFixedSize(36, 36);
+    follow_button->setIconSize(QSize(20, 20));
+    follow_button->setCursor(Qt::PointingHandCursor);
+    view_lay->addWidget(follow_button, 0, Qt::AlignVCenter);
+    wind_indicator->setParent(view_row);
+    view_lay->addWidget(wind_indicator, 0, Qt::AlignVCenter);
+    rightLayout->addWidget(view_row, 0, Qt::AlignRight);
+    connect(follow_button, &QToolButton::clicked, this, [=,this]() {
+        setFollowMode((follow_mode + 1) % 3);   // follow, then also heading up, then off
+    });
+    connect(DispatcherUi::get(), &DispatcherUi::followAircraft, this, &MapWidget::setFollowMode);
+    auto show_follow = [=,this]() {
+        bool on = getAppSettings().value("map/follow_button", true).toBool();
+        follow_button->setVisible(on);
+        if(!on && follow_mode != FOLLOW_OFF && follow_mode != FOLLOW_HEADING) {
+            setFollowMode(FOLLOW_OFF);    // (the menu keeps its own: follow, heading up)
+        }
+    };
+    connect(DispatcherUi::get(), &DispatcherUi::appSettingsChanged, this, show_follow);
+    setFollowMode(FOLLOW_OFF);
+    show_follow();
 
     PprzDispatcher::get()->bind("WIND", this, [=,this](QString sender, pprzlink::Message msg){
         (void)sender;
@@ -995,6 +1042,9 @@ void MapWidget::configure(QDomElement ele) {
     });
 
     connect(wind_indicator, &WindIndicator::requestRotation, this, [=,this](double rot) {
+        if(follow_mode == FOLLOW_HEADING) {
+            setFollowMode(FOLLOW);     // rotated by hand: still followed, not heading up any more
+        }
         rotateMap(rot-getRotation());
     });
 
@@ -1108,6 +1158,7 @@ void MapWidget::mouseMoveEvent(QMouseEvent *event) {
             double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());
             if(d > settings.value("map/move_hyteresis").toInt()) {
                 pan_state = PAN_MOVE;
+                setFollowMode(FOLLOW_OFF);     // the map moved by hand: not followed any more
             }
         } else if(pan_state == PAN_MOVE) {
             QPoint dp = event->pos()-lastPos;
@@ -2080,10 +2131,12 @@ void MapWidget::setAircraftPose(QString ac_id, Point2DLatLon pos, double heading
         }
         AircraftManager::get()->getAircraft(ac_id)->setPosition(pos);
 
-        if(GlobalConfig::get()->value("MAP_TRACK_AC", false).toBool() && ac_id == current_ac) {
+        if(follow_mode != FOLLOW_OFF && ac_id == current_ac) {
             auto scenePos = scenePoint(pos, zoomLevel(zoom()), tileSize());
             centerOn(scenePos);
-            rotateMap(-heading - getRotation());
+            if(follow_mode == FOLLOW_HEADING) {
+                rotateMap(-heading - getRotation());
+            }
         }
 
     }
@@ -2987,12 +3040,68 @@ void MapWidget::setFrozen(bool frozen) {
     placeFrozenBanner();
 }
 
+/// The mode banners at the bottom of the map: silent mode, waypoints frozen above it
 void MapWidget::placeFrozenBanner() {
-    if(!frozen_banner || !frozen_banner->isVisible()) {
+    int bottom = bottom_tabs && bottom_tabs->isVisible() ? bottom_tabs->y() : height();
+    bottom -= 14;
+    for(auto banner: {silent_banner, frozen_banner}) {
+        if(!banner || banner->isHidden()) {     // (isVisible: false before the window shows)
+            continue;
+        }
+        banner->adjustSize();
+        banner->move((width() - banner->width()) / 2, bottom - banner->height());
+        banner->raise();
+        bottom -= banner->height() + 6;
+    }
+}
+
+/// The map follows the selected aircraft (FOLLOW), also heading up (FOLLOW_HEADING), or not.
+void MapWidget::setFollowMode(int mode) {
+    bool changed = mode != follow_mode;
+    follow_mode = mode;
+    bool on = mode != FOLLOW_OFF;
+    // the icon: a target to follow, an arrow for heading up; white on blue while on
+    QPixmap pm(40, 40);
+    pm.fill(Qt::transparent);
+    {
+        QPainter p(&pm);
+        p.setRenderHint(QPainter::Antialiasing);
+        QColor c = on ? QColor(Qt::white) : QColor(0x3d4450);
+        if(mode == FOLLOW_HEADING) {
+            QPolygonF arrow({QPointF(20, 5), QPointF(33, 34), QPointF(20, 27), QPointF(7, 34)});
+            p.setPen(Qt::NoPen);
+            p.setBrush(c);
+            p.drawPolygon(arrow);
+        } else {
+            p.setPen(QPen(c, 3));
+            p.setBrush(Qt::NoBrush);
+            p.drawEllipse(QPointF(20, 20), 11, 11);
+            for(auto d: {QLineF(20, 2, 20, 9), QLineF(20, 31, 20, 38), QLineF(2, 20, 9, 20), QLineF(31, 20, 38, 20)}) {
+                p.drawLine(d);
+            }
+            p.setPen(Qt::NoPen);
+            p.setBrush(c);
+            p.drawEllipse(QPointF(20, 20), on ? 5 : 4, on ? 5 : 4);
+        }
+    }
+    follow_button->setIcon(QIcon(pm));
+    follow_button->setStyleSheet(on ?
+        "QToolButton#map_follow {background: #1d5fc9; border: 1px solid #1d5fc9; border-radius: 18px;}" :
+        "QToolButton#map_follow {background: rgba(255, 255, 255, 230); border: 1px solid #c9ced6; border-radius: 18px;}"
+        "QToolButton#map_follow:hover {background: white; border-color: #8c959f;}");
+    static const char* tips[] = {"Follow the selected aircraft", "Following; click: also heading up",
+                                 "Following, heading up; click: stop"};
+    follow_button->setToolTip(tips[qBound(0, mode, 2)]);
+    if(!changed) {
         return;
     }
-    frozen_banner->adjustSize();
-    int bottom = bottom_tabs && bottom_tabs->isVisible() ? bottom_tabs->y() : height();
-    frozen_banner->move((width() - frozen_banner->width()) / 2, bottom - frozen_banner->height() - 14);
-    frozen_banner->raise();
+    // at once on the aircraft, not at its next position
+    if(on && AircraftManager::get()->aircraftExists(current_ac)) {
+        auto ac = AircraftManager::get()->getAircraft(current_ac);
+        auto pos = ac->getPosition();
+        if(ac->isReal() && (pos.lat() != 0 || pos.lon() != 0)) {     // (no position yet: at its first one)
+            centerOn(scenePoint(pos, zoomLevel(zoom()), tileSize()));
+        }
+    }
+    emit DispatcherUi::get()->followAircraft(mode);     // (the menu: Track AC)
 }

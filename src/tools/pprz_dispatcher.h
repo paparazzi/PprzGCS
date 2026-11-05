@@ -52,13 +52,18 @@ public:
 
     bool isSilent() {return silent_mode;}
     void setSilent(bool silent) {
-        silent_mode = silent;
+        if(silent != silent_mode) {
+            silent_mode = silent;
+            emit silentChanged(silent);
+        }
     }
 
     /// messages were received from the server (since the start)
     bool serverSeen() {return server_seen;}
 
 signals:
+    /// silent mode: nothing is sent on the bus
+    void silentChanged(bool silent);
     /// the server answers (again), or stopped answering (also: none at the start)
     void serverStatusChanged(bool ok);
     void aircraft_die(pprzlink::Message);

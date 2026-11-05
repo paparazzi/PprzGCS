@@ -211,6 +211,10 @@ private:
     QVBoxLayout* columnRight;
     QVBoxLayout* buttonsRightLayout;
     WindIndicator* wind_indicator;
+    QToolButton* follow_button;
+    enum FollowMode {FOLLOW_OFF = 0, FOLLOW = 1, FOLLOW_HEADING = 2};
+    int follow_mode = FOLLOW_OFF;
+    void setFollowMode(int mode);
 
     QList<LockButton*> buttonsLeft;
     PanelTabs* bottom_tabs;
@@ -225,6 +229,7 @@ private:
     void setFrozen(bool frozen);
     void placeFrozenBanner();
     QPushButton* frozen_banner = nullptr;
+    QPushButton* silent_banner = nullptr;
 protected:
     void resizeEvent(QResizeEvent *event) override;
 private:

@@ -122,9 +122,15 @@ void PprzMain::populate_menu() {
     connect(silent_mode_action, &QAction::toggled, [=](bool checked) {
         PprzDispatcher::get()->setSilent(checked);
     });
+    // also left from the banner on the map
+    connect(PprzDispatcher::get(), &PprzDispatcher::silentChanged, silent_mode_action, &QAction::setChecked);
 
-    connect(map_track_ac, &QAction::toggled, [=](bool checked) {
-        GlobalConfig::get()->setValue("MAP_TRACK_AC", checked);
+    // follow the aircraft, heading up (also the follow button of the map)
+    connect(map_track_ac, &QAction::triggered, [=](bool checked) {
+        emit DispatcherUi::get()->followAircraft(checked ? 2 : 0);
+    });
+    connect(DispatcherUi::get(), &DispatcherUi::followAircraft, map_track_ac, [=](int mode) {
+        map_track_ac->setChecked(mode == 2);
     });
 
     auto reset_panels = file_menu->addAction("Reset panels");
