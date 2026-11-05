@@ -135,7 +135,14 @@ void SettingsViewer::fitContent() {
 bool SettingsViewer::eventFilter(QObject *object, QEvent *event)
 {
     if(event->type() == QEvent::FocusIn && field_focus.count(object)) {
-        field_focus[object](static_cast<QFocusEvent*>(event)->reason());
+        auto reason = static_cast<QFocusEvent*>(event)->reason();
+        // a click in a value field selects it all: typing replaces it (after the click, which
+        // places the cursor; a second click in the field places the cursor as usual)
+        auto edit = qobject_cast<QLineEdit*>(object);
+        if(edit != nullptr && reason == Qt::MouseFocusReason) {
+            QTimer::singleShot(0, edit, [edit]() { edit->selectAll(); });
+        }
+        field_focus[object](reason);
         return false;
     }
     if(event->type() == QEvent::MouseButtonPress && field_focus.count(object)) {
@@ -634,6 +641,7 @@ QWidget* SettingsViewer::makeSettingWidget(Setting* setting, QWidget* parent) {
             (*changed)();
         });
         connect(edit, &QLineEdit::returnPressed, send_btn, &QPushButton::click);
+        connect(slider, &DoubleSlider::returnPressed, send_btn, &QPushButton::click);     // as in the field
         // using the field opens the whole row (slider and buttons), as a click on the name; it
         // closes again when leaving it without a change
         // only for a tap, Tab or a shortcut: opening a group gives the focus to its first field
