@@ -115,16 +115,35 @@ void MapNotifications::setState(QString key, QString sender, QString text, Level
         }
         if(level == INFO) {
             items.removeAt(i);
-        } else {
-            // a dismissed one comes back when it gets worse
-            if(it.dismissed && level > it.dismissed_level) {
-                it.dismissed = false;
+            rebuild();
+            return;
+        }
+        // a dismissed one comes back when it gets worse
+        bool was_dismissed = it.dismissed;
+        if(it.dismissed && level > it.dismissed_level) {
+            it.dismissed = false;
+        }
+        if(it.text == text && it.level == level && it.dismissed == was_dismissed) {
+            return;     // the same again (sent at each telemetry message): nothing to redraw
+        }
+        it.time = QTime::currentTime();
+        bool only_text = it.level == level && it.dismissed == was_dismissed;
+        it.text = text;
+        it.level = level;
+        if(only_text) {
+            // e.g. a value in it: its row updated in place (rebuilding all the rows flickered)
+            for(auto row: findChildren<QWidget*>()) {
+                if(row->property("key").toString() == key) {
+                    if(auto l = row->findChild<QLabel*>("notification_text")) {
+                        l->setText(text);
+                    }
+                    if(auto t = row->findChild<QLabel*>("notification_time")) {
+                        t->setText(it.time.toString("HH:mm"));
+                        t->setToolTip(it.time.toString("HH:mm:ss"));
+                    }
+                }
             }
-            if(it.text != text || it.level != level) {
-                it.time = QTime::currentTime();
-            }
-            it.text = text;
-            it.level = level;
+            return;
         }
         rebuild();
         return;
