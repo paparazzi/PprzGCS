@@ -57,8 +57,15 @@ void set_app_settings() {
 
     default_setting("map/move_hyteresis", 20);
     default_setting("map/waypoint/size", 8);
+    // the ground station: the yellow of the old icon (ring and cross) is orange for the new ones
+    if(!getAppSettings().contains("map/gcs_icon_style") && getAppSettings().value("map/gcs_icon_color").toString() == "#ffff00") {
+        getAppSettings().setValue("map/gcs_icon_color", "#e8a33d");
+    }
+    default_setting("map/gcs_icon_style", "marker");
     default_setting("map/gcs_icon_size", 16);
-    default_setting("map/gcs_icon_color", "#ffff00");
+    default_setting("map/gcs_icon_color", "#e8a33d");
+    default_setting("map/gcs_track", true);
+    default_setting("map/gcs_track_seconds", 300);
     default_setting("map/circle/stroke", 4);
     default_setting("map/size_highlight_factor", 1.5);
 
@@ -177,6 +184,22 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     addHelp("With a ground GPS (ublox2ivy or gpsd2ivy): the distance and the bearing from the ground station to the aircraft.", w_map, l_map, row);
     live_settings << "map/aircraft_info_";     // read at each position of the aircraft
+
+    addSection("Ground station", w_map, l_map, row);
+    addHelp("With a ground GPS (ublox2ivy or gpsd2ivy). With two antennas (ublox2ivy), the icon shows the heading.", w_map, l_map, row);
+    cb = addSetting("Icon", "map/gcs_icon_style", w_map, l_map, row, Type::STRING_COMBO,
+                    QStringList{"marker|Marker", "boat|Boat", "car|Car"});
+    callbacks.append(cb);
+    cb = addSetting("Color", "map/gcs_icon_color", w_map, l_map, row, Type::STRING_COMBO,
+                    QStringList{"#e8a33d|Orange", "#ffff00|Yellow", "#1f6feb|Blue", "#e5484d|Red", "#2da44e|Green", "#ffffff|White"});
+    callbacks.append(cb);
+    cb = addSetting("Size", "map/gcs_icon_size", w_map, l_map, row, Type::INT);
+    callbacks.append(cb);
+    cb = addSetting("Track", "map/gcs_track", w_map, l_map, row, Type::BOOL);
+    callbacks.append(cb);
+    cb = addSetting("Track length (s)", "map/gcs_track_seconds", w_map, l_map, row, Type::INT);
+    callbacks.append(cb);
+    live_settings << "map/gcs_";     // read at each position of the ground station
 
     addSection("Shapes and texts", w_map, l_map, row);
     cb = addSetting("Other aircraft drawn smaller by", "map/size_highlight_factor", w_map, l_map, row, Type::DOUBLE);

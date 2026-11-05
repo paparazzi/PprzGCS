@@ -1326,6 +1326,9 @@ void MapWidget::updateGraphics(uint32_t update_events) {
     for(auto item: std::as_const(_items)) {
         item->updateGraphics(this, update_events);
     }
+    if((update_events & UpdateEvent::MAP_ZOOMED) && gcs_track_item) {
+        updateGcsTrack();   // (the scene coordinates depend on the zoom level)
+    }
     for(auto papget: std::as_const(papgets)) {
         papget->updateGraphics(this);
     }
@@ -2435,19 +2438,32 @@ void MapWidget::onGCSPos(pprzlink::Message msg) {
         return;
     }
     Point2DLatLon pos(lat, lon);
-    // the icon moved (sent at the rate of the receiver: not made again each time)
+    // the icon moved (sent at the rate of the receiver: not made again each time, only when its
+    // look changed in the settings)
+    auto settings = getAppSettings();
+    QString style = settings.value("map/gcs_icon_style", "marker").toString();
+    QString color = settings.value("map/gcs_icon_color").toString();
+    int size = settings.value("map/gcs_icon_size").toInt();
+    QString look = QString("%1|%2|%3").arg(style, color).arg(size);
+    if(gcsItem && look != gcs_look) {
+        removeItem(gcsItem);
+        gcsItem = nullptr;
+    }
     if(auto wi = dynamic_cast<WaypointItem*>(gcsItem)) {
         wi->setPosition(pos);
     } else {
-        auto settings = getAppSettings();
-        QColor color(settings.value("map/gcs_icon_color").toString());
-        auto wcenter = new WaypointItem(pos, "__NO_AC__", PprzPalette(color));
+        auto wcenter = new WaypointItem(pos, "__NO_AC__", PprzPalette(QColor(color)));
         wcenter->setEditable(false);
         addItem(wcenter);
         wcenter->setStyle(GraphicsObject::Style::GCS);
-        wcenter->setSize(settings.value("map/gcs_icon_size").toInt());
+        wcenter->getGraphicsPoint()->setGcsStyle(style);
+        wcenter->setSize(size);
         gcsItem = wcenter;
+        gcs_look = look;
     }
+    // its track
+    gcs_track.append({QDateTime::currentMSecsSinceEpoch(), pos});
+    updateGcsTrack();
     gcs_pos = pos;
     gcs_time = QDateTime::currentMSecsSinceEpoch();
     // a heading only from a receiver with two antennas (ublox2ivy: 361 without; gpsd2ivy: always 0)
@@ -2468,6 +2484,40 @@ void MapWidget::onGCSPos(pprzlink::Message msg) {
     } else if(follow_mode != FOLLOW_OFF && follow_target == TARGET_BOTH) {
         fitAircraftAndGcs();
     }
+}
+
+/// The track of the ground station (setting map/gcs_track): the last map/gcs_track_seconds
+void MapWidget::updateGcsTrack() {
+    auto settings = getAppSettings();
+    qint64 keep = static_cast<qint64>(settings.value("map/gcs_track_seconds", 300).toDouble() * 1000);
+    auto now = QDateTime::currentMSecsSinceEpoch();
+    while(!gcs_track.isEmpty() && now - gcs_track.first().first > keep) {
+        gcs_track.removeFirst();
+    }
+    bool on = settings.value("map/gcs_track", true).toBool() && gcs_track.size() >= 2;
+    if(!on) {
+        if(gcs_track_item) {
+            gcs_track_item->hide();
+        }
+        return;
+    }
+    if(!gcs_track_item) {
+        gcs_track_item = new QGraphicsPathItem();
+        gcs_track_item->setZValue(settings.value("map/z_values/unhighlighted").toDouble() - 1);    // below the icons
+        scene()->addItem(gcs_track_item);
+    }
+    QColor c(settings.value("map/gcs_icon_color").toString());
+    c.setAlpha(190);
+    QPen pen(c, 2.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    pen.setCosmetic(true);      // the same width at any zoom
+    gcs_track_item->setPen(pen);
+    int zl = zoomLevel(zoom());
+    QPainterPath path(scenePoint(gcs_track.first().second, zl, tileSize()));
+    for(int i = 1; i < gcs_track.size(); i++) {
+        path.lineTo(scenePoint(gcs_track[i].second, zl, tileSize()));
+    }
+    gcs_track_item->setPath(path);
+    gcs_track_item->show();
 }
 
 /// The selected aircraft and the ground station both in view: centered between them, zoomed out (or in)

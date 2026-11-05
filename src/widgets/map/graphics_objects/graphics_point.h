@@ -32,6 +32,8 @@ public:
     void setHoverMark(bool h) {if(hover_mark != h) {hover_mark = h; update();}}
     /// the ground station: its heading (deg, from the north), when known
     void setHeading(std::optional<double> h) {if(heading != h) {heading = h; update();}}
+    /// the ground station: its icon (marker, boat, car)
+    void setGcsStyle(QString s) {if(gcs_style != s) {prepareGeometryChange(); gcs_style = s; update();}}
     /// it follows the mouse (no button held) until a click places it (as a drag released there);
     /// a right click or cancelCarry puts it back (pointMoveCancelled)
     void startCarry();
@@ -82,6 +84,7 @@ private:
     QPointF pressScreen;
     bool hover_mark = false;
     std::optional<double> heading;
+    QString gcs_style = "marker";
     bool double_pressed = false;    // the press is the second of a double click    // where it was pressed on the screen (move threshold)
     PointMoveState move_state;
 
