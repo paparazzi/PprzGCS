@@ -1,5 +1,6 @@
 #include "card_dialog.h"
 #include "app_settings.h"
+#include "dispatcher_ui.h"
 #include "map_notifications.h"
 #include "switch.h"
 #include <QApplication>
@@ -94,6 +95,7 @@ void set_app_settings() {
     default_setting("settings/request_values", true);
     default_setting("strips/status_icons", true);
     default_setting("window/menu_title_bar", false);
+    default_setting("map/follow_button", true);
     default_setting("map/aircraft/track_width", 1);
 
     default_setting("aircraft_default_color", "red");
@@ -153,6 +155,11 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     cb = addSetting("Track width", "map/aircraft/track_width", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
+    cb = addSetting("Follow button", "map/follow_button", w_map, l_map, row, Type::BOOL);
+    callbacks.append(cb);
+    addHelp("The button left of the wind and compass, bottom right of the map. Click: the map follows the selected "
+            "aircraft; again: also heading up (as File \u2192 Track AC); again: off. Dragging the map stops it.", w_map, l_map, row);
+    live_settings << "map/follow_button";
     cb = addSetting("Battery and link icons", "map/aircraft_status_icons", w_map, l_map, row, Type::BOOL);
     callbacks.append(cb);
     addHelp("Small battery and link status icons next to each aircraft on the map.", w_map, l_map, row);
@@ -357,6 +364,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
             qApp->exit( PprzMain::EXIT_CODE_REBOOT );
             return;
         }
+        emit DispatcherUi::get()->appSettingsChanged();
         if(!needs_restart) {
             accept();
             return;
