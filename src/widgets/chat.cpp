@@ -346,8 +346,9 @@ void Chat::fitMessages() {
             break;
         }
     }
-    int wanted = user_sized ? 120 : qBound(120, h, 400);
-    // not resized by the user: exactly as tall as the messages (a scroll area asks for more)
+    // not resized by the user: room for a few long messages from the start (the card was resized
+    // each time); given a size: it fills the card
+    int wanted = user_sized ? 120 : 340;
     int max = user_sized ? QWIDGETSIZE_MAX : wanted;
     if(ui->scrollArea->minimumHeight() != wanted || ui->scrollArea->maximumHeight() != max) {
         ui->scrollArea->setMinimumHeight(wanted);
