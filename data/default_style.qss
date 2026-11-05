@@ -403,8 +403,10 @@ QLabel#rail_card_title {
 QToolButton#rail_card_close {
     border: 0;
     background: transparent;
-    min-width: 28px;
-    min-height: 28px;
+    min-width: 22px;
+    min-height: 22px;
+    max-height: 22px;
+    padding: 0;
     border-radius: 4px;
 }
 QToolButton#rail_card_close:hover {

@@ -55,7 +55,7 @@
 class CardGrip : public QWidget {
 public:
     CardGrip(QWidget* card, std::function<void(QSize)> resized) : QWidget(card), card(card), resized(resized) {
-        setFixedSize(16, 16);
+        setFixedSize(16, 16);   // easy to grab; its dots in the bottom margin of the card (not over the panel)
         setCursor(Qt::SizeFDiagCursor);
         setToolTip("Drag to resize (double click: back to the default size)");
         card->installEventFilter(this);
@@ -69,7 +69,7 @@ protected:
         p.setBrush(palette().color(QPalette::Mid));
         for(int i=0; i<3; i++) {
             for(int j=0; j<=i; j++) {
-                p.drawEllipse(QPointF(13 - j * 4, 13 - (i - j) * 4), 1.2, 1.2);
+                p.drawEllipse(QPointF(14 - j * 3, 14 - (i - j) * 3), 1.1, 1.1);
             }
         }
     }
@@ -88,7 +88,9 @@ protected:
         QSize s(qMax(min_size.width(), start_size.width() + d.x()),
                 qBound(min_size.height(), start_size.height() + d.y(), qMax(min_size.height(), max_h)));
         // a panel with a fixed shape (e.g. the PFD): its height follows the width, no white space
-        if(card->layout() && card->layout()->hasHeightForWidth()) {
+        // (only when it asks: a panel with wrapped text also has a height for a width, e.g. the
+        // chat, its height could not be changed any more)
+        if(card->property("keeps_aspect").toBool() && card->layout() && card->layout()->hasHeightForWidth()) {
             s.setHeight(qBound(min_size.height(), card->layout()->totalHeightForWidth(s.width()), qMax(min_size.height(), max_h)));
             if(s.height() == max_h) {
                 // as tall as allowed: as wide as that height needs
@@ -114,7 +116,7 @@ protected:
     }
 private:
     void place() {
-        move(card->width() - width() - 2, card->height() - height() - 2);
+        move(card->width() - width() - 1, card->height() - height() - 1);
         raise();
     }
     QWidget* card;
@@ -2531,6 +2533,7 @@ void MapWidget::addRailPanel(QString id, QWidget* widget, QString title, QString
     // the panel in a card over the map: a title bar with a close button
     auto card = new QFrame(this);
     card->setObjectName("rail_card");
+    card->setProperty("keeps_aspect", widget->property("keeps_aspect"));    // e.g. the PFD
     card->setAttribute(Qt::WA_StyledBackground);
     auto card_layout = new QVBoxLayout(card);
     card_layout->setContentsMargins(0, 0, 0, 0);
@@ -2538,7 +2541,7 @@ void MapWidget::addRailPanel(QString id, QWidget* widget, QString title, QString
     auto header = new QWidget(card);
     header->setObjectName("rail_card_header");
     auto header_layout = new QHBoxLayout(header);
-    header_layout->setContentsMargins(10, 2, 2, 2);
+    header_layout->setContentsMargins(10, 0, 1, 0);     // low: it is only to move the card
     auto title_label = new QLabel(title, header);
     title_label->setObjectName("rail_card_title");
     auto close_button = new QToolButton(header);
@@ -2553,7 +2556,7 @@ void MapWidget::addRailPanel(QString id, QWidget* widget, QString title, QString
     auto body = new QWidget(card);
     body->setObjectName("rail_card_body");
     auto body_layout = new QVBoxLayout(body);
-    body_layout->setContentsMargins(6, 4, 6, 6);
+    body_layout->setContentsMargins(6, 4, 6, 12);      // the bottom: room for the resize grip
     body_layout->addWidget(widget);
     card_layout->addWidget(body, 1);    // the extra height (resize grip) to the panel
     widget->show();
