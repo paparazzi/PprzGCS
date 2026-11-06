@@ -292,45 +292,72 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
         hl->addStretch(1);
         l_notify->addWidget(box, row - 1, 1);
     };
-    // heard: a sound with each warning or alarm, the speech
-    addSection("Sound", w_notify, l_notify, row);
-    cb = addSetting("Alert sounds", "notify/sound", w_notify, l_notify, row, Type::BOOL);
-    callbacks.append(cb);
-    alignSwitch({});
-    addHelp("A chime when a warning below shows or gets worse. An alarm beeps, and again every 4 s until it clears "
-            "or is dismissed (\u00d7).", w_notify, l_notify, row);
-    cb = addSetting("Speech", "notify/speech", w_notify, l_notify, row, Type::BOOL);
-    callbacks.append(cb);
-    alignSwitch({});
-#if defined(SPEECH_ENABLED)
-    addHelp("Says the warnings and alarms, and the messages of the layout (e.g. the altitude, a new mode or block).",
-            w_notify, l_notify, row);
-#else
-    if(auto item = l_notify->itemAtPosition(row - 1, 1)) {
-        item->widget()->setEnabled(false);
-    }
-    addHelp("This PprzGCS is built without speech (cmake -DSPEECH=ON, with Qt 6.4 or later).", w_notify, l_notify, row);
-#endif
-
-    QString group;
-    QString muted = "#6e7781";     // a grey readable in the light and the night style
+    // a section per group, each group once (in the order of its first kind, whatever the order of the kinds)
+    QStringList groups;
     for(auto &k: MapNotifications::kinds()) {
-        if(k.group != group) {
-            group = k.group;
-            addSection(group, w_notify, l_notify, row);
+        if(!groups.contains(k.group)) {
+            groups << k.group;
         }
-        QString name = k.name.toHtmlEscaped();
-        if(!k.detail.isEmpty()) {
-            name += QString("<br><span style='color:%1; font-size:11px;'>%2</span>").arg(muted, k.detail.toHtmlEscaped());
+    }
+    QString muted = "#6e7781";     // a grey readable in the light and the night style
+    for(auto &group: groups) {
+        addSection(group, w_notify, l_notify, row);
+        for(auto &k: MapNotifications::kinds()) {
+            if(k.group != group) {
+                continue;
+            }
+            QString name = k.name.toHtmlEscaped();
+            if(!k.detail.isEmpty()) {
+                name += QString("<br><span style='color:%1; font-size:11px;'>%2</span>").arg(muted, k.detail.toHtmlEscaped());
+            }
+            cb = addSetting(name, "notify/" + k.key, w_notify, l_notify, row, Type::BOOL);
+            callbacks.append(cb);
+            alignSwitch(k.levels);
         }
-        cb = addSetting(name, "notify/" + k.key, w_notify, l_notify, row, Type::BOOL);
-        callbacks.append(cb);
-        alignSwitch(k.levels);
     }
     live_settings << "notify/";     // read each time a notification comes
     finishTab(l_notify, row);
     tabWidget->addTab(w_notify, "Notifications");
+
+    // Tab Sound: how the notifications are heard (a sound with each warning or alarm, the speech)
+    auto w_sound = new QWidget(tabWidget);
+    auto l_sound = new QGridLayout(w_sound);
+    row = 0;
+    cb = addSetting("Alert sounds", "notify/sound", w_sound, l_sound, row, Type::BOOL);
+    callbacks.append(cb);
+    addHelp("A chime when a warning of the map shows or gets worse. An alarm beeps, and again every 4 s until it "
+            "clears or is dismissed (\u00d7).", w_sound, l_sound, row);
+    cb = addSetting("Speech", "notify/speech", w_sound, l_sound, row, Type::BOOL);
+    callbacks.append(cb);
+#if defined(SPEECH_ENABLED)
+    addHelp("Says the warnings and alarms, and the messages of the layout (e.g. the altitude, a new mode or block).",
+            w_sound, l_sound, row);
+#else
+    if(auto item = l_sound->itemAtPosition(row - 1, 1)) {
+        item->widget()->setEnabled(false);
+    }
+    addHelp("This PprzGCS is built without speech (cmake -DSPEECH=ON, with Qt 6.4 or later).", w_sound, l_sound, row);
+#endif
+    finishTab(l_sound, row);
+    tabWidget->addTab(w_sound, "Sound");
     tabWidget->tabBar()->moveTab(tabWidget->indexOf(w_ivy), tabWidget->count() - 1);   // Ivy last
+
+    // each tab scrolls: the dialog as tall as its tallest tab, but no taller than the screen
+    QSize largest;
+    for(int i=0; i<tabWidget->count(); i++) {
+        auto page = tabWidget->widget(i);
+        auto text = tabWidget->tabText(i);
+        largest = largest.expandedTo(page->sizeHint());
+        tabWidget->removeTab(i);
+        auto scroll = new QScrollArea(tabWidget);
+        scroll->setObjectName("settings_scroll");
+        scroll->setWidgetResizable(true);
+        scroll->setFrameShape(QFrame::NoFrame);
+        scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        scroll->setStyleSheet("#settings_scroll, #settings_scroll > QWidget > QWidget {background: transparent;}");
+        scroll->setWidget(page);
+        tabWidget->insertTab(i, scroll, text);
+    }
     tabWidget->setCurrentIndex(0);
 
 
@@ -348,6 +375,16 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     buttons->addWidget(save_button);
     lay->addLayout(buttons);
     setMinimumWidth(560);
+    // the size of the largest tab (and its scroll bar), within 85% of the screen
+    QSize scrolls;
+    for(int i=0; i<tabWidget->count(); i++) {
+        scrolls = scrolls.expandedTo(tabWidget->widget(i)->sizeHint());
+    }
+    QSize want = sizeHint() - scrolls + largest + QSize(style()->pixelMetric(QStyle::PM_ScrollBarExtent), 0);
+    if(auto s = screen()) {
+        want = want.boundedTo(s->availableGeometry().size() * 0.85);
+    }
+    resize(want);
 
     connect(save_button, &QPushButton::clicked, this, [=,this](){
         // what changed: a restart only for the settings that are not used right away
