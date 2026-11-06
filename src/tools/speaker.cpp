@@ -2,6 +2,7 @@
 #include "pprz_dispatcher.h"
 #include "gcs_utils.h"
 #include "AircraftManager.h"
+#include "dispatcher_ui.h"
 
 Speaker::Speaker(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox),
     tts(nullptr), locale("en_GB")
@@ -20,8 +21,11 @@ void Speaker::addSentence(QString txt, int priority, int validity) {
 }
 
 void Speaker::say() {
-    if(!tts || !speech()) {
+    if(!speech()) {
         return;
+    }
+    if(!tts) {
+        enableSpeech(true);     // switched on in the settings meanwhile
     }
 
     auto now = QTime::currentTime();
@@ -59,7 +63,7 @@ void Speaker::say() {
 }
 
 void Speaker::enableSpeech(bool s) {
-    setSpeech(s);
+    // (whether it speaks: speech(), from the settings or --speech; the messages are always listened to)
     if(!tts && s) {
         tts = new QTextToSpeech(this);
 
@@ -68,11 +72,6 @@ void Speaker::enableSpeech(bool s) {
         }
 
         setLocale(locale);
-
-        for(auto &msg: messages) {
-            bindMessage(msg);
-        }
-
     }
 }
 
@@ -94,9 +93,7 @@ void Speaker::setLocale(QString l) {
 void Speaker::registerMessage(QString name, QString text, int period, int expire, int priority, bool onChange, QString postprocessing) {
     struct Message msg = {name, text, period*1000, priority, expire, onChange, postprocessing};
     messages.append(msg);
-    if(speech()) {
-        bindMessage(msg);
-    }
+    bindMessage(msg);   // (said only while the speech is on)
 }
 
 void Speaker::bindMessage(struct Message msg) {
@@ -230,5 +227,13 @@ void Speaker::make_sentence(struct Message msg, QString field, pprzlink::Message
 
 void Speaker::setToolbox(PprzToolbox* toolbox) {
     PprzTool::setToolbox(toolbox);
+    // the warnings and alarms of the map, before the other messages
+    connect(DispatcherUi::get(), &DispatcherUi::alert, this, [=,this](QString sender, QString text, bool alarm) {
+        QString name = sender == "ground" ? QString("Server") : sender;
+        if(AircraftManager::get()->aircraftExists(sender)) {
+            name = AircraftManager::get()->getAircraft(sender)->name();
+        }
+        addSentence(name + ": " + text, alarm ? 10 : 5, 20);
+    });
     //connect(PprzDispatcher::get(), &PprzDispatcher::waypoint_moved, this, &AircraftManager::moveWaypoint);
 }

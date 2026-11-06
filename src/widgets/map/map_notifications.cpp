@@ -23,6 +23,17 @@ MapNotifications::MapNotifications(QWidget *parent) : QWidget(parent)
     timer->setInterval(250);
     connect(timer, &QTimer::timeout, this, &MapNotifications::expire);
     timer->start();
+    alarm_timer = new QTimer(this);
+    alarm_timer->setInterval(4000);
+    connect(alarm_timer, &QTimer::timeout, this, [=,this]() {
+        for(auto &it: items) {
+            if(it.level == ALARM && !it.dismissed) {
+                playSound(true);
+                return;
+            }
+        }
+        alarm_timer->stop();    // none left
+    });
     if(parent) {
         parent->installEventFilter(this);
     }
@@ -169,17 +180,58 @@ void MapNotifications::setState(QString key, QString sender, QString text, Level
 
 /// A state that appears or gets worse also goes in the chat (it stays there after it is cleared).
 void MapNotifications::announce(QString key, QString sender, QString text, Level level) {
-    if(key.startsWith("reboot:")) {
-        return;     // the chat has its own line for a reboot
-    }
-    // a state that comes and goes (e.g. a link partly lost): once per 30 s in the chat
+    // a state that comes and goes (e.g. a link partly lost): once per 30 s in the chat and heard
     auto now = QDateTime::currentMSecsSinceEpoch();
     QString id = key + ":" + QString::number(level);
     if(now - announced.value(id, 0) < 30000) {
         return;
     }
     announced[id] = now;
-    emit DispatcherUi::get()->alert(sender, text, level == ALARM);
+    if(!key.startsWith("reboot:")) {
+        emit DispatcherUi::get()->alert(sender, text, level == ALARM);     // (the chat has its own line for a reboot)
+    }
+    // a chime for a warning; an alarm beeps, and again every few seconds while it is shown
+    playSound(level == ALARM);
+    if(level == ALARM && !alarm_timer->isActive()) {
+        alarm_timer->start();
+    }
+}
+
+/// The alert sounds (setting notify/sound), played by the player of the system: no Qt Multimedia needed
+void MapNotifications::playSound(bool alarm) {
+    if(!getAppSettings().value("notify/sound", true).toBool()) {
+        return;
+    }
+    // several at the same moment (e.g. at the start): heard once
+    static qint64 last[2] = {0, 0};
+    auto now = QDateTime::currentMSecsSinceEpoch();
+    if(now - last[alarm] < 1000) {
+        return;
+    }
+    last[alarm] = now;
+    // paplay first: it plays with PulseAudio and with PipeWire (through pipewire-pulse), while pw-play
+    // fails when PipeWire runs next to PulseAudio without its own audio output
+    static const QStringList player = []() {
+        for(auto &p: QList<QStringList>{{"paplay"}, {"pw-play"}, {"aplay", "-q"}, {"afplay"}}) {
+            auto path = QStandardPaths::findExecutable(p[0]);
+            if(!path.isEmpty()) {
+                return QStringList{path} + p.mid(1);
+            }
+        }
+        return QStringList();
+    }();
+    QString file = user_or_app_path(alarm ? "sounds/alarm.wav" : "sounds/warning.wav");
+    if(player.isEmpty() || !QFile::exists(file)) {
+        QApplication::beep();
+        return;
+    }
+    // its messages not in the terminal of the GCS (an alarm plays again every few seconds)
+    QProcess p;
+    p.setProgram(player[0]);
+    p.setArguments(player.mid(1) << file);
+    p.setStandardOutputFile(QProcess::nullDevice());
+    p.setStandardErrorFile(QProcess::nullDevice());
+    p.startDetached();
 }
 
 void MapNotifications::expire() {
