@@ -2609,7 +2609,7 @@ void MapWidget::addRailPanel(QString id, QWidget* widget, QString title, QString
     card_layout->addWidget(body, 1);    // the extra height (resize grip) to the panel
     widget->show();
     // panels made for a column (e.g. from the tabs) need a usable width over the map
-    static const QStringList column_panels = {"settings", "flightplan", "checklist", "plotter", "commands"};
+    static const QStringList column_panels = {"settings", "flightplan", "checklist", "plotter", "commands", "chat"};
     // (not for a panel that is empty when the card is made, e.g. per aircraft before the first
     // one: it was 420 px wide, e.g. the link status)
     if(column_panels.contains(id.toLower()) || (widget->sizeHint().width() > 0 && widget->sizeHint().width() < 200)) {
