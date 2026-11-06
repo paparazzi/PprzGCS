@@ -21,7 +21,7 @@
             </columnLeft>
           </configure>
         </widget>
-        <rows size="200" id="right_pane">
+        <rows size="300" id="right_pane">
             <widget name="strips" container="list" alt="commands"/>
             <tabs size="30">
                 <widget name="flightplan" title="Flight plan"/>
