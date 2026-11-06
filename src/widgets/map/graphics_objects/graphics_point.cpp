@@ -50,6 +50,9 @@ GraphicsPoint::GraphicsPoint(int size, PprzPalette palette, QObject *parent) :
 
 QRectF GraphicsPoint::boundingRect() const {
     // with the white border and the shadow
+    if(style == GCS) {
+        return QRectF(-2*halfSize, -2*halfSize, 4*halfSize, 4*halfSize);   // (its heading reaches out)
+    }
     return QRectF(-halfSize-4, -halfSize-4, 2*halfSize+8, 2*halfSize+9);
 }
 
@@ -125,11 +128,77 @@ void GraphicsPoint::paint(QPainter *painter, const QStyleOptionGraphicsItem *opt
         }
         break;
     case GCS: {
-        painter->setBrush(Qt::NoBrush);
-        painter->setPen(QPen(palette.getVariant(current_color), 3));
-        painter->drawEllipse(QPoint(0,0), 2*halfSize/3, 2*halfSize/3);
-        painter->drawLine(0, -halfSize, 0, halfSize);
-        painter->drawLine(-halfSize, 0, halfSize, 0);
+        // the ground station: a white border and a shadow (visible on any imagery); with a heading
+        // (ublox2ivy, two antennas), it shows (the item turns against the map: back to its north first)
+        QColor color = palette.getVariant(current_color);
+        double hs = halfSize;
+        painter->setRenderHint(QPainter::Antialiasing);
+        auto shadowed = [&](const QPainterPath& path, QColor fill, QColor border, double width) {
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(QColor(0, 0, 0, 90));
+            painter->drawPath(path.translated(0, 1.5));
+            painter->setPen(QPen(border, width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+            painter->setBrush(fill);
+            painter->drawPath(path);
+        };
+        auto toHeading = [&]() {
+            painter->rotate(-rotation() + *heading);
+        };
+        if(gcs_style == "car") {
+            // a car seen from above: its front along the heading (north without one)
+            painter->save();
+            if(heading) {
+                toHeading();
+            } else {
+                painter->rotate(-rotation());
+            }
+            QPainterPath body;
+            body.addRoundedRect(QRectF(-0.55*hs, -1.1*hs, 1.1*hs, 2.2*hs), 0.35*hs, 0.4*hs);
+            shadowed(body, color, Qt::white, 2.5);
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(QColor(255, 255, 255, 220));
+            // the windscreen and the rear window
+            QPolygonF front({QPointF(-0.4*hs, -0.45*hs), QPointF(0.4*hs, -0.45*hs), QPointF(0.32*hs, -0.15*hs), QPointF(-0.32*hs, -0.15*hs)});
+            painter->drawPolygon(front);
+            painter->drawRect(QRectF(-0.32*hs, 0.6*hs, 0.64*hs, 0.2*hs));
+            painter->restore();
+        } else if(gcs_style == "boat") {
+            // a boat seen from above: its bow along the heading (north without one)
+            painter->save();
+            if(heading) {
+                toHeading();
+            } else {
+                painter->rotate(-rotation());
+            }
+            QPainterPath hull;
+            hull.moveTo(0, -1.2*hs);
+            hull.quadTo(0.7*hs, -0.4*hs, 0.55*hs, 0.95*hs);
+            hull.lineTo(-0.55*hs, 0.95*hs);
+            hull.quadTo(-0.7*hs, -0.4*hs, 0, -1.2*hs);
+            shadowed(hull, color, Qt::white, 2.5);
+            painter->setPen(Qt::NoPen);
+            painter->setBrush(QColor(255, 255, 255, 220));
+            painter->drawRoundedRect(QRectF(-0.28*hs, -0.1*hs, 0.56*hs, 0.6*hs), 0.12*hs, 0.12*hs);  // the cabin
+            painter->restore();
+        } else {
+            // a marker: a triangle, an arrow when it has a heading
+            QPainterPath path;
+            if(heading) {
+                painter->save();
+                toHeading();
+                path.addPolygon(QPolygonF({QPointF(0, -1.05*hs), QPointF(0.75*hs, 0.75*hs), QPointF(0, 0.35*hs),
+                                           QPointF(-0.75*hs, 0.75*hs), QPointF(0, -1.05*hs)}));
+                shadowed(path, color, Qt::white, 2.5);
+                painter->restore();
+            } else {
+                path.addPolygon(QPolygonF({QPointF(0, -0.95*hs), QPointF(0.82*hs, 0.6*hs), QPointF(-0.82*hs, 0.6*hs),
+                                           QPointF(0, -0.95*hs)}));
+                shadowed(path, color, Qt::white, 2.5);
+                painter->setPen(Qt::NoPen);
+                painter->setBrush(Qt::white);
+                painter->drawEllipse(QPointF(0, 0.12*hs), 0.2*hs, 0.2*hs);
+            }
+        }
         }
         break;
     case DCSHOT: {

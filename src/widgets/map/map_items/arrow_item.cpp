@@ -4,7 +4,99 @@
 #include "dispatcher_ui.h"
 
 
-constexpr double DISTANCE_TAU = 200;
+#include "AircraftManager.h"
+#include "coordinatestransform.h"
+#include <QGraphicsSceneMouseEvent>
+
+namespace {
+constexpr double TIP = 0;       // (nothing out of the pill)
+constexpr double ARROW = 16;    // room for the arrow in the tag
+constexpr double MARGIN = 8;    // from the edge of the visible map
+
+double distanceM(Point2DLatLon a, Point2DLatLon b) {
+    double la1 = qDegreesToRadians(a.lat()), la2 = qDegreesToRadians(b.lat());
+    double dla = la2 - la1, dlo = qDegreesToRadians(b.lon() - a.lon());
+    double h = sin(dla / 2) * sin(dla / 2) + cos(la1) * cos(la2) * sin(dlo / 2) * sin(dlo / 2);
+    return 2 * 6371000.0 * atan2(sqrt(h), sqrt(1 - h));
+}
+}
+
+OffscreenTag::OffscreenTag() {
+    setFlag(QGraphicsItem::ItemIgnoresTransformations);     // in pixels, upright
+    setAcceptedMouseButtons(Qt::LeftButton);
+    setCursor(Qt::PointingHandCursor);
+    font.setPixelSize(12);
+    font.setBold(true);
+}
+
+QSizeF OffscreenTag::pillSize() const {
+    QFontMetricsF fm(font);
+    return QSizeF(fm.horizontalAdvance(text) + 20 + ARROW, 24);    // (the arrow before the text)
+}
+
+QPainterPath OffscreenTag::tagPath() const {
+    QSizeF sz = pillSize();
+    QPainterPath path;
+    path.addRoundedRect(QRectF(-sz.width() / 2, -sz.height() / 2, sz.width(), sz.height()), sz.height() / 2, sz.height() / 2);
+    return path;
+}
+
+QRectF OffscreenTag::boundingRect() const {
+    QSizeF sz = pillSize();
+    double m = TIP + 4;
+    return QRectF(-sz.width() / 2 - m, -sz.height() / 2 - m, sz.width() + 2 * m, sz.height() + 2 * m);
+}
+
+QPainterPath OffscreenTag::shape() const {
+    return tagPath();
+}
+
+void OffscreenTag::set(QString t, QColor c, double a, bool s) {
+    if(t != text) {
+        prepareGeometryChange();
+    }
+    text = t;
+    color = c;
+    angle = a;
+    selected = s;
+    update();
+}
+
+void OffscreenTag::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
+    (void)option;
+    (void)widget;
+    painter->setRenderHint(QPainter::Antialiasing);
+    painter->setOpacity(selected ? 1.0 : 0.8);
+    auto path = tagPath();
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(QColor(0, 0, 0, 80));
+    painter->drawPath(path.translated(0, 1.5));
+    painter->setPen(QPen(Qt::white, 2));
+    painter->setBrush(color);
+    painter->drawPath(path);
+    // white text, or dark on a light color
+    painter->setPen(color.lightnessF() > 0.7 ? QColor(0x1f2328) : QColor(Qt::white));
+    painter->setFont(font);
+    QSizeF sz = pillSize();
+    QColor ink = painter->pen().color();
+    painter->drawText(QRectF(-sz.width() / 2 + ARROW, -sz.height() / 2, sz.width() - ARROW, sz.height()), Qt::AlignCenter, text);
+    // the arrow before the name, towards the aircraft
+    painter->save();
+    painter->translate(-sz.width() / 2 + 6 + ARROW / 2, 0);
+    painter->rotate(angle + 90);
+    painter->setPen(Qt::NoPen);
+    painter->setBrush(ink);
+    painter->drawPolygon(QPolygonF({QPointF(0, -7), QPointF(5.5, 6), QPointF(0, 2.5), QPointF(-5.5, 6)}));
+    painter->restore();
+}
+
+void OffscreenTag::mousePressEvent(QGraphicsSceneMouseEvent* event) {
+    event->accept();
+    if(clicked) {
+        clicked();
+    }
+}
+
 
 ArrowItem::ArrowItem(QString ac_id, double neutral_scale_zoom, QObject *parent) :
     MapItem(ac_id, neutral_scale_zoom, parent), m_size(30)
@@ -15,36 +107,30 @@ ArrowItem::ArrowItem(QString ac_id, double neutral_scale_zoom, QObject *parent) 
     z_value_unhighlighted = settings.value("map/z_values/aircraft").toDouble();
     z_value = z_value_unhighlighted;
 
-    scene_item = new GraphicsGroup(palette, this);
-    polygon = new QGraphicsPolygonItem(scene_item);
-    connect(scene_item, &GraphicsGroup::mousePressed, this, [=,this](auto event) {
-        (void)event;
+    scene_item = new OffscreenTag();
+    scene_item->clicked = [=,this]() {
         emit centerAC();
         emit DispatcherUi::get()->ac_selected(ac_id);
-    });
-
-    scene_item->addToGroup(polygon);
+    };
+    scene_item->hide();
     setZoomFactor(1.1);
 }
 
 
 void ArrowItem::setHighlighted(bool h) {
     MapItem::setHighlighted(h);
-    if(h) {
-        polygon->setBrush(palette.getColor());
-    } else {
-        polygon->setBrush(palette.getVariant(1));
-    }
     updateZValue();
 }
 
 void ArrowItem::updateZValue() {
-    //polygon->setZValue(z_value);
-    scene_item->setZValue(z_value);
+    scene_item->setZValue(z_value + (highlighted ? 1 : 0));
 }
 
 void ArrowItem::setVisible(bool visible) {
-    scene_item->setVisible(visible);
+    shown = visible;    // (shown only while the aircraft is out of the view)
+    if(!visible) {
+        scene_item->hide();
+    }
 }
 
 void ArrowItem::setForbidHighlight(bool fh) {
@@ -62,92 +148,38 @@ void ArrowItem::addToMap(MapWidget* map) {
 }
 
 void ArrowItem::updateGraphics(MapWidget* map, uint32_t update_event) {
-
-    if(update_event & (UpdateEvent::ANY)) {
-        QPointF ac_scene_pos = scenePoint(ac_pos, zoomLevel(map->zoom()), map->tileSize());
-        QPoint ac_view_pos = map->mapFromScene(ac_scene_pos);
-        if(!map->rect().contains(ac_view_pos)) {
-            //qDebug() << ac_view_pos;
-            auto [arrow_view_pos, angle, distance] = intersect(map->rect(), ac_view_pos);
-            QPolygonF arrow_poly = make_polygon(distance);
-            polygon->setPolygon(arrow_poly);
-            QPointF arrow_scene_pos = map->mapToScene(arrow_view_pos);
-            polygon->setPos(arrow_scene_pos);
-            double s = getScale(map->zoom(), map->scaleFactor());
-            polygon->setScale(s);
-            polygon->setRotation(angle - map->getRotation());
-            polygon->show();
-        } else {
-            polygon->hide();
+    if(!(update_event & UpdateEvent::ANY)) {
+        return;
+    }
+    // the visible map: not under the rail on the left
+    QRectF view = QRectF(map->rect());
+    if(auto rail = map->findChild<QWidget*>("map_rail")) {
+        if(rail->isVisible()) {
+            view.setLeft(rail->geometry().right() + 1);
         }
     }
-}
-
-std::tuple<QPoint, double, double> ArrowItem::intersect(QRect rect, QPoint p) {
-    if(rect.contains(p)) {
-        return std::make_tuple(p, -90.0, 0);
+    QPointF ac_scene_pos = scenePoint(ac_pos, zoomLevel(map->zoom()), map->tileSize());
+    QPointF p = map->mapFromScene(ac_scene_pos);
+    if(!shown || view.contains(p) || (ac_pos.lat() == 0 && ac_pos.lon() == 0)) {
+        scene_item->hide();
+        return;
     }
+    QString name = AircraftManager::get()->aircraftExists(ac_id) ? AircraftManager::get()->getAircraft(ac_id)->name() : ac_id;
+    // the distance from the middle of the view
+    QPointF c = view.center();
+    auto center = CoordinatesTransform::get()->wgs84_from_scene(map->mapToScene(c.toPoint()), zoomLevel(map->zoom()), map->tileSize());
+    double d = distanceM(center, ac_pos);
+    QString dist = d < 1000 ? QString("%1 m").arg(d, 0, 'f', 0) : QString("%1 km").arg(d / 1000, 0, 'f', d < 10000 ? 1 : 0);
+    double angle = qRadiansToDegrees(atan2(p.y() - c.y(), p.x() - c.x()));
+    scene_item->set(name + QString::fromUtf8(" · ") + dist, palette.getColor(), angle, highlighted);
 
-    double x = 0;
-    double y = 0;
-    double angle_deg = 0;
-
-    auto c = rect.center();
-    // avoid divide by 0
-    if(c.x() == p.x()) {
-        x = c.x();
-        if(p.y() >= c.y()) {
-            y = rect.bottom();
-            angle_deg = 90.0;
-        } else {
-            y = rect.top();
-            angle_deg = -90.0;
-        }
-    } else {
-        double slope = static_cast<double>(p.y() - c.y()) / static_cast<double>(p.x() - c.x());
-        double slope_corner = static_cast<double>(rect.height()) / static_cast<double>(rect.width());
-        double angle = atan2(p.y() - c.y(), p.x() - c.x());
-        angle_deg = qRadiansToDegrees(angle);
-
-
-        if(abs(slope) < abs(slope_corner)) {
-            // right of left edge
-            if(p.x() > c.x()) {
-                // right edge
-                x = rect.right();
-                y = c.y() + slope * rect.width()/2;
-
-            } else {
-                // left edge
-                x = rect.left();
-                y = c.y() - slope * rect.width()/2;
-            }
-        } else {
-            // top or bottom edge
-            if(p.y() > c.y()) {
-                // bottom
-                y = rect.bottom();
-                x = c.x() + rect.height()/(2.0*slope);
-            } else {
-                // top
-                y = rect.top();
-                x = c.x() - rect.height()/(2.0*slope);
-            }
-        }
-
-    }
-
-    auto inter = QPoint(x, y);
-    double distance = sqrt(pow(p.x()-inter.x(), 2) + pow(p.y()-inter.y(), 2));
-    return std::make_tuple(inter, angle_deg, distance);
-}
-
-QPolygonF ArrowItem::make_polygon(double distance) {
-    double angle = M_PI/8 * exp(-distance / static_cast<double>(DISTANCE_TAU)) + M_PI/32.0;
-    QPolygonF arrow_poly({
-        QPointF(0, 0),
-        QPointF(-m_size * cos(angle),  m_size * sin(angle)),
-        QPointF(-m_size * cos(angle),  -m_size * sin(angle))
-    });
-    return arrow_poly;
+    // on the line from the middle to the aircraft, as far as the tag stays in the view
+    QSizeF sz = scene_item->pillSize();
+    double hw = view.width() / 2 - sz.width() / 2 - TIP - MARGIN;
+    double hh = view.height() / 2 - sz.height() / 2 - TIP - MARGIN;
+    double dx = p.x() - c.x(), dy = p.y() - c.y();
+    double t = std::min(fabs(dx) > 1e-6 ? hw / fabs(dx) : 1e9, fabs(dy) > 1e-6 ? hh / fabs(dy) : 1e9);
+    QPointF pos = c + QPointF(dx, dy) * std::max(0.0, t);
+    scene_item->setPos(map->mapToScene(pos.toPoint()));
+    scene_item->show();
 }
