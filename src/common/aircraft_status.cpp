@@ -7,6 +7,7 @@ AircraftStatus::AircraftStatus(QString ac_id, QObject *parent) : QObject(parent)
     ac_id(ac_id)
 {
     watcher = new AircraftWatcher(ac_id, this);
+    link_path = new LinkPath(ac_id, this);
 
     //listen for NAVIGATION_REF to update origin waypoint of fixedwings
     PprzDispatcher::get()->bind("NAVIGATION_REF", this, [=,this](QString sender, pprzlink::Message msg) {

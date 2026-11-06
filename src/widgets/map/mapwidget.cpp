@@ -112,6 +112,22 @@ protected:
         if(o == card && e->type() == QEvent::Resize) {
             place();
         }
+        if(o == card && e->type() == QEvent::LayoutRequest) {
+            // the panel needs more room (e.g. new rows in the link status): the card grows with it
+            QTimer::singleShot(0, card, [card = card]() {
+                QSize need = card->minimumSizeHint();
+                if(card->minimumSize() == card->maximumSize()) {
+                    // a size set by the user: not smaller than needed
+                    QSize s = card->size().expandedTo(need);
+                    if(s != card->size()) {
+                        card->setMinimumSize(s);
+                        card->setMaximumSize(s);
+                    }
+                } else if(card->property("floating").toBool() && card->size() != card->sizeHint().expandedTo(card->minimumSize())) {
+                    card->adjustSize();     // on the map, out of a layout: as big as the panel asks
+                }
+            });
+        }
         return false;
     }
 private:
@@ -953,7 +969,7 @@ void MapWidget::configure(QDomElement ele) {
     });
     // an aircraft that is removed: its states go
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, [=,this](QString id) {
-        for(auto kind: {"bat", "link", "gps", "mode", "kill", "rc", "home", "height"}) {
+        for(auto kind: {"bat", "node_bat", "link", "gps", "mode", "kill", "rc", "home", "height"}) {
             notifications->setState(QString(kind) + ":" + id, id, "", MapNotifications::INFO);
         }
     });
@@ -2819,6 +2835,28 @@ void MapWidget::watchAircraftStates(QString ac_id) {
         case AircraftWatcher::BatStatus::OK:
             n->setState("bat:" + ac_id, ac_id, "", MapNotifications::INFO);
             break;
+        }
+    });
+    // the battery of the nodes on the link (e.g. a Herelink handheld): the lowest one
+    auto path = ac->getStatus()->getLinkPath();
+    connect(path, &LinkPath::nodeStats, this, [=]() {
+        if(!n) {
+            return;
+        }
+        std::optional<LinkPath::Node> low;
+        for(auto &node: path->nodes()) {
+            if(node.battery && (!low || *node.battery < *low->battery)) {
+                low = node;
+            }
+        }
+        if(low && *low->battery < 10) {
+            n->setState("node_bat:" + ac_id, ac_id, QString("Radio battery critical: node %1, %2 %").arg(low->hop).arg(*low->battery),
+                        MapNotifications::ALARM);
+        } else if(low && *low->battery < 20) {
+            n->setState("node_bat:" + ac_id, ac_id, QString("Radio battery low: node %1, %2 %").arg(low->hop).arg(*low->battery),
+                        MapNotifications::WARNING);
+        } else {
+            n->setState("node_bat:" + ac_id, ac_id, "", MapNotifications::INFO);
         }
     });
     // from the status messages: GPS fix, autopilot mode, kill, RC, distance from HOME, height

@@ -51,6 +51,7 @@ QList<MapNotifications::Kind> MapNotifications::kinds() {
         {"server", "Connection", "Server lost", "None at the start, or lost until it answers again", {"Warning", "Alarm"}, true},
         {"link", "Connection", "Link lost", "Partly lost, then lost", {"Warning", "Alarm"}, true},
         {"bat", "Aircraft", "Battery low", "Low, then critical", {"Warning", "Alarm"}, true},
+        {"node_bat", "Connection", "Radio battery low", "Of a node on the link (e.g. the Herelink handheld): below 20 %, then 10 %", {"Warning", "Alarm"}, true},
         {"gps", "Aircraft", "GPS fix lost", "After there was a 3D fix", {"Alarm"}, true},
         {"mode", "Aircraft", "Safety mode", "HOME, FAILSAFE, KILL or NOGPS", {"Alarm"}, true},
         {"kill", "Aircraft", "Throttle killed", "While flying, above 3 m", {"Alarm"}, true},

@@ -13,6 +13,7 @@ public:
 
 private:
     void updateData();
+    void updatePath();      // where frames get lost on the way (from the link statistics)
 
     struct Row {
         QLabel* dot;
@@ -31,6 +32,12 @@ private:
     QLabel* empty_label;
     QMap<QString, Row> rows;
     int next_row = 1;      // row 0: the captions
+
+    // the path below the links, in the same columns
+    static constexpr int PATH_ROW = 1000;
+    QList<QLabel*> path_captions;
+    QList<QList<QLabel*>> path_rows;    // name, down loss, up loss, max gap, signal
+    QLabel* path_notes;
 };
 
 #endif // LINKSTATUS_H

@@ -7,6 +7,7 @@
 #include "pprz_dispatcher.h"
 #include <optional>
 #include "aircraft_watcher.h"
+#include "link_path.h"
 
 
 class AircraftStatus : public QObject
@@ -20,6 +21,7 @@ public:
     QMap<QString, pprzlink::Message> getTelemetryMessages() {return telemetry_messages;}
 
     AircraftWatcher* getWatcher() {return watcher;}
+    LinkPath* getLinkPath() {return link_path;}
 
     /// the origin of the aircraft's local frame (from INS_REF), once received
     struct InsRef {
@@ -54,6 +56,7 @@ private:
     QMap<QString, pprzlink::Message> telemetry_messages;
 
     AircraftWatcher* watcher;
+    LinkPath* link_path;
     std::optional<InsRef> ins_ref_origin;
     QSet<uint8_t> reported_wps;     // waypoints whose position came from the aircraft
 

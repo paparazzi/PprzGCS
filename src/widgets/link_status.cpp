@@ -24,8 +24,28 @@ LinkStatus::LinkStatus(QString ac_id, QWidget *parent) : QWidget(parent),
         captions.append(l);
         l->hide();
     }
+    // the path, from the link statistics of the aircraft and of the nodes in between
+    col = 1;
+    for(auto c: {"Path", "Down loss", "Up loss", "Max gap", "Signal"}) {
+        auto l = new QLabel(c, this);
+        l->setObjectName("link_secondary");
+        l->setAlignment((col == 1 ? Qt::AlignLeft : Qt::AlignRight) | Qt::AlignVCenter);
+        grid->addWidget(l, PATH_ROW, col++);
+        path_captions.append(l);
+        l->hide();
+    }
+    path_notes = new QLabel(this);
+    path_notes->setObjectName("link_secondary");
+    path_notes->setWordWrap(true);
+    path_notes->setTextFormat(Qt::RichText);
+    path_notes->hide();
     v->addLayout(grid);
+    v->addWidget(path_notes);
     v->addStretch(1);
+
+    auto path_timer = new QTimer(this);
+    connect(path_timer, &QTimer::timeout, this, &LinkStatus::updatePath);
+    path_timer->start(1000);
 
     auto ac_status = AircraftManager::get()->getAircraft(ac_id)->getStatus();
     connect(ac_status, &AircraftStatus::telemetry_status, this, &LinkStatus::updateData);
@@ -35,9 +55,10 @@ LinkStatus::Row LinkStatus::makeRow(QString link_id) {
     Row r;
     r.dot = new QLabel(this);
     r.dot->setFixedSize(10, 10);
-    r.name = new QLabel(link_id == "no_id" ? QString("Link") : link_id, this);
+    bool no_id = link_id == "no_id" || link_id == "-1";    // (link without -id)
+    r.name = new QLabel(no_id ? QString("Link") : link_id, this);
     r.name->setObjectName("link_name");
-    r.name->setProperty("link_id", link_id == "no_id" ? QString("Link") : link_id);
+    r.name->setProperty("link_id", no_id ? QString("Link") : link_id);
     auto value = [&]() {
         auto l = new QLabel(QString::fromUtf8("\xE2\x80\x94"), this);
         l->setObjectName("link_value");
@@ -103,4 +124,133 @@ void LinkStatus::updateData() {
         r.uplink_lost->setText(QString("%1 s").arg(uplink_lost_time));
         r.uplink_lost->setStyleSheet(uplink_lost_time > 5 ? "color: #b42318; font-weight: bold;" : "");
     }
+}
+
+namespace {
+const char* AMBER = "#b54708";
+const char* RED = "#b42318";
+
+void setValue(QLabel* l, QString text, const char* color = nullptr, bool bold = false) {
+    l->setText(text);
+    QString style;
+    if(color) {
+        style = QString("color: %1;").arg(color);
+        if(bold) {
+            style += " font-weight: bold;";
+        }
+    }
+    if(l->styleSheet() != style) {
+        l->setStyleSheet(style);
+    }
+}
+
+QString dash() {
+    return QString::fromUtf8("\xE2\x80\x94");
+}
+}
+
+void LinkStatus::updatePath() {
+    auto path = AircraftManager::get()->getAircraft(ac_id)->getStatus()->getLinkPath();
+    bool shown = path->hasPath();
+    auto legs = shown ? path->legs() : QList<LinkPath::Leg>();
+    for(auto c: path_captions) {
+        c->setVisible(shown);
+    }
+
+    // one row per leg, the labels kept (no flicker)
+    while(path_rows.size() > legs.size()) {
+        for(auto l: path_rows.takeLast()) {
+            l->deleteLater();
+        }
+    }
+    while(path_rows.size() < legs.size()) {
+        int row = PATH_ROW + 1 + path_rows.size();
+        QList<QLabel*> labels;
+        for(int col = 1; col <= 5; col++) {
+            auto l = new QLabel(this);
+            l->setObjectName(col == 1 ? "link_secondary" : "link_value");
+            l->setAlignment((col == 1 ? Qt::AlignLeft : Qt::AlignRight) | Qt::AlignVCenter);
+            grid->addWidget(l, row, col);
+            labels.append(l);
+        }
+        path_rows.append(labels);
+    }
+
+    QStringList notes;
+    for(int i = 0; i < legs.size(); i++) {
+        auto &leg = legs[i];
+        auto &r = path_rows[i];
+        r[0]->setText(leg.name);
+        for(int j = 0; j < 2; j++) {
+            auto loss = j == 0 ? leg.down_loss : leg.up_loss;
+            if(loss) {
+                const char* c = *loss >= 10 ? RED : *loss >= 1 ? AMBER : nullptr;
+                setValue(r[1 + j], QString("%1 %").arg(*loss, 0, 'f', *loss < 10 ? 1 : 0), c, *loss >= 10);
+            } else {
+                setValue(r[1 + j], dash());
+            }
+        }
+        if(leg.max_gap) {
+            double g = *leg.max_gap;
+            QString t = g >= 65535 ? QString("> 65 s") : g < 10000 ? QString("%1 ms").arg(g, 0, 'f', 0)
+                                                                  : QString("%1 s").arg(g / 1000, 0, 'f', 0);
+            setValue(r[3], t, g >= 3000 ? RED : g >= 1000 ? AMBER : nullptr, g >= 3000);
+        } else {
+            setValue(r[3], dash());
+        }
+        // the signal: weak in amber, very weak in red
+        if(leg.dbm) {
+            int d = *leg.dbm;
+            setValue(r[4], QString("%1 dBm").arg(d), d < -90 ? RED : d < -80 ? AMBER : nullptr, d < -80);
+        } else {
+            setValue(r[4], dash());
+        }
+        QStringList errs;
+        if(leg.rejected > 0) {
+            errs.append(QString("%1 rejected").arg(leg.rejected));
+        }
+        if(leg.unsent > 0) {
+            errs.append(QString("%1 not sent").arg(leg.unsent));
+        }
+        if(!errs.isEmpty()) {
+            notes.append(QString("%1: %2").arg(leg.name.toHtmlEscaped(), errs.join(", ")));
+        }
+    }
+
+    // the nodes in between: battery (low: amber, critical: red), temperature, the GCS computers they found
+    for(auto &n: shown ? path->nodes() : QList<LinkPath::Node>()) {
+        if(n.hop == 0) {
+            continue;
+        }
+        QStringList parts;
+        if(n.battery) {
+            int b = *n.battery;
+            QString t = QString("battery %1 %").arg(b);
+            if(b < 20) {
+                t = QString("<span style=\"color: %1; font-weight: bold;\">%2</span>").arg(b < 10 ? RED : AMBER, t);
+            }
+            parts.append(t);
+        }
+        if(n.temperature) {
+            parts.append(QString::fromUtf8("%1 \xC2\xB0""C").arg(*n.temperature));
+        }
+        if(n.peers > 1) {
+            parts.append(QString("%1 GCS").arg(n.peers));
+        }
+        if(n.dropped > 0) {
+            parts.append(QString("%1 dropped").arg(n.dropped));
+        }
+        if(!parts.isEmpty()) {
+            notes.append(QString("Node %1: %2").arg(n.hop).arg(parts.join(", ")));
+        }
+    }
+    auto missing = path->missing();
+    if(!missing.isEmpty()) {
+        notes.append(missing);
+    }
+    QString text = notes.join("<br>");
+    if(path_notes->text() != text) {
+        path_notes->setText(text);
+    }
+    path_notes->setVisible(!text.isEmpty());
 }
