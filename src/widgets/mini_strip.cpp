@@ -279,6 +279,18 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     }
     time_button->setMinimumWidth(time_button->layout()->sizeHint().width() + 8);
     time_button->setProperty("full_width", time_button->minimumWidth());
+    // the values keep their width too (as wide as a long value, in bold as when the battery is
+    // low): the width of the strips, and of their panel at its minimum, does not follow each value
+    const QList<QPair<QLabel*, QString>> widest = {
+        {bat_label, "88.88 V/c"}, {alt_label, "8888 | +888 m"}, {speed_label, "-88.8 m/s"}, {throttle_label, "KILLED"}};
+    for(auto &[label, sample]: widest) {
+        label->ensurePolished();
+        QFont f = label->font();
+        f.setBold(true);
+        label->setMinimumWidth(QFontMetrics(f).horizontalAdvance(sample) + 2);
+    }
+    // the status text takes the width that is left (the icons have the details in their tooltip)
+    status_text->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
 
     // the selected aircraft's strip is highlighted; clicking a strip selects its aircraft
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, [=,this](QString id) {
@@ -405,6 +417,14 @@ void MiniStrip::updateAp(QString ap_mode) {
                             " border: 0; border-radius: 4px; padding: 2px 8px; }").arg(color.name());
     if(ap_mode_button->styleSheet() != style) {
         ap_mode_button->setStyleSheet(style);
+        // as wide as the longest mode: the strip keeps its width when the mode changes
+        ap_mode_button->ensurePolished();
+        QFontMetrics fm(ap_mode_button->font());
+        int w = fm.horizontalAdvance(ap_mode);
+        for(auto &m: mode_colors.keys()) {
+            w = qMax(w, fm.horizontalAdvance(m));
+        }
+        ap_mode_button->setMinimumWidth(w + 16 + 4);     // the padding (8 px each side), a margin
     }
     ap_mode_button->setText(ap_mode.isEmpty() ? QString::fromUtf8("\xE2\x80\x94") : ap_mode);
 }
