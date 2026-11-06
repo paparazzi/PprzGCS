@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTimer>
+#include <QSet>
 #include <memory>
 #include "PprzToolbox.h"
 #include "PprzApplication.h"
@@ -82,6 +83,11 @@ private:
     using sig_ptr_t = decltype(&PprzDispatcher::flight_param);
 
     void requestConfig(QString ac_id);
+    /// ask the aircraft the values of its settings, a few per second: all of them (after a reboot:
+    /// the values seen before are no longer valid), or those still unknown (the server did not
+    /// have them: the aircraft would report them only slowly)
+    void requestSettings(QString ac_id, bool only_unknown);
+    QSet<QString> settings_after_reload;    // rebooted: its settings asked once reloaded
     void bindDeftoSignal(QString const &name, sig_ptr_t sig);
 
     QList<long> _bindIds;

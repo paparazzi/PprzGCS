@@ -59,6 +59,7 @@ void AircraftManager::moveWaypoint(pprzlink::Message msg) {
     msg.getField("ground_alt", ground_alt);
 
     if(AircraftManager::get()->aircraftExists(ac_id) && wp_id != 0) {
+        AircraftManager::get()->getAircraft(ac_id)->getStatus()->markWaypointReported(wp_id);
         Waypoint* wp = AircraftManager::get()->getAircraft(ac_id)->getFlightPlan()->getWaypoint(wp_id);
         wp->setLat(lat);
         wp->setLon(lon);
