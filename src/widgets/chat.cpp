@@ -170,6 +170,25 @@ Chat::Chat(QWidget *parent) :
         addMessage(txt, ac->name());
     });
 
+    // the notifications at the top of the map (battery, link lost, ...): when they appear or get worse
+    connect(DispatcherUi::get(), &DispatcherUi::alert, this, [=,this](QString sender, QString text, bool alarm) {
+        addMessage(QString(alarm ? "[Alarm] " : "[Warning] ") + text, sender);
+    });
+    // errors of the server on the telemetry of an aircraft (the same one at most every 10 s)
+    PprzDispatcher::get()->bindOptional("TELEMETRY_ERROR", this, [=,this](QString sender, pprzlink::Message msg) {
+        (void)sender;
+        QString ac_name, txt;
+        msg.getField("ac_id", ac_name);
+        msg.getField("message", txt);
+        txt = QString("[Error] %1: %2").arg(ac_name, txt);
+        auto now = QDateTime::currentMSecsSinceEpoch();
+        if(now - last_errors.value(txt, 0) < 10000) {
+            return;
+        }
+        last_errors[txt] = now;
+        addMessage(txt, "ground");
+    });
+
     setAutoFillBackground(true);
 }
 

@@ -1,4 +1,5 @@
 #include "map_notifications.h"
+#include "dispatcher_ui.h"
 #include "AircraftManager.h"
 #include "gcs_utils.h"
 
@@ -127,6 +128,9 @@ void MapNotifications::setState(QString key, QString sender, QString text, Level
             return;     // the same again (sent at each telemetry message): nothing to redraw
         }
         it.time = QTime::currentTime();
+        if(level > it.level) {
+            announce(key, sender, text, level);     // worse: also in the chat
+        }
         bool only_text = it.level == level && it.dismissed == was_dismissed;
         it.text = text;
         it.level = level;
@@ -159,6 +163,22 @@ void MapNotifications::setState(QString key, QString sender, QString text, Level
     it.time = QTime::currentTime();
     items.append(it);
     rebuild();
+    announce(key, sender, text, level);
+}
+
+/// A state that appears or gets worse also goes in the chat (it stays there after it is cleared).
+void MapNotifications::announce(QString key, QString sender, QString text, Level level) {
+    if(key.startsWith("reboot:")) {
+        return;     // the chat has its own line for a reboot
+    }
+    // a state that comes and goes (e.g. a link partly lost): once per 30 s in the chat
+    auto now = QDateTime::currentMSecsSinceEpoch();
+    QString id = key + ":" + QString::number(level);
+    if(now - announced.value(id, 0) < 30000) {
+        return;
+    }
+    announced[id] = now;
+    emit DispatcherUi::get()->alert(sender, text, level == ALARM);
 }
 
 void MapNotifications::expire() {
