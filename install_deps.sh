@@ -14,17 +14,17 @@
 #   --dry-run  print the commands without running them
 #   --yes      install without asking (needed outside a terminal)
 #
-# Tested on Ubuntu 22.04 and 24.04. "a|b" is a package with another name on some releases: the first
-# one apt knows is installed (e.g. Qt6 SVG is libqt6svg6-dev on 22.04 and qt6-svg-dev on 24.04).
+# Tested on Ubuntu 22.04, 24.04 and 26.04. "a|b" is a package with another name on some releases: the first
+# one apt knows is installed (e.g. Qt6 SVG is libqt6svg6-dev on 22.04 and qt6-svg-dev from 24.04).
 set -euo pipefail
 
 declare -A GROUP_PACKAGES=(
-  [build]="build-essential cmake extra-cmake-modules qt6-base-dev libqt6svg6-dev|qt6-svg-dev qt6-qpa-plugins libgl-dev libglu1-mesa-dev mesa-common-dev libproj-dev libzip-dev libxml2-dev libsqlite3-dev"
+  [build]="build-essential cmake qt6-base-dev libqt6svg6-dev|qt6-svg-dev qt6-qpa-plugins libgl-dev libglu1-mesa-dev mesa-common-dev libproj-dev libzip-dev libxml2-dev libsqlite3-dev"
   [appimage]="qt6-base-dev-tools qmake6 file wget ca-certificates"
   [deb]="dpkg-dev debhelper fakeroot git"
 )
 GROUPS_ORDER=(build appimage deb)
-TESTED_RELEASES="jammy noble"
+TESTED_RELEASES="jammy noble resolute"
 
 usage() { sed -n '3,18p' "$0" | sed 's/^# \{0,1\}//'; }
 die() { printf 'install_deps.sh: %s\n' "$*" >&2; exit 2; }
@@ -67,7 +67,7 @@ fi
 codename="$(. /etc/os-release 2> /dev/null && echo "${VERSION_CODENAME:-}")"
 case " $TESTED_RELEASES " in
   *" $codename "*) ;;
-  *) echo "install_deps.sh: tested on Ubuntu 22.04 and 24.04; on ${codename:-this system}" \
+  *) echo "install_deps.sh: tested on Ubuntu 22.04, 24.04 and 26.04; on ${codename:-this system}" \
           "package names may differ" >&2 ;;
 esac
 
