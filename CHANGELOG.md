@@ -1,6 +1,8 @@
 # Changelog
 
 ## NEXT
++ Builds on Ubuntu 26.04; extra-cmake-modules no longer needed (icons and desktop files installed with GNUInstallDirs)
++ Map: an aircraft icon that cannot be opened is reported instead of loaded as an empty image
 + Checklist: `optional`, `help` (tooltip) and `remember` attributes, `choice` items and a Reset button
 + On `AIRCRAFT_REBOOT` the aircraft is reloaded (waypoints, settings, checklist), with a notice in the chat
 + Wind indicator and GVF config cleared on `AIRCRAFT_DIE`
