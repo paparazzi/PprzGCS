@@ -97,10 +97,6 @@ void PprzMain::populate_menu() {
     silent_mode_action->setCheckable(true);
     silent_mode_action->setChecked(PprzDispatcher::get()->isSilent());
 
-    auto speech_action = file_menu->addAction("Enable Speech");
-    speech_action->setCheckable(true);
-    speech_action->setChecked(speech());
-
     auto map_track_ac = file_menu->addAction("Track AC");
     map_track_ac->setCheckable(true);
     map_track_ac->setChecked(false);
@@ -126,10 +122,6 @@ void PprzMain::populate_menu() {
     connect(silent_mode_action, &QAction::toggled, [=](bool checked) {
         PprzDispatcher::get()->setSilent(checked);
     });
-
-#if defined(SPEECH_ENABLED)
-    connect(speech_action, &QAction::toggled, pprzApp()->toolbox()->speaker(), &Speaker::enableSpeech);
-#endif
 
     connect(map_track_ac, &QAction::toggled, [=](bool checked) {
         GlobalConfig::get()->setValue("MAP_TRACK_AC", checked);

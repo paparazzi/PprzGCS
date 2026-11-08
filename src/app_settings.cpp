@@ -101,6 +101,8 @@ void set_app_settings() {
     for(auto &k: MapNotifications::kinds()) {
         default_setting("notify/" + k.key, k.on);
     }
+    default_setting("notify/sound", true);
+    default_setting("notify/speech", false);
     default_setting("APP_STYLE_FILE", "default_style.qss");
     default_setting("APP_LAYOUT_FILE", "default_layout.xml");
 
@@ -260,51 +262,102 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     row = 0;
     // a section per group; per kind: its name, when it shows (in grey), how serious (a label
     // per level, as on the map) and its switch
-    QString group;
-    QString muted = "#6e7781";     // a grey readable in the light and the night style
-    for(auto &k: MapNotifications::kinds()) {
-        if(k.group != group) {
-            group = k.group;
-            addSection(group, w_notify, l_notify, row);
-        }
-        QString name = k.name.toHtmlEscaped();
-        if(!k.detail.isEmpty()) {
-            name += QString("<br><span style='color:%1; font-size:11px;'>%2</span>").arg(muted, k.detail.toHtmlEscaped());
-        }
-        cb = addSetting(name, "notify/" + k.key, w_notify, l_notify, row, Type::BOOL);
-        callbacks.append(cb);
-        // the levels, then the switch (in line from row to row)
+    // the levels (a label per level, as on the map), then the switch: in line from row to row
+    auto alignSwitch = [&](QStringList levels) {
         auto item = l_notify->itemAtPosition(row - 1, 1);
         auto sw = item != nullptr ? item->widget() : nullptr;
-        if(sw != nullptr) {
-            l_notify->removeWidget(sw);
-            auto box = new QWidget(w_notify);
-            auto hl = new QHBoxLayout(box);
-            hl->setContentsMargins(0, 0, 0, 0);
-            hl->setSpacing(4);
-            auto levels = new QWidget(box);
-            auto ll = new QHBoxLayout(levels);
-            ll->setContentsMargins(0, 0, 0, 0);
-            ll->setSpacing(4);
-            for(auto &level: k.levels) {
-                auto badge = new QLabel(level, levels);
-                badge->setObjectName("settings_level_" + level.toLower());
-                badge->setFixedHeight(18);
-                badge->setAlignment(Qt::AlignCenter);
-                ll->addWidget(badge);
+        if(sw == nullptr) {
+            return;
+        }
+        l_notify->removeWidget(sw);
+        auto box = new QWidget(w_notify);
+        auto hl = new QHBoxLayout(box);
+        hl->setContentsMargins(0, 0, 0, 0);
+        hl->setSpacing(4);
+        auto badges = new QWidget(box);
+        auto ll = new QHBoxLayout(badges);
+        ll->setContentsMargins(0, 0, 0, 0);
+        ll->setSpacing(4);
+        for(auto &level: levels) {
+            auto badge = new QLabel(level, badges);
+            badge->setObjectName("settings_level_" + level.toLower());
+            badge->setFixedHeight(18);
+            badge->setAlignment(Qt::AlignCenter);
+            ll->addWidget(badge);
+        }
+        ll->addStretch(1);
+        badges->setFixedWidth(140);
+        hl->addWidget(badges);
+        hl->addWidget(sw);
+        hl->addStretch(1);
+        l_notify->addWidget(box, row - 1, 1);
+    };
+    // a section per group, each group once (in the order of its first kind, whatever the order of the kinds)
+    QStringList groups;
+    for(auto &k: MapNotifications::kinds()) {
+        if(!groups.contains(k.group)) {
+            groups << k.group;
+        }
+    }
+    QString muted = "#6e7781";     // a grey readable in the light and the night style
+    for(auto &group: groups) {
+        addSection(group, w_notify, l_notify, row);
+        for(auto &k: MapNotifications::kinds()) {
+            if(k.group != group) {
+                continue;
             }
-            ll->addStretch(1);
-            levels->setFixedWidth(140);
-            hl->addWidget(levels);
-            hl->addWidget(sw);
-            hl->addStretch(1);
-            l_notify->addWidget(box, row - 1, 1);
+            QString name = k.name.toHtmlEscaped();
+            if(!k.detail.isEmpty()) {
+                name += QString("<br><span style='color:%1; font-size:11px;'>%2</span>").arg(muted, k.detail.toHtmlEscaped());
+            }
+            cb = addSetting(name, "notify/" + k.key, w_notify, l_notify, row, Type::BOOL);
+            callbacks.append(cb);
+            alignSwitch(k.levels);
         }
     }
     live_settings << "notify/";     // read each time a notification comes
     finishTab(l_notify, row);
     tabWidget->addTab(w_notify, "Notifications");
+
+    // Tab Sound: how the notifications are heard (a sound with each warning or alarm, the speech)
+    auto w_sound = new QWidget(tabWidget);
+    auto l_sound = new QGridLayout(w_sound);
+    row = 0;
+    cb = addSetting("Alert sounds", "notify/sound", w_sound, l_sound, row, Type::BOOL);
+    callbacks.append(cb);
+    addHelp("A chime when a warning of the map shows or gets worse. An alarm beeps, and again every 4 s until it "
+            "clears or is dismissed (\u00d7).", w_sound, l_sound, row);
+    cb = addSetting("Speech", "notify/speech", w_sound, l_sound, row, Type::BOOL);
+    callbacks.append(cb);
+#if defined(SPEECH_ENABLED)
+    addHelp("Says the warnings and alarms, and the messages of the layout (e.g. the altitude, a new mode or block).",
+            w_sound, l_sound, row);
+#else
+    if(auto item = l_sound->itemAtPosition(row - 1, 1)) {
+        item->widget()->setEnabled(false);
+    }
+    addHelp("This PprzGCS is built without speech (cmake -DSPEECH=ON, with Qt 6.4 or later).", w_sound, l_sound, row);
+#endif
+    finishTab(l_sound, row);
+    tabWidget->addTab(w_sound, "Sound");
     tabWidget->tabBar()->moveTab(tabWidget->indexOf(w_ivy), tabWidget->count() - 1);   // Ivy last
+
+    // each tab scrolls: the dialog as tall as its tallest tab, but no taller than the screen
+    QSize largest;
+    for(int i=0; i<tabWidget->count(); i++) {
+        auto page = tabWidget->widget(i);
+        auto text = tabWidget->tabText(i);
+        largest = largest.expandedTo(page->sizeHint());
+        tabWidget->removeTab(i);
+        auto scroll = new QScrollArea(tabWidget);
+        scroll->setObjectName("settings_scroll");
+        scroll->setWidgetResizable(true);
+        scroll->setFrameShape(QFrame::NoFrame);
+        scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+        scroll->setStyleSheet("#settings_scroll, #settings_scroll > QWidget > QWidget {background: transparent;}");
+        scroll->setWidget(page);
+        tabWidget->insertTab(i, scroll, text);
+    }
     tabWidget->setCurrentIndex(0);
 
 
@@ -322,6 +375,16 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     buttons->addWidget(save_button);
     lay->addLayout(buttons);
     setMinimumWidth(560);
+    // the size of the largest tab (and its scroll bar), within 85% of the screen
+    QSize scrolls;
+    for(int i=0; i<tabWidget->count(); i++) {
+        scrolls = scrolls.expandedTo(tabWidget->widget(i)->sizeHint());
+    }
+    QSize want = sizeHint() - scrolls + largest + QSize(style()->pixelMetric(QStyle::PM_ScrollBarExtent), 0);
+    if(auto s = screen()) {
+        want = want.boundedTo(s->availableGeometry().size() * 0.85);
+    }
+    resize(want);
 
     connect(save_button, &QPushButton::clicked, this, [=,this](){
         // what changed: a restart only for the settings that are not used right away
