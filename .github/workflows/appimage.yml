@@ -4,12 +4,21 @@ on:
   push:
       tags:
       - '**'
+  pull_request:  # builds and tests the AppImage when its build changes
+    paths:
+      - 'make_appimage.sh'
+      - 'install_deps.sh'
+      - '.github/workflows/appimage.yml'
   workflow_dispatch:  # builds the AppImage without releasing it
 
 jobs:
   build-appimage:
 
+    # the oldest supported release: the AppImage uses the glibc of the system, so it runs on the newer ones too
     runs-on: ubuntu-22.04
+
+    outputs:
+      version: ${{ steps.setenv.outputs.version }}
 
     steps:
       - name: Checkout repository and submodules
@@ -19,12 +28,14 @@ jobs:
           path: ./pprzgcs
       
       - name: setEnv
+        id: setenv
         run: |
           export MAKEFLAGS=-j$(nproc)
           PPRZGCS_VERSION=$(echo "${{ github.ref }}" | sed 's/refs.tags.\(.*\)/\1/g' | sed 's/\//_/g')
           PPRZGCS_VERSION="${PPRZGCS_VERSION:-$(git -C pprzgcs describe --tags --always)}"
           echo "VERSION: $PPRZGCS_VERSION"
           echo "PPRZGCS_VERSION=$PPRZGCS_VERSION" >> $GITHUB_ENV
+          echo "version=$PPRZGCS_VERSION" >> $GITHUB_OUTPUT
           echo "VERSION: ${{ env.PPRZGCS_VERSION }}"
         
       - name: Install dependencies
@@ -51,3 +62,38 @@ jobs:
           token: '${{ secrets.GITHUB_TOKEN }}'
           files: 'PprzGCS_${{ env.PPRZGCS_VERSION }}-x86_64.AppImage'
 
+  # the AppImage built on 22.04 also starts on the newer releases
+  test-appimage:
+    needs: build-appimage
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-26.04]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: AppImage_${{ needs.build-appimage.outputs.version }}
+
+      # a display server, and the libraries of a desktop the AppImage does not bundle (on purpose: the graphics
+      # drivers, X11, fonts), missing on the runners
+      - name: Install a display server and the desktop libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb xauth \
+            libegl1 libgl1 libopengl0 libx11-6 libx11-xcb1 libxcb1 libfontconfig1 libfreetype6 libxkbcommon0 libxkbcommon-x11-0
+
+      - name: Extract
+        # (FUSE 2 is not installed on the newer releases)
+        run: |
+          chmod +x PprzGCS-x86_64.AppImage
+          ./PprzGCS-x86_64.AppImage --appimage-extract > /dev/null
+
+      - name: Libraries still missing
+        run: |
+          find squashfs-root -name '*.so*' -o -path '*/bin/*' -type f | xargs ldd 2> /dev/null | grep 'not found' | sort -u || true
+
+      - name: Run
+        run: xvfb-run -a ./squashfs-root/AppRun --version
