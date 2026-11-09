@@ -10,9 +10,7 @@
 #include <QColorDialog>
 #include "panels.h"
 
-#if defined(SPEECH_ENABLED)
 #include "speaker.h"
-#endif
 
 LaunchTypes PprzMain::launch_type = DEFAULT;
 

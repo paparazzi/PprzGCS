@@ -3,9 +3,13 @@
 #include "gcs_utils.h"
 #include "AircraftManager.h"
 #include "dispatcher_ui.h"
+#include <QStandardPaths>
 
 Speaker::Speaker(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox),
-    tts(nullptr), locale("en_GB")
+#if defined(QT_TEXTTOSPEECH)
+    tts(nullptr),
+#endif
+    process(nullptr), enabled(false), locale("en_GB")
 {
     timer = new QTimer();
     timer->setSingleShot(true);
@@ -24,7 +28,7 @@ void Speaker::say() {
     if(!speech()) {
         return;
     }
-    if(!tts) {
+    if(!enabled) {
         enableSpeech(true);     // switched on in the settings meanwhile
     }
 
@@ -40,7 +44,7 @@ void Speaker::say() {
     }
 
 
-    if(!sentences.isEmpty() && tts->state() == QTextToSpeech::State::Ready) {
+    if(!sentences.isEmpty() && !speaking()) {
         int prio = 0;
         int index = 0;
 
@@ -53,7 +57,7 @@ void Speaker::say() {
         }
 
         auto s = sentences.takeAt(index);
-        tts->say(s.text);
+        speak(s.text);
         //qDebug() << "saying: " << s.text;
     }
 
@@ -64,19 +68,94 @@ void Speaker::say() {
 
 void Speaker::enableSpeech(bool s) {
     // (whether it speaks: speech(), from the settings or --speech; the messages are always listened to)
-    if(!tts && s) {
-        tts = new QTextToSpeech(this);
-
-        for(auto &e:tts->availableEngines()) {
-            qDebug() << e;
-        }
-
+    if(enabled || !s) {
+        return;
+    }
+    enabled = true;
+#if defined(QT_TEXTTOSPEECH)
+    // Qt TextToSpeech when it has an engine, else the program of the system
+    tts = new QTextToSpeech(this);
+    if(tts->state() == QTextToSpeech::State::Error) {
+        qDebug() << "Qt TextToSpeech:" << tts->errorString() << "- using" << systemCommand().value(0, "nothing");
+        delete tts;
+        tts = nullptr;
+    } else {
         setLocale(locale);
+        return;
+    }
+#endif
+    if(systemCommand().isEmpty()) {
+        qDebug() << "speech: neither spd-say nor espeak-ng found (install speech-dispatcher)";
     }
 }
 
+/// spd-say (speech-dispatcher, installed with the Ubuntu desktop) first, then espeak-ng
+QStringList Speaker::systemCommand() {
+    static const QStringList command = []() {
+        for(auto &p: QList<QStringList>{{"spd-say", "--wait"}, {"espeak-ng"}, {"espeak"}}) {
+            auto path = QStandardPaths::findExecutable(p[0]);
+            if(!path.isEmpty()) {
+                return QStringList{path} + p.mid(1);
+            }
+        }
+        return QStringList();
+    }();
+    return command;
+}
+
+bool Speaker::available() {
+#if defined(QT_TEXTTOSPEECH)
+    if(!QTextToSpeech::availableEngines().isEmpty()) {
+        return true;
+    }
+#endif
+    return !systemCommand().isEmpty();
+}
+
+bool Speaker::speaking() {
+#if defined(QT_TEXTTOSPEECH)
+    if(tts) {
+        return tts->state() != QTextToSpeech::State::Ready;
+    }
+#endif
+    return process && process->state() != QProcess::NotRunning;
+}
+
+void Speaker::speak(QString text) {
+#if defined(QT_TEXTTOSPEECH)
+    if(tts) {
+        tts->say(text);
+        return;
+    }
+#endif
+    auto command = systemCommand();
+    if(command.isEmpty()) {
+        return;
+    }
+    if(!process) {
+        process = new QProcess(this);
+        // its messages not in the terminal of the GCS
+        process->setStandardOutputFile(QProcess::nullDevice());
+        process->setStandardErrorFile(QProcess::nullDevice());
+        // the next sentence once this one is said (spd-say --wait, espeak-ng: until the end)
+        connect(process, &QProcess::finished, this, &Speaker::say);
+    }
+    // the language of the locale (en_GB: en), known by both
+    auto language = locale.section('_', 0, 0);
+    QStringList args = command.mid(1);
+    if(command[0].endsWith("spd-say")) {
+        args << "-l" << language;
+    } else {
+        args << "-v" << language;
+    }
+    process->setProgram(command[0]);
+    process->setArguments(args << "--" << text);
+    process->start();
+}
+
 void Speaker::setLocale(QString l) {
-    locale = l;
+    locale = l;     // (for the program of the system: its language, at the next sentence)
+#if defined(QT_TEXTTOSPEECH)
     if(tts) {
         for(auto &l: tts->availableLocales()) {
             if(l.name() == locale) {
@@ -88,6 +167,7 @@ void Speaker::setLocale(QString l) {
             qDebug() << v.name();
         }
     }
+#endif
 }
 
 void Speaker::registerMessage(QString name, QString text, int period, int expire, int priority, bool onChange, QString postprocessing) {

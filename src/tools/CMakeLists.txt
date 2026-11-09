@@ -10,11 +10,8 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/AircraftManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/units.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/watcher.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/speaker.cpp
 )
-
-if(${SPEECH})
-    list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/speaker.cpp)
-endif()
 
 if(${GRPC})
     list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/grpcconnector.cpp)

@@ -12,9 +12,7 @@ class CoordinatesTransform;
 class Units;
 class DispatcherUi;
 class Watcher;
-#if defined(SPEECH_ENABLED)
 class Speaker;
-#endif
 #if GRPC_ENABLED
 class GRPCConnector;
 #endif
@@ -32,9 +30,7 @@ public:
     Units*                units                () {return _units               ;}
     DispatcherUi*         dispatcherUi         () {return _dispatcherUi        ;}
     Watcher*              watcher              () {return _watcher             ;}
-#if defined(SPEECH_ENABLED)
     Speaker*              speaker              () {return _speaker             ;}
-#endif
 #if GRPC_ENABLED
     GRPCConnector*        connector            () {return _connector           ;}
 #endif
@@ -48,9 +44,7 @@ private:
     Units*                _units                = nullptr;
     DispatcherUi*         _dispatcherUi         = nullptr;
     Watcher*              _watcher              = nullptr;
-#if defined(SPEECH_ENABLED)
     Speaker* _speaker                           = nullptr;
-#endif
 #if GRPC_ENABLED
     GRPCConnector*       _connector             = nullptr;
 #endif

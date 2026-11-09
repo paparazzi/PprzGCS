@@ -2,6 +2,7 @@
 #include "app_settings.h"
 #include "dispatcher_ui.h"
 #include "map_notifications.h"
+#include "speaker.h"
 #include "switch.h"
 #include <QApplication>
 #include <QFile>
@@ -370,15 +371,15 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
             "clears or is dismissed (\u00d7).", w_sound, l_sound, row);
     cb = addSetting("Speech", "notify/speech", w_sound, l_sound, row, Type::BOOL);
     callbacks.append(cb);
-#if defined(SPEECH_ENABLED)
-    addHelp("Says the warnings and alarms, and the messages of the layout (e.g. the altitude, a new mode or block).",
-            w_sound, l_sound, row);
-#else
-    if(auto item = l_sound->itemAtPosition(row - 1, 1)) {
-        item->widget()->setEnabled(false);
+    if(Speaker::available()) {
+        addHelp("Says the warnings and alarms, and the messages of the layout (e.g. the altitude, a new mode or block).",
+                w_sound, l_sound, row);
+    } else {
+        if(auto item = l_sound->itemAtPosition(row - 1, 1)) {
+            item->widget()->setEnabled(false);
+        }
+        addHelp("Nothing to speak with: install speech-dispatcher (spd-say) or espeak-ng.", w_sound, l_sound, row);
     }
-    addHelp("This PprzGCS is built without speech (cmake -DSPEECH=ON, with Qt 6.4 or later).", w_sound, l_sound, row);
-#endif
     finishTab(l_sound, row);
     tabWidget->addTab(w_sound, "Sound");
     tabWidget->tabBar()->moveTab(tabWidget->indexOf(w_ivy), tabWidget->count() - 1);   // Ivy last

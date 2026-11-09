@@ -2,7 +2,10 @@
 #define SPEAKER_H
 
 #include <QObject>
+#include <QProcess>
+#if defined(QT_TEXTTOSPEECH)
 #include <QTextToSpeech>
+#endif
 #include "PprzToolbox.h"
 #include "PprzApplication.h"
 #include "pprz_dispatcher.h"
@@ -18,6 +21,9 @@ public:
     void addSentence(QString txt, int priority=0, int validity=30);
     void registerMessage(QString name, QString text, int period, int expire, int priority, bool onChange, QString postprocessing);
     void setLocale(QString l);
+
+    /// whether this system can speak: Qt TextToSpeech, or spd-say or espeak-ng
+    static bool available();
 signals:
 
 public slots:
@@ -58,8 +64,17 @@ private:
     void make_sentence(struct Message msg, QString field, pprzlink::Message pprz_msg, QString ac_id);
 
     void say();
+    bool speaking();
+    void speak(QString text);
 
+    /// the speech program of the system (spd-say or espeak-ng), and its arguments before the text
+    static QStringList systemCommand();
+
+#if defined(QT_TEXTTOSPEECH)
     QTextToSpeech* tts;
+#endif
+    QProcess* process;
+    bool enabled;
     QString locale;
 
     QList<Sentence> sentences;

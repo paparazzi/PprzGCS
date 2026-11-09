@@ -74,11 +74,7 @@ void setVerbose(bool v) {
 
 bool speech() {
     // switched on in the app settings (Notifications), or for this run (--speech)
-#if defined(SPEECH_ENABLED)
     return qApp->property("SPEECH").toBool() || getAppSettings().value("notify/speech", false).toBool();
-#else
-    return false;
-#endif
 }
 
 void setSpeech(bool s) {
