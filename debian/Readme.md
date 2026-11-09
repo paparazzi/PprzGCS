@@ -6,12 +6,12 @@ How to make a new release
 2. Update `pprzgcs_version.sh` with the correct DEFAULT_VERSION. (TODO: use version from debian/changelog)
 3. Commit your changes and tag the commit.
 4. `git ls-files --recurse-submodules | tar -cvf pprzgcs.tar -T -`
-5. `mkdir ../pprzgcs_release && src=$(pwd) && cd ../pprzgcs_release`
-6. `tar -xvf "$src/pprzgcs.tar"`
-7. Install dependencies: `sudo apt install ivy-qt-dev`
-8. `debuild -S`
-9. `dput ppa:paparazzi-uav/ppa <pprzgcs_..._source.changes>`
-10. Update changelog minor version number and distribution name in the release directory to build for other distributions, and restart from step 8. Do not commit those changes.
+5. `mkdir ../pprzgcs_release && tar -xvf pprzgcs.tar -C ../pprzgcs_release && cd ../pprzgcs_release`
+6. Update changelog minor version number and distribution name (in the release directory).
+7. For Jammy: remove `qt6-speech-dev` from _Build-Depends_ in `control`, and add `-DSPEECH=OFF` to the cmake options in `rules`.
+8. `debuild -S -sa`
+9. `dput ppa:paparazzi-uav/ppa ../pprzgcs_..._source.changes`
+10. To build for other distributions, restart from step 6.
 
 
 

@@ -22,6 +22,11 @@ export MAKEFLAGS="${MAKEFLAGS:--j$(nproc 2> /dev/null || sysctl -n hw.ncpu 2> /d
 CHECKS=true
 BUILD_TYPE=RelWithDebInfo
 cmake_options=()
+# Disable speech by default on Ubuntu 22.04; explicit command-line options take precedence.
+codename="$(. /etc/os-release 2> /dev/null && echo "${VERSION_CODENAME:-}")" || codename=""
+if [ "$codename" = jammy ]; then
+  cmake_options+=(-DSPEECH=OFF)
+fi
 while [ $# -gt 0 ]; do
   case "$1" in
     --skip-checks) CHECKS=false ;;

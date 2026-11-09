@@ -45,7 +45,7 @@ if(CCACHE_PROGRAM)
     set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
 endif()
 
-option(SPEECH "Enable speech" OFF)
+option(SPEECH "Enable speech" ON)
 option(GRPC "Enable GRPC" OFF)
 
 add_subdirectory(ext/pprzlinkQt ${CMAKE_BINARY_DIR}/pprzlinkqt)

@@ -23,6 +23,12 @@ declare -A GROUP_PACKAGES=(
   [appimage]="qt6-base-dev-tools qmake6 file wget ca-certificates"
   [deb]="dpkg-dev debhelper fakeroot git"
 )
+# Additional build packages for each Ubuntu release.
+declare -A RELEASE_PACKAGES=(
+  [jammy]=""
+  [noble]="qt6-declarative-dev qt6-speech-dev"
+  [resolute]="qt6-speech-dev"
+)
 GROUPS_ORDER=(build appimage deb)
 TESTED_RELEASES="jammy noble resolute"
 
@@ -70,6 +76,10 @@ case " $TESTED_RELEASES " in
   *) echo "install_deps.sh: tested on Ubuntu 22.04, 24.04 and 26.04; on ${codename:-this system}" \
           "package names may differ" >&2 ;;
 esac
+
+for package in ${RELEASE_PACKAGES[${codename:-unknown}]:-}; do
+  packages+=("$package")
+done
 
 # the installed packages among every name (dpkg-query fails when some name is unknown: its output
 # still lists the others)
