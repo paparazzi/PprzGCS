@@ -77,11 +77,23 @@ jobs:
         with:
           name: AppImage_${{ needs.build-appimage.outputs.version }}
 
-      - name: Install a display server
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb xauth
+      # a display server, and the libraries of a desktop the AppImage does not bundle (on purpose: the graphics
+      # drivers, X11, fonts), missing on the runners
+      - name: Install a display server and the desktop libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb xauth \
+            libegl1 libgl1 libopengl0 libx11-6 libx11-xcb1 libxcb1 libfontconfig1 libfreetype6 libxkbcommon0 libxkbcommon-x11-0
 
-      - name: Run
-        # extracted, as FUSE 2 is not installed on the newer releases
+      - name: Extract
+        # (FUSE 2 is not installed on the newer releases)
         run: |
           chmod +x PprzGCS-x86_64.AppImage
-          xvfb-run -a ./PprzGCS-x86_64.AppImage --appimage-extract-and-run --version
+          ./PprzGCS-x86_64.AppImage --appimage-extract > /dev/null
+
+      - name: Libraries still missing
+        run: |
+          find squashfs-root -name '*.so*' -o -path '*/bin/*' -type f | xargs ldd 2> /dev/null | grep 'not found' | sort -u || true
+
+      - name: Run
+        run: xvfb-run -a ./squashfs-root/AppRun --version
