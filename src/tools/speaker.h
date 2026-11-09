@@ -24,6 +24,11 @@ public:
 
     /// whether this system can speak: Qt TextToSpeech, or spd-say or espeak-ng
     static bool available();
+
+    /// the voices of speech-dispatcher for this language ("en"), as "module:voice|voice (module, language)"
+    static QStringList voices(QString language = "en");
+    /// says a sentence once with this voice and rate (the settings dialog, before they are saved)
+    static void trySay(QString text, QString voice, int rate);
 signals:
 
 public slots:
@@ -69,6 +74,10 @@ private:
 
     /// the speech program of the system (spd-say or espeak-ng), and its arguments before the text
     static QStringList systemCommand();
+    /// the arguments of systemCommand() for a sentence: voice "module:voice" ("" the default of the language)
+    static QStringList systemArguments(QString text, QString language, QString voice, int rate);
+    /// how it is said: Paparazzi the Italian way
+    static QString spoken(QString text);
 
 #if defined(QT_TEXTTOSPEECH)
     QTextToSpeech* tts;

@@ -15,6 +15,8 @@
 #include <QVariant>
 #include <QStandardPaths>
 #include <QSettings>
+#include <QComboBox>
+#include <QPushButton>
 #include <QtWidgets>
 #include <QFileInfo>
 #include <pprzmain.h>
@@ -120,6 +122,8 @@ void set_app_settings() {
     }
     default_setting("notify/sound", true);
     default_setting("notify/speech", false);
+    default_setting("notify/speech_voice", "");
+    default_setting("notify/speech_rate", "0");
     default_setting("APP_STYLE_FILE", "default_style.qss");
     default_setting("APP_LAYOUT_FILE", "default_layout.xml");
 
@@ -374,6 +378,25 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     if(Speaker::available()) {
         addHelp("Says the warnings and alarms, and the messages of the layout (e.g. the altitude, a new mode or block).",
                 w_sound, l_sound, row);
+
+        // the voices of speech-dispatcher (spd-say): each engine installed (espeak-ng, pico, rhvoice...)
+        cb = addSetting("Voice", "notify/speech_voice", w_sound, l_sound, row, Type::STRING_COMBO,
+                        QStringList{"|Default"} + Speaker::voices());
+        callbacks.append(cb);
+        auto voice_combo = qobject_cast<QComboBox*>(l_sound->itemAtPosition(row - 1, 1)->widget());
+        addHelp("Better voices than espeak-ng: sudo apt install speech-dispatcher-pico (or speech-dispatcher-rhvoice "
+                "rhvoice-english), then systemctl --user restart speech-dispatcher.", w_sound, l_sound, row);
+        cb = addSetting("Rate", "notify/speech_rate", w_sound, l_sound, row, Type::STRING_COMBO,
+                        QStringList{"-40|Slower", "-20|Slow", "0|Normal", "25|Fast", "50|Faster"});
+        callbacks.append(cb);
+        auto rate_combo = qobject_cast<QComboBox*>(l_sound->itemAtPosition(row - 1, 1)->widget());
+        // said with the voice and rate chosen, before they are saved
+        auto try_button = new QPushButton("Try", w_sound);
+        l_sound->addWidget(try_button, row - 1, 2);
+        connect(try_button, &QPushButton::clicked, this, [=]() {
+            Speaker::trySay("Welcome to Paparazzi. Altitude 120 meters.", voice_combo->currentData().toString(),
+                            rate_combo->currentData().toInt());
+        });
     } else {
         if(auto item = l_sound->itemAtPosition(row - 1, 1)) {
             item->widget()->setEnabled(false);

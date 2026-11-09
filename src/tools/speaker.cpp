@@ -4,6 +4,7 @@
 #include "AircraftManager.h"
 #include "dispatcher_ui.h"
 #include <QStandardPaths>
+#include <QRegularExpression>
 
 Speaker::Speaker(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox),
 #if defined(QT_TEXTTOSPEECH)
@@ -124,7 +125,8 @@ bool Speaker::speaking() {
 void Speaker::speak(QString text) {
 #if defined(QT_TEXTTOSPEECH)
     if(tts) {
-        tts->say(text);
+        tts->setRate(qBound(-1.0, getAppSettings().value("notify/speech_rate", 0).toInt() / 100.0, 1.0));
+        tts->say(spoken(text));
         return;
     }
 #endif
@@ -140,17 +142,86 @@ void Speaker::speak(QString text) {
         // the next sentence once this one is said (spd-say --wait, espeak-ng: until the end)
         connect(process, &QProcess::finished, this, &Speaker::say);
     }
-    // the language of the locale (en_GB: en), known by both
-    auto language = locale.section('_', 0, 0);
-    QStringList args = command.mid(1);
-    if(command[0].endsWith("spd-say")) {
-        args << "-l" << language;
-    } else {
-        args << "-v" << language;
-    }
+    auto settings = getAppSettings();
     process->setProgram(command[0]);
-    process->setArguments(args << "--" << text);
+    // the language of the locale (en_GB: en), known by both
+    process->setArguments(systemArguments(text, locale.section('_', 0, 0), settings.value("notify/speech_voice").toString(),
+                                          settings.value("notify/speech_rate", 0).toInt()));
     process->start();
+}
+
+QString Speaker::spoken(QString text) {
+    // as the GCS of Paparazzi always said it ("papa ratsi"): read as English, it is "pa-pa-razzy"
+    static const QRegularExpression paparazzi("\\bpaparazzi\\b", QRegularExpression::CaseInsensitiveOption);
+    return text.replace(paparazzi, "papa ratsi");
+}
+
+QStringList Speaker::systemArguments(QString text, QString language, QString voice, int rate) {
+    auto command = systemCommand();
+    QStringList args = command.mid(1);
+    if(command.value(0).endsWith("spd-say")) {
+        auto module = voice.section(':', 0, 0);
+        auto name = voice.section(':', 1);
+        if(!module.isEmpty() && !name.isEmpty()) {
+            args << "-o" << module << "-y" << name;     // (its language with it)
+        } else {
+            args << "-l" << language;
+        }
+        args << "-r" << QString::number(qBound(-100, rate, 100));
+    } else {
+        // espeak-ng: words per minute, 175 by default
+        args << "-v" << language << "-s" << QString::number(175 + 175 * qBound(-100, rate, 100) / 200);
+    }
+    return args << "--" << spoken(text);
+}
+
+void Speaker::trySay(QString text, QString voice, int rate) {
+    auto command = systemCommand();
+    if(command.isEmpty()) {
+        return;
+    }
+    QProcess p;
+    p.setProgram(command[0]);
+    p.setArguments(systemArguments(text, "en", voice, rate));
+    p.setStandardOutputFile(QProcess::nullDevice());
+    p.setStandardErrorFile(QProcess::nullDevice());
+    p.startDetached();
+}
+
+QStringList Speaker::voices(QString language) {
+    // spd-say -O: the engines (output modules); spd-say -o <module> -L: "NAME LANGUAGE VARIANT", the name with spaces
+    auto run = [](QStringList args) {
+        QProcess p;
+        p.start(systemCommand().value(0), args);
+        if(!p.waitForFinished(3000)) {
+            p.kill();
+            return QStringList();
+        }
+        auto lines = QString::fromUtf8(p.readAllStandardOutput()).split('\n', Qt::SkipEmptyParts);
+        return lines.mid(1);    // (the title line)
+    };
+    QStringList list;
+    if(!systemCommand().value(0).endsWith("spd-say")) {
+        return list;
+    }
+    for(auto &m: run({"-O"})) {
+        auto module = m.trimmed();
+        for(auto &line: run({"-o", module, "-L"})) {
+            auto words = line.simplified().split(' ');
+            if(words.size() < 3) {
+                continue;
+            }
+            auto variant = words.takeLast();
+            auto lang = words.takeLast();
+            auto name = words.join(' ');
+            // the voices of the language, not each variant of espeak-ng (dozens for each)
+            if(variant != "none" || !lang.toLower().startsWith(language.toLower())) {
+                continue;
+            }
+            list << QString("%1:%2|%2 (%1, %3)").arg(module, name, lang);
+        }
+    }
+    return list;
 }
 
 void Speaker::setLocale(QString l) {
