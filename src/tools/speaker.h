@@ -19,7 +19,7 @@ public:
     explicit Speaker(PprzApplication* app, PprzToolbox* toolbox);
     void setToolbox(PprzToolbox* toolbox) override;
     void addSentence(QString txt, int priority=0, int validity=30);
-    void registerMessage(QString name, QString text, int period, int expire, int priority, bool onChange, QString postprocessing);
+    void registerMessage(QString name, QString text, int period, int priority, int expire, bool onChange, QString postprocessing);
     void setLocale(QString l);
 
     /// whether this system can speak: Qt TextToSpeech, or spd-say or espeak-ng

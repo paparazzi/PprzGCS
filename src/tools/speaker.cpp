@@ -241,8 +241,9 @@ void Speaker::setLocale(QString l) {
 #endif
 }
 
-void Speaker::registerMessage(QString name, QString text, int period, int expire, int priority, bool onChange, QString postprocessing) {
-    struct Message msg = {name, text, period*1000, priority, expire, onChange, postprocessing};
+void Speaker::registerMessage(QString name, QString text, int period, int priority, int expire, bool onChange, QString postprocessing) {
+    struct Message msg = {.name = name, .text = text, .timeout = period*1000, .expire = expire, .priority = priority,
+                          .onChange = onChange, .postprocessing = postprocessing};
     messages.append(msg);
     bindMessage(msg);   // (said only while the speech is on)
 }
