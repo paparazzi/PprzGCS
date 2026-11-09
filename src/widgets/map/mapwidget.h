@@ -211,6 +211,24 @@ private:
     QVBoxLayout* columnRight;
     QVBoxLayout* buttonsRightLayout;
     WindIndicator* wind_indicator;
+    QToolButton* follow_button;
+    enum FollowMode {FOLLOW_OFF = 0, FOLLOW = 1, FOLLOW_HEADING = 2};
+    int follow_mode = FOLLOW_OFF;
+    void setFollowMode(int mode);
+    // what is followed: the selected aircraft, the ground station (its GPS), or both in view
+    enum FollowTarget {TARGET_AC = 0, TARGET_GCS = 1, TARGET_BOTH = 2};
+    int follow_target = TARGET_AC;
+    bool follow_emitting = false;       // (the menu Track AC is told, not to be taken as a request)
+    void fitAircraftAndGcs();
+    // the ground station (FLIGHT_PARAM of "GCS", from ublox2ivy or gpsd2ivy)
+    std::optional<Point2DLatLon> gcs_pos;
+    std::optional<double> gcs_heading;  // only with a heading (ublox2ivy, two antennas)
+    qint64 gcs_time = 0;
+    QString gcs_look;                   // style|color|size of the icon made (made again when changed)
+    QList<QPair<qint64, Point2DLatLon>> gcs_track;
+    QGraphicsPathItem* gcs_track_item = nullptr;
+    void updateGcsTrack();
+    bool gcsFresh() {return gcs_pos && QDateTime::currentMSecsSinceEpoch() - gcs_time < 10000;}
 
     QList<LockButton*> buttonsLeft;
     PanelTabs* bottom_tabs;
@@ -225,6 +243,7 @@ private:
     void setFrozen(bool frozen);
     void placeFrozenBanner();
     QPushButton* frozen_banner = nullptr;
+    QPushButton* silent_banner = nullptr;
 protected:
     void resizeEvent(QResizeEvent *event) override;
 private:

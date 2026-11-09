@@ -1,5 +1,6 @@
 #include "card_dialog.h"
 #include "app_settings.h"
+#include "dispatcher_ui.h"
 #include "map_notifications.h"
 #include "switch.h"
 #include <QApplication>
@@ -56,8 +57,21 @@ void set_app_settings() {
 
     default_setting("map/move_hyteresis", 20);
     default_setting("map/waypoint/size", 8);
-    default_setting("map/gcs_icon_size", 16);
-    default_setting("map/gcs_icon_color", "#ffff00");
+    // the ground station: the yellow of the old icon (ring and cross) is orange for the new ones
+    // (and its old size, 16: a bit smaller)
+    if(!getAppSettings().contains("map/gcs_icon_style")) {
+        if(getAppSettings().value("map/gcs_icon_color").toString() == "#ffff00") {
+            getAppSettings().setValue("map/gcs_icon_color", "#e8a33d");
+        }
+        if(getAppSettings().value("map/gcs_icon_size").toInt() == 16) {
+            getAppSettings().setValue("map/gcs_icon_size", 12);
+        }
+    }
+    default_setting("map/gcs_icon_style", "marker");
+    default_setting("map/gcs_icon_size", 12);
+    default_setting("map/gcs_icon_color", "#e8a33d");
+    default_setting("map/gcs_track", true);
+    default_setting("map/gcs_track_seconds", 300);
     default_setting("map/circle/stroke", 4);
     default_setting("map/size_highlight_factor", 1.5);
 
@@ -79,6 +93,7 @@ void set_app_settings() {
     default_setting("map/aircraft_info_height", false);
     default_setting("map/aircraft_info_climb", false);
     default_setting("map/aircraft_info_speed", false);
+    default_setting("map/aircraft_info_gcs", false);
     // the waypoint under the mouse: its name in blue, with a ring around it (or not), or nothing
     // (was the switch map/waypoint_hover_mark)
     if(!settings.contains("map/waypoint_hover_highlight") && settings.contains("map/waypoint_hover_mark")) {
@@ -94,6 +109,7 @@ void set_app_settings() {
     default_setting("settings/request_values", true);
     default_setting("strips/status_icons", true);
     default_setting("window/menu_title_bar", false);
+    default_setting("map/follow_button", true);
     default_setting("map/aircraft/track_width", 1);
 
     default_setting("aircraft_default_color", "red");
@@ -155,6 +171,12 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     cb = addSetting("Track width", "map/aircraft/track_width", w_map, l_map, row, Type::INT);
     callbacks.append(cb);
+    cb = addSetting("Follow button", "map/follow_button", w_map, l_map, row, Type::BOOL);
+    callbacks.append(cb);
+    addHelp("The button left of the wind and compass, bottom right of the map. Click: the map follows the selected "
+            "aircraft; again: also heading up (as File \u2192 Track AC); again: off. Right click or long press: follow the ground station, or keep the aircraft and the "
+            "ground station in view (with a ground GPS). Dragging the map stops it.", w_map, l_map, row);
+    live_settings << "map/follow_button";
     cb = addSetting("Battery and link icons", "map/aircraft_status_icons", w_map, l_map, row, Type::BOOL);
     callbacks.append(cb);
     addHelp("Small battery and link status icons next to each aircraft on the map.", w_map, l_map, row);
@@ -166,7 +188,26 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     cb = addSetting("Ground speed next to the aircraft", "map/aircraft_info_speed", w_map, l_map, row, Type::BOOL);
     callbacks.append(cb);
+    cb = addSetting("Distance from the ground station", "map/aircraft_info_gcs", w_map, l_map, row, Type::BOOL);
+    callbacks.append(cb);
+    addHelp("With a ground GPS (ublox2ivy or gpsd2ivy): the distance and the bearing from the ground station to the aircraft.", w_map, l_map, row);
     live_settings << "map/aircraft_info_";     // read at each position of the aircraft
+
+    addSection("Ground station", w_map, l_map, row);
+    addHelp("With a ground GPS (ublox2ivy or gpsd2ivy). With two antennas (ublox2ivy), the icon shows the heading.", w_map, l_map, row);
+    cb = addSetting("Icon", "map/gcs_icon_style", w_map, l_map, row, Type::STRING_COMBO,
+                    QStringList{"marker|Marker", "boat|Boat", "car|Car"});
+    callbacks.append(cb);
+    cb = addSetting("Color", "map/gcs_icon_color", w_map, l_map, row, Type::STRING_COMBO,
+                    QStringList{"#e8a33d|Orange", "#ffff00|Yellow", "#1f6feb|Blue", "#e5484d|Red", "#2da44e|Green", "#ffffff|White"});
+    callbacks.append(cb);
+    cb = addSetting("Size", "map/gcs_icon_size", w_map, l_map, row, Type::INT);
+    callbacks.append(cb);
+    cb = addSetting("Track", "map/gcs_track", w_map, l_map, row, Type::BOOL);
+    callbacks.append(cb);
+    cb = addSetting("Track length (s)", "map/gcs_track_seconds", w_map, l_map, row, Type::INT);
+    callbacks.append(cb);
+    live_settings << "map/gcs_";     // read at each position of the ground station
 
     addSection("Shapes and texts", w_map, l_map, row);
     cb = addSetting("Other aircraft drawn smaller by", "map/size_highlight_factor", w_map, l_map, row, Type::DOUBLE);
@@ -420,6 +461,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
             qApp->exit( PprzMain::EXIT_CODE_REBOOT );
             return;
         }
+        emit DispatcherUi::get()->appSettingsChanged();
         if(!needs_restart) {
             accept();
             return;
