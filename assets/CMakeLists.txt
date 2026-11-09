@@ -1,22 +1,15 @@
+# desktop integration: icons, menu entry and AppStream metadata, at the standard XDG places
+# (GNUInstallDirs is included by the top-level CMakeLists.txt)
 
-find_package(ECM 1.0.0 REQUIRED NO_MODULE)
-set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
-include(ECMInstallIcons)
-include(KDEInstallDirs)
+foreach(size 16 32 48 64 128)
+    install(FILES ${size}-apps-pprzgcs.png
+            DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/${size}x${size}/apps
+            RENAME pprzgcs.png
+    )
+endforeach()
 
-ecm_install_icons(
-    ICONS
-        16-apps-pprzgcs.png
-        32-apps-pprzgcs.png
-        48-apps-pprzgcs.png
-        64-apps-pprzgcs.png
-        128-apps-pprzgcs.png
-
-    THEME
-        hicolor
-
-    DESTINATION
-        ${KDE_INSTALL_ICONDIR}
+install(FILES pprzgcs.svg
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/icons/hicolor/scalable/apps
 )
 
 configure_file(
@@ -25,16 +18,9 @@ configure_file(
 )
 
 install(FILES ${CMAKE_BINARY_DIR}/assets/org.paparazzi.pprzgcs.appdata.xml
-    DESTINATION ${KDE_INSTALL_METAINFODIR}
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/metainfo
 )
 
-
-install(FILES pprzgcs.svg
-        DESTINATION ${KDE_INSTALL_FULL_ICONDIR}/hicolor/scalable/apps
+install(FILES org.paparazzi.pprzgcs.desktop
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/applications
 )
-
-
-install(FILES "org.paparazzi.pprzgcs.desktop"
-        DESTINATION ${KDE_INSTALL_APPDIR}
-)
-

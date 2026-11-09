@@ -39,7 +39,7 @@ The developer version may have new features or bug fixes not landed in releases 
 
 ### Build from sources
 
-On Ubuntu 22.04 or 24.04:
+On Ubuntu 22.04, 24.04 or 26.04:
 
 ```
 git clone --recursive https://github.com/paparazzi/PprzGCS.git

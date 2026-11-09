@@ -3,8 +3,8 @@
 How to build from sources
 =========================
 
-Ubuntu 22.04 and 24.04
-______________________
+Ubuntu 22.04, 24.04 and 26.04
+______________________________
 
 Clone the repository with its submodules, and run the build script:
 

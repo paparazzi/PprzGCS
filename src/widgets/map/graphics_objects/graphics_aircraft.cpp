@@ -71,7 +71,10 @@ void GraphicsAircraft::changeFocus() {
 
 void GraphicsAircraft::loadSvg(QString path) {
     QFile file(path);
-    file.open(QIODevice::ReadOnly);
+    if(!file.open(QIODevice::ReadOnly)) {
+        qWarning() << "GraphicsAircraft: cannot open the icon" << path << ":" << file.errorString();
+        return;
+    }
     QByteArray baData = file.readAll();
     // load svg contents to xml document and edit contents
     svgdoc.setContent(baData);
