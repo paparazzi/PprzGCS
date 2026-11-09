@@ -1051,7 +1051,7 @@ void MapWidget::configure(QDomElement ele) {
     follow_button->setMenu(follow_menu);
     follow_button->setPopupMode(QToolButton::DelayedPopup);
     follow_button->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(follow_button, &QToolButton::customContextMenuRequested, this, [=](QPoint p) {
+    connect(follow_button, &QToolButton::customContextMenuRequested, this, [=,this](QPoint p) {
         follow_menu->exec(follow_button->mapToGlobal(p));
     });
     // File > Track AC: the aircraft, heading up
