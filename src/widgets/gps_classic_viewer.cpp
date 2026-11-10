@@ -23,7 +23,7 @@ GPSClassicViewer::GPSClassicViewer(QString ac_id, QWidget *parent) : QWidget(par
  * and text; below, a signal bar per satellite (green: used, gray: not used, faded: old).
  * The button next to the quality shows a sky plot below the bars: the satellites by azimuth
  * (north up) and elevation (zenith in the middle, horizon on the outer circle), in the color of
- * their bar, SBAS satellites (id 120 to 158) in yellow.
+ * their bar. SBAS satellites (id 120 to 158) are an outline, in the bars and the sky plot.
  */
 // green: used, gray: not used, faded: old
 static QColor barColor(int flags, int age) {
@@ -32,6 +32,21 @@ static QColor barColor(int flags, int age) {
         c.setAlpha(90);
     }
     return c;
+}
+
+// SBAS satellites (u-blox ids 120 to 158) are drawn as an outline, the others filled
+static bool isSbas(int id) {
+    return id >= 120 && id <= 158;
+}
+
+static void setFill(QPainter &p, QColor c, bool outline) {
+    if(outline) {
+        p.setPen(QPen(c, 1.5));
+        p.setBrush(Qt::NoBrush);
+    } else {
+        p.setPen(Qt::NoPen);
+        p.setBrush(c);
+    }
 }
 
 void GPSClassicViewer::mousePressEvent(QMouseEvent *event) {
@@ -133,9 +148,9 @@ void GPSClassicViewer::paintEvent(QPaintEvent *event) {
             auto &sv = infos[i];
             double h = qBound(2.0, (sv.cno - 15) * bars_h / 35.0, qMax(2.0, static_cast<double>(bars_h)));
             QColor c = barColor(sv.flags, sv.age);
-            p.setPen(Qt::NoPen);
-            p.setBrush(c);
-            p.drawRoundedRect(QRectF(i * w + 2, top + bars_h - h, w - 4, h), 2, 2);
+            QRectF bar(i * w + 2, top + bars_h - h, w - 4, h);
+            setFill(p, c, isSbas(sv.id));
+            p.drawRoundedRect(isSbas(sv.id) ? bar.adjusted(0.75, 0.75, -0.75, -0.75) : bar, 2, 2);
             p.setPen(secondary);
             p.drawText(QRectF(i * w, top + bars_h + 2, w, label_h), Qt::AlignCenter, QString::number(sv.id));
         }
@@ -172,14 +187,9 @@ void GPSClassicViewer::paintEvent(QPaintEvent *event) {
             double dist = r * (90 - qMin(sv.elev, 90)) / 90;
             double az = sv.azim * M_PI / 180;
             QPointF pos = c + QPointF(std::sin(az), -std::cos(az)) * dist;
-            QColor col = barColor(sv.flags, sv.age);
-            if(sv.id >= 120 && sv.id <= 158) {
-                col = QColor(224, 176, 0, sv.age > 4 ? 90 : 255);
-            }
             double rad = (sv.flags & 0x01) ? 6 : 4;
-            p.setPen(Qt::NoPen);
-            p.setBrush(col);
-            p.drawEllipse(pos, rad, rad);
+            setFill(p, barColor(sv.flags, sv.age), isSbas(sv.id));
+            p.drawEllipse(pos, isSbas(sv.id) ? rad - 0.75 : rad, isSbas(sv.id) ? rad - 0.75 : rad);
             p.setPen(secondary);
             p.drawText(QRectF(pos.x() + rad, pos.y() - rad - 10, 30, 12), Qt::AlignLeft | Qt::AlignVCenter,
                        QString::number(sv.id));
