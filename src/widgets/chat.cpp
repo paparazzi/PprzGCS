@@ -74,8 +74,15 @@ Chat::Chat(QWidget *parent) :
             connect(a, &QAction::triggered, this, [=,this]() {ui->fd_combo->setCurrentIndex(i); updateDestButton();});
         }
     });
+    // clear the messages shown (old errors once the problem is solved), away from Send
+    clear_button = new QToolButton(this);
+    clear_button->setObjectName("chat_clear");
+    clear_button->setText("Clear");
+    clear_button->setToolTip("Remove the messages shown");
+    connect(clear_button, &QToolButton::clicked, this, &Chat::clearMessages);
     auto input_row = new QHBoxLayout();
     input_row->setSpacing(6);
+    input_row->addWidget(clear_button);
     ui->verticalLayout->removeWidget(ui->msg_lineedit);
     ui->horizontalLayout->removeWidget(ui->send_button);
     input_row->addWidget(ui->msg_lineedit, 1);
@@ -83,6 +90,7 @@ Chat::Chat(QWidget *parent) :
     input_row->addWidget(ui->send_button);
     ui->verticalLayout->addLayout(input_row);
     updateDestButton();
+    updateClearButton();
     setFrameShape(QFrame::NoFrame);
     setMinimumSize(320, 0);     // (the .ui file has a 300 px minimum height: the chat fits its messages)
     ui->scrollArea->setMinimumHeight(120);     // a few messages visible; more fit (fitMessages)
@@ -260,6 +268,33 @@ void Chat::applyFilter() {
     for(auto cb: ui->scroll_widget->findChildren<ChatBubble*>()) {
         cb->setVisible(current_filter == "all" || cb->category() == current_filter);
     }
+    updateClearButton();
+}
+
+void Chat::clearMessages() {
+    for(auto cb: ui->scroll_widget->findChildren<ChatBubble*>()) {
+        if(current_filter == "all" || cb->category() == current_filter) {
+            // out of the layout now: the next message does not join a removed bubble
+            ui->scroll_widget->layout()->removeWidget(cb);
+            cb->hide();
+            cb->deleteLater();
+        }
+    }
+    last_errors.clear();    // an error that comes again shows again
+    QTimer::singleShot(0, this, &Chat::fitMessages);
+    updateClearButton();
+}
+
+void Chat::updateClearButton() {
+    bool any = false;
+    for(auto cb: ui->scroll_widget->findChildren<ChatBubble*>()) {
+        if(ui->scroll_widget->layout()->indexOf(cb) != -1 &&
+           (current_filter == "all" || cb->category() == current_filter)) {
+            any = true;
+            break;
+        }
+    }
+    clear_button->setEnabled(any);
 }
 
 void Chat::updateDestButton() {
@@ -335,6 +370,7 @@ void Chat::addMessage(QString txt, QString source, QString dst, bool sent) {
     ui->scroll_widget->layout()->addWidget(cb);
     QTimer::singleShot(0, this, &Chat::fitMessages);
     cb->setVisible(current_filter == "all" || cb->category() == current_filter);
+    updateClearButton();
 
     // delay scroll to bottom to wait for the x=widget to be repainted.
     QTimer::singleShot(20, this, [=,this](){

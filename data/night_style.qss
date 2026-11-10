@@ -591,7 +591,7 @@ QPushButton#chat_filter:checked {
     border-color: #3b74d6;
     color: white;
 }
-QToolButton#chat_dest {
+QToolButton#chat_dest, QToolButton#chat_clear {
     border: 1px solid #3a424d;
     border-radius: 6px;
     background-color: #2a3038;
