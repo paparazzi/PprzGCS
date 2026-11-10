@@ -255,7 +255,7 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
             case FL:
                 if(baro) {
                     ft = pressureAltFt(ad.pressure, STD_P);
-                    alt_info = QString("%1 ft on 1013 hPa").arg(std::lround(ft / 10.) * 10);
+                    alt_info = QString("%1 ft on 1013 hPa").arg(std::lround(ft / 5.) * 5);
                 } else {
                     alt_info = "no pressure";
                 }
@@ -266,7 +266,7 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
                 alt = QString("FL%1").arg(qMax(0L, std::lround(ft / 100.)), 3, 10, QChar('0'));
                 alt_unit = "";
             } else if(!std::isnan(ft)) {
-                alt = QString::number(std::lround(ft / 10.) * 10);   // what is said on the radio
+                alt = QString::number(std::lround(ft / 5.) * 5);     // what is said on the radio
             }
 
             // bearing and distance from HOME
@@ -289,7 +289,7 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
                 double dn = (lat - wp->getLat()) * M_PI / 180. * 6371000.;
                 double de = (lon - wp->getLon()) * M_PI / 180. * 6371000. * std::cos(wp->getLat() * M_PI / 180.);
                 double d = std::hypot(dn, de);
-                int brg = (int)std::lround(std::atan2(de, dn) * 180. / M_PI / 10.) * 10;
+                int brg = (int)std::lround(std::atan2(de, dn) * 180. / M_PI / 5.) * 5;
                 brg = ((brg % 360) + 360) % 360;
                 home = QString("bearing %1, %2").arg(brg, 3, 10, QChar('0')).arg(distText(d));
             }
@@ -399,11 +399,11 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
     p.setPen(timer_on ? text : QColor(Qt::white));
     p.setFont(font(18, false));
     p.drawText(timer_button, Qt::AlignCenter, timer_on ? "RESET\nTIMER" : "START\nTIMER");
-    QString since = "--:--", dist = "~ --";
+    QString since = "--:--", dist = "~--";
     if(timer_on) {
         qint64 sec = timer->second.clock.elapsed() / 1000;
         since = QString("%1:%2").arg(sec / 60, 2, 10, QChar('0')).arg(sec % 60, 2, 10, QChar('0'));
-        dist = "~ " + distText(timer->second.dist);
+        dist = "~" + distText(timer->second.dist);
     }
     const double tx = timer_button.right() + 16 * s;
     p.setPen(caption);
