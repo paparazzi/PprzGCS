@@ -8,7 +8,8 @@
 ChatBubble::ChatBubble(QString source, QString dest, QString msg, bool sent, QWidget *parent) :
     QWidget(parent),
     source(source),
-    dest(dest)
+    dest(dest),
+    sent(sent)
 {
     setObjectName(sent ? "chat_row_sent" : "chat_row");
     setAttribute(Qt::WA_StyledBackground);
@@ -17,6 +18,28 @@ ChatBubble::ChatBubble(QString source, QString dest, QString msg, bool sent, QWi
     v->setContentsMargins(6, 4, 6, 2);
     v->setSpacing(2);
 
+    tag = new QLabel(this);
+    QFont f = tag->font();
+    f.setPixelSize(11);
+    f.setBold(true);
+    tag->setFont(f);
+    tag->setAlignment(Qt::AlignCenter);
+    tag->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    v->addWidget(tag, 0, Qt::AlignLeft);
+
+    body = new QFrame(this);
+    body->setObjectName("chat_body");
+    lines_layout = new QVBoxLayout(body);
+    lines_layout->setContentsMargins(5, 0, 0, 0);
+    lines_layout->setSpacing(0);
+    v->addWidget(body);
+    updateSender();
+
+    chat_time = QTime::currentTime();
+    addText(msg);
+}
+
+void ChatBubble::updateSender() {
     QString name = source;
     QColor color(0x6e7781);
     if(sent) {
@@ -35,29 +58,10 @@ ChatBubble::ChatBubble(QString source, QString dest, QString msg, bool sent, QWi
     if(sent && dest != "") {
         name += QString::fromUtf8(" → ") + dest;
     }
-
-    tag = new QLabel(this);
-    QFont f = tag->font();
-    f.setPixelSize(11);
-    f.setBold(true);
-    tag->setFont(f);
-    tag->setText(QFontMetrics(f).elidedText(name, Qt::ElideRight, 100));
+    tag->setText(QFontMetrics(tag->font()).elidedText(name, Qt::ElideRight, 100));
     tag->setToolTip(name);
-    tag->setAlignment(Qt::AlignCenter);
-    tag->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     tag->setStyleSheet(QString("background: %1; color: white; border-radius: 4px; padding: 1px 6px;").arg(color.name()));
-    v->addWidget(tag, 0, Qt::AlignLeft);
-
-    auto body = new QFrame(this);
-    body->setObjectName("chat_body");
     body->setStyleSheet(QString("#chat_body {border: 0; border-left: 3px solid %1;}").arg(color.name()));
-    lines_layout = new QVBoxLayout(body);
-    lines_layout->setContentsMargins(5, 0, 0, 0);
-    lines_layout->setSpacing(0);
-    v->addWidget(body);
-
-    chat_time = QTime::currentTime();
-    addText(msg);
 }
 
 /// "alarm", "warning" or "" from the words in the text

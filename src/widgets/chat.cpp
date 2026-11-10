@@ -210,6 +210,13 @@ void Chat::onNewAircraft(QString ac_id) {
     auto ac = AircraftManager::get()->getAircraft(ac_id);
     ui->name_combo->addItem(ac->name());
     addFilter(ac_id, ac->name(), ac->getColor().name());
+    // its messages from before its config (e.g. the GCS started while it flies): its name and color now
+    for(auto cb: ui->scroll_widget->findChildren<ChatBubble*>()) {
+        if(cb->getSource() == ac_id) {
+            cb->updateSender();
+        }
+    }
+    applyFilter();
 }
 
 void Chat::addFilter(QString category, QString name, QString color) {
