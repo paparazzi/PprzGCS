@@ -82,20 +82,20 @@ void GPSClassicViewer::paintEvent(QPaintEvent *event) {
 
     p.setFont(caption);
     p.setPen(secondary);
-    p.drawText(QRectF(0, 0, 120, 16), Qt::AlignLeft | Qt::AlignVCenter, "Accuracy");
-    p.drawText(QRectF(110, 0, 90, 16), Qt::AlignLeft | Qt::AlignVCenter, "Satellites");
+    p.drawText(QRectF(0, 0, 92, 16), Qt::AlignLeft | Qt::AlignVCenter, "Accuracy");
+    p.drawText(QRectF(92, 0, 90, 16), Qt::AlignLeft | Qt::AlignVCenter, "Satellites");
     p.setFont(value);
     p.setPen(text);
-    p.drawText(QRectF(0, 16, 120, 26), Qt::AlignLeft | Qt::AlignVCenter,
+    p.drawText(QRectF(0, 16, 92, 26), Qt::AlignLeft | Qt::AlignVCenter,
                no_data ? QString::fromUtf8("\xE2\x80\x94") : QString("%1 m").arg(pacc / 100., 0, 'f', 1));
-    p.drawText(QRectF(110, 16, 90, 26), Qt::AlignLeft | Qt::AlignVCenter,
+    p.drawText(QRectF(92, 16, 90, 26), Qt::AlignLeft | Qt::AlignVCenter,
                no_data ? QString::fromUtf8("\xE2\x80\x94") : QString("%1 / %2").arg(nb_sat_used).arg(infos.size()));
 
     QFont pill_font = font();
     pill_font.setPixelSize(12);
     pill_font.setBold(true);
     p.setFont(pill_font);
-    QRectF pill(qMax(205.0, width() - 98.0), 12, 70, 24);
+    QRectF pill(qMax(170.0, width() - 98.0), 12, 70, 24);   // the button still fits at 280 px
     p.setPen(Qt::NoPen);
     p.setBrush(quality_bg);
     p.drawRoundedRect(pill, 12, 12);
