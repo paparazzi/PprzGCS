@@ -3,10 +3,11 @@
 #
 #   ./install_deps.sh [--check] [--dry-run] [--yes] [GROUP...]
 #
-# Groups (default: build; appimage and deb include build):
+# Groups (default: build; the others include build):
 #   build     compile and run PprzGCS: ./build.sh
 #   appimage  package it as an AppImage: ./make_appimage.sh
 #   deb       package it as a .deb: dpkg-buildpackage
+#   speech    speak (spd-say), and Qt TextToSpeech for cmake -DSPEECH=ON (from 24.04, none on 22.04)
 #   all       every group
 #
 #   --check    print the missing packages (nothing when all are installed), exit 1 when some are
@@ -22,11 +23,17 @@ declare -A GROUP_PACKAGES=(
   [build]="build-essential cmake qt6-base-dev libqt6svg6-dev|qt6-svg-dev qt6-qpa-plugins libgl-dev libglu1-mesa-dev mesa-common-dev libproj-dev libzip-dev libxml2-dev libsqlite3-dev"
   [appimage]="qt6-base-dev-tools qmake6 file wget ca-certificates"
   [deb]="dpkg-dev debhelper fakeroot git"
+  [speech]="speech-dispatcher"
 )
-GROUPS_ORDER=(build appimage deb)
+# the packages of a group on one Ubuntu release only ([group:codename])
+declare -A RELEASE_PACKAGES=(
+  [speech:noble]="qt6-declarative-dev qt6-speech-dev"
+  [speech:resolute]="qt6-speech-dev"
+)
+GROUPS_ORDER=(build appimage deb speech)
 TESTED_RELEASES="jammy noble resolute"
 
-usage() { sed -n '3,18p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '3,19p' "$0" | sed 's/^# \{0,1\}//'; }
 die() { printf 'install_deps.sh: %s\n' "$*" >&2; exit 2; }
 run() { printf '+ %s\n' "$*"; "$@"; }
 
@@ -70,6 +77,11 @@ case " $TESTED_RELEASES " in
   *) echo "install_deps.sh: tested on Ubuntu 22.04, 24.04 and 26.04; on ${codename:-this system}" \
           "package names may differ" >&2 ;;
 esac
+for group in build "${groups[@]}"; do
+  for package in ${RELEASE_PACKAGES[$group:${codename:-unknown}]:-}; do
+    case " ${packages[*]} " in *" $package "*) ;; *) packages+=("$package") ;; esac
+  done
+done
 
 # the installed packages among every name (dpkg-query fails when some name is unknown: its output
 # still lists the others)

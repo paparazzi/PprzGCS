@@ -57,6 +57,7 @@ The packages are installed by `install_deps.sh`, which can also be run alone:
 | `./install_deps.sh` | build and run PprzGCS (`./build.sh`) |
 | `./install_deps.sh appimage` | also package the AppImage (`./make_appimage.sh`) |
 | `./install_deps.sh deb` | also package the `.deb` (`dpkg-buildpackage`) |
+| `./install_deps.sh speech` | also Qt TextToSpeech, to build with `-DSPEECH=ON` (24.04 and later; speech works without it, through `spd-say`) |
 | `./install_deps.sh --check` | only list the missing packages |
 
 Other build options (`./build.sh --help`):

@@ -24,6 +24,7 @@ The packages are installed by ``install_deps.sh``, which can also be run alone:
     ./install_deps.sh            # to build and run PprzGCS
     ./install_deps.sh appimage   # also to package the AppImage
     ./install_deps.sh deb        # also to package the .deb
+    ./install_deps.sh speech     # also Qt TextToSpeech, for cmake -DSPEECH=ON (24.04 and later)
     ./install_deps.sh --check    # only list the missing packages
 
 Other build options (``./build.sh --help``):
