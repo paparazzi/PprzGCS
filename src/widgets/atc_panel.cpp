@@ -72,7 +72,7 @@ AtcPanel::AtcPanel(QWidget *parent) : QWidget(parent)
     connect(t, &QTimer::timeout, this, &AtcPanel::tick);
     t->start(250);
 
-    setToolTip("Click the altitude reference or the distance unit to change it; right click: set the QNH");
+    setToolTip("Click the altitude reference, the distance unit or the FROM waypoint to change it; right click: set the QNH");
 }
 
 QSize AtcPanel::sizeHint() const {
@@ -122,6 +122,30 @@ QString AtcPanel::distText(double d) const {
     return QString("%1 km").arg(d / 1000, 0, 'f', 2);
 }
 
+/// Menu of the waypoints of the selected aircraft, to choose the one the bearing is from
+void AtcPanel::chooseFromWp(QPoint pos) {
+    if(!AircraftManager::get()->aircraftExists(current_ac)) {
+        return;
+    }
+    auto fpl = AircraftManager::get()->getAircraft(current_ac)->getFlightPlan();
+    if(!fpl) {
+        return;
+    }
+    QString chosen = from_wp.count(current_ac) ? from_wp[current_ac] : "";
+    QMenu menu(this);
+    auto def = menu.addAction("ARP, else HOME", this, [this]() { from_wp.erase(current_ac); update(); });
+    def->setCheckable(true);
+    def->setChecked(chosen.isEmpty());
+    menu.addSeparator();
+    for(auto w: fpl->getWaypoints()) {
+        QString n = w->getName();
+        auto a = menu.addAction(n, this, [this, n]() { from_wp[current_ac] = n; update(); });
+        a->setCheckable(true);
+        a->setChecked(n == chosen);
+    }
+    menu.exec(pos);
+}
+
 void AtcPanel::askQnh() {
     bool ok;
     double v = QInputDialog::getDouble(this, "QNH", "QNH (hPa), 0: the one of the aircraft",
@@ -146,6 +170,10 @@ void AtcPanel::mousePressEvent(QMouseEvent *event) {
             tick();     // the ground speed right away
         }
         update();
+        return;
+    }
+    if(from_row.contains(event->position())) {
+        chooseFromWp(event->globalPosition().toPoint());
         return;
     }
     for(int i=0; i<3; i++) {
@@ -285,8 +313,10 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
                 }
                 return nullptr;
             };
-            Waypoint* wp = find_wp("ARP");
+            Waypoint* wp = from_wp.count(current_ac) ? find_wp(from_wp[current_ac]) : nullptr;
             if(wp) {
+                ref_name = wp->getName();
+            } else if((wp = find_wp("ARP"))) {
                 ref_name = "ARP";
             } else {
                 wp = find_wp("HOME");
@@ -425,7 +455,8 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
     p.drawLine(QPointF(m, y), QPointF(w - m, y));
     p.setPen(caption);
     p.setFont(font(16, false));
-    p.drawText(QPointF(m, y + 24 * s), "FROM " + ref_name);
+    from_row = QRectF(m, y, w - 2 * m, 64 * s);
+    p.drawText(QPointF(m, y + 24 * s), "FROM " + ref_name + " ▾");
     p.setPen(text);
     p.setFont(font(24, false));
     p.drawText(QPointF(m, y + 54 * s), home);

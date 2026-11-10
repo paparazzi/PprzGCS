@@ -22,7 +22,8 @@ class QTimer;
  *  - flight time in min, battery
  *  - a timer (e.g. started at a fly away), with the distance flown since, from the ground speed
  *    (one per aircraft)
- *  - bearing and distance from the ARP waypoint (aerodrome reference point), else HOME
+ *  - bearing and distance from a waypoint: ARP (aerodrome reference point), else HOME, or
+ *    one chosen by clicking it
  *  - distances in NM, or in m (km from 1000 m): click to choose
  */
 class AtcPanel : public QWidget, public Configurable
@@ -53,6 +54,7 @@ private:
     };
 
     void tick();
+    void chooseFromWp(QPoint pos);
     void setAltRef(AltRef ref);
     void setDistMetric(bool metric);
     QString distText(double d) const;
@@ -73,10 +75,14 @@ private:
     };
     std::map<QString, Timer> timers;
 
+    // per aircraft: the waypoint the bearing is from (not set: ARP, else HOME)
+    std::map<QString, QString> from_wp;
+
     // clickable areas, from the last paint
     QRectF timer_button;
     QRectF ref_chips[3];
     QRectF dist_chips[2];       // NM, m
+    QRectF from_row;
 };
 
 #endif // ATC_PANEL_H
