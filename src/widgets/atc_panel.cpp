@@ -22,7 +22,7 @@ static double pressureAltFt(double p, double ref) {
     return 145366.45 * (1. - std::pow(p / ref, 0.190284));
 }
 
-static const char* REF_NAMES[3] = {"QNH", "QFE", "FL"};
+static const char* REF_NAMES[3] = {"QNH", "GPS", "FL"};
 static const char* DIST_NAMES[2] = {"NM", "m"};
 
 AtcPanel::AtcPanel(QWidget *parent) : QWidget(parent)
@@ -56,9 +56,17 @@ AtcPanel::AtcPanel(QWidget *parent) : QWidget(parent)
             }
         }
     });
-    PprzDispatcher::get()->bindOptional("INS_REF", this, [=,this](QString sender, pprzlink::Message msg) {
-        msg.getField("baro_qfe", air_data[sender].qfe);
-    });
+    // height above MSL from the GPS receiver (not the altitude of the state estimate),
+    // in mm: hmsl of GPS_INT and GPS_LLA, alt of GPS
+    for(auto [name, field]: {std::pair{"GPS_INT", "hmsl"}, {"GPS_LLA", "hmsl"}, {"GPS", "alt"}}) {
+        PprzDispatcher::get()->bindOptional(name, this, [=,this](QString sender, pprzlink::Message msg) {
+            int32_t mm;
+            msg.getField(field, mm);
+            auto& ad = air_data[sender];
+            ad.hmsl = mm / 1000.;
+            ad.last_gps.start();
+        });
+    }
 
     auto t = new QTimer(this);
     connect(t, &QTimer::timeout, this, &AtcPanel::tick);
@@ -211,12 +219,11 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
         auto status = ac->getStatus();
         auto fp = status->getMessage("FLIGHT_PARAM");
         if(fp) {
-            float course, gspeed, alt_msl, agl;
+            float course, gspeed, alt_msl;
             double lat, lon;
             fp->getField("course", course);
             fp->getField("speed", gspeed);
             fp->getField("alt", alt_msl);
-            fp->getField("agl", agl);
             fp->getField("lat", lat);
             fp->getField("long", lon);
             int hdg = (int)std::lround(course / 5.f) * 5;
@@ -241,15 +248,14 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
             switch(alt_ref) {
             case QNH:
                 ft = baro ? pressureAltFt(ad.pressure, qnh * 100.) : alt_msl * FT;
-                alt_info = baro ? QString("QNH %1 hPa, %2").arg(qnh, 0, 'f', 0).arg(qnh_src) : "GPS altitude (MSL)";
+                alt_info = baro ? QString("QNH %1 hPa, %2").arg(qnh, 0, 'f', 0).arg(qnh_src) : "no pressure: altitude of the aircraft (MSL)";
                 break;
-            case QFE:
-                if(baro && ad.qfe > 0) {
-                    ft = pressureAltFt(ad.pressure, ad.qfe);
-                    alt_info = QString("QFE %1 hPa").arg(ad.qfe / 100., 0, 'f', 0);
+            case GPS:
+                if(ad.last_gps.isValid() && ad.last_gps.elapsed() < 12000) {   // slow telemetry modes: every 5 s
+                    ft = ad.hmsl * FT;
+                    alt_info = "GPS, above MSL";
                 } else {
-                    ft = agl * FT;
-                    alt_info = "above ground, GPS";
+                    alt_info = "no GPS height";
                 }
                 break;
             case FL:

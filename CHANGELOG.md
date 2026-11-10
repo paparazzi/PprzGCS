@@ -1,6 +1,7 @@
 # Changelog
 
 ## NEXT
++ ATC panel: the QFE altitude replaced by the GPS height above MSL (hmsl of GPS_INT, GPS_LLA, GPS); a QFE can still be shown by setting the ground pressure as QNH
 + ATC panel: distances in NM (2 decimals) or in m (km from 1000 m), chosen with chips like the altitude reference; a narrow START/RESET TIMER button on two lines, with the time and the distance under each other
 + ATC panel: a timer per aircraft; a running timer keeps counting while another aircraft is selected
 + Video: the size menu (right click) and Ctrl + mouse wheel removed; drag the corner of the panel to resize it

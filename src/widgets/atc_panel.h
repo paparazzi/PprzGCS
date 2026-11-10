@@ -16,7 +16,8 @@ class QTimer;
  *  - name of the aircraft (as callsign)
  *  - heading of the ground track, 3 digits, rounded to 5 deg
  *  - ground speed in kt
- *  - altitude in ft on QNH or QFE, or flight level (click to choose; right click to set the QNH);
+ *  - altitude in ft on QNH, from the GPS (height above MSL), or flight level (click to choose;
+ *    right click to set the QNH);
  *    QNH: set in the GCS, else from the aircraft, else estimated from the pressure and GPS altitude
  *  - flight time in min, battery
  *  - a timer (e.g. started at a fly away), with the distance flown since, from the ground speed
@@ -34,7 +35,7 @@ public:
     QSize minimumSizeHint() const override;
     void configure(QDomElement) override {};
 
-    enum AltRef {QNH, QFE, FL};
+    enum AltRef {QNH, GPS, FL};
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -45,9 +46,10 @@ private:
     struct AirData {
         float pressure = 0;     // Pa
         float qnh = 0;          // hPa, from the aircraft
-        float qfe = 0;          // Pa, at the origin (INS_REF)
         float qnh_est = 0;      // hPa, estimated here: pressure matched to the GPS altitude (MSL)
         QElapsedTimer last;     // last pressure
+        double hmsl = 0;        // m, height above MSL from the GPS
+        QElapsedTimer last_gps; // last hmsl
     };
 
     void tick();
