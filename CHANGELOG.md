@@ -5,7 +5,7 @@
 + ATC panel: the QFE altitude replaced by the GPS height above MSL (hmsl of GPS_INT, GPS_LLA, GPS); a QFE can still be shown by setting the ground pressure as QNH
 + ATC panel: distances in NM (2 decimals) or in m (km from 1000 m), chosen with chips like the altitude reference; a narrow START/RESET TIMER button on two lines, with the time and the distance under each other
 + ATC panel: a timer per aircraft; a running timer keeps counting while another aircraft is selected
-+ Video: the size menu (right click) and Ctrl + mouse wheel removed; drag the corner of the panel to resize it
++ Video: the size menu and Ctrl + mouse wheel removed (drag the corner of the panel to resize it); right click: Video source... to choose a udp:// or tcp:// source in the GCS (saved, instead of the one of the layout)
 + Builds on Ubuntu 26.04; extra-cmake-modules no longer needed (icons and desktop files installed with GNUInstallDirs)
 + Map: an aircraft icon that cannot be opened is reported instead of loaded as an empty image
 + Checklist: `optional`, `help` (tooltip) and `remember` attributes, `choice` items and a Reset button

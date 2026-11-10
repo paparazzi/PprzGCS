@@ -5,6 +5,10 @@
 #include <QTimer>
 #include <QNetworkDatagram>
 #include <QDomElement>
+#include <QContextMenuEvent>
+#include <QInputDialog>
+#include <QMenu>
+#include "gcs_utils.h"
 
 static constexpr int NO_VIDEO_TIMEOUT = 1000;   // ms without frame before "No video"
 static constexpr int RECONNECT_PERIOD = 1000;   // ms between TCP connection attempts
@@ -29,13 +33,16 @@ VideoViewer::VideoViewer(QWidget *parent) : QWidget(parent)
     });
     watchdog->start();
 
-    setSource("udp://:5600");
+    setSource(getAppSettings().value("video/source", layout_source).toString());
 }
 
 void VideoViewer::configure(QDomElement conf)
 {
     if(conf.hasAttribute("source")) {
-        setSource(conf.attribute("source"));
+        layout_source = conf.attribute("source");
+        if(!getAppSettings().contains("video/source")) {
+            setSource(layout_source);
+        }
     }
     if(conf.hasAttribute("width")) {
         preferred_width = qBound(MIN_WIDTH, conf.attribute("width").toInt(), MAX_WIDTH);
@@ -52,6 +59,43 @@ QSize VideoViewer::sizeHint() const
 QSize VideoViewer::minimumSizeHint() const
 {
     return QSize(MIN_WIDTH, MIN_WIDTH * 3 / 4);
+}
+
+void VideoViewer::contextMenuEvent(QContextMenuEvent *event)
+{
+    QMenu menu(this);
+    menu.addAction(tr("Video source..."), this, &VideoViewer::askSource);
+    menu.exec(event->globalPos());
+}
+
+/// Ask for the source; saved for the next start, empty: back to the one of the layout
+void VideoViewer::askSource()
+{
+    QString text = source.toString();
+    QString error;
+    while(true) {
+        bool ok;
+        text = QInputDialog::getText(this, tr("Video source"),
+            error + tr("udp://:5600  receive JPEG frames on UDP port 5600\n"
+                       "tcp://192.168.1.10:5601  connect to the TCP server of the video pipeline\n"
+                       "Empty: the source of the layout (%1)").arg(layout_source),
+            QLineEdit::Normal, text, &ok).trimmed();
+        if(!ok) {
+            return;
+        }
+        if(text.isEmpty()) {
+            getAppSettings().remove("video/source");
+            setSource(layout_source);
+            return;
+        }
+        auto scheme = QUrl(text).scheme();
+        if(scheme == "udp" || scheme == "tcp") {
+            getAppSettings().setValue("video/source", text);
+            setSource(text);
+            return;
+        }
+        error = tr("Not a udp:// or tcp:// address.\n\n");
+    }
 }
 
 void VideoViewer::setSource(const QString &src)
