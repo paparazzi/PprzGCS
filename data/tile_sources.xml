@@ -14,6 +14,13 @@
 		format=".png"
 	/>
 	<source
+		name="Cyberzoo" title="Cyberzoo (TU Delft)" dir="CYBERZOO"
+		addr=""
+		zoomMin="18" zoomMax="23"
+		tileSize="256"
+		format=".png"
+	/>
+	<source
 		name="Google" title="Satellite" dir="GOOGLE"
 		addr="https://mt1.google.com/vt/lyrs=s&amp;x={x}&amp;y={y}&amp;z={z}"
 		zoomMin="0" zoomMax="19"
