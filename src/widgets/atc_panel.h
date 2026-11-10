@@ -20,6 +20,7 @@ class QTimer;
  *    QNH: set in the GCS, else from the aircraft, else estimated from the pressure and GPS altitude
  *  - flight time in min, battery
  *  - a timer (e.g. started at a fly away), with the distance flown since, from the ground speed
+ *    (one per aircraft)
  *  - bearing and distance from the ARP waypoint (aerodrome reference point), else HOME, in NM
  */
 class AtcPanel : public QWidget, public Configurable
@@ -57,12 +58,14 @@ private:
     AltRef alt_ref = QNH;
     float qnh_set = 0;          // hPa, set in the GCS (0: the one of the aircraft, or 1013.25)
 
-    // timer
-    bool timer_on = false;
-    QElapsedTimer timer;
-    qint64 last_tick_ms = 0;
-    double timer_dist = 0;      // m
-    float last_speed = 0;       // m/s, the last ground speed received
+    // a timer per aircraft, running until RESET (also when the aircraft is reloaded)
+    struct Timer {
+        QElapsedTimer clock;
+        qint64 last_tick_ms = 0;
+        double dist = 0;        // m
+        float speed = 0;        // m/s, the last ground speed received
+    };
+    std::map<QString, Timer> timers;
 
     // clickable areas, from the last paint
     QRectF timer_button;

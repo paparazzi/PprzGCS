@@ -74,16 +74,16 @@ QSize AtcPanel::minimumSizeHint() const {
 }
 
 void AtcPanel::tick() {
-    // the timer distance: the last ground speed, also when the link is lost
-    qint64 now = timer.isValid() ? timer.elapsed() : 0;
-    if(timer_on) {
-        timer_dist += last_speed * (now - last_tick_ms) / 1000.;
-        last_tick_ms = now;
-    }
-    if(AircraftManager::get()->aircraftExists(current_ac)) {
-        auto fp = AircraftManager::get()->getAircraft(current_ac)->getStatus()->getMessage("FLIGHT_PARAM");
-        if(fp) {
-            fp->getField("speed", last_speed);
+    // the timer distances: the last ground speed of each aircraft, also when the link is lost
+    for(auto &[id, t]: timers) {
+        qint64 now = t.clock.elapsed();
+        t.dist += t.speed * (now - t.last_tick_ms) / 1000.;
+        t.last_tick_ms = now;
+        if(AircraftManager::get()->aircraftExists(id)) {
+            auto fp = AircraftManager::get()->getAircraft(id)->getStatus()->getMessage("FLIGHT_PARAM");
+            if(fp) {
+                fp->getField("speed", t.speed);
+            }
         }
     }
     update();
@@ -112,13 +112,11 @@ void AtcPanel::mousePressEvent(QMouseEvent *event) {
         return;
     }
     if(timer_button.contains(event->position())) {
-        if(timer_on) {
-            timer_on = false;   // reset
+        if(timers.count(current_ac)) {
+            timers.erase(current_ac);   // reset
         } else {
-            timer_on = true;
-            timer.start();
-            last_tick_ms = 0;
-            timer_dist = 0;
+            timers[current_ac].clock.start();
+            tick();     // the ground speed right away
         }
         update();
         return;
@@ -349,7 +347,9 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
     p.drawText(QRectF(m, time_row.top(), w - 2 * m, time_row.height() - 14 * s),
                Qt::AlignRight | Qt::AlignBottom, bat);
 
-    // timer
+    // timer of this aircraft
+    auto timer = timers.find(current_ac);
+    bool timer_on = timer != timers.end();
     p.setPen(line);
     p.drawLine(QPointF(m, y), QPointF(w - m, y));
     timer_button = QRectF(m, y + 12 * s, 154 * s, 40 * s);
@@ -362,9 +362,9 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
     p.drawText(timer_button, Qt::AlignCenter, timer_on ? "RESET TIMER" : "START TIMER");
     QString since = "--:--", dist = "~ -- NM";
     if(timer_on) {
-        qint64 sec = timer.elapsed() / 1000;
+        qint64 sec = timer->second.clock.elapsed() / 1000;
         since = QString("%1:%2").arg(sec / 60, 2, 10, QChar('0')).arg(sec % 60, 2, 10, QChar('0'));
-        dist = QString("~ %1 NM").arg(timer_dist / NM, 0, 'f', 1);
+        dist = QString("~ %1 NM").arg(timer->second.dist / NM, 0, 'f', 1);
     }
     p.setPen(caption);
     p.setFont(font(14, false));

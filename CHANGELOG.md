@@ -1,6 +1,7 @@
 # Changelog
 
 ## NEXT
++ ATC panel: a timer per aircraft; a running timer keeps counting while another aircraft is selected
 + Video: the size menu (right click) and Ctrl + mouse wheel removed; drag the corner of the panel to resize it
 + Builds on Ubuntu 26.04; extra-cmake-modules no longer needed (icons and desktop files installed with GNUInstallDirs)
 + Map: an aircraft icon that cannot be opened is reported instead of loaded as an empty image
