@@ -16,8 +16,12 @@ ap.add_argument("--res", type=float, required=True)
 ap.add_argument("--lat0", type=float, required=True); ap.add_argument("--lon0", type=float, required=True)
 ap.add_argument("--x-bearing", type=float, required=True)
 ap.add_argument("--crop", type=float, default=0, help="keep only this half width (m) around the center, in the image frame")
+ap.add_argument("--crop-box", type=float, nargs=4, metavar=("XMIN", "XMAX", "YMIN", "YMAX"),
+                help="keep only this box (m, image frame: x right, y up)")
 ap.add_argument("--zmin", type=int, default=18); ap.add_argument("--zmax", type=int, default=23)
 a = ap.parse_args()
+if a.crop > 0 and not a.crop_box:
+    a.crop_box = [-a.crop, a.crop, -a.crop, a.crop]
 
 src = np.asarray(Image.open(a.image).convert("RGBA")).astype(np.float32)
 H, W = src.shape[:2]
@@ -39,9 +43,9 @@ def sample(east, north):
     for du, dv, w in ((0, 0, (1 - fu) * (1 - fv)), (1, 0, fu * (1 - fv)), (0, 1, (1 - fu) * fv), (1, 1, fu * fv)):
         uu = u0 + du; vv = v0 + dv
         ok = (uu >= 0) & (uu < W) & (vv >= 0) & (vv < H)
-        if a.crop > 0:
-            c = a.crop / a.res
-            ok &= (np.abs(uu + 0.5 - W / 2) <= c) & (np.abs(vv + 0.5 - H / 2) <= c)
+        if a.crop_box:
+            xm = (uu + 0.5 - W / 2) * a.res; ym = (H / 2 - vv - 0.5) * a.res
+            ok &= (xm >= a.crop_box[0]) & (xm <= a.crop_box[1]) & (ym >= a.crop_box[2]) & (ym <= a.crop_box[3])
         ok = ok[..., None]
         out += np.where(ok, src[np.clip(vv, 0, H - 1), np.clip(uu, 0, W - 1)], 0) * w
     return out
@@ -54,7 +58,7 @@ def lonlat_to_tile(lon, lat, z):
     return x, y
 
 
-half = math.hypot(W, H) / 2 * a.res if a.crop <= 0 else a.crop * math.sqrt(2)                 # the image rotated: all of it within this radius
+half = math.hypot(W, H) / 2 * a.res if not a.crop_box else math.hypot(max(map(abs, a.crop_box[:2])), max(map(abs, a.crop_box[2:])))                 # the image rotated: all of it within this radius
 dlat = math.degrees(half / R); dlon = math.degrees(half / (R * coslat))
 count = 0
 for z in range(a.zmin, a.zmax + 1):
