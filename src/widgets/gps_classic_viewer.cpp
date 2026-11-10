@@ -25,6 +25,7 @@ const int UNKNOWN_ELEV = 127;   // outside -90..90: the position is not known   
 
 const QColor USED(0x1f7a3f);
 const QColor NOT_USED(0x8c959f);
+const QColor NO_LOCK(0xf0a020);     // the accent orange, as in the ATC panel
 
 struct Quality {
     QColor color;
@@ -46,11 +47,12 @@ Quality quality(bool valid, double accuracy, int used) {
     return {USED, QColor(0xe3f1e6), "Good"};
 }
 
-/// Pen and brush of a satellite, in its bar and in the sky plot: green when used, gray when
-/// not, faded when old; an outline for an SBAS satellite (returns the inset for the pen).
+/// Pen and brush of a satellite, in its bar and in the sky plot: green when used, else orange
+/// without a lock, else gray; faded when old; an outline for an SBAS satellite (returns the inset
+/// for the pen).
 template<class Satellite>
 double setSatelliteStyle(QPainter &p, const Satellite &sv) {
-    QColor c = sv.used() ? USED : NOT_USED;
+    QColor c = sv.used() ? USED : sv.noLock() ? NO_LOCK : NOT_USED;
     if(sv.old()) {
         c.setAlpha(90);
     }
@@ -276,12 +278,12 @@ GPSClassicViewer::GpsData GPSClassicViewer::getData() const
     gps.valid = true;
     gps.accuracy = pacc / 100.;
 
-    auto ids = list("svid"), flags = list("flags"), cnos = list("cno"), ages = list("msg_age");
+    auto ids = list("svid"), flags = list("flags"), cnos = list("cno"), ages = list("msg_age"), qis = list("qi");
     auto elevs = list("elev"), azims = list("azim");
     // the lists should have the same length; do not read past a shorter one
     int n = std::min({ids.size(), flags.size(), cnos.size(), ages.size()});
     for(int i = 0; i < n; i++) {
-        Satellite sv{ids[i], flags[i], cnos[i], ages[i],
+        Satellite sv{ids[i], flags[i], i < qis.size() ? qis[i] : -1, cnos[i], ages[i],
                      i < elevs.size() ? elevs[i] : UNKNOWN_ELEV, i < azims.size() ? azims[i] : 0};
         if(sv.id != 0 && sv.age <= MAX_AGE) {   // id 0: empty channel
             gps.satellites.append(sv);
