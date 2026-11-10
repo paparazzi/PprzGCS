@@ -23,7 +23,7 @@ static double pressureAltFt(double p, double ref) {
 }
 
 static const char* REF_NAMES[3] = {"QNH", "QFE", "FL"};
-static const char* DIST_NAMES[2] = {"NM", "m"};
+static const char* DIST_NAMES[2] = {"Nm", "m"};
 
 AtcPanel::AtcPanel(QWidget *parent) : QWidget(parent)
 {
@@ -103,10 +103,10 @@ void AtcPanel::setDistMetric(bool metric) {
     update();
 }
 
-/// A distance (m) in NM with 1 decimal, or in m with 1 decimal, from 1000 m in km with 2 decimals
+/// A distance (m) in Nm with 2 decimals, or in m with 1 decimal, from 1000 m in km with 2 decimals
 QString AtcPanel::distText(double d) const {
     if(!dist_metric) {
-        return QString("%1 NM").arg(d / NM, 0, 'f', 1);
+        return QString("%1 Nm").arg(d / NM, 0, 'f', 2);
     }
     if(d < 1000) {
         return QString("%1 m").arg(d, 0, 'f', 1);
@@ -164,7 +164,7 @@ void AtcPanel::contextMenuEvent(QContextMenuEvent *event) {
     }
     menu.addSeparator();
     for(int i=0; i<2; i++) {
-        auto a = menu.addAction(i ? "Distances in m / km" : "Distances in NM");
+        auto a = menu.addAction(i ? "Distances in m / km" : "Distances in Nm");
         a->setCheckable(true);
         a->setChecked(dist_metric == (i == 1));
         connect(a, &QAction::triggered, this, [=,this]() {setDistMetric(i == 1);});
