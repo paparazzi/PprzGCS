@@ -23,12 +23,14 @@ static double pressureAltFt(double p, double ref) {
 }
 
 static const char* REF_NAMES[3] = {"QNH", "QFE", "FL"};
+static const char* DIST_NAMES[2] = {"NM", "m"};
 
 AtcPanel::AtcPanel(QWidget *parent) : QWidget(parent)
 {
     auto settings = getAppSettings();
     alt_ref = static_cast<AltRef>(qBound(0, settings.value("atc/alt_ref", QNH).toInt(), 2));
     qnh_set = settings.value("atc/qnh", 0).toFloat();
+    dist_metric = settings.value("atc/dist_metric", false).toBool();
 
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, [=,this](QString id) {
         current_ac = id;
@@ -62,7 +64,7 @@ AtcPanel::AtcPanel(QWidget *parent) : QWidget(parent)
     connect(t, &QTimer::timeout, this, &AtcPanel::tick);
     t->start(250);
 
-    setToolTip("Click the altitude reference to change it; right click: set the QNH");
+    setToolTip("Click the altitude reference or the distance unit to change it; right click: set the QNH");
 }
 
 QSize AtcPanel::sizeHint() const {
@@ -93,6 +95,23 @@ void AtcPanel::setAltRef(AltRef ref) {
     alt_ref = ref;
     getAppSettings().setValue("atc/alt_ref", static_cast<int>(ref));
     update();
+}
+
+void AtcPanel::setDistMetric(bool metric) {
+    dist_metric = metric;
+    getAppSettings().setValue("atc/dist_metric", metric);
+    update();
+}
+
+/// A distance (m) in NM with 1 decimal, or in m with 1 decimal, from 1000 m in km with 2 decimals
+QString AtcPanel::distText(double d) const {
+    if(!dist_metric) {
+        return QString("%1 NM").arg(d / NM, 0, 'f', 1);
+    }
+    if(d < 1000) {
+        return QString("%1 m").arg(d, 0, 'f', 1);
+    }
+    return QString("%1 km").arg(d / 1000, 0, 'f', 2);
 }
 
 void AtcPanel::askQnh() {
@@ -127,6 +146,12 @@ void AtcPanel::mousePressEvent(QMouseEvent *event) {
             return;
         }
     }
+    for(int i=0; i<2; i++) {
+        if(dist_chips[i].contains(event->position())) {
+            setDistMetric(i == 1);
+            return;
+        }
+    }
 }
 
 void AtcPanel::contextMenuEvent(QContextMenuEvent *event) {
@@ -136,6 +161,13 @@ void AtcPanel::contextMenuEvent(QContextMenuEvent *event) {
         a->setCheckable(true);
         a->setChecked(alt_ref == i);
         connect(a, &QAction::triggered, this, [=,this]() {setAltRef(static_cast<AltRef>(i));});
+    }
+    menu.addSeparator();
+    for(int i=0; i<2; i++) {
+        auto a = menu.addAction(i ? "Distances in m / km" : "Distances in NM");
+        a->setCheckable(true);
+        a->setChecked(dist_metric == (i == 1));
+        connect(a, &QAction::triggered, this, [=,this]() {setDistMetric(i == 1);});
     }
     menu.addSeparator();
     connect(menu.addAction("Set QNH..."), &QAction::triggered, this, &AtcPanel::askQnh);
@@ -259,7 +291,7 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
                 double d = std::hypot(dn, de);
                 int brg = (int)std::lround(std::atan2(de, dn) * 180. / M_PI / 10.) * 10;
                 brg = ((brg % 360) + 360) % 360;
-                home = QString("bearing %1, %2 NM").arg(brg, 3, 10, QChar('0')).arg(d / NM, 0, 'f', 1);
+                home = QString("bearing %1, %2").arg(brg, 3, 10, QChar('0')).arg(distText(d));
             }
         }
         auto ap = status->getMessage("AP_STATUS");
@@ -315,26 +347,31 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
     row("SPEED (ground)", speed, "kt");
     QRectF alt_row = row("ALTITUDE", alt, alt_unit);
 
-    // altitude reference chips
-    {
+    // a row of chips at the top right (the chosen one highlighted), their rectangles in rects
+    auto chips = [&](double top, const char* const* names, int n, int chosen, QRectF* rects) {
         auto cf = font(16, false);
         p.setFont(cf);
         QFontMetricsF fm(cf);
         double x = w - m;
-        for(int i=2; i>=0; i--) {
-            double tw = fm.horizontalAdvance(REF_NAMES[i]) + 12 * s;
+        for(int i=n-1; i>=0; i--) {
+            double tw = fm.horizontalAdvance(names[i]) + 12 * s;
             x -= tw;
-            QRectF chip(x, alt_row.top() + 6 * s, tw, 22 * s);
-            ref_chips[i] = chip;
-            bool on = alt_ref == i;
+            QRectF chip(x, top + 6 * s, tw, 22 * s);
+            rects[i] = chip;
+            bool on = chosen == i;
             p.setPen(Qt::NoPen);
             p.setBrush(on ? accent : line);
             p.drawRoundedRect(chip, 5 * s, 5 * s);
             p.setPen(on ? QColor(Qt::black) : caption);
-            p.drawText(chip, Qt::AlignCenter, REF_NAMES[i]);
+            p.drawText(chip, Qt::AlignCenter, names[i]);
             x -= 6 * s;
         }
         p.setBrush(Qt::NoBrush);
+    };
+
+    // altitude reference chips
+    {
+        chips(alt_row.top(), REF_NAMES, 3, alt_ref, ref_chips);
         p.setPen(caption);
         p.setFont(font(14, false));
         p.drawText(QRectF(m, alt_row.top(), w - 2 * m, alt_row.height() - 8 * s),
@@ -350,29 +387,32 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
     // timer of this aircraft
     auto timer = timers.find(current_ac);
     bool timer_on = timer != timers.end();
+    // narrow button on two lines, the time and the distance left-aligned at its right
     p.setPen(line);
     p.drawLine(QPointF(m, y), QPointF(w - m, y));
-    timer_button = QRectF(m, y + 12 * s, 154 * s, 40 * s);
+    chips(y, DIST_NAMES, 2, dist_metric ? 1 : 0, dist_chips);
+    timer_button = QRectF(m, y + 12 * s, 100 * s, 96 * s);
     p.setPen(Qt::NoPen);
     p.setBrush(timer_on ? line : red);
     p.drawRoundedRect(timer_button, 8 * s, 8 * s);
     p.setBrush(Qt::NoBrush);
     p.setPen(timer_on ? text : QColor(Qt::white));
     p.setFont(font(18, false));
-    p.drawText(timer_button, Qt::AlignCenter, timer_on ? "RESET TIMER" : "START TIMER");
-    QString since = "--:--", dist = "~ -- NM";
+    p.drawText(timer_button, Qt::AlignCenter, timer_on ? "RESET\nTIMER" : "START\nTIMER");
+    QString since = "--:--", dist = "~ --";
     if(timer_on) {
         qint64 sec = timer->second.clock.elapsed() / 1000;
         since = QString("%1:%2").arg(sec / 60, 2, 10, QChar('0')).arg(sec % 60, 2, 10, QChar('0'));
-        dist = QString("~ %1 NM").arg(timer->second.dist / NM, 0, 'f', 1);
+        dist = "~ " + distText(timer->second.dist);
     }
+    const double tx = timer_button.right() + 16 * s;
     p.setPen(caption);
     p.setFont(font(14, false));
-    p.drawText(QPointF(m + 174 * s, y + 24 * s), "since");
+    p.drawText(QPointF(tx, y + 24 * s), "since");
     p.setPen(timer_on ? accent : caption);
     p.setFont(font(40, true));
-    p.drawText(QPointF(m + 174 * s, y + 62 * s), since);
-    p.drawText(QPointF(m, y + 104 * s), dist);
+    p.drawText(QPointF(tx, y + 62 * s), since);
+    p.drawText(QPointF(tx, y + 104 * s), dist);
     y += 120 * s;
 
     p.setPen(line);
