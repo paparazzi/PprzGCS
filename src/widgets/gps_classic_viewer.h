@@ -14,6 +14,7 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event);
+    void mousePressEvent(QMouseEvent *event);
 
 signals:
 
@@ -26,6 +27,8 @@ private:
         int flags;
         int cno;
         int age;
+        int elev;   // deg
+        int azim;   // deg
     };
 
     std::tuple<uint16_t, QList<struct SvInfo>> getData();
@@ -35,6 +38,9 @@ private:
     QString ac_id;
 
     QSize minSize;
+
+    bool show_sky = false;  // the sky plot below the bars, saved
+    QRectF sky_button;      // from the last paint
 
 };
 

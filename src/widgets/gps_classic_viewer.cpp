@@ -1,10 +1,13 @@
 #include "gps_classic_viewer.h"
 #include "AircraftManager.h"
+#include "gcs_utils.h"
+#include <cmath>
 #include <QDebug>
 
 GPSClassicViewer::GPSClassicViewer(QString ac_id, QWidget *parent) : QWidget(parent),
     ac_id(ac_id)
 {
+    show_sky = getAppSettings().value("gps/sky_plot", false).toBool();
     connect(AircraftManager::get()->getAircraft(ac_id)->getStatus(),
             &AircraftStatus::engine_status, this, [=,this]() {
         this->update();
@@ -18,7 +21,29 @@ GPSClassicViewer::GPSClassicViewer(QString ac_id, QWidget *parent) : QWidget(par
 /**
  * The position accuracy and the number of satellites used, with the quality as a colored bar
  * and text; below, a signal bar per satellite (green: used, gray: not used, faded: old).
+ * The button next to the quality shows a sky plot below the bars: the satellites by azimuth
+ * (north up) and elevation (zenith in the middle, horizon on the outer circle), in the color of
+ * their bar, SBAS satellites (id 120 to 158) in yellow.
  */
+// green: used, gray: not used, faded: old
+static QColor barColor(int flags, int age) {
+    QColor c = (flags & 0x01) ? QColor(0x1f7a3f) : QColor(0x8c959f);
+    if(age > 4) {
+        c.setAlpha(90);
+    }
+    return c;
+}
+
+void GPSClassicViewer::mousePressEvent(QMouseEvent *event) {
+    if(event->button() == Qt::LeftButton && sky_button.contains(event->position())) {
+        show_sky = !show_sky;
+        getAppSettings().setValue("gps/sky_plot", show_sky);
+        update();
+        return;
+    }
+    QWidget::mousePressEvent(event);
+}
+
 void GPSClassicViewer::paintEvent(QPaintEvent *event) {
     (void)event;
     QPainter p(this);
@@ -70,12 +95,26 @@ void GPSClassicViewer::paintEvent(QPaintEvent *event) {
     pill_font.setPixelSize(12);
     pill_font.setBold(true);
     p.setFont(pill_font);
-    QRectF pill(qMax(205.0, width() - 72.0), 12, 70, 24);
+    QRectF pill(qMax(205.0, width() - 98.0), 12, 70, 24);
     p.setPen(Qt::NoPen);
     p.setBrush(quality_bg);
     p.drawRoundedRect(pill, 12, 12);
     p.setPen(quality);
     p.drawText(pill, Qt::AlignCenter, quality_txt);
+
+    // sky plot button: a chevron, right when hidden, down when shown
+    sky_button = QRectF(pill.right() + 4, 12, 24, 24);
+    p.setPen(Qt::NoPen);
+    p.setBrush(show_sky ? QColor(128, 128, 128, 70) : QColor(128, 128, 128, 30));
+    p.drawRoundedRect(sky_button, 6, 6);
+    p.setPen(QPen(text, 1.8, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    p.setBrush(Qt::NoBrush);
+    QPointF bc = sky_button.center();
+    if(show_sky) {
+        p.drawPolyline(QPolygonF({bc + QPointF(-5, -2.5), bc + QPointF(0, 2.5), bc + QPointF(5, -2.5)}));
+    } else {
+        p.drawPolyline(QPolygonF({bc + QPointF(-2.5, -5), bc + QPointF(2.5, 0), bc + QPointF(-2.5, 5)}));
+    }
 
     // satellites: signal bars (C/N0), the id below
     const int top = 52, bars_h = 70, label_h = 16;
@@ -93,10 +132,7 @@ void GPSClassicViewer::paintEvent(QPaintEvent *event) {
         for(int i=0; i<n; i++) {
             auto &sv = infos[i];
             double h = qBound(2.0, (sv.cno - 15) * bars_h / 35.0, qMax(2.0, static_cast<double>(bars_h)));
-            QColor c = (sv.flags & 0x01) ? QColor(0x1f7a3f) : QColor(0x8c959f);
-            if(sv.age > 4) {
-                c.setAlpha(90);
-            }
+            QColor c = barColor(sv.flags, sv.age);
             p.setPen(Qt::NoPen);
             p.setBrush(c);
             p.drawRoundedRect(QRectF(i * w + 2, top + bars_h - h, w - 4, h), 2, 2);
@@ -104,6 +140,50 @@ void GPSClassicViewer::paintEvent(QPaintEvent *event) {
             p.drawText(QRectF(i * w, top + bars_h + 2, w, label_h), Qt::AlignCenter, QString::number(sv.id));
         }
         minSize = QSize(280, top + bars_h + label_h + 4);
+    }
+
+    if(show_sky) {
+        // sky plot: zenith in the middle, horizon on the outer circle, circles every 30 deg
+        const double label = 14;
+        const double top_sky = minSize.height() + 4;
+        const double d = qBound(120.0, width() - 2 * label, 260.0);
+        const double r = d / 2;
+        const QPointF c(width() / 2., top_sky + label + r);
+        QColor grid = text;
+        grid.setAlpha(60);
+        p.setPen(grid);
+        p.setBrush(Qt::NoBrush);
+        for(double el: {0., 30., 60.}) {
+            p.drawEllipse(c, r * (90 - el) / 90, r * (90 - el) / 90);
+        }
+        p.drawLine(c - QPointF(r, 0), c + QPointF(r, 0));
+        p.drawLine(c - QPointF(0, r), c + QPointF(0, r));
+        p.setFont(caption);
+        p.setPen(secondary);
+        for(auto [letter, dx, dy]: {std::tuple{"N", 0., -1.}, {"E", 1., 0.}, {"S", 0., 1.}, {"W", -1., 0.}}) {
+            QPointF lc = c + QPointF(dx, dy) * (r + label / 2);
+            p.drawText(QRectF(lc.x() - label, lc.y() - label / 2, 2 * label, label), Qt::AlignCenter, letter);
+        }
+        for(auto &sv: infos) {
+            if(sv.elev < 0 || (sv.elev == 0 && sv.azim == 0)) {
+                continue;   // position not known
+            }
+            double dist = r * (90 - qMin(sv.elev, 90)) / 90;
+            double az = sv.azim * M_PI / 180;
+            QPointF pos = c + QPointF(std::sin(az), -std::cos(az)) * dist;
+            QColor col = barColor(sv.flags, sv.age);
+            if(sv.id >= 120 && sv.id <= 158) {
+                col = QColor(224, 176, 0, sv.age > 4 ? 90 : 255);
+            }
+            double rad = (sv.flags & 0x01) ? 6 : 4;
+            p.setPen(Qt::NoPen);
+            p.setBrush(col);
+            p.drawEllipse(pos, rad, rad);
+            p.setPen(secondary);
+            p.drawText(QRectF(pos.x() + rad, pos.y() - rad - 10, 30, 12), Qt::AlignLeft | Qt::AlignVCenter,
+                       QString::number(sv.id));
+        }
+        minSize.setHeight(top_sky + 2 * label + d + 2);
     }
     // the quality as a thin line at the bottom
     p.setPen(Qt::NoPen);
@@ -139,16 +219,16 @@ std::tuple<uint16_t, QList<struct GPSClassicViewer::SvInfo>> GPSClassicViewer::g
     msg->getField("flags", _flags);
     //msg->getField("qi", _qis);
     msg->getField("cno", _cnos);
-    //msg->getField("elev", _elevs);
-    //msg->getField("azim", _azims);
+    msg->getField("elev", _elevs);
+    msg->getField("azim", _azims);
     msg->getField("msg_age", _msg_ages);
 
     QList<int> svids;
     QList<int> flags;
     //QList<int> qis;
     QList<int> cno;
-    //QList<int> elevs;
-    //QList<int> azims;
+    QList<int> elevs;
+    QList<int> azims;
     QList<int> msg_age;
 
     QList< struct SvInfo> infos;
@@ -171,9 +251,13 @@ std::tuple<uint16_t, QList<struct GPSClassicViewer::SvInfo>> GPSClassicViewer::g
         cno.append(cn.toInt());
     }
 
-    // elevs
+    for(auto &e: _elevs.split(',')) {
+        elevs.append(e.toInt());
+    }
 
-    // azims
+    for(auto &a: _azims.split(',')) {
+        azims.append(a.toInt());
+    }
 
     for(auto &age: _msg_ages.split(',')) {
         msg_age.append(age.toInt());
@@ -183,7 +267,9 @@ std::tuple<uint16_t, QList<struct GPSClassicViewer::SvInfo>> GPSClassicViewer::g
     // the lists should have the same length; do not read past a shorter one
     int n = qMin(qMin(svids.size(), flags.size()), qMin(cno.size(), msg_age.size()));
     for(int i=0; i<n; i++) {
-        infos.append(SvInfo{svids[i], flags[i], cno[i], msg_age[i]});
+        // elevation and azimuth unknown (-1) when missing
+        infos.append(SvInfo{svids[i], flags[i], cno[i], msg_age[i],
+                            i < elevs.size() ? elevs[i] : -1, i < azims.size() ? azims[i] : 0});
     }
 
     QMutableListIterator<struct SvInfo> i(infos);

@@ -1,6 +1,7 @@
 # Changelog
 
 ## NEXT
++ GPS: a button next to the quality shows a sky plot of the satellites (azimuth, elevation) below the bars, in the color of their bar, SBAS in yellow
 + Builds on Ubuntu 26.04; extra-cmake-modules no longer needed (icons and desktop files installed with GNUInstallDirs)
 + Map: an aircraft icon that cannot be opened is reported instead of loaded as an empty image
 + Checklist: `optional`, `help` (tooltip) and `remember` attributes, `choice` items and a Reset button
