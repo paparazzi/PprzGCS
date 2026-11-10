@@ -22,8 +22,8 @@ class QTimer;
  *    (also with multipartmux, the frames are found by their JPEG markers)
  *
  * Layout: <widget name="video"><configure source="udp://:5600" width="320"/></widget>
- * The width (pixels) is the preferred size of the widget, the height follows the
- * aspect ratio of the video. Change it with Ctrl + mouse wheel or the context menu.
+ * The width (pixels) is the size the widget asks for at the start, the height follows
+ * the aspect ratio of the video. To change the size, drag the corner of the panel.
  */
 class VideoViewer : public QWidget, public Configurable
 {
@@ -37,8 +37,6 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
-    void wheelEvent(QWheelEvent *event) override;
-    void contextMenuEvent(QContextMenuEvent *event) override;
 
 private:
     void setSource(const QString &source);
@@ -46,7 +44,6 @@ private:
     void readTcp();
     void connectTcp();
     void showFrame(const QByteArray &jpeg);
-    void setPreferredWidth(int width);
 
     QUrl source;
     QUdpSocket *udp = nullptr;

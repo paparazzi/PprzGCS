@@ -5,10 +5,6 @@
 #include <QTimer>
 #include <QNetworkDatagram>
 #include <QDomElement>
-#include <QWheelEvent>
-#include <QContextMenuEvent>
-#include <QMenu>
-#include <cmath>
 
 static constexpr int NO_VIDEO_TIMEOUT = 1000;   // ms without frame before "No video"
 static constexpr int RECONNECT_PERIOD = 1000;   // ms between TCP connection attempts
@@ -42,14 +38,8 @@ void VideoViewer::configure(QDomElement conf)
         setSource(conf.attribute("source"));
     }
     if(conf.hasAttribute("width")) {
-        setPreferredWidth(conf.attribute("width").toInt());
+        preferred_width = qBound(MIN_WIDTH, conf.attribute("width").toInt(), MAX_WIDTH);
     }
-}
-
-void VideoViewer::setPreferredWidth(int width)
-{
-    preferred_width = qBound(MIN_WIDTH, width, MAX_WIDTH);
-    updateGeometry();   // the panel holding the widget follows its size hint
 }
 
 QSize VideoViewer::sizeHint() const
@@ -62,29 +52,6 @@ QSize VideoViewer::sizeHint() const
 QSize VideoViewer::minimumSizeHint() const
 {
     return QSize(MIN_WIDTH, MIN_WIDTH * 3 / 4);
-}
-
-void VideoViewer::wheelEvent(QWheelEvent *event)
-{
-    if(event->modifiers() & Qt::ControlModifier) {
-        // 10 % per wheel step
-        double steps = event->angleDelta().y() / 120.;
-        setPreferredWidth(qRound(preferred_width * std::pow(1.1, steps)));
-        event->accept();
-    } else {
-        QWidget::wheelEvent(event);
-    }
-}
-
-void VideoViewer::contextMenuEvent(QContextMenuEvent *event)
-{
-    QMenu menu(this);
-    for(auto [name, width]: {std::pair{tr("Small"), 320}, {tr("Medium"), 480}, {tr("Large"), 640}, {tr("Extra large"), 960}}) {
-        auto action = menu.addAction(name, this, [this, width = width]() { setPreferredWidth(width); });
-        action->setCheckable(true);
-        action->setChecked(preferred_width == width);
-    }
-    menu.exec(event->globalPos());
 }
 
 void VideoViewer::setSource(const QString &src)

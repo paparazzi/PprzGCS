@@ -1,6 +1,7 @@
 # Changelog
 
 ## NEXT
++ Video: the size menu (right click) and Ctrl + mouse wheel removed; drag the corner of the panel to resize it
 + Builds on Ubuntu 26.04; extra-cmake-modules no longer needed (icons and desktop files installed with GNUInstallDirs)
 + Map: an aircraft icon that cannot be opened is reported instead of loaded as an empty image
 + Checklist: `optional`, `help` (tooltip) and `remember` attributes, `choice` items and a Reset button
