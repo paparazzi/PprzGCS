@@ -31,13 +31,14 @@ private:
         int flags;      // bit 0: used in the fix
         int cno;        // signal, dBHz
         int age;        // of the last data
-        int elev;       // deg above the horizon, -1: unknown
+        int elev;       // whole deg above the horizon: 0 horizon, 90 straight up; outside -90..90: unknown
         int azim;       // deg from north, clockwise
 
         bool used() const { return flags & 0x01; }
         bool sbas() const { return id >= 120 && id <= 158; }
         bool old() const { return age > 4; }
-        bool positionKnown() const { return elev >= 0 && !(elev == 0 && azim == 0); }
+        // also unknown: 0 / 0, sent for an idle channel
+        bool positionKnown() const { return elev >= -90 && elev <= 90 && !(elev == 0 && azim == 0); }
     };
 
     struct GpsData {

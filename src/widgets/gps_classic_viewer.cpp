@@ -20,7 +20,8 @@ const double SKY_MIN_DIAMETER = 120;
 const double SKY_MAX_DIAMETER = 260;
 const double SKY_LABEL = 14;    // room for N, E, S, W around the outer circle
 
-const int MAX_AGE = 60;         // satellites with older data are left out
+const int MAX_AGE = 60;
+const int UNKNOWN_ELEV = 127;   // outside -90..90: the position is not known         // satellites with older data are left out
 
 const QColor USED(0x1f7a3f);
 const QColor NOT_USED(0x8c959f);
@@ -207,7 +208,7 @@ double GPSClassicViewer::drawBars(QPainter &p, const GpsData &gps, double top)
 }
 
 /// The satellites by azimuth (north up) and elevation: zenith in the middle, horizon on the outer
-/// circle, circles every 30 deg; bigger when used
+/// circle (also for a satellite below it), circles every 30 deg; bigger when used
 double GPSClassicViewer::drawSkyPlot(QPainter &p, const GpsData &gps, double top)
 {
     const QColor text = palette().color(QPalette::WindowText);
@@ -281,7 +282,7 @@ GPSClassicViewer::GpsData GPSClassicViewer::getData() const
     int n = std::min({ids.size(), flags.size(), cnos.size(), ages.size()});
     for(int i = 0; i < n; i++) {
         Satellite sv{ids[i], flags[i], cnos[i], ages[i],
-                     i < elevs.size() ? elevs[i] : -1, i < azims.size() ? azims[i] : 0};
+                     i < elevs.size() ? elevs[i] : UNKNOWN_ELEV, i < azims.size() ? azims[i] : 0};
         if(sv.id != 0 && sv.age <= MAX_AGE) {   // id 0: empty channel
             gps.satellites.append(sv);
         }
