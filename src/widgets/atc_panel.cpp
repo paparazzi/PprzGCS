@@ -429,10 +429,10 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
     chips(y, DIST_NAMES, 2, dist_metric ? 1 : 0, dist_chips);
     timer_button = QRectF(m, y + 12 * s, 100 * s, 96 * s);
     p.setPen(Qt::NoPen);
-    p.setBrush(timer_on ? line : red);
+    p.setBrush(timer_on ? red : line);
     p.drawRoundedRect(timer_button, 8 * s, 8 * s);
     p.setBrush(Qt::NoBrush);
-    p.setPen(timer_on ? text : QColor(Qt::white));
+    p.setPen(timer_on ? QColor(Qt::white) : text);
     p.setFont(font(18, false));
     p.drawText(timer_button, Qt::AlignCenter, timer_on ? "RESET\nTIMER" : "START\nTIMER");
     QString since = "--:--", dist = "~--";
