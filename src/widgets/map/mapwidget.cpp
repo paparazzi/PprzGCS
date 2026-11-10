@@ -102,6 +102,7 @@ protected:
         }
         card->setMinimumSize(s);
         card->setMaximumSize(s);
+        card->setProperty("user_size", s);     // also while dragging, the card keeps this size
     }
     void mouseReleaseEvent(QMouseEvent*) override {
         resized(card->size());
@@ -118,8 +119,10 @@ protected:
             QTimer::singleShot(0, card, [card = card]() {
                 QSize need = card->minimumSizeHint();
                 if(card->minimumSize() == card->maximumSize()) {
-                    // a size set by the user: not smaller than needed
-                    QSize s = card->size().expandedTo(need);
+                    // a size set by the user: not smaller than needed, and back to it when the
+                    // panel needs less again (e.g. the sky plot of the GPS hidden)
+                    QSize user = card->property("user_size").toSize();
+                    QSize s = (user.isValid() ? user : card->size()).expandedTo(need);
                     if(s != card->size()) {
                         card->setMinimumSize(s);
                         card->setMaximumSize(s);
