@@ -142,6 +142,7 @@ void GPSClassicViewer::paintEvent(QPaintEvent *event) {
         minSize = QSize(280, top + bars_h + label_h + 4);
     }
 
+    const int height_without_sky = minSize.height();
     if(show_sky) {
         // sky plot: zenith in the middle, horizon on the outer circle, circles every 30 deg
         const double label = 14;
@@ -189,6 +190,8 @@ void GPSClassicViewer::paintEvent(QPaintEvent *event) {
     p.setPen(Qt::NoPen);
     p.setBrush(quality);
     p.drawRoundedRect(QRectF(0, minSize.height() - 3, width(), 3), 1.5, 1.5);
+    // the sky plot is not part of the size set by the user for a card on the map rail
+    setProperty("rail_extra_height", minSize.height() - height_without_sky);
     if(minimumSize() != minSize) {
         setMinimumSize(minSize);
     }
