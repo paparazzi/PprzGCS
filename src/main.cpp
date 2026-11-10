@@ -15,9 +15,7 @@
 #include "AircraftManager.h"
 #include "globalconfig.h"
 
-#if defined(SPEECH_ENABLED)
 #include "speaker.h"
-#endif
 
 #include "pprzgcs_version.h"
 #ifndef PPRZGCS_VERSION
@@ -93,17 +91,13 @@ int main(int argc, char *argv[])
         parser.addOption({{"b", "bus"}, "Ivy bus", "bus"});
         parser.addOption({{"g", "swarm-conf", "groups-conf"},
                           "Swarm XML configuration file.", "file"});
-#if defined(SPEECH_ENABLED)
         parser.addOption({"speech", "Enable speech"});
-#endif
         parser.process(a);
 
         setVerbose(parser.isSet("v"));
 
-#if defined(SPEECH_ENABLED)
         setSpeech(parser.isSet("speech"));
         pprzApp()->toolbox()->speaker()->enableSpeech(parser.isSet("speech"));
-#endif
 
         if(parser.isSet("fpedit") && PprzMain::launch_type == DEFAULT) {
             PprzMain::launch_type = FLIGHTPLAN_EDIT;

@@ -2,7 +2,10 @@
 #define SPEAKER_H
 
 #include <QObject>
+#include <QProcess>
+#if defined(QT_TEXTTOSPEECH)
 #include <QTextToSpeech>
+#endif
 #include "PprzToolbox.h"
 #include "PprzApplication.h"
 #include "pprz_dispatcher.h"
@@ -16,8 +19,16 @@ public:
     explicit Speaker(PprzApplication* app, PprzToolbox* toolbox);
     void setToolbox(PprzToolbox* toolbox) override;
     void addSentence(QString txt, int priority=0, int validity=30);
-    void registerMessage(QString name, QString text, int period, int expire, int priority, bool onChange, QString postprocessing);
+    void registerMessage(QString name, QString text, int period, int priority, int expire, bool onChange, QString postprocessing);
     void setLocale(QString l);
+
+    /// whether this system can speak: Qt TextToSpeech, or spd-say or espeak-ng
+    static bool available();
+
+    /// the voices of speech-dispatcher for this language ("en"), as "module:voice|voice (module, language)"
+    static QStringList voices(QString language = "en");
+    /// says a sentence once with this voice and rate (the settings dialog, before they are saved)
+    static void trySay(QString text, QString voice, int rate);
 signals:
 
 public slots:
@@ -58,8 +69,21 @@ private:
     void make_sentence(struct Message msg, QString field, pprzlink::Message pprz_msg, QString ac_id);
 
     void say();
+    bool speaking();
+    void speak(QString text);
 
+    /// the speech program of the system (spd-say or espeak-ng), and its arguments before the text
+    static QStringList systemCommand();
+    /// the arguments of systemCommand() for a sentence: voice "module:voice" ("" the default of the language)
+    static QStringList systemArguments(QString text, QString language, QString voice, int rate);
+    /// how it is said: Paparazzi the Italian way
+    static QString spoken(QString text);
+
+#if defined(QT_TEXTTOSPEECH)
     QTextToSpeech* tts;
+#endif
+    QProcess* process;
+    bool enabled;
     QString locale;
 
     QList<Sentence> sentences;

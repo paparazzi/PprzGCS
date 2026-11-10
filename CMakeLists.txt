@@ -45,7 +45,7 @@ if(CCACHE_PROGRAM)
     set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
 endif()
 
-option(SPEECH "Enable speech" OFF)
+option(SPEECH "Speak with Qt TextToSpeech (Qt 6.4 or later), else with spd-say or espeak-ng" OFF)
 option(GRPC "Enable GRPC" OFF)
 
 add_subdirectory(ext/pprzlinkQt ${CMAKE_BINARY_DIR}/pprzlinkqt)
@@ -60,11 +60,11 @@ add_definitions(-DPPRZGCS_SOURCE_DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data")
 set(QT_COMPONENTS Widgets Xml Network Svg)
 
 if(SPEECH)
-    message("SPEECH ENABLED !")
-    add_definitions(-DSPEECH_ENABLED)
+    message("SPEECH: Qt TextToSpeech ENABLED !")
+    add_definitions(-DQT_TEXTTOSPEECH)
     list(APPEND QT_COMPONENTS TextToSpeech)
 else()
-    message("SPEECH DISABLED !")
+    message("SPEECH: Qt TextToSpeech DISABLED, speaking with spd-say or espeak-ng")
 endif()
 
 
