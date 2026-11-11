@@ -170,6 +170,10 @@ void TileProvider::downloadTile(TileItem* tile, TileItem* tileObj) {
     QUrl url = tileUrl(tile->coordinates());
     QNetworkRequest request = QNetworkRequest(url);
     request.setRawHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:72.0) Gecko");
+    // HTTP/1.1 (the default of Qt 5): with HTTP/2 (the default of Qt 6) many of the parallel requests of
+    // the tiles fail with Qt 6.2 ("Server is unable to maintain the header compression context",
+    // "Connection closed"), e.g. on GitHub Pages
+    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
     QList<QVariant> l = QList<QVariant>();
     l.push_back(QVariant::fromValue(tile));     // tile being downloaded
     l.push_back(QVariant::fromValue(tileObj));  // tile to display

@@ -14,6 +14,14 @@
 		format=".png"
 	/>
 	<source
+		name="Cyberzoo" title="Cyberzoo (TU Delft)" dir="CYBERZOO"
+		addr="https://docs.paparazziuav.org/pprzgcs-tiles/CYBERZOO/{z}/{x}/{y}.png"
+		zoomMin="16" zoomMax="23"
+		xMin="486749" xMax="487234" yMin="6798418" yMax="6798616"
+		tileSize="256"
+		format=".png"
+	/>
+	<source
 		name="Google" title="Satellite" dir="GOOGLE"
 		addr="https://mt1.google.com/vt/lyrs=s&amp;x={x}&amp;y={y}&amp;z={z}"
 		zoomMin="0" zoomMax="19"
