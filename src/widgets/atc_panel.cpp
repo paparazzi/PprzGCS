@@ -22,13 +22,15 @@ static double pressureAltFt(double p, double ref) {
     return 145366.45 * (1. - std::pow(p / ref, 0.190284));
 }
 
-static const char* REF_NAMES[3] = {"QNH", "QFE", "FL"};
+static const char* REF_NAMES[3] = {"QNH", "GPS", "FL"};
+static const char* DIST_NAMES[2] = {"NM", "m"};
 
 AtcPanel::AtcPanel(QWidget *parent) : QWidget(parent)
 {
     auto settings = getAppSettings();
     alt_ref = static_cast<AltRef>(qBound(0, settings.value("atc/alt_ref", QNH).toInt(), 2));
     qnh_set = settings.value("atc/qnh", 0).toFloat();
+    dist_metric = settings.value("atc/dist_metric", false).toBool();
 
     connect(DispatcherUi::get(), &DispatcherUi::ac_selected, this, [=,this](QString id) {
         current_ac = id;
@@ -54,15 +56,23 @@ AtcPanel::AtcPanel(QWidget *parent) : QWidget(parent)
             }
         }
     });
-    PprzDispatcher::get()->bindOptional("INS_REF", this, [=,this](QString sender, pprzlink::Message msg) {
-        msg.getField("baro_qfe", air_data[sender].qfe);
-    });
+    // height above MSL from the GPS receiver (not the altitude of the state estimate),
+    // in mm: hmsl of GPS_INT and GPS_LLA, alt of GPS
+    for(auto [name, field]: {std::pair{"GPS_INT", "hmsl"}, {"GPS_LLA", "hmsl"}, {"GPS", "alt"}}) {
+        PprzDispatcher::get()->bindOptional(name, this, [=,this](QString sender, pprzlink::Message msg) {
+            int32_t mm;
+            msg.getField(field, mm);
+            auto& ad = air_data[sender];
+            ad.hmsl = mm / 1000.;
+            ad.last_gps.start();
+        });
+    }
 
     auto t = new QTimer(this);
     connect(t, &QTimer::timeout, this, &AtcPanel::tick);
     t->start(250);
 
-    setToolTip("Click the altitude reference to change it; right click: set the QNH");
+    setToolTip("Click the altitude reference, the distance unit or the FROM waypoint to change it; right click: set the QNH");
 }
 
 QSize AtcPanel::sizeHint() const {
@@ -74,16 +84,16 @@ QSize AtcPanel::minimumSizeHint() const {
 }
 
 void AtcPanel::tick() {
-    // the timer distance: the last ground speed, also when the link is lost
-    qint64 now = timer.isValid() ? timer.elapsed() : 0;
-    if(timer_on) {
-        timer_dist += last_speed * (now - last_tick_ms) / 1000.;
-        last_tick_ms = now;
-    }
-    if(AircraftManager::get()->aircraftExists(current_ac)) {
-        auto fp = AircraftManager::get()->getAircraft(current_ac)->getStatus()->getMessage("FLIGHT_PARAM");
-        if(fp) {
-            fp->getField("speed", last_speed);
+    // the timer distances: the last ground speed of each aircraft, also when the link is lost
+    for(auto &[id, t]: timers) {
+        qint64 now = t.clock.elapsed();
+        t.dist += t.speed * (now - t.last_tick_ms) / 1000.;
+        t.last_tick_ms = now;
+        if(AircraftManager::get()->aircraftExists(id)) {
+            auto fp = AircraftManager::get()->getAircraft(id)->getStatus()->getMessage("FLIGHT_PARAM");
+            if(fp) {
+                fp->getField("speed", t.speed);
+            }
         }
     }
     update();
@@ -93,6 +103,47 @@ void AtcPanel::setAltRef(AltRef ref) {
     alt_ref = ref;
     getAppSettings().setValue("atc/alt_ref", static_cast<int>(ref));
     update();
+}
+
+void AtcPanel::setDistMetric(bool metric) {
+    dist_metric = metric;
+    getAppSettings().setValue("atc/dist_metric", metric);
+    update();
+}
+
+/// A distance (m) in NM with 2 decimals, or in m with 1 decimal, from 1000 m in km with 2 decimals
+QString AtcPanel::distText(double d) const {
+    if(!dist_metric) {
+        return QString("%1 NM").arg(d / NM, 0, 'f', 2);
+    }
+    if(d < 1000) {
+        return QString("%1 m").arg(d, 0, 'f', 1);
+    }
+    return QString("%1 km").arg(d / 1000, 0, 'f', 2);
+}
+
+/// Menu of the waypoints of the selected aircraft, to choose the one the bearing is from
+void AtcPanel::chooseFromWp(QPoint pos) {
+    if(!AircraftManager::get()->aircraftExists(current_ac)) {
+        return;
+    }
+    auto fpl = AircraftManager::get()->getAircraft(current_ac)->getFlightPlan();
+    if(!fpl) {
+        return;
+    }
+    QString chosen = from_wp.count(current_ac) ? from_wp[current_ac] : "";
+    QMenu menu(this);
+    auto def = menu.addAction("ARP, else HOME", this, [this]() { from_wp.erase(current_ac); update(); });
+    def->setCheckable(true);
+    def->setChecked(chosen.isEmpty());
+    menu.addSeparator();
+    for(auto w: fpl->getWaypoints()) {
+        QString n = w->getName();
+        auto a = menu.addAction(n, this, [this, n]() { from_wp[current_ac] = n; update(); });
+        a->setCheckable(true);
+        a->setChecked(n == chosen);
+    }
+    menu.exec(pos);
 }
 
 void AtcPanel::askQnh() {
@@ -112,20 +163,28 @@ void AtcPanel::mousePressEvent(QMouseEvent *event) {
         return;
     }
     if(timer_button.contains(event->position())) {
-        if(timer_on) {
-            timer_on = false;   // reset
+        if(timers.count(current_ac)) {
+            timers.erase(current_ac);   // reset
         } else {
-            timer_on = true;
-            timer.start();
-            last_tick_ms = 0;
-            timer_dist = 0;
+            timers[current_ac].clock.start();
+            tick();     // the ground speed right away
         }
         update();
+        return;
+    }
+    if(from_row.contains(event->position())) {
+        chooseFromWp(event->globalPosition().toPoint());
         return;
     }
     for(int i=0; i<3; i++) {
         if(ref_chips[i].contains(event->position())) {
             setAltRef(static_cast<AltRef>(i));
+            return;
+        }
+    }
+    for(int i=0; i<2; i++) {
+        if(dist_chips[i].contains(event->position())) {
+            setDistMetric(i == 1);
             return;
         }
     }
@@ -138,6 +197,13 @@ void AtcPanel::contextMenuEvent(QContextMenuEvent *event) {
         a->setCheckable(true);
         a->setChecked(alt_ref == i);
         connect(a, &QAction::triggered, this, [=,this]() {setAltRef(static_cast<AltRef>(i));});
+    }
+    menu.addSeparator();
+    for(int i=0; i<2; i++) {
+        auto a = menu.addAction(i ? "Distances in m / km" : "Distances in NM");
+        a->setCheckable(true);
+        a->setChecked(dist_metric == (i == 1));
+        connect(a, &QAction::triggered, this, [=,this]() {setDistMetric(i == 1);});
     }
     menu.addSeparator();
     connect(menu.addAction("Set QNH..."), &QAction::triggered, this, &AtcPanel::askQnh);
@@ -181,12 +247,11 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
         auto status = ac->getStatus();
         auto fp = status->getMessage("FLIGHT_PARAM");
         if(fp) {
-            float course, gspeed, alt_msl, agl;
+            float course, gspeed, alt_msl;
             double lat, lon;
             fp->getField("course", course);
             fp->getField("speed", gspeed);
             fp->getField("alt", alt_msl);
-            fp->getField("agl", agl);
             fp->getField("lat", lat);
             fp->getField("long", lon);
             int hdg = (int)std::lround(course / 5.f) * 5;
@@ -211,21 +276,20 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
             switch(alt_ref) {
             case QNH:
                 ft = baro ? pressureAltFt(ad.pressure, qnh * 100.) : alt_msl * FT;
-                alt_info = baro ? QString("QNH %1 hPa, %2").arg(qnh, 0, 'f', 0).arg(qnh_src) : "GPS altitude (MSL)";
+                alt_info = baro ? QString("QNH %1 hPa, %2").arg(qnh, 0, 'f', 0).arg(qnh_src) : "no pressure: altitude of the aircraft (MSL)";
                 break;
-            case QFE:
-                if(baro && ad.qfe > 0) {
-                    ft = pressureAltFt(ad.pressure, ad.qfe);
-                    alt_info = QString("QFE %1 hPa").arg(ad.qfe / 100., 0, 'f', 0);
+            case GPS:
+                if(ad.last_gps.isValid() && ad.last_gps.elapsed() < 12000) {   // slow telemetry modes: every 5 s
+                    ft = ad.hmsl * FT;
+                    alt_info = "GPS, above MSL";
                 } else {
-                    ft = agl * FT;
-                    alt_info = "above ground, GPS";
+                    alt_info = "no GPS height";
                 }
                 break;
             case FL:
                 if(baro) {
                     ft = pressureAltFt(ad.pressure, STD_P);
-                    alt_info = QString("%1 ft on 1013 hPa").arg(std::lround(ft / 10.) * 10);
+                    alt_info = QString("%1 ft on 1013 hPa").arg(std::lround(ft / 5.) * 5);
                 } else {
                     alt_info = "no pressure";
                 }
@@ -236,7 +300,7 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
                 alt = QString("FL%1").arg(qMax(0L, std::lround(ft / 100.)), 3, 10, QChar('0'));
                 alt_unit = "";
             } else if(!std::isnan(ft)) {
-                alt = QString::number(std::lround(ft / 10.) * 10);   // what is said on the radio
+                alt = QString::number(std::lround(ft / 5.) * 5);     // what is said on the radio
             }
 
             // bearing and distance from HOME
@@ -249,8 +313,10 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
                 }
                 return nullptr;
             };
-            Waypoint* wp = find_wp("ARP");
+            Waypoint* wp = from_wp.count(current_ac) ? find_wp(from_wp[current_ac]) : nullptr;
             if(wp) {
+                ref_name = wp->getName();
+            } else if((wp = find_wp("ARP"))) {
                 ref_name = "ARP";
             } else {
                 wp = find_wp("HOME");
@@ -259,9 +325,9 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
                 double dn = (lat - wp->getLat()) * M_PI / 180. * 6371000.;
                 double de = (lon - wp->getLon()) * M_PI / 180. * 6371000. * std::cos(wp->getLat() * M_PI / 180.);
                 double d = std::hypot(dn, de);
-                int brg = (int)std::lround(std::atan2(de, dn) * 180. / M_PI / 10.) * 10;
+                int brg = (int)std::lround(std::atan2(de, dn) * 180. / M_PI / 5.) * 5;
                 brg = ((brg % 360) + 360) % 360;
-                home = QString("bearing %1, %2 NM").arg(brg, 3, 10, QChar('0')).arg(d / NM, 0, 'f', 1);
+                home = QString("bearing %1, %2").arg(brg, 3, 10, QChar('0')).arg(distText(d));
             }
         }
         auto ap = status->getMessage("AP_STATUS");
@@ -317,26 +383,31 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
     row("SPEED (ground)", speed, "kt");
     QRectF alt_row = row("ALTITUDE", alt, alt_unit);
 
-    // altitude reference chips
-    {
+    // a row of chips at the top right (the chosen one highlighted), their rectangles in rects
+    auto chips = [&](double top, const char* const* names, int n, int chosen, QRectF* rects) {
         auto cf = font(16, false);
         p.setFont(cf);
         QFontMetricsF fm(cf);
         double x = w - m;
-        for(int i=2; i>=0; i--) {
-            double tw = fm.horizontalAdvance(REF_NAMES[i]) + 12 * s;
+        for(int i=n-1; i>=0; i--) {
+            double tw = fm.horizontalAdvance(names[i]) + 12 * s;
             x -= tw;
-            QRectF chip(x, alt_row.top() + 6 * s, tw, 22 * s);
-            ref_chips[i] = chip;
-            bool on = alt_ref == i;
+            QRectF chip(x, top + 6 * s, tw, 22 * s);
+            rects[i] = chip;
+            bool on = chosen == i;
             p.setPen(Qt::NoPen);
             p.setBrush(on ? accent : line);
             p.drawRoundedRect(chip, 5 * s, 5 * s);
             p.setPen(on ? QColor(Qt::black) : caption);
-            p.drawText(chip, Qt::AlignCenter, REF_NAMES[i]);
+            p.drawText(chip, Qt::AlignCenter, names[i]);
             x -= 6 * s;
         }
         p.setBrush(Qt::NoBrush);
+    };
+
+    // altitude reference chips
+    {
+        chips(alt_row.top(), REF_NAMES, 3, alt_ref, ref_chips);
         p.setPen(caption);
         p.setFont(font(14, false));
         p.drawText(QRectF(m, alt_row.top(), w - 2 * m, alt_row.height() - 8 * s),
@@ -349,37 +420,43 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
     p.drawText(QRectF(m, time_row.top(), w - 2 * m, time_row.height() - 14 * s),
                Qt::AlignRight | Qt::AlignBottom, bat);
 
-    // timer
+    // timer of this aircraft
+    auto timer = timers.find(current_ac);
+    bool timer_on = timer != timers.end();
+    // narrow button on two lines, the time and the distance left-aligned at its right
     p.setPen(line);
     p.drawLine(QPointF(m, y), QPointF(w - m, y));
-    timer_button = QRectF(m, y + 12 * s, 154 * s, 40 * s);
+    chips(y, DIST_NAMES, 2, dist_metric ? 1 : 0, dist_chips);
+    timer_button = QRectF(m, y + 12 * s, 100 * s, 96 * s);
     p.setPen(Qt::NoPen);
-    p.setBrush(timer_on ? line : red);
+    p.setBrush(timer_on ? red : line);
     p.drawRoundedRect(timer_button, 8 * s, 8 * s);
     p.setBrush(Qt::NoBrush);
-    p.setPen(timer_on ? text : QColor(Qt::white));
+    p.setPen(timer_on ? QColor(Qt::white) : text);
     p.setFont(font(18, false));
-    p.drawText(timer_button, Qt::AlignCenter, timer_on ? "RESET TIMER" : "START TIMER");
-    QString since = "--:--", dist = "~ -- NM";
+    p.drawText(timer_button, Qt::AlignCenter, timer_on ? "RESET\nTIMER" : "START\nTIMER");
+    QString since = "--:--", dist = "~--";
     if(timer_on) {
-        qint64 sec = timer.elapsed() / 1000;
+        qint64 sec = timer->second.clock.elapsed() / 1000;
         since = QString("%1:%2").arg(sec / 60, 2, 10, QChar('0')).arg(sec % 60, 2, 10, QChar('0'));
-        dist = QString("~ %1 NM").arg(timer_dist / NM, 0, 'f', 1);
+        dist = "~" + distText(timer->second.dist);
     }
+    const double tx = timer_button.right() + 16 * s;
     p.setPen(caption);
     p.setFont(font(14, false));
-    p.drawText(QPointF(m + 174 * s, y + 24 * s), "since");
+    p.drawText(QPointF(tx, y + 24 * s), "since");
     p.setPen(timer_on ? accent : caption);
     p.setFont(font(40, true));
-    p.drawText(QPointF(m + 174 * s, y + 62 * s), since);
-    p.drawText(QPointF(m, y + 104 * s), dist);
+    p.drawText(QPointF(tx, y + 62 * s), since);
+    p.drawText(QPointF(tx, y + 104 * s), dist);
     y += 120 * s;
 
     p.setPen(line);
     p.drawLine(QPointF(m, y), QPointF(w - m, y));
     p.setPen(caption);
     p.setFont(font(16, false));
-    p.drawText(QPointF(m, y + 24 * s), "FROM " + ref_name);
+    from_row = QRectF(m, y, w - 2 * m, 64 * s);
+    p.drawText(QPointF(m, y + 24 * s), "FROM " + ref_name + " ▾");
     p.setPen(text);
     p.setFont(font(24, false));
     p.drawText(QPointF(m, y + 54 * s), home);
