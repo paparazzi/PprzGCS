@@ -50,6 +50,9 @@ private:
     void addFilter(QString category, QString name, QString color);
     void applyFilter();
     void updateDestButton();
+    /// remove the messages shown (those of the current filter)
+    void clearMessages();
+    void updateClearButton();
     QWidget* filter_row;
     FlowLayout* filter_layout;     // the filters wrap on more lines (many aircraft)
     QList<QPushButton*> filter_order;
@@ -57,6 +60,7 @@ private:
     QMap<QString, QPushButton*> filters;
     QString current_filter = "all";
     QToolButton* dest_button;
+    QToolButton* clear_button;
 
     Ui::Chat *ui;
 };

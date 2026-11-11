@@ -5,6 +5,7 @@
 #include <QTime>
 #include <QLabel>
 #include <QVBoxLayout>
+#include <QFrame>
 
 /**
  * The messages of one sender in a row: a tag with the name in its aircraft color, the messages
@@ -26,15 +27,19 @@ public:
     /// "alarm", "warning" or "" from the words in the text
     static QString level(QString text);
     QString currentLevel() {return _level;}
+    /// the name, color and filter of the sender again: an aircraft whose config came after its first messages
+    void updateSender();
 
 private:
     void updateLevel();
 
     QString source;
     QString dest;
+    bool sent;
     QString _category;
     QTime chat_time;
     QLabel* tag;
+    QFrame* body;
     QVBoxLayout* lines_layout;
     QString _level;
 };
