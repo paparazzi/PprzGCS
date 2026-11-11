@@ -236,16 +236,6 @@ void TileProvider::handleReply(QNetworkReply *reply) {
 
 bool TileProvider::load_tile_from_disk(TileItem* item) {
     QString path = tilePath(item->coordinates());
-    if(!QFile::exists(path)) {
-        // else the tiles that come with PprzGCS (data/map: e.g. the Cyberzoo), in the same layout
-        auto coor = item->coordinates();
-        QString app_path = appConfig()->value("APP_DATA_PATH").toString() + "/map/" + _config->dir + "/" +
-                QString::number(coor.zoom()) + "/" + QString::number(coor.xi()) + "/" +
-                QString::number(coor.yi()) + _config->format;
-        if(QFile::exists(app_path)) {
-            path = app_path;
-        }
-    }
     std::ifstream f(path.toStdString());
     if(f.good()) {
         // tile found on disk

@@ -1,8 +1,9 @@
 # Local map tiles
 
-Tiles for a place that no online map shows in detail (an indoor flight arena), shipped in
-`data/map/<DIR>/<z>/<x>/<y>.png` with a source in `data/tile_sources.xml` (no `addr`). PprzGCS reads a
-tile from the tiles folder of the settings first, else from `data/map`.
+Tiles for a place that no online map shows in detail (an indoor flight arena). They are served from
+[paparazzi/pprzgcs-tiles](https://github.com/paparazzi/pprzgcs-tiles) (GitHub Pages), one folder per place,
+`<DIR>/<z>/<x>/<y>.png`, with a source in `data/tile_sources.xml` that has its address and its limits
+(`xMin`/`xMax`/`yMin`/`yMax`, web mercator meters). That repository says how to add a place.
 
 ## Cyberzoo (TU Delft)
 
@@ -16,7 +17,7 @@ plans 238 deg: to turn it, change `--x-bearing`.
 ```bash
 ./render_cyberzoo.py $PAPARAZZI_HOME/sw/ext/tudelft_gazebo_models/models/cyberzoo /tmp/cyberzoo.png 0.01 8
 ./add_furniture.py /tmp/cyberzoo.png /tmp/cyberzoo_tables.png 0.01 8
-./make_tiles.py /tmp/cyberzoo_tables.png ../../data/map/CYBERZOO --res 0.01 \
+./make_tiles.py /tmp/cyberzoo_tables.png <pprzgcs-tiles>/CYBERZOO --res 0.01 \
     --lat0 51.990634 --lon0 4.376789 --x-bearing 247 --crop-box -5.3 5.3 -5.3 6.6 --zmin 18 --zmax 23
 ```
 

@@ -15,8 +15,9 @@
 	/>
 	<source
 		name="Cyberzoo" title="Cyberzoo (TU Delft)" dir="CYBERZOO"
-		addr=""
+		addr="https://docs.paparazziuav.org/pprzgcs-tiles/CYBERZOO/{z}/{x}/{y}.png"
 		zoomMin="18" zoomMax="23"
+		xMin="487069" xMax="487374" yMin="6798279" yMax="6798585"
 		tileSize="256"
 		format=".png"
 	/>
