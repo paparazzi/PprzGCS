@@ -19,6 +19,7 @@
                 </widget>
                 <widget name="atc" icon="rail_atc.svg" title="ATC"/>
                 <widget name="energy" icon="rail_energy.svg" title="Energy"/>
+                <widget name="attitude3d" icon="rail_attitude3d.svg" title="Attitude 3D"/>
             </columnLeft>
           </configure>
         </widget>
