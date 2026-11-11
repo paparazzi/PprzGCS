@@ -51,6 +51,21 @@
 #include "map_items/grid_item.h"
 
 
+/// Height a panel in the card shows on demand (e.g. the sky plot of the GPS), from its property
+/// "rail_extra_height": not part of the size set by the user, so the card shrinks back when it
+/// is hidden, also after a resize while it was shown.
+static QSize railExtraSize(QWidget* card) {
+    int extra = 0;
+    for(auto w: card->findChildren<QWidget*>()) {
+        bool ok = false;
+        int h = w->property("rail_extra_height").toInt(&ok);
+        if(ok && w->isVisible()) {
+            extra = qMax(extra, h);
+        }
+    }
+    return QSize(0, extra);
+}
+
 /// The resize grip in the bottom right corner of a rail card: drag to resize, double click to
 /// go back to the size the panel asks for.
 class CardGrip : public QWidget {
@@ -102,9 +117,11 @@ protected:
         }
         card->setMinimumSize(s);
         card->setMaximumSize(s);
+        // also while dragging, the card keeps this size (without the extra height)
+        card->setProperty("user_size", s - railExtraSize(card));
     }
     void mouseReleaseEvent(QMouseEvent*) override {
-        resized(card->size());
+        resized(card->size() - railExtraSize(card));
     }
     void mouseDoubleClickEvent(QMouseEvent*) override {
         resized(QSize());
@@ -118,8 +135,11 @@ protected:
             QTimer::singleShot(0, card, [card = card]() {
                 QSize need = card->minimumSizeHint();
                 if(card->minimumSize() == card->maximumSize()) {
-                    // a size set by the user: not smaller than needed
-                    QSize s = card->size().expandedTo(need);
+                    // a size set by the user (plus the extra height shown now): not smaller than
+                    // needed, and back to it when the panel needs less again
+                    QSize user = card->property("user_size").toSize();
+                    QSize base = user.isValid() ? user + railExtraSize(card) : card->size();
+                    QSize s = base.expandedTo(need);
                     if(s != card->size()) {
                         card->setMinimumSize(s);
                         card->setMaximumSize(s);
@@ -2949,8 +2969,8 @@ void MapWidget::fitRailCards() {
     for(auto card: rail_cards) {
         QSize user = card->property("user_size").toSize();
         if(user.isValid()) {
-            // a saved size is not smaller than the panel needs now
-            user = user.expandedTo(card->minimumSizeHint());
+            // a saved size (plus the extra height shown now) is not smaller than the panel needs now
+            user = (user + railExtraSize(card)).expandedTo(card->minimumSizeHint());
             QSize s(user.width(), qMin(user.height(), qMax(card->minimumSizeHint().height(), height() - 30)));
             card->setMinimumSize(s);
             card->setMaximumSize(s);
