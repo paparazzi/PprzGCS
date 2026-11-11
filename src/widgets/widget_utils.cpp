@@ -23,6 +23,7 @@
 #include "video_viewer.h"
 #include "atc_panel.h"
 #include "energy_viewer.h"
+#include "attitude_3d.h"
 
 #include <QDebug>
 #include <QLabel>
@@ -35,7 +36,7 @@ using ac_widgets_list = std::tuple<
     Commands, FlightPlanViewerV2,
     GPSClassicViewer, FlightPlanEditor,
     Plotter, LinkStatus, GVFViewer, GridViewer,
-    Checklist, EnergyViewer
+    Checklist, EnergyViewer, Attitude3D
 >;
 using simple_widgets_list = std::tuple<PprzMap, Pfd, Chat, VideoViewer, GroupController, AtcPanel>;
 using containers_list = std::tuple<StackContainer, ListContainer>;
@@ -53,6 +54,7 @@ std::map<QString, size_t> AC_WIDGETS_MAP = {
     {"checklist", tuple_element_index_v<Checklist, ac_widgets_list>},
     {"grid_viewer", tuple_element_index_v<GridViewer, ac_widgets_list>},
     {"energy", tuple_element_index_v<EnergyViewer, ac_widgets_list>},
+    {"attitude3d", tuple_element_index_v<Attitude3D, ac_widgets_list>},
 };
 
 
