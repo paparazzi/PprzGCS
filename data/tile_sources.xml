@@ -1,15 +1,9 @@
 <sources>
 	<source
-		name="LubrizolPM5" title="Lubrizol PM5 (local)" dir="LubrizolPM5"
-		addr=""
-		zoomMin="0" zoomMax="18"
-		tileSize="256"
-		format=".png"
-	/>
-	<source
-		name="Voliere" title="Volière (local)" dir="VOLIERE"
-		addr=""
+		name="ENAC Arena" title="ENAC Arena" dir="VOLIERE"
+		addr="https://docs.paparazziuav.org/pprzgcs-tiles/ENAC_ARENA/{z}/{x}/{y}.png"
 		zoomMin="15" zoomMax="25"
+		xMin="163880" xMax="165104" yMin="5397065" yMax="5398289"
 		tileSize="256"
 		format=".png"
 	/>
@@ -54,13 +48,6 @@
 	<source
 		name="OpenStreetMap" title="Street map" dir="OSM_CLASSIC"
 		addr="http://tile.openstreetmap.org/{z}/{x}/{y}.png"
-		zoomMin="0" zoomMax="19"
-		tileSize="256"
-		format=".png"
-	/>
-	<source
-		name="Hiking" title="Hiking map" dir="HIKING"
-		addr="http://tile.waymarkedtrails.org/hiking/{z}/{x}/{y}.png"
 		zoomMin="0" zoomMax="19"
 		tileSize="256"
 		format=".png"
