@@ -160,5 +160,46 @@ Add a plot coming from the telemetry class by dropping a field from the *Message
 This widget can  be configured from the layout file. See :ref:`Layout/Plotter <layout_plotter>`.
 
 
+Energy
+------
 
+name: ``energy``
 
+The energy left in the battery of the selected aircraft, as the ``energy_mon`` tool of Paparazzi, in % of Wh (not Ah:
+the last part of the charge holds less energy, at a lower voltage). Inputs, from ``ENGINE_STATUS``: the voltage, the
+current when the aircraft measures it, else the throttle, and the charge used (mAh) when the aircraft counts it.
+
+The voltage of a cell at rest gives its charge through the discharge curve of its chemistry; under load the voltage
+sags by ΔV. Pills at the top choose the estimator, from simple to complex, also in flight:
+
++ V: the voltage alone (default), which reads low under load but never too high. With a ΔV per cell set in the
+  Battery window, the pill reads V + ΔV and the voltage + ΔV is used while the motors run; this is right only when
+  the real sag is close to ΔV (a slow fixed wing sags less than a hovering multirotor).
++ mAh: the charge at the start (from the voltage) minus the charge used over the capacity. The charge used is the one
+  counted on board (``charge`` of ``ENERGY``), else the current counted by the panel; also when the count of the
+  aircraft stays below half of the current it sends (a count that does not count). Needs the capacity.
++ V - I·R: the voltage + 60 % of R x load. R is learned from the changes of the load: each change of current or
+  throttle changes the voltage by R x the change; in mΩ per cell with the current, else in mV per % of throttle. Only
+  60 % of the sag is corrected, so that the charge left is not overestimated: it reads a little low, but closer than
+  the voltage alone. A voltage reading that jumps with the throttle (motor ripple) makes R too high and the estimate
+  too optimistic: then use V or mAh. Until the load has changed
+  enough, ΔV of the Battery window is used and the panel says so.
++ Filter: the mAh count, pulled slowly (5 min) towards the charge of V - I·R. Needs the capacity, and the current or
+  the charge used; else V - I·R is used.
+
+Under the curve: the charge left, the flight time to the reserve, and what the estimator uses: ΔV (V), the mAh used
+(mAh), or R (V - I·R, Filter). The time to the reserve comes from the mean power of the last 30 s and the capacity,
+else (no current or no capacity) from how fast the energy went down in the last 2 minutes.
+
+The curve: the voltage at rest of the chemistry (black), and under it the curve under load, minus the ΔV of the
+estimator (orange; none for mAh), with the battery on it: at rest on the black curve, under load below it, and the
+reserve in red.
+
+The battery, which changes seldom, is set in a window (click *Battery...* on the battery line, or right click): the
+chemistry (LiPo, LiHV, Li-ion or LiFe; on the flat curve of LiFe the voltage says little about the charge), the cells
+in series, the capacity in mAh, the reserve and ΔV under load per cell. The cells and the capacity start from the
+airframe (``BAT_NB_CELLS``, ``MAX_BAT_CAPACITY`` in mAh); without ``BAT_NB_CELLS`` the cells are guessed from the
+first voltage. The mAh count starts again from the voltage only when the aircraft's own count starts again, or
+after a reboot (no telemetry for a few seconds) with a nearly full battery (above 90 %); otherwise, use New battery in
+the right-click menu. Change the capacity when you use another battery, also in flight: the mAh estimate follows at once;
+a button sets it back to the value of the airframe. Right click: the battery window, new battery. The choices are saved per aircraft.

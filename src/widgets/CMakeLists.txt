@@ -7,6 +7,8 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/checklist.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/checklist.ui
     ${CMAKE_CURRENT_SOURCE_DIR}/commands.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/energy_estimator.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/energy_viewer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flightplan_viewerv2.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flightplaneditor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flightplaneditor.ui
