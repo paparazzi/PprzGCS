@@ -180,7 +180,8 @@ explains them):
   counted on board (``charge`` of ``ENERGY``), else the current counted by the panel; also when the count of the
   aircraft stays below half of the current it sends (a count that does not count). Needs the capacity.
 + V - I·R: the voltage + 60 % of R x load. R is learned from the changes of the load: each change of current or
-  throttle changes the voltage by R x the change; in mΩ per cell with the current, else in mV per % of throttle. Only
+  throttle changes the voltage by R x the change; in mΩ per cell with the current, else in mV per % of throttle. R
+  starts at 0 and rises only as the changes of the load confirm it, so that the first hover does not make it too high. Only
   60 % of the sag is corrected, so that the charge left is not overestimated: it reads a little low, but closer than
   the voltage alone. A voltage reading that jumps with the throttle (motor ripple) makes R too high and the estimate
   too optimistic: then use V or mAh. Until the load has changed

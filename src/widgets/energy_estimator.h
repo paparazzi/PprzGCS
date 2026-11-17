@@ -17,7 +17,8 @@
  * - SAG: OCV = V + 60 % of R * load, R learned: the load is the current (R in Ohm) when it is
  *   measured, else the throttle (R in V per %). R0 and Rp (polarization, 10 s) are fitted by
  *   recursive least squares on the changes of voltage and load over 2 s, which cancels the slow
- *   fall of the OCV, updated only when the load changes. Only 60 % is corrected: the estimate
+ *   fall of the OCV, updated only when the load changes. R starts at 0 with a small covariance:
+ *   the first changes of the load cannot make it too high at once. Only 60 % is corrected: the estimate
  *   must not show more charge than is left. A voltage reading that follows the throttle (motor
  *   ripple) makes R too high, and then even 60 % can be too much.
  * - FILTER: complementary filter: the charge used of CHARGE, pulled towards the SoC of SAG with a

@@ -33,6 +33,8 @@ const double TAU_V = 10;            // s, low-pass of the voltage
 const double LAG = 2;               // s, the changes over this time
 const double TAU_X = 10;            // s, the polarization
 const double MEMORY = 300;          // s, of the least squares
+const double R_PRIOR = 0.01;        // start covariance of R0 and Rp: R starts at 0 and grows only as
+                                    // the changes of the load show it (not too high from the first ones)
 const int MIN_UPDATES = 10;
 
 // FILTER
@@ -129,7 +131,7 @@ void EnergyEstimator::resetSag()
     for(int i = 0; i < 3; i++) {
         th[i] = 0;
         for(int j = 0; j < 3; j++) {
-            P[i][j] = i == j ? 1 : 0;
+            P[i][j] = i == j ? (i < 2 ? R_PRIOR : 1) : 0;
         }
     }
     updates = 0;
