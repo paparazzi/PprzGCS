@@ -202,4 +202,5 @@ airframe (``BAT_NB_CELLS``, ``MAX_BAT_CAPACITY`` in mAh); without ``BAT_NB_CELLS
 first voltage. The mAh count starts again from the voltage only when the aircraft's own count starts again, or
 after a reboot (no telemetry for a few seconds) with a nearly full battery (above 90 %); otherwise, use New battery in
 the right-click menu. Change the capacity when you use another battery, also in flight: the mAh estimate follows at once;
-a button sets it back to the value of the airframe. Right click: the battery window, new battery. The choices are saved per aircraft.
+a button sets it back to the value of the airframe. Right click: the battery window, new battery. The choices are saved per aircraft;
+the cells and the capacity only when they differ from the airframe, else they follow the airframe.

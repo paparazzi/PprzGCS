@@ -70,25 +70,28 @@ EnergyViewer::EnergyViewer(QString ac_id, QWidget *parent) : QWidget(parent),
     if(ac->getAirframe() != nullptr) {
         auto cells = ac->getAirframe()->getDefine("BAT_NB_CELLS");
         if(cells && cells->value.toInt() > 0) {
-            estimator.setCells(cells->value.toInt());
+            airframe_cells = cells->value.toInt();
+            estimator.setCells(airframe_cells);
             cells_known = true;
         }
         auto cap = ac->getAirframe()->getDefine("MAX_BAT_CAPACITY");
         if(cap && cap->value.toDouble() > 0) {
-            airframe_capacity = cap->value.toDouble();
+            // in mAh; also accepted in Ah
+            airframe_capacity = cap->value.toDouble() * (cap->unit.compare("Ah", Qt::CaseInsensitive) == 0 ? 1000 : 1);
             estimator.setCapacity(airframe_capacity);
         }
     }
-    // the choices of the user, per aircraft, over the airframe
+    // the choices of the user, per aircraft, over the airframe (the cells and the capacity are saved
+    // only when they differ from the airframe: else they follow it, also when it changes)
     auto settings = getAppSettings();
     QString key = "energy/" + ac_name + "/";
     estimator.setChemistry(static_cast<EnergyEstimator::Chemistry>(
         qBound(0, settings.value(key + "chemistry", 0).toInt(), EnergyEstimator::CHEMISTRIES - 1)));
     estimator.setMethod(static_cast<EnergyEstimator::Method>(
-        qBound(0, settings.value(key + "estimator", EnergyEstimator::SAG).toInt(), EnergyEstimator::METHODS - 1)));
+        qBound(0, settings.value(key + "estimator", EnergyEstimator::VOLTAGE).toInt(), EnergyEstimator::METHODS - 1)));
     if(settings.contains(key + "cells")) {
-        estimator.setCells(settings.value(key + "cells").toInt());
-        cells_known = true;
+        estimator.setCells(settings.value(key + "cells").toInt());     // 0: guessed from the voltage
+        cells_known = estimator.getCells() > 0;
     }
     if(settings.contains(key + "capacity")) {
         estimator.setCapacity(settings.value(key + "capacity").toDouble());
@@ -453,15 +456,20 @@ void EnergyViewer::askSettings()
     cells_known = cells->value() > 0;
     if(cells_known) {
         estimator.setCells(cells->value());
-        settings.setValue(key + "cells", cells->value());
-    } else {
+    } else if(was_known) {
+        estimator.setCells(0);  // guessed again from the next voltage
+    }
+    if(cells->value() == airframe_cells) {
         settings.remove(key + "cells");
-        if(was_known) {
-            estimator.setCells(0);  // guessed again from the next voltage
-        }
+    } else {
+        settings.setValue(key + "cells", cells->value());
     }
     estimator.setCapacity(capacity->value());
-    settings.setValue(key + "capacity", capacity->value());
+    if(capacity->value() == qRound(airframe_capacity)) {
+        settings.remove(key + "capacity");
+    } else {
+        settings.setValue(key + "capacity", capacity->value());
+    }
     estimator.setReserve(reserve->value() / 100.);
     settings.setValue(key + "reserve", reserve->value() / 100.);
     estimator.setSag(sag->value());

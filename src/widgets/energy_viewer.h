@@ -47,6 +47,7 @@ private:
     QElapsedTimer clock;
     bool seen_current = false;      // the aircraft measures the current
     bool cells_known = false;       // from the airframe or the user, else guessed from the voltage
+    int airframe_cells = 0;         // BAT_NB_CELLS of the airframe; 0: none
     double airframe_capacity = 0;   // mAh, MAX_BAT_CAPACITY of the airframe; 0: none
     QRectF method_chips[EnergyEstimator::METHODS];
     QRectF battery_line;

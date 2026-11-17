@@ -126,7 +126,7 @@ private:
     std::deque<Point> points;       // the last seconds
     std::deque<std::pair<double, double>> history;     // (t, energy), for the trend
     Chemistry chemistry = LIPO;
-    Method method = SAG;
+    Method method = VOLTAGE;
     int cells = 0;          // 0: guessed from the voltage
     bool cells_guessed = false;     // guessed: a higher voltage can raise it
     double capacity = 0;    // mAh
