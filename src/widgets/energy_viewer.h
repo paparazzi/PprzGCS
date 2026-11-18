@@ -57,7 +57,9 @@ private:
     bool cells_known = false;       // from the airframe or the user, else guessed from the voltage
     int airframe_cells = 0;         // BAT_NB_CELLS of the airframe; 0: none
     double airframe_capacity = 0;   // mAh, BAT_CAPACITY of the airframe; 0: none
-    int airframe_chemistry = -1;    // BAT_CHEMISTRY of the airframe; -1: none (LiPo)
+    /// BAT_CHEMISTRY of the airframe; LiPo when not set (or not known)
+    EnergyEstimator::Chemistry airframe_chemistry = EnergyEstimator::LIPO;
+    bool airframe_chemistry_set = false;
     double airframe_resistance = 0; // mOhm per cell, BAT_CELL_RESISTANCE of the airframe; 0: none
     double level_low = 0;           // V of the pack: LOW_BAT_LEVEL, CRITIC_BAT_LEVEL and
     double level_critic = 0;        // CATASTROPHIC_BAT_LEVEL of the airframe; 0: not set

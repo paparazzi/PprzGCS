@@ -3,6 +3,7 @@
 #include "gcs_utils.h"
 #include <QComboBox>
 #include <QContextMenuEvent>
+#include <QDebug>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QFormLayout>
@@ -110,7 +111,14 @@ EnergyViewer::EnergyViewer(QString ac_id, QWidget *parent) : QWidget(parent),
         level_catastrophic = level("CATASTROPHIC_BAT_LEVEL");
         auto chem = ac->getAirframe()->getDefine("BAT_CHEMISTRY");
         if(chem) {
-            airframe_chemistry = chemistryOf(chem->value);
+            int c = chemistryOf(chem->value);
+            if(c >= 0) {
+                airframe_chemistry = static_cast<EnergyEstimator::Chemistry>(c);
+                airframe_chemistry_set = true;
+            } else {
+                qWarning() << "Energy:" << ac_name << ": BAT_CHEMISTRY" << chem->value
+                           << "not known (LIPO, LIHV, LIION or LIFE), LiPo used";
+            }
         }
         auto res = ac->getAirframe()->getDefine("BAT_CELL_RESISTANCE");
         if(res && res->value.toDouble() > 0) {
@@ -123,7 +131,7 @@ EnergyViewer::EnergyViewer(QString ac_id, QWidget *parent) : QWidget(parent),
     auto settings = getAppSettings();
     QString key = "energy/" + ac_name + "/";
     estimator.setChemistry(static_cast<EnergyEstimator::Chemistry>(
-        qBound(0, settings.value(key + "chemistry", qMax(0, airframe_chemistry)).toInt(), EnergyEstimator::CHEMISTRIES - 1)));
+        qBound(0, settings.value(key + "chemistry", airframe_chemistry).toInt(), EnergyEstimator::CHEMISTRIES - 1)));
     estimator.setStartResistance(settings.value(key + "resistance", airframe_resistance).toDouble() / 1000);
     estimator.setMethod(static_cast<EnergyEstimator::Method>(
         qBound(0, settings.value(key + "estimator", EnergyEstimator::VOLTAGE).toInt(), EnergyEstimator::METHODS - 1)));
@@ -666,9 +674,8 @@ void EnergyViewer::askSettings()
         chem->addItem(chemistryName(static_cast<EnergyEstimator::Chemistry>(i)));
     }
     chem->setCurrentIndex(estimator.getChemistry());
-    if(airframe_chemistry >= 0) {
-        chem->setToolTip("Airframe (BAT_CHEMISTRY): " + chemistryName(static_cast<EnergyEstimator::Chemistry>(airframe_chemistry)));
-    }
+    chem->setToolTip(airframe_chemistry_set ? "Airframe (BAT_CHEMISTRY): " + chemistryName(airframe_chemistry)
+                                             : QString("No BAT_CHEMISTRY in the airframe: LiPo by default"));
     form->addRow("Chemistry", chem);
 
     auto cells = new QSpinBox(&dialog);
@@ -751,7 +758,7 @@ void EnergyViewer::askSettings()
     auto settings = getAppSettings();
     QString key = "energy/" + ac_name + "/";
     estimator.setChemistry(static_cast<EnergyEstimator::Chemistry>(chem->currentIndex()));
-    if(chem->currentIndex() == qMax(0, airframe_chemistry)) {
+    if(chem->currentIndex() == airframe_chemistry) {
         settings.remove(key + "chemistry");
     } else {
         settings.setValue(key + "chemistry", chem->currentIndex());
