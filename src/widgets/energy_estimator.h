@@ -26,8 +26,9 @@
  *
  * The energy left is in Wh (the integral of the OCV over the charge), not in Ah: the last
  * percent of charge holds less energy, at a lower voltage. The time left: from the mean power of
- * the last 30 s and the capacity when both are known, else from how fast the energy went down over
- * the last 2 min.
+ * the last 30 s and the capacity when both are known (none without power, on the ground), else
+ * from how fast the energy went down over the last 2 min while the motors run. Below the reserve:
+ * the time to empty.
  */
 class EnergyEstimator
 {

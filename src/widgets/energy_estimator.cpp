@@ -413,8 +413,11 @@ EnergyEstimator::Result EnergyEstimator::estimate(Method chosen) const
         }
     }
 
-    // else the time left from the trend of the energy
-    if(r.minutes < 0 && history.size() >= 10 && last.t - history.front().first > 60) {
+    // else (no current or no capacity) the time left from the trend of the energy, while the motors
+    // run. With the current and the capacity, only the power counts: no power (on the ground), no
+    // time, and a jump of the estimate (e.g. the sag gone at the landing) does not change it.
+    bool from_power = with_current && capacity > 0;
+    if(!from_power && motors && r.minutes < 0 && history.size() >= 10 && last.t - history.front().first > 60) {
         double st = 0, se = 0, stt = 0, ste = 0;
         int k = history.size();
         for(auto &[t, e] : history) {

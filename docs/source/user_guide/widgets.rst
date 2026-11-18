@@ -191,7 +191,8 @@ explains them):
 
 Under the curve: the charge left, the flight time to the reserve, and what the estimator uses: ΔV (V), the mAh used
 (mAh), or R (V - I·R, Filter). The time to the reserve comes from the mean power of the last 30 s and the capacity,
-else (no current or no capacity) from how fast the energy went down in the last 2 minutes. Below the reserve, it shows the time to
+else (no current or no capacity) from how fast the energy went down in the last 2 minutes while the motors run. With the
+current and the capacity it is the energy left (in Wh) over the mean power: on the ground (no power) it shows no time. Below the reserve, it shows the time to
 empty (0 %), in red.
 
 In V - I·R and Filter, a plot under the curve shows the last 5 minutes: the measured cell voltage (top) and current,
