@@ -102,14 +102,17 @@ EnergyViewer::EnergyViewer(QString ac_id, QWidget *parent) : QWidget(parent),
             airframe_capacity = cap->value.toDouble() * (cap->unit.compare("Ah", Qt::CaseInsensitive) == 0 ? 1000 : 1);
             estimator.setCapacity(airframe_capacity);
         }
-        // the alarm levels of the aircraft, drawn on the curve (0: not set, the default per cell)
-        auto level = [&](QString name) {
+        // the alarm levels of the aircraft, drawn on the curve: the pack voltages the alerts use
+        // (not set: the default per cell times BAT_NB_CELLS, else 3 cells); marked when a default
+        level_low = ac->getAirframe()->batteryLevel("LOW_BAT_LEVEL");
+        level_critic = ac->getAirframe()->batteryLevel("CRITIC_BAT_LEVEL");
+        level_catastrophic = ac->getAirframe()->batteryLevel("CATASTROPHIC_BAT_LEVEL");
+        for(auto name : {"LOW_BAT_LEVEL", "CRITIC_BAT_LEVEL", "CATASTROPHIC_BAT_LEVEL"}) {
             auto d = ac->getAirframe()->getDefine(name);
-            return d && d->value.toDouble() > 0 ? d->value.toDouble() : 0.0;
-        };
-        level_low = level("LOW_BAT_LEVEL");
-        level_critic = level("CRITIC_BAT_LEVEL");
-        level_catastrophic = level("CATASTROPHIC_BAT_LEVEL");
+            if(!(d && d->value.toDouble() > 0)) {
+                level_defaults << name;
+            }
+        }
         auto chem = ac->getAirframe()->getDefine("BAT_CHEMISTRY");
         if(chem) {
             int c = chemistryOf(chem->value);
@@ -591,17 +594,18 @@ void EnergyViewer::drawCurve(QPainter &p, QRectF area)
         level_labels.clear();
         auto &labels = level_labels;
         for(const auto &l : levels) {
-            // not set in the airframe: the default per cell (as the alerts use)
-            const int n = estimator.getCells();
-            double pack = l.v > 0 ? l.v : Airframe::defaultCellLevel(l.define) * n;
-            double v = pack / n;
+            double pack = l.v;
+            double v = pack / estimator.getCells();
+            if(pack <= 0) {
+                continue;
+            }
             if(v <= vmin || v >= vmax) {
                 continue;
             }
             double y = pos(0, v).y();
             p.setPen(QPen(l.color, 1, Qt::DashLine));
             p.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y));
-            QString label = QString("%1 %2 V%3").arg(l.name).arg(pack, 0, 'f', 1).arg(l.v > 0 ? "" : " (default)");
+            QString label = QString("%1 %2 V%3").arg(l.name).arg(pack, 0, 'f', 1).arg(level_defaults.contains(l.define) ? " (default)" : "");
             QRectF lr(plot.left() + 4, y - 11, lfm.horizontalAdvance(label) + 2, 11);
             if(!previous.isNull() && lr.intersects(previous)) {
                 lr.moveLeft(previous.right() + 8);
