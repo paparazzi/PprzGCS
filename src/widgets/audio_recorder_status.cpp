@@ -83,8 +83,11 @@ AudioRecorderStatus::AudioRecorderStatus(QWidget *parent) : QWidget(parent)
         for(auto l: levels) {
             s.levels.append(std::isfinite(l) ? l : -120.f);
         }
-        // (spaces in a label sent as _)
+        // (spaces in a label sent as _; no label: no channel, its level only fills the message)
         s.labels = labels.isEmpty() ? QStringList() : labels.replace("_", " ").split(";");
+        if(s.labels.isEmpty()) {
+            s.levels.clear();
+        }
         onStatus(s, false);
     });
 #if defined(AUDIO_RECORDER_ENABLED)

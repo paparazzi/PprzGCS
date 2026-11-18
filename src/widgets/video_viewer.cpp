@@ -9,6 +9,9 @@
 #include <QInputDialog>
 #include <QMenu>
 #include "gcs_utils.h"
+#if defined(AUDIO_RECORDER_ENABLED)
+#include "video_recorder.h"
+#endif
 
 static constexpr int NO_VIDEO_TIMEOUT = 1000;   // ms without frame before "No video"
 static constexpr int RECONNECT_PERIOD = 1000;   // ms between TCP connection attempts
@@ -33,7 +36,24 @@ VideoViewer::VideoViewer(QWidget *parent) : QWidget(parent)
     });
     watchdog->start();
 
+#if defined(AUDIO_RECORDER_ENABLED)
+    connect(VideoRecorder::get(), &VideoRecorder::frame, this, [this](QString label, QImage img) {
+        if(label == camera) {
+            showImage(img);
+        }
+    });
+#endif
+    // the source chosen last (context menu), else the layout's
     setSource(getAppSettings().value("video/source", layout_source).toString());
+}
+
+VideoViewer::~VideoViewer()
+{
+#if defined(AUDIO_RECORDER_ENABLED)
+    if(!camera.isEmpty()) {
+        VideoRecorder::get()->removeViewer(camera);
+    }
+#endif
 }
 
 void VideoViewer::configure(QDomElement conf)
@@ -64,6 +84,22 @@ QSize VideoViewer::minimumSizeHint() const
 void VideoViewer::contextMenuEvent(QContextMenuEvent *event)
 {
     QMenu menu(this);
+    // the source: the stream of the layout, a camera of the Recording settings, or another stream
+    menu.addSection(tr("Source"));
+    auto add_source = [&](QString text, QString src) {
+        auto action = menu.addAction(text, this, [this, src]() { chooseSource(src); });
+        action->setCheckable(true);
+        action->setChecked(source_text == src);
+    };
+    add_source(layout_source, layout_source);
+#if defined(AUDIO_RECORDER_ENABLED)
+    for(auto &label: VideoRecorder::get()->labels()) {
+        add_source(tr("Camera: %1").arg(label), "camera:" + label);
+    }
+    if(VideoRecorder::get()->labels().isEmpty()) {
+        menu.addAction(tr("Cameras: Settings, Recording"))->setEnabled(false);
+    }
+#endif
     menu.addAction(tr("Video source..."), this, &VideoViewer::askSource);
     menu.exec(event->globalPos());
 }
@@ -71,7 +107,7 @@ void VideoViewer::contextMenuEvent(QContextMenuEvent *event)
 /// Ask for the source; saved for the next start, empty: back to the one of the layout
 void VideoViewer::askSource()
 {
-    QString text = source.toString();
+    QString text = source_text;
     QString error;
     while(true) {
         bool ok;
@@ -107,9 +143,23 @@ void VideoViewer::setSource(const QString &src)
     reconnect_timer->stop();
     tcp_buffer.clear();
     image = QImage();
+#if defined(AUDIO_RECORDER_ENABLED)
+    if(!camera.isEmpty()) {
+        VideoRecorder::get()->removeViewer(camera);
+    }
+#endif
+    camera.clear();
 
+    source_text = src;
     source = QUrl(src);
-    if(source.scheme() == "udp") {
+    if(src.startsWith("camera:")) {
+#if defined(AUDIO_RECORDER_ENABLED)
+        camera = src.mid(7);
+        VideoRecorder::get()->addViewer(camera);
+#else
+        qWarning() << "video: built without the recorder, no camera" << src;
+#endif
+    } else if(source.scheme() == "udp") {
         udp = new QUdpSocket(this);
         QHostAddress addr = source.host().isEmpty() ? QHostAddress(QHostAddress::Any) : QHostAddress(source.host());
         if(!udp->bind(addr, source.port(5600), QUdpSocket::ShareAddress | QUdpSocket::ReuseAddressHint)) {
@@ -174,6 +224,16 @@ void VideoViewer::readTcp()
     showFrame(jpeg);
 }
 
+void VideoViewer::chooseSource(const QString &src)
+{
+    if(src == layout_source) {
+        getAppSettings().remove("video/source");
+    } else {
+        getAppSettings().setValue("video/source", src);
+    }
+    setSource(src);
+}
+
 void VideoViewer::showFrame(const QByteArray &jpeg)
 {
     if(jpeg.isEmpty()) {
@@ -181,6 +241,13 @@ void VideoViewer::showFrame(const QByteArray &jpeg)
     }
     QImage img;
     if(img.loadFromData(jpeg, "JPEG")) {
+        showImage(img);
+    }
+}
+
+void VideoViewer::showImage(const QImage &img)
+{
+    {
         bool new_aspect = image.isNull() || img.width() * image.height() != img.height() * image.width();
         image = img;
         if(new_aspect) {
@@ -209,6 +276,6 @@ void VideoViewer::paintEvent(QPaintEvent *event)
             p.fillRect(rect(), QColor(0, 0, 0, 160));
         }
         p.setPen(Qt::white);
-        p.drawText(rect(), Qt::AlignCenter, tr("No video\n%1").arg(source.toString()));
+        p.drawText(rect(), Qt::AlignCenter, tr("No video\n%1").arg(source_text));
     }
 }

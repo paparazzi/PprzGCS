@@ -1,6 +1,8 @@
 #if defined(AUDIO_RECORDER_ENABLED)
 #include "audio_recorder.h"
 #include "audio_mic_settings.h"
+#include "camera_settings.h"
+#include "video_recorder.h"
 #endif
 #include "card_dialog.h"
 #include "app_settings.h"
@@ -131,6 +133,7 @@ void set_app_settings() {
     default_setting("audio/folder", "");
     default_setting("audio/chunk_minutes", 10);
     default_setting("audio/mark_key", "F9");
+    default_setting("video/folder", "");
     default_setting("notify/speech", false);
     default_setting("notify/speech_voice", "");
     default_setting("notify/speech_rate", "0");
@@ -439,7 +442,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     row = 0;
 #if defined(AUDIO_RECORDER_ENABLED)
     addSection("Recording", w_rec, l_rec, row);
-    cb = addSetting("Record the microphones", "audio/enabled", w_rec, l_rec, row, Type::BOOL);
+    cb = addSetting("Record the microphones and cameras", "audio/enabled", w_rec, l_rec, row, Type::BOOL);
     callbacks.append(cb);
     addHelp("The microphones below are recorded in var/logs/audio (or the folder below), a file per microphone, for the "
             "transcription and the logbook after the flight. The status bar shows the recording, the level of "
@@ -468,6 +471,20 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append([=]() {
         AudioRecorder::saveMicConfigs(mics->configs());
     });
+
+    addSection("Cameras", w_rec, l_rec, row);
+    auto cams = new CameraSettings(w_rec);
+    l_rec->addWidget(cams, row, 0, 1, 3);
+    row += 1;
+    callbacks.append([=]() {
+        VideoRecorder::saveCameraConfigs(cams->configs());
+    });
+    cb = addSetting("Video folder (empty: var/logs/video)", "video/folder", w_rec, l_rec, row, Type::PATH_DIR);
+    callbacks.append(cb);
+    addHelp("Recorded with the microphones (ffmpeg): a USB camera in H.264, a stream as it comes, a file per camera "
+            "and a new one with the audio files. About 0.5 to 1.5 GB per camera and hour. The Video panel shows "
+            "them (right click: the source).", w_rec, l_rec, row);
+    live_settings << "video/";
 #else
     addSection("Recording", w_rec, l_rec, row);
     addHelp("This PprzGCS is built without the audio recorder (install qt6-multimedia-dev and libsndfile1-dev, "

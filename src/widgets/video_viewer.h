@@ -25,12 +25,16 @@ class QTimer;
  * The width (pixels) is the size the widget asks for at the start, the height follows
  * the aspect ratio of the video. To change the size, drag the corner of the panel.
  * Right click: choose another source (saved, it replaces the one of the layout).
+ *
+ * Or a camera of the Recording settings (camera:<label>): its frames from the recorder
+ * (VideoRecorder), which runs it while shown.
  */
 class VideoViewer : public QWidget, public Configurable
 {
     Q_OBJECT
 public:
     explicit VideoViewer(QWidget *parent = nullptr);
+    ~VideoViewer();
 
     void configure(QDomElement) override;
     QSize sizeHint() const override;
@@ -47,9 +51,13 @@ private:
     void readTcp();
     void connectTcp();
     void showFrame(const QByteArray &jpeg);
+    void showImage(const QImage &img);
+    void chooseSource(const QString &src);
 
     QUrl source;
+    QString source_text;
     QString layout_source = "udp://:5600";  // used when no source is chosen in the GCS
+    QString camera;                         // the camera shown (camera:<label>), else empty
     QUdpSocket *udp = nullptr;
     QTcpSocket *tcp = nullptr;
     QTimer *reconnect_timer;

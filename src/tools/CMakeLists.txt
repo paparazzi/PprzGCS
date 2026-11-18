@@ -14,7 +14,7 @@ list(APPEND SOURCE
 )
 
 if(${AUDIO_RECORDER})
-    list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/audio_recorder.cpp)
+    list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/audio_recorder.cpp ${CMAKE_CURRENT_SOURCE_DIR}/video_recorder.cpp)
 endif()
 
 if(${GRPC})

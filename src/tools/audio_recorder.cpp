@@ -3,6 +3,7 @@
 #include "dispatcher_ui.h"
 #include "gcs_utils.h"
 #include "pprzmain.h"
+#include "video_recorder.h"
 #include <QAudioSource>
 #include <QMediaDevices>
 #include <QStorageInfo>
@@ -216,6 +217,7 @@ void AudioRecorder::doStart() {
         for(auto m: std::as_const(mics)) {
             openMic(m);
         }
+        VideoRecorder::get()->setRecording(true);   // the cameras with the microphones
     }
     sendStatus();
 }
@@ -227,6 +229,7 @@ void AudioRecorder::doStop() {
         for(auto m: std::as_const(mics)) {
             closeMic(m);
         }
+        VideoRecorder::get()->setRecording(false);
     }
     getAppSettings().setValue("audio/was_recording", false);
     sendStatus();
@@ -415,14 +418,20 @@ void AudioRecorder::sendStatus() {
         }
     }
 
+    // the cameras (VideoRecorder): their problems and files with those of the microphones
+    auto video = VideoRecorder::get();
+    bool has_cameras = !video->labels().isEmpty();
+    auto video_problems = video->problems();
+    files.append(video->files());
     QStringList info;
-    if(recording && mics.isEmpty()) {
-        info.append("no microphone in the settings");
+    if(recording && mics.isEmpty() && !has_cameras) {
+        info.append("no microphone or camera in the settings");
     }
     if(!missing.isEmpty()) {
         info.append("not connected: " + missing.join(", "));
     }
     info.append(errors);
+    info.append(video_problems);
     if(recording) {
         QStorageInfo storage(folder);
         if(storage.isValid() && storage.bytesAvailable() < LOW_DISK) {
@@ -431,7 +440,8 @@ void AudioRecorder::sendStatus() {
     }
     s.info = info.join(" · ");
     s.file = files.join(";");
-    s.state = !recording ? AudioStatus::IDLE : open > 0 ? AudioStatus::RECORDING : AudioStatus::ERROR;
+    bool video_ok = has_cameras && video_problems.size() < video->labels().size();
+    s.state = !recording ? AudioStatus::IDLE : (open > 0 || video_ok) ? AudioStatus::RECORDING : AudioStatus::ERROR;
     emit status(s);
 
     auto dispatcher = PprzDispatcher::get();
@@ -442,6 +452,9 @@ void AudioRecorder::sendStatus() {
             labels.append(l.replace(" ", "_"));
         }
         std::vector<float> levels(s.levels.begin(), s.levels.end());
+        if(levels.empty()) {
+            levels.push_back(-120.f);   // (an empty array is not sent: the message could not be parsed)
+        }
         msg.addField("recorder", PprzDispatcher::ivyString(s.name));
         msg.addField("state", static_cast<uint8_t>(s.state));
         msg.addField("unix_time", s.start_time);

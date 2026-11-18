@@ -38,7 +38,7 @@ set(SOURCE
 )
 
 if(${AUDIO_RECORDER})
-    list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/audio_mic_settings.cpp)
+    list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/audio_mic_settings.cpp ${CMAKE_CURRENT_SOURCE_DIR}/camera_settings.cpp)
 endif()
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
