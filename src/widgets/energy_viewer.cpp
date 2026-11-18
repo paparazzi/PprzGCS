@@ -1,6 +1,7 @@
 #include "energy_viewer.h"
 #include "AircraftManager.h"
 #include "gcs_utils.h"
+#include "airframe.h"
 #include <QComboBox>
 #include <QContextMenuEvent>
 #include <QDebug>
@@ -101,10 +102,10 @@ EnergyViewer::EnergyViewer(QString ac_id, QWidget *parent) : QWidget(parent),
             airframe_capacity = cap->value.toDouble() * (cap->unit.compare("Ah", Qt::CaseInsensitive) == 0 ? 1000 : 1);
             estimator.setCapacity(airframe_capacity);
         }
-        // the alarm levels of the aircraft, drawn on the curve
+        // the alarm levels of the aircraft, drawn on the curve (0: not set, the default per cell)
         auto level = [&](QString name) {
             auto d = ac->getAirframe()->getDefine(name);
-            return d ? d->value.toDouble() : 0.0;
+            return d && d->value.toDouble() > 0 ? d->value.toDouble() : 0.0;
         };
         level_low = level("LOW_BAT_LEVEL");
         level_critic = level("CRITIC_BAT_LEVEL");
@@ -580,23 +581,27 @@ void EnergyViewer::drawCurve(QPainter &p, QRectF area)
         p.setClipRect(plot);
         p.setFont(pixelFont(font(), 9, false));
         QFontMetricsF lfm(p.font());
-        struct Level { double v; QColor color; const char *name; };
-        const Level levels[] = {{level_low, LOW, "low"}, {level_critic, EMPTY, "critic"},
-                                {level_catastrophic, withAlpha(text, 220), "catastrophic"}};
+        struct Level { double v; QColor color; const char *name; const char *define; };
+        const Level levels[] = {{level_low, LOW, "low", "LOW_BAT_LEVEL"},
+                                {level_critic, EMPTY, "critic", "CRITIC_BAT_LEVEL"},
+                                {level_catastrophic, withAlpha(text, 220), "catastrophic", "CATASTROPHIC_BAT_LEVEL"}};
         // the labels on the left (the battery is on the right, near empty), side by side when
         // the levels are close (low and critic often are)
         QRectF previous;
         level_labels.clear();
         auto &labels = level_labels;
         for(const auto &l : levels) {
-            double v = l.v / estimator.getCells();
-            if(l.v <= 0 || v <= vmin || v >= vmax) {
+            // not set in the airframe: the default per cell (as the alerts use)
+            const int n = estimator.getCells();
+            double pack = l.v > 0 ? l.v : Airframe::defaultCellLevel(l.define) * n;
+            double v = pack / n;
+            if(v <= vmin || v >= vmax) {
                 continue;
             }
             double y = pos(0, v).y();
             p.setPen(QPen(l.color, 1, Qt::DashLine));
             p.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y));
-            QString label = QString("%1 %2 V").arg(l.name).arg(l.v, 0, 'f', 1);
+            QString label = QString("%1 %2 V%3").arg(l.name).arg(pack, 0, 'f', 1).arg(l.v > 0 ? "" : " (default)");
             QRectF lr(plot.left() + 4, y - 11, lfm.horizontalAdvance(label) + 2, 11);
             if(!previous.isNull() && lr.intersects(previous)) {
                 lr.moveLeft(previous.right() + 8);

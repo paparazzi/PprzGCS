@@ -202,7 +202,8 @@ estimator (orange; none for mAh), with the battery on it: at rest on the black c
 reserve in red. A thin gray line shows the voltage measured over the whole flight, against the energy used as the
 estimator estimated it at that time (the trace starts again with a new battery). Dashed lines mark the alarm levels of the airframe,
 per cell: ``LOW_BAT_LEVEL`` (orange), ``CRITIC_BAT_LEVEL`` (red) and ``CATASTROPHIC_BAT_LEVEL`` (black); the measured
-voltage under load is what reaches them.
+voltage under load is what reaches them. A level not set in the airframe is 3.5, 3.25 and 3.0 V per cell, also for the
+battery alerts and the battery plot.
 
 The battery, which changes seldom, is set in a window (click *Battery...* on the battery line, or right click): the
 chemistry (LiPo, LiHV, Li-ion or LiFe; on the flat curve of LiFe the voltage says little about the charge), the cells

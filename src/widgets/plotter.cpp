@@ -473,10 +473,8 @@ PlotDef Plotter::preset(QString id) {
         d.lines = {{BAT, "", BLUE, false, 2}};
         // the low and critical levels of the airframe
         auto airframe = AircraftManager::get()->getAircraft(ac_id)->getAirframe();
-        auto low = airframe->getDefine("LOW_BAT_LEVEL");
-        auto critic = airframe->getDefine("CRITIC_BAT_LEVEL");
-        d.levels.append({low.has_value() ? low->value.toDouble() : 10.5, "low", ORANGE});
-        d.levels.append({critic.has_value() ? critic->value.toDouble() : 10., "critical", RED});
+        d.levels.append({airframe->batteryLevel("LOW_BAT_LEVEL"), "low", ORANGE});
+        d.levels.append({airframe->batteryLevel("CRITIC_BAT_LEVEL"), "critical", RED});
     } else if(id == "current") {
         d.title = "Current · throttle";
         d.lines = {{AMP, "A", ORANGE, false, 1},

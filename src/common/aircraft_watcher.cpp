@@ -8,13 +8,10 @@ AircraftWatcher::AircraftWatcher(QString ac_id, QObject *parent) : QObject(paren
 
 void AircraftWatcher::init() {
     auto airframe = pprzApp()->toolbox()->aircraftManager()->getAircraft(ac_id)->getAirframe();
-    auto lbl = airframe->getDefine("LOW_BAT_LEVEL");
-    auto cbl = airframe->getDefine("CRITIC_BAT_LEVEL");
-    auto ctbl = airframe->getDefine("CATASTROPHIC_BAT_LEVEL");
-
-    bat_low = lbl.has_value() ? lbl->value.toDouble() : 10.5;
-    bat_critic = cbl.has_value() ? cbl->value.toDouble() : 10.;
-    bat_catastrophic = ctbl.has_value() ? ctbl->value.toDouble() : 9.;
+    // not set: 3.5, 3.25 and 3.0 V per cell
+    bat_low = airframe->batteryLevel("LOW_BAT_LEVEL");
+    bat_critic = airframe->batteryLevel("CRITIC_BAT_LEVEL");
+    bat_catastrophic = airframe->batteryLevel("CATASTROPHIC_BAT_LEVEL");
 }
 
 void AircraftWatcher::watch_bat(pprzlink::Message msg) {
