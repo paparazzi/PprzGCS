@@ -94,7 +94,7 @@ EnergyViewer::EnergyViewer(QString ac_id, QWidget *parent) : QWidget(parent),
             estimator.setCells(airframe_cells);
             cells_known = true;
         }
-        auto cap = ac->getAirframe()->getDefine("MAX_BAT_CAPACITY");
+        auto cap = ac->getAirframe()->getDefine("BAT_CAPACITY");
         if(cap && cap->value.toDouble() > 0) {
             // in mAh; also accepted in Ah
             airframe_capacity = cap->value.toDouble() * (cap->unit.compare("Ah", Qt::CaseInsensitive) == 0 ? 1000 : 1);
@@ -633,7 +633,7 @@ void EnergyViewer::askSettings()
         h->setContentsMargins(0, 0, 0, 0);
         h->addWidget(capacity, 1);
         auto reset = new QPushButton(QString("Airframe: %1 mAh").arg(qRound(airframe_capacity)), row);
-        reset->setToolTip("MAX_BAT_CAPACITY of the airframe");
+        reset->setToolTip("BAT_CAPACITY of the airframe");
         connect(reset, &QPushButton::clicked, capacity, [capacity, cap = airframe_capacity]() { capacity->setValue(qRound(cap)); });
         h->addWidget(reset);
         form->addRow("Capacity", row);

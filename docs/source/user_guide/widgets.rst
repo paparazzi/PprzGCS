@@ -212,7 +212,7 @@ R start from the airframe, section ``BAT``:
 
    <define name="BAT_CHEMISTRY" value="LIION"/>                  <!-- LIPO, LIHV, LIION or LIFE -->
    <define name="BAT_NB_CELLS" value="6"/>
-   <define name="MAX_BAT_CAPACITY" value="29000" unit="mAh"/>
+   <define name="BAT_CAPACITY" value="29000" unit="mAh"/>
    <define name="BAT_CELL_RESISTANCE" value="2.0" unit="mOhm"/>  <!-- per cell -->
 
 Without ``BAT_NB_CELLS`` the cells are guessed from the first voltage, without ``BAT_CHEMISTRY`` LiPo is used. The mAh
