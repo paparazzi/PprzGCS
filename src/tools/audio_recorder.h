@@ -41,6 +41,7 @@ public:
     bool isRecording() {return recording;}
     QString name() {return recorder_name;}
 
+    /// by the user (status bar, AUDIO_RECORD_CMD)
     void start();
     void stop();
 
@@ -75,6 +76,8 @@ private:
         QString error;
     };
 
+    void doStart();
+    void doStop();
     void loadSettings();
     void openMic(Mic* m);
     void closeMic(Mic* m);

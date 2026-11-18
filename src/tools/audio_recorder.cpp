@@ -2,6 +2,7 @@
 #include "pprz_dispatcher.h"
 #include "dispatcher_ui.h"
 #include "gcs_utils.h"
+#include "pprzmain.h"
 #include <QAudioSource>
 #include <QMediaDevices>
 #include <QStorageInfo>
@@ -40,13 +41,14 @@ AudioRecorder::AudioRecorder(QObject* parent) : QObject(parent),
     connect(media_devices, &QMediaDevices::audioInputsChanged, this, &AudioRecorder::onDevicesChanged);
     connect(&status_timer, &QTimer::timeout, this, &AudioRecorder::sendStatus);
     connect(DispatcherUi::get(), &DispatcherUi::appSettingsChanged, this, [this]() {
+        // again with the new settings (new files), as it was
         bool was = recording;
         if(recording) {
-            stop();
+            doStop();
         }
         loadSettings();
         if(enabled && was) {
-            start();
+            doStart();
         }
         sendStatus();
     });
@@ -68,10 +70,11 @@ AudioRecorder::AudioRecorder(QObject* parent) : QObject(parent),
     });
 
     loadSettings();
-    // with the GCS, or again after a crash during a recording
-    auto settings = getAppSettings();
-    if(enabled && (settings.value("audio/autostart").toBool() || settings.value("audio/was_recording").toBool())) {
-        start();
+    // pprzgcs --record (e.g. the flight sessions of the Paparazzi Center): until PprzGCS closes
+    // (not in the simulations: their sessions do not pass it), or again after a crash during a recording
+    if(enabled && (appConfig()->value("AUDIO_RECORD_ARG").toBool() ||
+                   getAppSettings().value("audio/was_recording").toBool())) {
+        doStart();
     }
     status_timer.start(1000);
 }
@@ -162,7 +165,8 @@ QList<float> AudioRecorder::peaks(const char* data, qint64 frames, const QAudioF
 
 void AudioRecorder::loadSettings() {
     auto settings = getAppSettings();
-    enabled = settings.value("audio/enabled").toBool();
+    // (never while editing flight plans)
+    enabled = settings.value("audio/enabled").toBool() && PprzMain::launch_type != FLIGHTPLAN_EDIT;
     recorder_name = settings.value("audio/name").toString().trimmed();
     if(recorder_name.isEmpty()) {
         recorder_name = QHostInfo::localHostName();
@@ -188,6 +192,14 @@ void AudioRecorder::loadSettings() {
 }
 
 void AudioRecorder::start() {
+    doStart();
+}
+
+void AudioRecorder::stop() {
+    doStop();
+}
+
+void AudioRecorder::doStart() {
     if(!enabled) {
         return;
     }
@@ -203,7 +215,7 @@ void AudioRecorder::start() {
     sendStatus();
 }
 
-void AudioRecorder::stop() {
+void AudioRecorder::doStop() {
     if(recording) {
         recording = false;
         start_time = 0;

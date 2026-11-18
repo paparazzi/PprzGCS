@@ -126,7 +126,6 @@ void set_app_settings() {
     }
     default_setting("notify/sound", true);
     default_setting("audio/enabled", false);
-    default_setting("audio/autostart", true);
     default_setting("audio/name", "");
     default_setting("audio/format", "opus");
     default_setting("audio/folder", "");
@@ -444,11 +443,10 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     addHelp("The microphones below are recorded in the logs folder, a file per microphone, for the "
             "transcription and the logbook after the flight. The status bar shows the recording, the level of "
-            "each channel, and a microphone that is not connected or has no signal.", w_rec, l_rec, row);
-    cb = addSetting("Start with PprzGCS", "audio/autostart", w_rec, l_rec, row, Type::BOOL);
-    callbacks.append(cb);
-    addHelp("Else started from the status bar (click the recorder). After a crash during a recording, it "
-            "starts again in any case.", w_rec, l_rec, row);
+            "each channel, and a microphone that is not connected or has no signal.<br>Started from the status "
+            "bar (click the recorder), or from the start when PprzGCS runs with --record: e.g. in the flight "
+            "sessions of the Paparazzi Center, not in the simulations. It records until PprzGCS closes, and "
+            "starts again after a crash during a recording. Never while editing flight plans.", w_rec, l_rec, row);
     cb = addSetting("Format", "audio/format", w_rec, l_rec, row, Type::STRING_COMBO,
                     QStringList{"opus|Opus (speech, about 11 MB per channel and hour)",
                                 "flac|FLAC (lossless, about 15 times larger)"});
