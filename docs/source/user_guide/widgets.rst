@@ -200,7 +200,9 @@ part of the sag. R is learned from the changes seen there.
 The curve: the voltage at rest of the chemistry (black), and under it the curve under load, minus the ΔV of the
 estimator (orange; none for mAh), with the battery on it: at rest on the black curve, under load below it, and the
 reserve in red. A thin gray line shows the voltage measured over the whole flight, against the energy used as the
-estimator estimated it at that time (the trace starts again with a new battery).
+estimator estimated it at that time (the trace starts again with a new battery). Dashed lines mark the alarm levels of the airframe,
+per cell: ``LOW_BAT_LEVEL`` (orange), ``CRITIC_BAT_LEVEL`` (red) and ``CATASTROPHIC_BAT_LEVEL`` (black); the measured
+voltage under load is what reaches them.
 
 The battery, which changes seldom, is set in a window (click *Battery...* on the battery line, or right click): the
 chemistry (LiPo, LiHV, Li-ion or LiFe; on the flat curve of LiFe the voltage says little about the charge), the cells

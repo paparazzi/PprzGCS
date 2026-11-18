@@ -38,6 +38,7 @@ protected:
 private:
     void addEngineStatus();
     void drawCurve(QPainter &p, QRectF area);
+    void drawLevelLabels(QPainter &p);
     /// V - I.R: the history of the measured voltage and load, and the filtered load
     void drawHistory(QPainter &p, QRectF area);
     /// the pills of the estimator, at the top of the panel; returns their height
@@ -58,6 +59,11 @@ private:
     double airframe_capacity = 0;   // mAh, BAT_CAPACITY of the airframe; 0: none
     int airframe_chemistry = -1;    // BAT_CHEMISTRY of the airframe; -1: none (LiPo)
     double airframe_resistance = 0; // mOhm per cell, BAT_CELL_RESISTANCE of the airframe; 0: none
+    double level_low = 0;           // V of the pack: LOW_BAT_LEVEL, CRITIC_BAT_LEVEL and
+    double level_critic = 0;        // CATASTROPHIC_BAT_LEVEL of the airframe; 0: not set
+    double level_catastrophic = 0;
+    struct LevelLabel { QRectF rect; QString text; QColor color; };
+    std::vector<LevelLabel> level_labels;   // placed by drawCurve, drawn over the curves
     QRectF method_chips[EnergyEstimator::METHODS];
     QRectF battery_line;
     struct Past {

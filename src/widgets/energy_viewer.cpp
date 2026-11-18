@@ -100,6 +100,14 @@ EnergyViewer::EnergyViewer(QString ac_id, QWidget *parent) : QWidget(parent),
             airframe_capacity = cap->value.toDouble() * (cap->unit.compare("Ah", Qt::CaseInsensitive) == 0 ? 1000 : 1);
             estimator.setCapacity(airframe_capacity);
         }
+        // the alarm levels of the aircraft, drawn on the curve
+        auto level = [&](QString name) {
+            auto d = ac->getAirframe()->getDefine(name);
+            return d ? d->value.toDouble() : 0.0;
+        };
+        level_low = level("LOW_BAT_LEVEL");
+        level_critic = level("CRITIC_BAT_LEVEL");
+        level_catastrophic = level("CATASTROPHIC_BAT_LEVEL");
         auto chem = ac->getAirframe()->getDefine("BAT_CHEMISTRY");
         if(chem) {
             airframe_chemistry = chemistryOf(chem->value);
@@ -489,6 +497,21 @@ void EnergyViewer::drawHistory(QPainter &p, QRectF area)
     units();
 }
 
+/// the names of the alarm levels, over the curves, on a light background
+void EnergyViewer::drawLevelLabels(QPainter &p)
+{
+    p.save();
+    p.setFont(pixelFont(font(), 9, false));
+    for(const auto &l : level_labels) {
+        p.setPen(Qt::NoPen);
+        p.setBrush(withAlpha(palette().color(QPalette::Window), 210));
+        p.drawRect(l.rect.adjusted(-2, 0, 2, 0));
+        p.setPen(l.color);
+        p.drawText(l.rect, Qt::AlignLeft | Qt::AlignVCenter, l.text);
+    }
+    p.restore();
+}
+
 /// The discharge curve: cell voltage at rest (and under the present load) against the energy used
 void EnergyViewer::drawCurve(QPainter &p, QRectF area)
 {
@@ -542,6 +565,40 @@ void EnergyViewer::drawCurve(QPainter &p, QRectF area)
         }
         return path;
     };
+    // the alarm levels of the airframe (pack voltage over the cells): the measured voltage under load
+    // reaches them, so they are compared with the gray trace and the battery under load
+    if(estimator.getCells() > 0) {
+        p.save();
+        p.setClipRect(plot);
+        p.setFont(pixelFont(font(), 9, false));
+        QFontMetricsF lfm(p.font());
+        struct Level { double v; QColor color; const char *name; };
+        const Level levels[] = {{level_low, LOW, "low"}, {level_critic, EMPTY, "critic"},
+                                {level_catastrophic, withAlpha(text, 220), "catastrophic"}};
+        // the labels on the left (the battery is on the right, near empty), side by side when
+        // the levels are close (low and critic often are)
+        QRectF previous;
+        level_labels.clear();
+        auto &labels = level_labels;
+        for(const auto &l : levels) {
+            double v = l.v / estimator.getCells();
+            if(l.v <= 0 || v <= vmin || v >= vmax) {
+                continue;
+            }
+            double y = pos(0, v).y();
+            p.setPen(QPen(l.color, 1, Qt::DashLine));
+            p.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y));
+            QString label = QString("%1 %2 V").arg(l.name).arg(l.v, 0, 'f', 1);
+            QRectF lr(plot.left() + 4, y - 11, lfm.horizontalAdvance(label) + 2, 11);
+            if(!previous.isNull() && lr.intersects(previous)) {
+                lr.moveLeft(previous.right() + 8);
+            }
+            labels.push_back({lr, label, l.color});
+            previous = lr;
+        }
+        p.restore();
+    }
+
     const auto &r = result;
     // under the curves: the measured voltage over the flight, against the energy used estimated then
     if(r.valid) {
@@ -575,6 +632,8 @@ void EnergyViewer::drawCurve(QPainter &p, QRectF area)
         p.setPen(QPen(ACCENT, 2));
         p.drawPath(curve(r.dv));
     }
+
+    drawLevelLabels(p);
 
     // the battery: at rest on the curve, under load below
     QPointF rest = pos(1 - r.energy, r.ocv);
