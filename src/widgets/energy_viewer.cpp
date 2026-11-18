@@ -13,6 +13,8 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QSpinBox>
+#include <QToolButton>
+#include <QWhatsThis>
 #include <QDoubleSpinBox>
 #include <cmath>
 
@@ -101,13 +103,26 @@ EnergyViewer::EnergyViewer(QString ac_id, QWidget *parent) : QWidget(parent),
     clock.start();
 
     connect(ac->getStatus(), &AircraftStatus::engine_status, this, &EnergyViewer::addEngineStatus);
-    setToolTip("Energy left (Wh) from the voltage, corrected for the sag under load\n"
-               "(the current when measured, else the throttle).\n"
-               "V: the voltage + \xCE\x94V set in Battery\xE2\x80\xA6 (while the motors run).\n"
-               "mAh: the charge used (sent by the aircraft, else the current counted) over the capacity.\n"
-               "V \xE2\x88\x92 I\xC2\xB7R: the voltage + 60 % of R \xC3\x97 load, R learned from the changes of the load.\n"
-               "Filter: the mAh count, pulled slowly towards V \xE2\x88\x92 I\xC2\xB7R.\n"
-               "Click the battery line or right click: chemistry, cells, capacity, reserve.");
+    // the help: on a "?" (as in the app settings), not as a tooltip over the whole panel
+    help_button = new QToolButton(this);
+    help_button->setText("?");
+    help_button->setAutoRaise(true);
+    help_button->setCursor(Qt::WhatsThisCursor);
+    help_button->setToolTip("Help");
+    help_button->setStyleSheet("QToolButton { font-weight: bold; color: palette(placeholder-text); "
+                               "border: 1px solid palette(mid); border-radius: 9px; min-width: 16px; max-width: 16px; "
+                               "min-height: 16px; max-height: 16px; padding: 0px; }");
+    connect(help_button, &QToolButton::clicked, this, [this]() {
+        QWhatsThis::showText(help_button->mapToGlobal(QPoint(help_button->width() / 2, help_button->height())),
+            "Energy left (Wh) from the voltage, corrected for the sag under load "
+            "(the current when measured, else the throttle).<br>"
+            "<b>V</b>: the voltage + \xCE\x94V set in Battery\xE2\x80\xA6 (while the motors run); "
+            "with \xCE\x94V 0, the voltage alone: low under load, never too high.<br>"
+            "<b>mAh</b>: the charge used (sent by the aircraft, else the current counted) over the capacity.<br>"
+            "<b>V \xE2\x88\x92 I\xC2\xB7R</b>: the voltage + 60 % of R \xC3\x97 load, R learned from the changes of the load.<br>"
+            "<b>Filter</b>: the mAh count, pulled slowly towards V \xE2\x88\x92 I\xC2\xB7R.<br>"
+            "Click the battery line or right click: chemistry, cells, capacity, reserve.", help_button);
+    });
 }
 
 void EnergyViewer::addEngineStatus()
@@ -132,6 +147,12 @@ void EnergyViewer::addEngineStatus()
     estimator.addSample(s);
     result = estimator.estimate();
     update();
+}
+
+void EnergyViewer::resizeEvent(QResizeEvent *event)
+{
+    QWidget::resizeEvent(event);
+    help_button->move(width() - help_button->width(), (static_cast<int>(CHIP_H) - help_button->height()) / 2);
 }
 
 QSize EnergyViewer::sizeHint() const
@@ -247,19 +268,22 @@ void EnergyViewer::paintEvent(QPaintEvent *event)
     const auto m = estimator.getMethod();
     if(r.valid && (m == EnergyEstimator::CHARGE || m == EnergyEstimator::FILTER) && !r.ready[m]) {
         hint = estimator.getCapacity() <= 0 ? "Set the capacity (Battery\xE2\x80\xA6) to count the mAh"
-                                            : "No current nor mAh in ENGINE_STATUS: nothing to count";
+                                            : "No current nor mAh sent: nothing to count";
         hint += m == EnergyEstimator::FILTER ? "; V \xE2\x88\x92 I\xC2\xB7R meanwhile" : "; V meanwhile";
     } else if(r.valid && (r.method == EnergyEstimator::SAG || r.method == EnergyEstimator::FILTER) && !r.r_known) {
         hint = r.with_current ? "R not known yet: change the current" : "R not known yet: change the throttle";
     }
     double curve_top = y + 74;
     if(!hint.isEmpty()) {
+        // wrapped: a narrow panel (a card on the map) shows all of it
+        QRectF hr = fm.boundingRect(QRectF(0, y + 73, width(), 100), Qt::AlignLeft | Qt::TextWordWrap, hint);
         p.setPen(LOW);
-        p.drawText(QRectF(0, y + 72, width(), 14), Qt::AlignLeft | Qt::AlignVCenter, hint);
-        curve_top += 12;
+        p.drawText(QRectF(0, y + 73, width(), hr.height()), Qt::AlignLeft | Qt::TextWordWrap, hint);
+        curve_top += hr.height();
     }
 
-    double curve_h = qMax(CURVE_HEIGHT, height() - curve_top - FOOTER - 2);
+    // the curve gives the room taken by the hint, so that the values under it stay visible
+    double curve_h = qMax(CURVE_HEIGHT - (curve_top - y - 74), height() - curve_top - FOOTER - 2);
     drawCurve(p, QRectF(0, curve_top, width(), curve_h));
 
     // under the plot: the charge left, the flight time to the reserve, and what the estimator uses

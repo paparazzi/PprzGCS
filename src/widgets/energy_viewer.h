@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QElapsedTimer>
+#include <QToolButton>
 #include "energy_estimator.h"
 
 /**
@@ -29,6 +30,7 @@ protected:
     void paintEvent(QPaintEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
     void addEngineStatus();
@@ -51,6 +53,7 @@ private:
     double airframe_capacity = 0;   // mAh, MAX_BAT_CAPACITY of the airframe; 0: none
     QRectF method_chips[EnergyEstimator::METHODS];
     QRectF battery_line;
+    QToolButton *help_button;  // the help, as in the app settings
 };
 
 #endif // ENERGY_VIEWER_H

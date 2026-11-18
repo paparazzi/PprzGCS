@@ -170,7 +170,8 @@ the last part of the charge holds less energy, at a lower voltage). Inputs, from
 current when the aircraft measures it, else the throttle, and the charge used (mAh) when the aircraft counts it.
 
 The voltage of a cell at rest gives its charge through the discharge curve of its chemistry; under load the voltage
-sags by ΔV. Pills at the top choose the estimator, from simple to complex, also in flight:
+sags by ΔV. Pills at the top choose the estimator, from simple to complex, also in flight (the *?* at the top right
+explains them):
 
 + V: the voltage alone (default), which reads low under load but never too high. With a ΔV per cell set in the
   Battery window, the pill reads V + ΔV and the voltage + ΔV is used while the motors run; this is right only when
