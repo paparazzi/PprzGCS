@@ -305,6 +305,12 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     cb = addSetting("Menu bar as the title bar (no window frame)", "window/menu_title_bar", w_general, l_general, row, Type::BOOL);
     callbacks.append(cb);
+    cb = addSetting("Mark key", "audio/mark_key", w_general, l_general, row, Type::STRING);
+    callbacks.append(cb);
+    addHelp("The key of the Mark button (status bar): a mark in the logs and the Messages at this moment, to find "
+            "it back in the flight log, the audio and the transcript. A function key (e.g. F9) works also while "
+            "typing in a text field. Empty: no key.", w_general, l_general, row);
+    live_settings << "audio/mark_key";     // the key changes right away
     finishTab(l_general, row);
     tabWidget->insertTab(0, w_general, "General");
 
@@ -469,12 +475,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     addHelp("This PprzGCS is built without the audio recorder (install qt6-multimedia-dev and libsndfile1-dev, "
             "and build again).", w_rec, l_rec, row);
 #endif
-    addSection("Mark", w_rec, l_rec, row);
-    cb = addSetting("Mark key", "audio/mark_key", w_rec, l_rec, row, Type::STRING);
-    callbacks.append(cb);
-    addHelp("The key of the Mark button (status bar): a mark in the logs and the Messages at this moment. "
-            "A function key (e.g. F9) works also while typing in a text field. Empty: no key.", w_rec, l_rec, row);
-    live_settings << "audio/";      // the recorder and the Mark key follow right away
+    live_settings << "audio/";      // the recorder follows right away
     finishTab(l_rec, row);
     tabWidget->addTab(w_rec, "Recording");
 
