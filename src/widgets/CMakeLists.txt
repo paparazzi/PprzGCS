@@ -2,6 +2,7 @@
 set(SOURCE
     ${SOURCE}
     ${CMAKE_CURRENT_SOURCE_DIR}/ac_selector.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/audio_recorder_status.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/chat.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/chat.ui
     ${CMAKE_CURRENT_SOURCE_DIR}/checklist.cpp
@@ -35,6 +36,10 @@ set(SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/windindicator.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/group_controller.cpp
 )
+
+if(${AUDIO_RECORDER})
+    list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/audio_mic_settings.cpp)
+endif()
 
 set(INC_DIRS ${INC_DIRS} ${CMAKE_CURRENT_SOURCE_DIR})
 

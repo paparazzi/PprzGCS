@@ -1,3 +1,7 @@
+#if defined(AUDIO_RECORDER_ENABLED)
+#include "audio_recorder.h"
+#include "audio_mic_settings.h"
+#endif
 #include "card_dialog.h"
 #include "app_settings.h"
 #include "dispatcher_ui.h"
@@ -121,6 +125,13 @@ void set_app_settings() {
         default_setting("notify/" + k.key, k.on);
     }
     default_setting("notify/sound", true);
+    default_setting("audio/enabled", false);
+    default_setting("audio/autostart", true);
+    default_setting("audio/name", "");
+    default_setting("audio/format", "opus");
+    default_setting("audio/folder", "");
+    default_setting("audio/chunk_minutes", 10);
+    default_setting("audio/mark_key", "F9");
     default_setting("notify/speech", false);
     default_setting("notify/speech_voice", "");
     default_setting("notify/speech_rate", "0");
@@ -138,6 +149,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     auto lay = new QVBoxLayout(this);
 
     auto tabWidget = new QTabWidget(this);
+    tabs = tabWidget;
     lay->addWidget(tabWidget);
 
     auto settings = getAppSettings();
@@ -416,6 +428,56 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     }
     finishTab(l_sound, row);
     tabWidget->addTab(w_sound, "Sound");
+    // Tab Recording: the microphones (e.g. of the pilots), for the transcription and the logbook
+    auto w_rec = new QWidget(tabWidget);
+    auto l_rec = new QGridLayout(w_rec);
+    row = 0;
+#if defined(AUDIO_RECORDER_ENABLED)
+    addSection("Recording", w_rec, l_rec, row);
+    cb = addSetting("Record the microphones", "audio/enabled", w_rec, l_rec, row, Type::BOOL);
+    callbacks.append(cb);
+    addHelp("The microphones below are recorded in the logs folder, a file per microphone, for the "
+            "transcription and the logbook after the flight. The status bar shows the recording, the level of "
+            "each channel, and a microphone that is not connected or has no signal.", w_rec, l_rec, row);
+    cb = addSetting("Start with PprzGCS", "audio/autostart", w_rec, l_rec, row, Type::BOOL);
+    callbacks.append(cb);
+    addHelp("Else started from the status bar (click the recorder). After a crash during a recording, it "
+            "starts again in any case.", w_rec, l_rec, row);
+    cb = addSetting("Format", "audio/format", w_rec, l_rec, row, Type::STRING_COMBO,
+                    QStringList{"opus|Opus (speech, about 11 MB per channel and hour)",
+                                "flac|FLAC (lossless, about 15 times larger)"});
+    callbacks.append(cb);
+    cb = addSetting("New file every (minutes)", "audio/chunk_minutes", w_rec, l_rec, row, Type::INT);
+    callbacks.append(cb);
+    addHelp("A crash or a power loss then loses only the last seconds. The files follow each other "
+            "without a gap.", w_rec, l_rec, row);
+    cb = addSetting("Folder (empty: var/logs)", "audio/folder", w_rec, l_rec, row, Type::PATH_DIR);
+    callbacks.append(cb);
+    cb = addSetting("Recorder name (empty: the computer)", "audio/name", w_rec, l_rec, row, Type::STRING);
+    callbacks.append(cb);
+    addHelp("Shown in the status bar of the other GCSs, which can start and stop it.", w_rec, l_rec, row);
+
+    addSection("Microphones", w_rec, l_rec, row);
+    auto mics = new AudioMicSettings(w_rec);
+    l_rec->addWidget(mics, row, 0, 1, 3);
+    row += 1;
+    callbacks.append([=]() {
+        AudioRecorder::saveMicConfigs(mics->configs());
+    });
+#else
+    addSection("Recording", w_rec, l_rec, row);
+    addHelp("This PprzGCS is built without the audio recorder (install qt6-multimedia-dev and libsndfile1-dev, "
+            "and build again).", w_rec, l_rec, row);
+#endif
+    addSection("Mark", w_rec, l_rec, row);
+    cb = addSetting("Mark key", "audio/mark_key", w_rec, l_rec, row, Type::STRING);
+    callbacks.append(cb);
+    addHelp("The key of the Mark button (status bar): a mark in the logs and the Messages at this moment. "
+            "A function key (e.g. F9) works also while typing in a text field. Empty: no key.", w_rec, l_rec, row);
+    live_settings << "audio/";      // the recorder and the Mark key follow right away
+    finishTab(l_rec, row);
+    tabWidget->addTab(w_rec, "Recording");
+
     tabWidget->tabBar()->moveTab(tabWidget->indexOf(w_ivy), tabWidget->count() - 1);   // Ivy last
 
     // each tab scrolls: the dialog as tall as its tallest tab, but no taller than the screen
@@ -523,6 +585,14 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     });
 }
 
+
+void SettingsEditor::showTab(QString name) {
+    for(int i=0; i<tabs->count(); i++) {
+        if(tabs->tabText(i) == name) {
+            tabs->setCurrentIndex(i);
+        }
+    }
+}
 
 /// A heading for the rows below it (e.g. "Waypoints")
 void SettingsEditor::addSection(QString title, QWidget* w, QGridLayout* gl, int &row) {

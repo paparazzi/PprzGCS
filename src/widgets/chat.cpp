@@ -178,6 +178,36 @@ Chat::Chat(QWidget *parent) :
         addMessage(txt, ac->name());
     });
 
+    // the marks (the Mark button): of this GCS, and of the others; not sent to the aircraft
+    auto mark_text = [](double unix_time, QString ac_id) {
+        auto t = QDateTime::fromMSecsSinceEpoch(static_cast<qint64>(unix_time * 1000));
+        QString txt = QString::fromUtf8("\u2691 Mark ") + t.toString("HH:mm:ss");
+        if(AircraftManager::get()->aircraftExists(ac_id)) {
+            txt += QString::fromUtf8(" \u00b7 ") + AircraftManager::get()->getAircraft(ac_id)->name();
+        }
+        return txt;
+    };
+    connect(DispatcherUi::get(), &DispatcherUi::markSent, this, [=,this](double unix_time, QString ac_id) {
+        addMessage(mark_text(unix_time, ac_id), "me", "", true);
+    });
+    PprzDispatcher::get()->bindOptional("LOG_MARK", this, [=,this](QString sender, pprzlink::Message msg) {
+        (void)sender;
+        double unix_time = 0;
+        QString source, ac_id, text;
+        msg.getField("unix_time", unix_time);
+        msg.getField("source", source);
+        msg.getField("ac_id", ac_id);
+        msg.getField("text", text);
+        if(source == chat_id) {
+            return;     // (already shown when sent)
+        }
+        auto txt = mark_text(unix_time, ac_id);
+        if(!text.isEmpty()) {
+            txt += ": " + text;
+        }
+        addMessage(txt, source);
+    });
+
     // the notifications at the top of the map (battery, link lost, ...): when they appear or get worse
     connect(DispatcherUi::get(), &DispatcherUi::alert, this, [=,this](QString sender, QString text, bool alarm) {
         addMessage(QString(alarm ? "[Alarm] " : "[Warning] ") + text, sender);

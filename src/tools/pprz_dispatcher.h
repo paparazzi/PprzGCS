@@ -50,6 +50,18 @@ public:
 
     void unBind(long bid);
 
+    /// connected to the Ivy bus: messages can be sent
+    bool isStarted() {return started;}
+    /// a string field for Ivy: "" when empty (pprzlinkQt quotes the values with spaces, but sends an
+    /// empty one as nothing: the message could not be parsed), without quotes inside
+    static QString ivyString(QString s) {
+        s.remove('"');
+        return s.isEmpty() ? QString("\"\"") : s;
+    }
+
+    /// the pprzlink id of this GCS (the sender of its messages)
+    QString getId() {return pprzlink_id;}
+
     bool isSilent() {return silent_mode;}
     void setSilent(bool silent) {
         if(silent != silent_mode) {

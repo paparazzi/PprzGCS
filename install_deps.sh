@@ -20,7 +20,7 @@
 set -euo pipefail
 
 declare -A GROUP_PACKAGES=(
-  [build]="build-essential cmake qt6-base-dev libqt6svg6-dev|qt6-svg-dev qt6-qpa-plugins libgl-dev libglu1-mesa-dev mesa-common-dev libproj-dev libzip-dev libxml2-dev libsqlite3-dev"
+  [build]="build-essential cmake qt6-base-dev libqt6svg6-dev|qt6-svg-dev qt6-qpa-plugins libgl-dev libglu1-mesa-dev mesa-common-dev libproj-dev libzip-dev libxml2-dev libsqlite3-dev qt6-multimedia-dev libsndfile1-dev"
   [appimage]="qt6-base-dev-tools qmake6 file wget ca-certificates"
   [deb]="dpkg-dev debhelper fakeroot git"
   [speech]="speech-dispatcher"

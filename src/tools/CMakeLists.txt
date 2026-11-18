@@ -13,6 +13,10 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/speaker.cpp
 )
 
+if(${AUDIO_RECORDER})
+    list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/audio_recorder.cpp)
+endif()
+
 if(${GRPC})
     list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/grpcconnector.cpp)
 endif()

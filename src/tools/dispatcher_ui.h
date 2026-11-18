@@ -32,6 +32,7 @@ signals:
     void alert(QString sender, QString text, bool alarm);   // a notification at the top of the map appeared or got worse
     void followAircraft(int mode);      // the map follows the selected aircraft: 0 off, 1 follow, 2 follow and heading up
     void appSettingsChanged();          // the app settings were saved
+    void markSent(double unix_time, QString ac_id);    // this GCS sent a LOG_MARK (the Mark button)
     //void create_waypoint(Waypoint*);
 
     // GVF viewer signals
