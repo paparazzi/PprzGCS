@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include <QElapsedTimer>
+#include <deque>
+#include <vector>
 #include <QToolButton>
 #include "energy_estimator.h"
 
@@ -35,6 +37,8 @@ protected:
 private:
     void addEngineStatus();
     void drawCurve(QPainter &p, QRectF area);
+    /// V - I.R: the history of the measured voltage and load, and the filtered load
+    void drawHistory(QPainter &p, QRectF area);
     /// the pills of the estimator, at the top of the panel; returns their height
     double drawChips(QPainter &p);
     /// the window of the battery settings
@@ -51,8 +55,23 @@ private:
     bool cells_known = false;       // from the airframe or the user, else guessed from the voltage
     int airframe_cells = 0;         // BAT_NB_CELLS of the airframe; 0: none
     double airframe_capacity = 0;   // mAh, MAX_BAT_CAPACITY of the airframe; 0: none
+    int airframe_chemistry = -1;    // BAT_CHEMISTRY of the airframe; -1: none (LiPo)
+    double airframe_resistance = 0; // mOhm per cell, BAT_CELL_RESISTANCE of the airframe; 0: none
     QRectF method_chips[EnergyEstimator::METHODS];
     QRectF battery_line;
+    struct Past {
+        double t;       // s
+        double cell;    // V per cell, measured
+        double load;    // A, else % of throttle
+        double load_x;  // the same, low-passed
+    };
+    std::deque<Past> history;   // the last minutes, for drawHistory
+    struct Trace {
+        double t;       // s
+        double cell;    // V per cell, measured
+        double energy[EnergyEstimator::METHODS];    // left, 0..1, by each method; -1: unknown
+    };
+    std::vector<Trace> trace;   // the whole flight (1 per s), drawn on the curve
     QToolButton *help_button;  // the help, as in the app settings
 };
 

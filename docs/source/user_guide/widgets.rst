@@ -193,16 +193,31 @@ Under the curve: the charge left, the flight time to the reserve, and what the e
 (mAh), or R (V - I·R, Filter). The time to the reserve comes from the mean power of the last 30 s and the capacity,
 else (no current or no capacity) from how fast the energy went down in the last 2 minutes.
 
+In V - I·R and Filter, a plot under the curve shows the last 5 minutes: the measured cell voltage (top) and current,
+else throttle (bottom), in gray, and in orange the current low-passed over 10 s, which the estimator uses for the slow
+part of the sag. R is learned from the changes seen there.
+
 The curve: the voltage at rest of the chemistry (black), and under it the curve under load, minus the ΔV of the
 estimator (orange; none for mAh), with the battery on it: at rest on the black curve, under load below it, and the
-reserve in red.
+reserve in red. A thin gray line shows the voltage measured over the whole flight, against the energy used as the
+estimator estimated it at that time (the trace starts again with a new battery).
 
 The battery, which changes seldom, is set in a window (click *Battery...* on the battery line, or right click): the
 chemistry (LiPo, LiHV, Li-ion or LiFe; on the flat curve of LiFe the voltage says little about the charge), the cells
-in series, the capacity in mAh, the reserve and ΔV under load per cell. The cells and the capacity start from the
-airframe (``BAT_NB_CELLS``, ``MAX_BAT_CAPACITY`` in mAh); without ``BAT_NB_CELLS`` the cells are guessed from the
-first voltage. The mAh count starts again from the voltage only when the aircraft's own count starts again, or
-after a reboot (no telemetry for a few seconds) with a nearly full battery (above 90 %); otherwise, use New battery in
-the right-click menu. Change the capacity when you use another battery, also in flight: the mAh estimate follows at once;
-a button sets it back to the value of the airframe. Right click: the battery window, new battery. The choices are saved per aircraft;
-the cells and the capacity only when they differ from the airframe, else they follow the airframe.
+in series, the capacity in mAh, R per cell (the start of R for V - I·R, with a current sensor; then it corrects from
+the take-off and goes on learning), the reserve and ΔV under load per cell. The chemistry, the cells, the capacity and
+R start from the airframe, section ``BAT``:
+
+.. code-block:: xml
+
+   <define name="BAT_CHEMISTRY" value="LIION"/>                  <!-- LIPO, LIHV, LIION or LIFE -->
+   <define name="BAT_NB_CELLS" value="6"/>
+   <define name="MAX_BAT_CAPACITY" value="29000" unit="mAh"/>
+   <define name="BAT_CELL_RESISTANCE" value="2.0" unit="mOhm"/>  <!-- per cell -->
+
+Without ``BAT_NB_CELLS`` the cells are guessed from the first voltage, without ``BAT_CHEMISTRY`` LiPo is used. The mAh
+count starts again from the voltage only when the aircraft's own count starts again, or after a reboot (no telemetry
+for a few seconds) with a nearly full battery (above 90 %); otherwise, use New battery in the right-click menu. Change
+the capacity when you use another battery, also in flight: the mAh estimate follows at once; a button sets it back to
+the value of the airframe. Right click: the battery window, new battery. The choices are saved per aircraft; the
+chemistry, the cells, the capacity and R only when they differ from the airframe, else they follow the airframe.

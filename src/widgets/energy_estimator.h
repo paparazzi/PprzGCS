@@ -69,6 +69,8 @@ public:
         bool with_current = false;
         bool r_known = false;   // R is fitted
         double used = -1;       // Ah used since the start, -1: unknown
+        double load = 0;        // the load now: A with the current, else % of throttle
+        double load_x = 0;      // the load low-passed (10 s), the polarization of V - I.R
         double power = 0;       // W, mean of the last seconds; 0: unknown
         double wh_left = -1;    // Wh, -1: unknown (no capacity)
         double minutes = -1;    // to the reserve, -1: unknown
@@ -85,11 +87,17 @@ public:
     void setReserve(double r) { reserve = r; }         // 0..1 of the energy
     double getReserve() const { return reserve; }
     void setSag(double v) { sag_user = v; }            // V per cell under load, for VOLTAGE
+    /// R per cell (Ohm) to start V - I.R with (e.g. from the airframe), with the current only; 0: from 0.
+    /// Used at the next start of the fit (new battery), or at once while R is not known yet.
+    void setStartResistance(double ohm);
+    double getStartResistance() const { return r_start; }
     double getSag() const { return sag_user; }
 
     void addSample(const Sample &s);
     void clear();
-    Result estimate() const;
+    Result estimate() const { return estimate(method); }
+    /// the estimate of another method than the chosen one (e.g. to draw them all)
+    Result estimate(Method chosen) const;
 
     /// Cell voltage at rest for a state of charge (0..1)
     static double ocvOfSoc(Chemistry c, double soc);
@@ -133,6 +141,7 @@ private:
     double capacity = 0;    // mAh
     double reserve = 0.2;
     double sag_user = 0;    // 0: the voltage alone, never optimistic
+    double r_start = 0;     // Ohm per cell, the start of R0 with the current; 0: from 0
     bool with_current = false;
 
     // VOLTAGE and SAG: the cell voltage (+ the fitted sag), low-passed

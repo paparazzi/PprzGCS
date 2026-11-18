@@ -17,6 +17,8 @@
 #include <QWhatsThis>
 #include <QDoubleSpinBox>
 #include <cmath>
+#include <algorithm>
+#include <vector>
 
 namespace {
 
@@ -26,6 +28,12 @@ const double CHIPS = CHIP_H + 6;        // the pills of the estimator
 const double HEADER = CHIPS + 76;
 const double CURVE_HEIGHT = 130;
 const double FOOTER = 36;               // charge, time and resistance under the plot
+const double HISTORY_H = 96;            // V - I.R: the history of the voltage and the load
+const double HISTORY_S = 300;           // s shown
+const double CURVE_MIN = 90;            // the curve, made smaller for the history
+const double TRACE_DT = 1;              // s between the points of the voltage over the flight
+const size_t TRACE_MAX = 7200;          // then every other point is dropped
+const double TRACE_NEW = 0.1;           // the energy went up more: another battery, the trace starts again
 
 const QColor GOOD(0x1f7a3f);
 const QColor ACCENT(0xf0a020);          // as in the ATC panel
@@ -55,6 +63,16 @@ QString chemistryName(EnergyEstimator::Chemistry c) {
     }
 }
 
+/// BAT_CHEMISTRY of an airframe (LIPO, LIHV, LIION, LIFE, a few spellings), -1: not known
+int chemistryOf(QString name) {
+    QString n = name.toUpper().remove('_').remove('-').remove(' ').remove('"');
+    if(n == "LIPO") return EnergyEstimator::LIPO;
+    if(n == "LIHV" || n == "LIPOHV") return EnergyEstimator::LIHV;
+    if(n == "LIION") return EnergyEstimator::LIION;
+    if(n == "LIFE" || n == "LIFEPO4") return EnergyEstimator::LIFE;
+    return -1;
+}
+
 /// the range of the plot: the curve, and room under it for the sag
 void plotRange(EnergyEstimator::Chemistry c, double &vmin, double &vmax) {
     vmin = std::floor((EnergyEstimator::ocvOfSoc(c, 0.05) - 0.4) * 10) / 10;
@@ -82,13 +100,23 @@ EnergyViewer::EnergyViewer(QString ac_id, QWidget *parent) : QWidget(parent),
             airframe_capacity = cap->value.toDouble() * (cap->unit.compare("Ah", Qt::CaseInsensitive) == 0 ? 1000 : 1);
             estimator.setCapacity(airframe_capacity);
         }
+        auto chem = ac->getAirframe()->getDefine("BAT_CHEMISTRY");
+        if(chem) {
+            airframe_chemistry = chemistryOf(chem->value);
+        }
+        auto res = ac->getAirframe()->getDefine("BAT_CELL_RESISTANCE");
+        if(res && res->value.toDouble() > 0) {
+            // per cell, in mOhm (also accepted in Ohm)
+            airframe_resistance = res->value.toDouble() * (res->unit.compare("Ohm", Qt::CaseInsensitive) == 0 ? 1000 : 1);
+        }
     }
-    // the choices of the user, per aircraft, over the airframe (the cells and the capacity are saved
-    // only when they differ from the airframe: else they follow it, also when it changes)
+    // the choices of the user, per aircraft, over the airframe (the chemistry, cells, capacity and R
+    // are saved only when they differ from the airframe: else they follow it, also when it changes)
     auto settings = getAppSettings();
     QString key = "energy/" + ac_name + "/";
     estimator.setChemistry(static_cast<EnergyEstimator::Chemistry>(
-        qBound(0, settings.value(key + "chemistry", 0).toInt(), EnergyEstimator::CHEMISTRIES - 1)));
+        qBound(0, settings.value(key + "chemistry", qMax(0, airframe_chemistry)).toInt(), EnergyEstimator::CHEMISTRIES - 1)));
+    estimator.setStartResistance(settings.value(key + "resistance", airframe_resistance).toDouble() / 1000);
     estimator.setMethod(static_cast<EnergyEstimator::Method>(
         qBound(0, settings.value(key + "estimator", EnergyEstimator::VOLTAGE).toInt(), EnergyEstimator::METHODS - 1)));
     if(settings.contains(key + "cells")) {
@@ -146,6 +174,45 @@ void EnergyViewer::addEngineStatus()
     }
     estimator.addSample(s);
     result = estimator.estimate();
+    if(result.valid) {
+        if(!history.empty() && s.t < history.back().t) {
+            history.clear();
+        }
+        history.push_back({s.t, result.cell, result.load, result.load_x});
+        while(history.front().t < s.t - HISTORY_S) {
+            history.pop_front();
+        }
+        // the voltage over the whole flight, against the energy used by each method
+        if(trace.empty() || s.t >= trace.back().t + TRACE_DT || s.t < trace.back().t) {
+            Trace tr;
+            tr.t = s.t;
+            tr.cell = result.cell;
+            for(int i = 0; i < EnergyEstimator::METHODS; i++) {
+                auto e = estimator.estimate(static_cast<EnergyEstimator::Method>(i));
+                // a method that cannot run (yet) falls back on another: not its own estimate
+                tr.energy[i] = e.valid && e.method == i ? e.energy : -1;
+            }
+            int m = result.method;
+            bool restart = s.t < (trace.empty() ? 0 : trace.back().t);
+            for(auto it = trace.rbegin(); !restart && it != trace.rend(); ++it) {
+                if(it->energy[m] >= 0) {
+                    restart = tr.energy[m] > it->energy[m] + TRACE_NEW;
+                    break;
+                }
+            }
+            if(restart) {
+                trace.clear();
+            }
+            trace.push_back(tr);
+            if(trace.size() > TRACE_MAX) {
+                std::vector<Trace> half;
+                for(size_t i = 0; i < trace.size(); i += 2) {
+                    half.push_back(trace[i]);
+                }
+                trace.swap(half);
+            }
+        }
+    }
     update();
 }
 
@@ -157,7 +224,8 @@ void EnergyViewer::resizeEvent(QResizeEvent *event)
 
 QSize EnergyViewer::sizeHint() const
 {
-    return QSize(300, minimumSizeHint().height());
+    // room for the history of V - I.R under a full curve
+    return QSize(300, minimumSizeHint().height() + static_cast<int>(CURVE_MIN + HISTORY_H - CURVE_HEIGHT));
 }
 
 QSize EnergyViewer::minimumSizeHint() const
@@ -284,7 +352,18 @@ void EnergyViewer::paintEvent(QPaintEvent *event)
 
     // the curve gives the room taken by the hint, so that the values under it stay visible
     double curve_h = qMax(CURVE_HEIGHT - (curve_top - y - 74), height() - curve_top - FOOTER - 2);
+    // V - I.R and Filter: under the curve, the voltage and the load from which R is learned
+    // (only when there is room: a small panel keeps the curve)
+    double history_h = qMin(qMax(HISTORY_H, 0.4 * curve_h), curve_h - CURVE_MIN);
+    bool show_history = (m == EnergyEstimator::SAG || m == EnergyEstimator::FILTER) && history_h >= 50;
+    if(show_history) {
+        curve_h -= history_h;
+    }
     drawCurve(p, QRectF(0, curve_top, width(), curve_h));
+    if(show_history) {
+        drawHistory(p, QRectF(0, curve_top + curve_h, width(), history_h));
+        curve_h += history_h;
+    }
 
     // under the plot: the charge left, the flight time to the reserve, and what the estimator uses
     QRectF foot(0, curve_top + curve_h + 2, width(), FOOTER);
@@ -317,6 +396,97 @@ void EnergyViewer::paintEvent(QPaintEvent *event)
             stat(2, "Sag/cell per throttle", QString("%1 mV/%").arg(r.resistance * 1000, 0, 'f', 2));
         }
     }
+}
+
+/// The last minutes: the measured cell voltage (top) and load (bottom) in thin gray, and the
+/// load low-passed, which V - I.R uses for the polarization, in orange
+void EnergyViewer::drawHistory(QPainter &p, QRectF area)
+{
+    const QColor text = palette().color(QPalette::WindowText);
+    const QColor gray = withAlpha(text, 120);
+    QRectF plot = area.adjusted(30, 4, -4, -14);
+    const double gap = 4;
+    QRectF top(plot.left(), plot.top(), plot.width(), (plot.height() - gap) / 2);
+    QRectF bottom(plot.left(), top.bottom() + gap, plot.width(), top.height());
+    p.setBrush(Qt::NoBrush);
+    p.setPen(QPen(withAlpha(text, 40), 1));
+    p.drawRect(top);
+    p.drawRect(bottom);
+    p.setFont(pixelFont(font(), 10, false));
+    p.setPen(withAlpha(text, 150));
+    QString unit = result.with_current ? "A" : "% thr";
+    // the units, over the lines (drawn last)
+    auto units = [&]() {
+        QFontMetricsF fm(p.font());
+        for(auto [rect, label] : {std::pair<QRectF, QString>{top, "V/cell"}, {bottom, unit}}) {
+            QRectF b(rect.left() + 1, rect.top() + 1, fm.horizontalAdvance(label) + 6, 12);
+            p.setPen(Qt::NoPen);
+            p.setBrush(withAlpha(palette().color(QPalette::Window), 220));
+            p.drawRect(b);
+            p.setPen(withAlpha(text, 150));
+            p.drawText(b, Qt::AlignCenter, label);
+        }
+        p.setBrush(Qt::NoBrush);
+    };
+    p.drawText(QRectF(plot.left(), plot.bottom() + 1, plot.width(), 13), Qt::AlignLeft | Qt::AlignVCenter,
+               QString::fromUtf8("\xE2\x88\x92%1 min").arg(qRound(HISTORY_S / 60)));
+    p.drawText(QRectF(plot.left(), plot.bottom() + 1, plot.width(), 13), Qt::AlignRight | Qt::AlignVCenter, "now");
+    if(history.size() < 2) {
+        units();
+        return;
+    }
+
+    // the scales: the voltage over its range, the load from 0
+    // (the load to its 99th percentile: a single peak, at a take-off, does not flatten the rest)
+    double vlo = 1e9, vhi = -1e9, lhi = 1;
+    std::vector<double> loads;
+    for(const auto &h : history) {
+        vlo = std::min(vlo, h.cell);
+        vhi = std::max(vhi, h.cell);
+        lhi = std::max(lhi, h.load_x);
+        loads.push_back(h.load);
+    }
+    auto k = loads.begin() + static_cast<long>(0.99 * (loads.size() - 1));
+    std::nth_element(loads.begin(), k, loads.end());
+    lhi = std::max(lhi, *k) * 1.1;
+    if(vhi - vlo < 0.05) {
+        double c = (vhi + vlo) / 2;
+        vlo = c - 0.025;
+        vhi = c + 0.025;
+    }
+    p.setPen(withAlpha(text, 150));
+    p.drawText(QRectF(area.left(), top.top() - 2, 28, 12), Qt::AlignRight | Qt::AlignTop, QString::number(vhi, 'f', 2));
+    p.drawText(QRectF(area.left(), top.bottom() - 10, 28, 12), Qt::AlignRight | Qt::AlignBottom, QString::number(vlo, 'f', 2));
+    p.drawText(QRectF(area.left(), bottom.top() - 2, 28, 12), Qt::AlignRight | Qt::AlignTop, QString::number(qRound(lhi)));
+    p.drawText(QRectF(area.left(), bottom.bottom() - 10, 28, 12), Qt::AlignRight | Qt::AlignBottom, "0");
+
+    const double now = history.back().t;
+    auto xof = [&](double t) { return plot.right() - plot.width() * (now - t) / HISTORY_S; };
+    QPainterPath v, l, lx;
+    for(size_t i = 0; i < history.size(); i++) {
+        const auto &h = history[i];
+        QPointF pv(xof(h.t), top.bottom() - top.height() * (h.cell - vlo) / (vhi - vlo));
+        QPointF pl(xof(h.t), bottom.bottom() - bottom.height() * h.load / lhi);
+        QPointF px(xof(h.t), bottom.bottom() - bottom.height() * h.load_x / lhi);
+        if(i == 0) {
+            v.moveTo(pv);
+            l.moveTo(pl);
+            lx.moveTo(px);
+        } else {
+            v.lineTo(pv);
+            l.lineTo(pl);
+            lx.lineTo(px);
+        }
+    }
+    p.save();
+    p.setClipRect(plot);
+    p.setPen(QPen(gray, 1));
+    p.drawPath(v);
+    p.drawPath(l);
+    p.setPen(QPen(ACCENT, 1.5));
+    p.drawPath(lx);
+    p.restore();
+    units();
 }
 
 /// The discharge curve: cell voltage at rest (and under the present load) against the energy used
@@ -372,10 +542,31 @@ void EnergyViewer::drawCurve(QPainter &p, QRectF area)
         }
         return path;
     };
+    const auto &r = result;
+    // under the curves: the measured voltage over the flight, against the energy used estimated then
+    if(r.valid) {
+        QPainterPath measured;
+        bool drawing = false;
+        for(const auto &tr : trace) {
+            double e = tr.energy[r.method];
+            if(e < 0) {
+                drawing = false;
+                continue;
+            }
+            QPointF pt = pos(1 - e, qBound(vmin, tr.cell, vmax));
+            drawing ? measured.lineTo(pt) : measured.moveTo(pt);
+            drawing = true;
+        }
+        p.save();
+        p.setClipRect(plot);
+        p.setBrush(Qt::NoBrush);
+        p.setPen(QPen(withAlpha(text, 110), 1));
+        p.drawPath(measured);
+        p.restore();
+    }
     p.setBrush(Qt::NoBrush);
     p.setPen(QPen(withAlpha(text, 200), 2));
     p.drawPath(curve(0));
-    const auto &r = result;
     if(!r.valid) {
         return;
     }
@@ -416,6 +607,9 @@ void EnergyViewer::askSettings()
         chem->addItem(chemistryName(static_cast<EnergyEstimator::Chemistry>(i)));
     }
     chem->setCurrentIndex(estimator.getChemistry());
+    if(airframe_chemistry >= 0) {
+        chem->setToolTip("Airframe (BAT_CHEMISTRY): " + chemistryName(static_cast<EnergyEstimator::Chemistry>(airframe_chemistry)));
+    }
     form->addRow("Chemistry", chem);
 
     auto cells = new QSpinBox(&dialog);
@@ -447,6 +641,29 @@ void EnergyViewer::askSettings()
         form->addRow("Capacity", capacity);
     }
 
+    auto resistance = new QDoubleSpinBox(&dialog);
+    resistance->setRange(0, 100);
+    resistance->setDecimals(1);
+    resistance->setSingleStep(0.1);
+    resistance->setSpecialValueText("learned from 0");
+    resistance->setSuffix(QString::fromUtf8(" m\xCE\xA9"));
+    resistance->setValue(estimator.getStartResistance() * 1000);
+    resistance->setToolTip("Internal resistance of a cell, the start of R for V \xE2\x88\x92 I\xC2\xB7R (with a current sensor);\n"
+                           "it is learned further in flight. Used from the next battery, or at once while R is not known yet");
+    if(airframe_resistance > 0) {
+        auto row = new QWidget(&dialog);
+        auto h = new QHBoxLayout(row);
+        h->setContentsMargins(0, 0, 0, 0);
+        h->addWidget(resistance, 1);
+        auto reset = new QPushButton(QString::fromUtf8("Airframe: %1 m\xCE\xA9").arg(airframe_resistance, 0, 'f', 1), row);
+        reset->setToolTip("BAT_CELL_RESISTANCE of the airframe");
+        connect(reset, &QPushButton::clicked, resistance, [resistance, r = airframe_resistance]() { resistance->setValue(r); });
+        h->addWidget(reset);
+        form->addRow("R per cell", row);
+    } else {
+        form->addRow("R per cell", resistance);
+    }
+
     auto reserve = new QSpinBox(&dialog);
     reserve->setRange(0, 60);
     reserve->setSingleStep(5);
@@ -475,7 +692,17 @@ void EnergyViewer::askSettings()
     auto settings = getAppSettings();
     QString key = "energy/" + ac_name + "/";
     estimator.setChemistry(static_cast<EnergyEstimator::Chemistry>(chem->currentIndex()));
-    settings.setValue(key + "chemistry", chem->currentIndex());
+    if(chem->currentIndex() == qMax(0, airframe_chemistry)) {
+        settings.remove(key + "chemistry");
+    } else {
+        settings.setValue(key + "chemistry", chem->currentIndex());
+    }
+    estimator.setStartResistance(resistance->value() / 1000);
+    if(std::abs(resistance->value() - airframe_resistance) < 0.05) {
+        settings.remove(key + "resistance");
+    } else {
+        settings.setValue(key + "resistance", resistance->value());
+    }
     bool was_known = cells_known;
     cells_known = cells->value() > 0;
     if(cells_known) {
@@ -530,6 +757,8 @@ void EnergyViewer::contextMenuEvent(QContextMenuEvent *event)
             estimator.setCells(0);  // guessed again from the new battery
         }
         seen_current = false;
+        history.clear();
+        trace.clear();
         result = EnergyEstimator::Result();
         update();
     });

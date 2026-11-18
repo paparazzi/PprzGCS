@@ -135,6 +135,11 @@ void EnergyEstimator::resetSag()
         }
     }
     updates = 0;
+    // a known R (airframe): V - I.R can correct from the start, and goes on learning from there
+    if(with_current && r_start > 0) {
+        th[0] = r_start;
+        updates = MIN_UPDATES;
+    }
     load_mean = 0;
     load_x = points.empty() ? 0 : points.back().load;
     ocv_lp = -1;
@@ -144,6 +149,15 @@ void EnergyEstimator::resetSag()
 bool EnergyEstimator::motorsOn(const Point &pt) const
 {
     return pt.throttle > 5 || pt.current > 2;
+}
+
+void EnergyEstimator::setStartResistance(double ohm)
+{
+    r_start = std::max(0.0, ohm);
+    if(with_current && r_start > 0 && updates < MIN_UPDATES) {
+        th[0] = r_start;
+        updates = MIN_UPDATES;
+    }
 }
 
 bool EnergyEstimator::rKnown() const
@@ -325,7 +339,7 @@ void EnergyEstimator::updateCharge(const Sample &s, double dt, bool after_gap)
     }
 }
 
-EnergyEstimator::Result EnergyEstimator::estimate() const
+EnergyEstimator::Result EnergyEstimator::estimate(Method chosen) const
 {
     Result r;
     if(points.size() < MIN_SAMPLES || cells <= 0) {
@@ -338,13 +352,15 @@ EnergyEstimator::Result EnergyEstimator::estimate() const
     r.r_known = rKnown();
     r.resistance = th[0] + th[1];
     r.used = used;
+    r.load = last.load;
+    r.load_x = last.x;
     bool counted = capacity > 0 && used >= 0 && (onboard_charge || with_current);
     r.ready[VOLTAGE] = true;
     r.ready[CHARGE] = counted;
     r.ready[SAG] = true;            // V + dV of the user until R is known
     r.ready[FILTER] = counted;
 
-    Method m = method;
+    Method m = chosen;
     if(!r.ready[m]) {
         m = m == FILTER ? SAG : VOLTAGE;
     }
