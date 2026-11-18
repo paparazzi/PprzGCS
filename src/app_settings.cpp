@@ -441,7 +441,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     addSection("Recording", w_rec, l_rec, row);
     cb = addSetting("Record the microphones", "audio/enabled", w_rec, l_rec, row, Type::BOOL);
     callbacks.append(cb);
-    addHelp("The microphones below are recorded in the logs folder, a file per microphone, for the "
+    addHelp("The microphones below are recorded in var/logs/audio (or the folder below), a file per microphone, for the "
             "transcription and the logbook after the flight. The status bar shows the recording, the level of "
             "each channel, and a microphone that is not connected or has no signal.<br>Started from the status "
             "bar (click the recorder), or from the start when PprzGCS runs with --record: e.g. in the flight "
@@ -455,7 +455,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     addHelp("A crash or a power loss then loses only the last seconds. The files follow each other "
             "without a gap.", w_rec, l_rec, row);
-    cb = addSetting("Folder (empty: var/logs)", "audio/folder", w_rec, l_rec, row, Type::PATH_DIR);
+    cb = addSetting("Folder (empty: var/logs/audio)", "audio/folder", w_rec, l_rec, row, Type::PATH_DIR);
     callbacks.append(cb);
     cb = addSetting("Recorder name (empty: the computer)", "audio/name", w_rec, l_rec, row, Type::STRING);
     callbacks.append(cb);

@@ -25,8 +25,13 @@ double nowUnix() {
     return QDateTime::currentMSecsSinceEpoch() / 1000.0;
 }
 
-QString defaultFolder() {
+QString logsFolder() {
     return appConfig()->value("PAPARAZZI_HOME").toString() + "/var/logs";
+}
+
+/// var/logs/audio: next to the server logs, apart from them (and from var/logs/video)
+QString defaultFolder() {
+    return logsFolder() + "/audio";
 }
 }
 
@@ -308,7 +313,9 @@ void AudioRecorder::openFile(Mic* m, double t) {
     sf_set_string(m->sf, SF_STR_DATE, date.toUTC().toString(Qt::ISODateWithMs).toUtf8().constData());
     sf_set_string(m->sf, SF_STR_SOFTWARE, "PprzGCS");
     sf_set_string(m->sf, SF_STR_TITLE, m->config.labels.join(", ").toUtf8().constData());
-    m->file = QFileInfo(path).fileName();
+    // (as in AUDIO_RECORD_STATUS: relative to var/logs when in it, e.g. audio/26_11_18__...opus)
+    auto rel = QDir(logsFolder()).relativeFilePath(path);
+    m->file = rel.startsWith("..") ? path : rel;
     m->error.clear();
     m->frames_file = 0;
 }

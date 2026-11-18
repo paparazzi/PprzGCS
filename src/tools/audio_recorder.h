@@ -21,7 +21,7 @@ struct MicConfig {
 
 /**
  * Records the microphones of the settings (e.g. a DJI Mic receiver: one pilot per channel), in
- * the logs folder (var/logs), for the transcription and the logbook after the flight.
+ * the logs folder (var/logs/audio), for the transcription and the logbook after the flight.
  *
  * - a file per microphone, a new one every few minutes (a crash loses seconds, not the file):
  *   YY_MM_DD__HH_MM_SS__audio__<labels>.opus (or .flac), the UTC start time of its first sample
