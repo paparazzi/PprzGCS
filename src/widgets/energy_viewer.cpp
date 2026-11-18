@@ -388,18 +388,20 @@ void EnergyViewer::paintEvent(QPaintEvent *event)
     // under the plot: the charge left, the flight time to the reserve, and what the estimator uses
     QRectF foot(0, curve_top + curve_h + 2, width(), FOOTER);
     double cw = foot.width() / 3;
-    auto stat = [&](int i, QString caption, QString value) {
+    auto stat = [&](int i, QString caption, QString value, QColor color = QColor()) {
         QRectF c(foot.left() + i * cw, foot.top(), cw, foot.height());
         p.setFont(pixelFont(font(), 10, false));
         p.setPen(secondary);
         p.drawText(QRectF(c.left(), c.top(), c.width(), 13), Qt::AlignLeft | Qt::AlignVCenter, caption);
         p.setFont(pixelFont(font(), 15, true));
-        p.setPen(r.valid ? text : secondary);
+        p.setPen(!r.valid ? secondary : color.isValid() ? color : text);
         p.drawText(QRectF(c.left(), c.top() + 13, c.width(), 20), Qt::AlignLeft | Qt::AlignVCenter, value);
     };
     stat(0, "Charge left", r.valid ? QString("%1 %").arg(qRound(r.soc * 100)) : none);
-    stat(1, QString("Time to %1 %").arg(qRound(reserve * 100)),
-         r.minutes >= 0 ? QString::fromUtf8("\xE2\x89\x88 %1 min").arg(r.minutes, 0, 'f', r.minutes < 10 ? 1 : 0) : none);
+    // below the reserve: the time to empty, in red
+    stat(1, r.valid && r.to_empty ? QString("Time to 0 %") : QString("Time to %1 %").arg(qRound(reserve * 100)),
+         r.minutes >= 0 ? QString::fromUtf8("\xE2\x89\x88 %1 min").arg(r.minutes, 0, 'f', r.minutes < 10 ? 1 : 0) : none,
+         r.valid && r.to_empty ? EMPTY : QColor());
     switch(r.method) {
     case EnergyEstimator::VOLTAGE:
         stat(2, QString::fromUtf8("\xCE\x94V/cell (set)"), QString("%1 mV").arg(qRound(estimator.getSag() * 1000)));

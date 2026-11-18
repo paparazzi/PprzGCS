@@ -73,7 +73,8 @@ public:
         double load_x = 0;      // the load low-passed (10 s), the polarization of V - I.R
         double power = 0;       // W, mean of the last seconds; 0: unknown
         double wh_left = -1;    // Wh, -1: unknown (no capacity)
-        double minutes = -1;    // to the reserve, -1: unknown
+        double minutes = -1;    // to the reserve (below it: to empty), -1: unknown
+        bool to_empty = false;  // below the reserve: minutes is the time to 0 %
     };
 
     void setChemistry(Chemistry c);

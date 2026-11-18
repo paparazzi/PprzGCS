@@ -402,11 +402,14 @@ EnergyEstimator::Result EnergyEstimator::estimate(Method chosen) const
         }
         r.power = k > 0 ? p / k : 0;
     }
+    // the time to the reserve; below it, to empty
+    r.to_empty = r.energy <= reserve;
+    const double target = r.to_empty ? 0 : reserve;
     if(capacity > 0) {
         double total = cells * capacity / 1000 * meanOcv(chemistry);
         r.wh_left = total * r.energy;
         if(r.power > 1) {
-            r.minutes = std::max(0.0, (r.energy - reserve) * total / r.power * 60);
+            r.minutes = std::max(0.0, (r.energy - target) * total / r.power * 60);
         }
     }
 
@@ -424,7 +427,7 @@ EnergyEstimator::Result EnergyEstimator::estimate(Method chosen) const
         double den = k * stt - st * st;
         double slope = den > 0 ? (k * ste - st * se) / den : 0;     // per s
         if(slope < -1e-6) {
-            r.minutes = std::max(0.0, (r.energy - reserve) / -slope / 60);
+            r.minutes = std::max(0.0, (r.energy - target) / -slope / 60);
         }
     }
     return r;
