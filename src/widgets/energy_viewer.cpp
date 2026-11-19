@@ -168,7 +168,7 @@ EnergyViewer::EnergyViewer(QString ac_id, QWidget *parent) : QWidget(parent),
             "with \xCE\x94V 0, the voltage alone: low under load, never too high.<br>"
             "<b>mAh</b>: the charge used (sent by the aircraft, else the current counted) over the capacity.<br>"
             "<b>V \xE2\x88\x92 I\xC2\xB7R</b>: the voltage + 60 % of R \xC3\x97 load, R learned from the changes of the load.<br>"
-            "<b>Filter</b>: the mAh count, pulled slowly towards V \xE2\x88\x92 I\xC2\xB7R.<br>"
+            "<b>Filter</b>: the mAh count, pulled towards V \xE2\x88\x92 I\xC2\xB7R (time constant 2 min).<br>"
             "Click the battery line or right click: chemistry, cells, capacity, reserve.", help_button);
     });
 }

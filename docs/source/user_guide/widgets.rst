@@ -186,7 +186,7 @@ explains them):
   the voltage alone. A voltage reading that jumps with the throttle (motor ripple) makes R too high and the estimate
   too optimistic: then use V or mAh. Until the load has changed
   enough, ΔV of the Battery window is used and the panel says so.
-+ Filter: the mAh count, pulled slowly (5 min) towards the charge of V - I·R. Needs the capacity, and the current or
++ Filter: the mAh count, pulled towards the charge of V - I·R with a time constant of 2 min. Needs the capacity, and the current or
   the charge used; else V - I·R is used.
 
 Under the curve: the charge left, the flight time to the reserve, and what the estimator uses: ΔV (V), the mAh used

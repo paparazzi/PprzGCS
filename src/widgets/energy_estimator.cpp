@@ -38,7 +38,7 @@ const double R_PRIOR = 0.01;        // start covariance of R0 and Rp: R starts a
 const int MIN_UPDATES = 10;
 
 // FILTER
-const double TAU_FILTER = 300;      // s, of the pull towards SAG
+const double TAU_FILTER = 120;      // s, of the pull towards SAG: the count drifts, trusted only short
 const double NEW_BATTERY = 0.01;    // Ah: the charge used sent went down by more: a new battery
 const double NOT_FLOWN = 0.002;     // Ah used: still before the flight
 const double ONBOARD_CHECK = 0.2;   // Ah counted here before the count of the aircraft is checked

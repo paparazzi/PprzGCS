@@ -22,7 +22,7 @@
  *   must not show more charge than is left. A voltage reading that follows the throttle (motor
  *   ripple) makes R too high, and then even 60 % can be too much.
  * - FILTER: complementary filter: the charge used of CHARGE, pulled towards the SoC of SAG with a
- *   time constant of 5 min.
+ *   time constant of 2 min.
  *
  * The energy left is in Wh (the integral of the OCV over the charge), not in Ah: the last
  * percent of charge holds less energy, at a lower voltage. The time left: from the mean power of
