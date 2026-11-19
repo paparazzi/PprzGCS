@@ -65,7 +65,7 @@ QString chemistryName(EnergyEstimator::Chemistry c) {
     }
 }
 
-/// BAT_CHEMISTRY of an airframe (LIPO, LIHV, LIION, LIFE, a few spellings), -1: not known
+/// BAT_TYPE (the chemistry) of an airframe (LIPO, LIHV, LIION, LIFE, a few spellings), -1: not known
 int chemistryOf(QString name) {
     QString n = name.toUpper().remove('_').remove('-').remove(' ').remove('"');
     if(n == "LIPO") return EnergyEstimator::LIPO;
@@ -113,14 +113,14 @@ EnergyViewer::EnergyViewer(QString ac_id, QWidget *parent) : QWidget(parent),
                 level_defaults << name;
             }
         }
-        auto chem = ac->getAirframe()->getDefine("BAT_CHEMISTRY");
+        auto chem = ac->getAirframe()->getDefine("BAT_TYPE");
         if(chem) {
             int c = chemistryOf(chem->value);
             if(c >= 0) {
                 airframe_chemistry = static_cast<EnergyEstimator::Chemistry>(c);
                 airframe_chemistry_set = true;
             } else {
-                qWarning() << "Energy:" << ac_name << ": BAT_CHEMISTRY" << chem->value
+                qWarning() << "Energy:" << ac_name << ": BAT_TYPE" << chem->value
                            << "not known (LIPO, LIHV, LIION or LIFE), LiPo used";
             }
         }
@@ -738,8 +738,8 @@ void EnergyViewer::askSettings()
         chem->addItem(chemistryName(static_cast<EnergyEstimator::Chemistry>(i)));
     }
     chem->setCurrentIndex(estimator.getChemistry());
-    chem->setToolTip(airframe_chemistry_set ? "Airframe (BAT_CHEMISTRY): " + chemistryName(airframe_chemistry)
-                                             : QString("No BAT_CHEMISTRY in the airframe: LiPo by default"));
+    chem->setToolTip(airframe_chemistry_set ? "Airframe (BAT_TYPE): " + chemistryName(airframe_chemistry)
+                                             : QString("No BAT_TYPE in the airframe: LiPo by default"));
     form->addRow("Chemistry", chem);
 
     auto cells = new QSpinBox(&dialog);

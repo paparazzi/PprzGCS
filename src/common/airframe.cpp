@@ -310,16 +310,17 @@ double Airframe::defaultCellLevel(QString name) {
     return 0;
 }
 
-double Airframe::batteryLevel(QString name, int cells) {
+double Airframe::batteryLevel(QString name) {
     auto d = getDefine(name);
     if(d && d->value.toDouble() > 0) {
         return d->value.toDouble();
     }
+    int cells = 3;  // the default on board and in the server
     auto nb = getDefine("BAT_NB_CELLS");
     if(nb && nb->value.toInt() > 0) {
         cells = nb->value.toInt();
     }
-    return defaultCellLevel(name) * (cells > 0 ? cells : 3);
+    return defaultCellLevel(name) * cells;
 }
 
 QList<ChecklistItem*> Airframe::getChecklistItems() {

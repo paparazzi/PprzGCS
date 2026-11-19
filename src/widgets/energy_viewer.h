@@ -15,7 +15,7 @@
  * discharge curve of the chemistry with the state of the battery on it (at rest on the curve,
  * under load below it), and under it the charge left, the flight time to the reserve and the
  * internal resistance. Inputs: the voltage, and the current when measured, else the throttle.
- * The chemistry, cells, capacity and R come from the airframe (BAT_CHEMISTRY, BAT_NB_CELLS,
+ * The chemistry, cells, capacity and R come from the airframe (BAT_TYPE, BAT_NB_CELLS,
  * BAT_CAPACITY in mAh, BAT_CELL_RESISTANCE in mOhm per cell).
  * Pills at the top: the estimator (V, V - I*R or filter), changed often in flight. The battery
  * (chemistry, cells, capacity, reserve) in a window: click the battery line, or right click.
@@ -58,7 +58,7 @@ private:
     bool cells_known = false;       // from the airframe or the user, else guessed from the voltage
     int airframe_cells = 0;         // BAT_NB_CELLS of the airframe; 0: none
     double airframe_capacity = 0;   // mAh, BAT_CAPACITY of the airframe; 0: none
-    /// BAT_CHEMISTRY of the airframe; LiPo when not set (or not known)
+    /// BAT_TYPE of the airframe; LiPo when not set (or not known)
     EnergyEstimator::Chemistry airframe_chemistry = EnergyEstimator::LIPO;
     bool airframe_chemistry_set = false;
     double airframe_resistance = 0; // mOhm per cell, BAT_CELL_RESISTANCE of the airframe; 0: none

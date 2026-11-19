@@ -64,7 +64,7 @@ Click on a strip to select the aircraft for the other widgets, double click it t
 With more than 3 aircraft, the strips of the aircraft that are not selected are compact (two lines).
 The round icon next to the throttle shows its state: green while the throttle is on, red (and *KILLED*)
 while it is killed; clicking it kills or resurrects the throttle, after a confirmation.
-Click the battery to show the voltage per cell or the total (with ``BAT_NB_CELLS`` in the airframe).
+Click the battery to show the voltage per cell or the total (``BAT_NB_CELLS`` of the airframe, else 3 cells).
 The link, GPS, RC and IMU icons are shown by default; *File > Settings > General* can hide them when ok.
 
 
@@ -216,12 +216,13 @@ R start from the airframe, section ``BAT``:
 
 .. code-block:: xml
 
-   <define name="BAT_CHEMISTRY" value="LIION"/>                  <!-- LIPO, LIHV, LIION or LIFE -->
+   <define name="BAT_TYPE" value="LIION"/>                       <!-- LIPO, LIHV, LIION or LIFE -->
    <define name="BAT_NB_CELLS" value="6"/>
    <define name="BAT_CAPACITY" value="29000" unit="mAh"/>
    <define name="BAT_CELL_RESISTANCE" value="2.0" unit="mOhm"/>  <!-- per cell -->
 
-Without ``BAT_NB_CELLS`` the cells are guessed from the first voltage, without ``BAT_CHEMISTRY`` LiPo is used. The mAh
+Without ``BAT_NB_CELLS`` the cells are guessed from the first voltage for the charge left (the alarm levels use 3 cells,
+as on board and in the server), without ``BAT_TYPE`` LiPo is used. The mAh
 count starts again from the voltage only when the aircraft's own count starts again, or after a reboot (no telemetry
 for a few seconds) with a nearly full battery (above 90 %); otherwise, use New battery in the right-click menu. Change
 the capacity when you use another battery, also in flight: the mAh estimate follows at once; a button sets it back to
