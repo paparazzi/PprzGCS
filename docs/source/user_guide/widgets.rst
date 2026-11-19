@@ -205,7 +205,7 @@ reserve in red. A thin gray line shows the voltage measured over the whole fligh
 estimator estimated it at that time: each estimator has its own trace, kept also while another one is shown (it
 starts again with a new battery). Dashed lines mark the alarm levels of the airframe,
 per cell: ``LOW_BAT_LEVEL`` (orange), ``CRITIC_BAT_LEVEL`` (red) and ``CATASTROPHIC_BAT_LEVEL`` (black); the measured
-voltage under load is what reaches them. A level not set in the airframe is 3.5, 3.25 and 3.0 V per cell, also for the
+voltage under load is what reaches them. A level below the plot is named at its bottom, with a down arrow. A level not set in the airframe is 3.5, 3.25 and 3.0 V per cell, also for the
 battery alerts and the battery plot.
 
 The battery, which changes seldom, is set in a window (click *Battery...* on the battery line, or right click): the

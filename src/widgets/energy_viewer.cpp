@@ -616,13 +616,19 @@ void EnergyViewer::drawCurve(QPainter &p, QRectF area)
             if(pack <= 0) {
                 continue;
             }
-            if(v <= vmin || v >= vmax) {
+            if(v >= vmax) {
                 continue;
             }
-            double y = pos(0, v).y();
-            p.setPen(QPen(l.color, 1, Qt::DashLine));
-            p.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y));
             QString label = QString("%1 %2 V%3").arg(l.name).arg(pack, 0, 'f', 1).arg(level_defaults.contains(l.define) ? " (default)" : "");
+            // below the plot: only the name, at the bottom, with a down arrow (no line)
+            const bool below = v <= vmin;
+            double y = below ? plot.bottom() - 1 : pos(0, v).y();
+            if(below) {
+                label = QString::fromUtf8("\xE2\x86\x93 ") + label;
+            } else {
+                p.setPen(QPen(l.color, 1, Qt::DashLine));
+                p.drawLine(QPointF(plot.left(), y), QPointF(plot.right(), y));
+            }
             QRectF lr(plot.left() + 4, y - 11, lfm.horizontalAdvance(label) + 2, 11);
             if(!previous.isNull() && lr.intersects(previous)) {
                 lr.moveLeft(previous.right() + 8);
