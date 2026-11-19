@@ -195,14 +195,15 @@ else (no current or no capacity) from how fast the energy went down in the last 
 current and the capacity it is the energy left (in Wh) over the mean power: on the ground (no power) it shows no time. Below the reserve, it shows the time to
 empty (0 %), in red.
 
-In V - I·R and Filter, a plot under the curve shows the last 5 minutes: the measured cell voltage (top) and current,
+Under the curve, in every estimator, a plot shows the last 5 minutes: the measured cell voltage (top) and current,
 else throttle (bottom), in gray, and in orange the current low-passed over 10 s, which the estimator uses for the slow
 part of the sag. R is learned from the changes seen there.
 
-The curve: the voltage at rest of the chemistry (black), and under it the curve under load, minus the ΔV of the
+The curve (legend at the top right): the voltage at rest of the chemistry (black), and under it the curve under load, minus the ΔV of the
 estimator (orange; none for mAh), with the battery on it: at rest on the black curve, under load below it, and the
 reserve in red. A thin gray line shows the voltage measured over the whole flight, against the energy used as the
-estimator estimated it at that time (the trace starts again with a new battery). Dashed lines mark the alarm levels of the airframe,
+estimator estimated it at that time: each estimator has its own trace, kept also while another one is shown (it
+starts again with a new battery). Dashed lines mark the alarm levels of the airframe,
 per cell: ``LOW_BAT_LEVEL`` (orange), ``CRITIC_BAT_LEVEL`` (red) and ``CATASTROPHIC_BAT_LEVEL`` (black); the measured
 voltage under load is what reaches them. A level not set in the airframe is 3.5, 3.25 and 3.0 V per cell, also for the
 battery alerts and the battery plot.

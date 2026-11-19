@@ -372,10 +372,10 @@ void EnergyViewer::paintEvent(QPaintEvent *event)
 
     // the curve gives the room taken by the hint, so that the values under it stay visible
     double curve_h = qMax(CURVE_HEIGHT - (curve_top - y - 74), height() - curve_top - FOOTER - 2);
-    // V - I.R and Filter: under the curve, the voltage and the load from which R is learned
+    // under the curve, in every estimator: the voltage and the load (from which R is learned)
     // (only when there is room: a small panel keeps the curve)
     double history_h = qMin(qMax(HISTORY_H, 0.4 * curve_h), curve_h - CURVE_MIN);
-    bool show_history = (m == EnergyEstimator::SAG || m == EnergyEstimator::FILTER) && history_h >= 50;
+    bool show_history = history_h >= 50;
     if(show_history) {
         curve_h -= history_h;
     }
@@ -653,6 +653,38 @@ void EnergyViewer::drawCurve(QPainter &p, QRectF area)
     }
 
     drawLevelLabels(p);
+
+    // the legend, top right (the curves are low on the empty side)
+    {
+        struct Entry { QColor color; QString name; double width; };
+        std::vector<Entry> entries = {{withAlpha(text, 200), "at rest (estimated)", 2}};
+        if(r.dv > 0.005) {
+            entries.push_back({ACCENT, "under load", 2});
+        }
+        if(trace.size() > 1) {
+            entries.push_back({withAlpha(text, 110), "measured", 1});
+        }
+        p.save();
+        p.setFont(pixelFont(font(), 9, false));
+        QFontMetricsF lfm(p.font());
+        double w = 0;
+        for(const auto &e : entries) {
+            w = std::max(w, lfm.horizontalAdvance(e.name));
+        }
+        const double line = 14, row = 11;
+        QRectF box(plot.right() - w - line - 10, plot.top() + 3, w + line + 8, row * entries.size() + 4);
+        p.setPen(Qt::NoPen);
+        p.setBrush(withAlpha(palette().color(QPalette::Window), 210));
+        p.drawRect(box);
+        for(size_t i = 0; i < entries.size(); i++) {
+            double y = box.top() + 2 + row * i + row / 2;
+            p.setPen(QPen(entries[i].color, entries[i].width));
+            p.drawLine(QPointF(box.left() + 3, y), QPointF(box.left() + 3 + line, y));
+            p.setPen(withAlpha(text, 170));
+            p.drawText(QRectF(box.left() + line + 6, y - row / 2, w + 2, row), Qt::AlignLeft | Qt::AlignVCenter, entries[i].name);
+        }
+        p.restore();
+    }
 
     // the battery: at rest on the curve, under load below
     QPointF rest = pos(1 - r.energy, r.ocv);
