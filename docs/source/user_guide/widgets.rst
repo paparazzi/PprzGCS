@@ -195,7 +195,7 @@ else (no current or no capacity) from how fast the energy went down in the last 
 current and the capacity it is the energy left (in Wh) over the mean power: on the ground (no power) it shows no time. Below the reserve, it shows the time to
 empty (0 %), in red.
 
-Under the curve, in every estimator, a plot shows the last 5 minutes: the measured cell voltage (top) and current,
+Under the curve, in every estimator, a plot (opened and closed with the chevron next to the *?*) shows the last 5 minutes: the measured cell voltage (top) and current,
 else throttle (bottom), in gray, and in orange the current low-passed over 10 s, which the estimator uses for the slow
 part of the sag. R is learned from the changes seen there.
 

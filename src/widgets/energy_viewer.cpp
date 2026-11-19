@@ -151,6 +151,9 @@ EnergyViewer::EnergyViewer(QString ac_id, QWidget *parent) : QWidget(parent),
     clock.start();
 
     connect(ac->getStatus(), &AircraftStatus::engine_status, this, &EnergyViewer::addEngineStatus);
+    show_history = getAppSettings().value("energy/history", true).toBool();
+    setProperty("rail_extra_height", show_history ? static_cast<int>(HISTORY_H) : 0);
+
     // the help: on a "?" (as in the app settings), not as a tooltip over the whole panel
     help_button = new QToolButton(this);
     help_button->setText("?");
@@ -244,13 +247,13 @@ void EnergyViewer::resizeEvent(QResizeEvent *event)
 
 QSize EnergyViewer::sizeHint() const
 {
-    // room for the history of V - I.R under a full curve
-    return QSize(300, minimumSizeHint().height() + static_cast<int>(CURVE_MIN + HISTORY_H - CURVE_HEIGHT));
+    return QSize(300, minimumSizeHint().height());
 }
 
 QSize EnergyViewer::minimumSizeHint() const
 {
-    return QSize(MIN_WIDTH, static_cast<int>(HEADER + CURVE_HEIGHT + FOOTER + 4));
+    // the history, when opened, under the full curve
+    return QSize(MIN_WIDTH, static_cast<int>(HEADER + CURVE_HEIGHT + FOOTER + 4 + (show_history ? HISTORY_H : 0)));
 }
 
 double EnergyViewer::drawChips(QPainter &p)
@@ -280,6 +283,20 @@ double EnergyViewer::drawChips(QPainter &p)
         QString name = i == EnergyEstimator::VOLTAGE && estimator.getSag() > 0 ? QString::fromUtf8("V + \xCE\x94V") : METHOD_NAMES[i];
         method_chips[i] = chip(x, 0, name, on, enabled);
         x = method_chips[i].right() + 4;
+    }
+    // the history (voltage and current) under the curve: a chevron, right when hidden, down when
+    // shown, as the sky plot of the GPS panel
+    history_button = QRectF(width() - 18 - 6 - 24, 0, 24, CHIP_H);
+    p.setPen(Qt::NoPen);
+    p.setBrush(QColor(128, 128, 128, show_history ? 70 : 30));
+    p.drawRoundedRect(history_button, 5, 5);
+    p.setPen(QPen(text, 1.6, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    p.setBrush(Qt::NoBrush);
+    QPointF c = history_button.center();
+    if(show_history) {
+        p.drawPolyline(QPolygonF({c + QPointF(-4.5, -2), c + QPointF(0, 2.5), c + QPointF(4.5, -2)}));
+    } else {
+        p.drawPolyline(QPolygonF({c + QPointF(-2, -4.5), c + QPointF(2.5, 0), c + QPointF(-2, 4.5)}));
     }
     p.setBrush(Qt::NoBrush);
     return CHIPS;
@@ -370,15 +387,13 @@ void EnergyViewer::paintEvent(QPaintEvent *event)
         curve_top += hr.height();
     }
 
+    // the room for the curve and, when opened (chevron), the history under it: the voltage and
+    // the load (from which R is learned). The history always gets at least HISTORY_H: the panel is
+    // that much taller when it is open (rail_extra_height for a card on the map)
+    double room = height() - curve_top - FOOTER - 2;
+    double history_h = show_history ? qMax(HISTORY_H, 0.4 * (room - HISTORY_H)) : 0;
     // the curve gives the room taken by the hint, so that the values under it stay visible
-    double curve_h = qMax(CURVE_HEIGHT - (curve_top - y - 74), height() - curve_top - FOOTER - 2);
-    // under the curve, in every estimator: the voltage and the load (from which R is learned)
-    // (only when there is room: a small panel keeps the curve)
-    double history_h = qMin(qMax(HISTORY_H, 0.4 * curve_h), curve_h - CURVE_MIN);
-    bool show_history = history_h >= 50;
-    if(show_history) {
-        curve_h -= history_h;
-    }
+    double curve_h = qMax(CURVE_HEIGHT - (curve_top - y - 74), room - history_h);
     drawCurve(p, QRectF(0, curve_top, width(), curve_h));
     if(show_history) {
         drawHistory(p, QRectF(0, curve_top + curve_h, width(), history_h));
@@ -847,6 +862,15 @@ void EnergyViewer::mousePressEvent(QMouseEvent *event)
             saveConfig("estimator", i);
             return;
         }
+    }
+    if(history_button.contains(pos)) {
+        show_history = !show_history;
+        getAppSettings().setValue("energy/history", show_history);
+        // not part of the size set by the user for a card on the map rail: it grows and shrinks back
+        setProperty("rail_extra_height", show_history ? static_cast<int>(HISTORY_H) : 0);
+        updateGeometry();
+        update();
+        return;
     }
     if(battery_line.contains(pos)) {
         askSettings();

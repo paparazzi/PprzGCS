@@ -70,6 +70,8 @@ private:
     std::vector<LevelLabel> level_labels;   // placed by drawCurve, drawn over the curves
     QRectF method_chips[EnergyEstimator::METHODS];
     QRectF battery_line;
+    QRectF history_button;      // the chevron that opens and closes the history
+    bool show_history = true;   // the history of the voltage and the load under the curve
     struct Past {
         double t;       // s
         double cell;    // V per cell, measured
