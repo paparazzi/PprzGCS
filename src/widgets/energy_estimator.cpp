@@ -33,10 +33,12 @@ const double TAU_V = 10;            // s, low-pass of the voltage
 const double LAG = 2;               // s, the changes over this time
 const double TAU_X = 10;            // s, the polarization
 const double MEMORY = 300;          // s, of the least squares
+const double R_PRIOR = 0.01;        // start covariance of R0 and Rp: R starts at 0 and grows only as
+                                    // the changes of the load show it (not too high from the first ones)
 const int MIN_UPDATES = 10;
 
 // FILTER
-const double TAU_FILTER = 300;      // s, of the pull towards SAG
+const double TAU_FILTER = 120;      // s, of the pull towards SAG: the count drifts, trusted only short
 const double NEW_BATTERY = 0.01;    // Ah: the charge used sent went down by more: a new battery
 const double NOT_FLOWN = 0.002;     // Ah used: still before the flight
 const double ONBOARD_CHECK = 0.2;   // Ah counted here before the count of the aircraft is checked
@@ -129,10 +131,15 @@ void EnergyEstimator::resetSag()
     for(int i = 0; i < 3; i++) {
         th[i] = 0;
         for(int j = 0; j < 3; j++) {
-            P[i][j] = i == j ? 1 : 0;
+            P[i][j] = i == j ? (i < 2 ? R_PRIOR : 1) : 0;
         }
     }
     updates = 0;
+    // a known R (airframe): V - I.R can correct from the start, and goes on learning from there
+    if(with_current && r_start > 0) {
+        th[0] = r_start;
+        updates = MIN_UPDATES;
+    }
     load_mean = 0;
     load_x = points.empty() ? 0 : points.back().load;
     ocv_lp = -1;
@@ -142,6 +149,15 @@ void EnergyEstimator::resetSag()
 bool EnergyEstimator::motorsOn(const Point &pt) const
 {
     return pt.throttle > 5 || pt.current > 2;
+}
+
+void EnergyEstimator::setStartResistance(double ohm)
+{
+    r_start = std::max(0.0, ohm);
+    if(with_current && r_start > 0 && updates < MIN_UPDATES) {
+        th[0] = r_start;
+        updates = MIN_UPDATES;
+    }
 }
 
 bool EnergyEstimator::rKnown() const
@@ -323,7 +339,7 @@ void EnergyEstimator::updateCharge(const Sample &s, double dt, bool after_gap)
     }
 }
 
-EnergyEstimator::Result EnergyEstimator::estimate() const
+EnergyEstimator::Result EnergyEstimator::estimate(Method chosen) const
 {
     Result r;
     if(points.size() < MIN_SAMPLES || cells <= 0) {
@@ -336,13 +352,15 @@ EnergyEstimator::Result EnergyEstimator::estimate() const
     r.r_known = rKnown();
     r.resistance = th[0] + th[1];
     r.used = used;
+    r.load = last.load;
+    r.load_x = last.x;
     bool counted = capacity > 0 && used >= 0 && (onboard_charge || with_current);
     r.ready[VOLTAGE] = true;
     r.ready[CHARGE] = counted;
     r.ready[SAG] = true;            // V + dV of the user until R is known
     r.ready[FILTER] = counted;
 
-    Method m = method;
+    Method m = chosen;
     if(!r.ready[m]) {
         m = m == FILTER ? SAG : VOLTAGE;
     }
@@ -384,16 +402,22 @@ EnergyEstimator::Result EnergyEstimator::estimate() const
         }
         r.power = k > 0 ? p / k : 0;
     }
+    // the time to the reserve; below it, to empty
+    r.to_empty = r.energy <= reserve;
+    const double target = r.to_empty ? 0 : reserve;
     if(capacity > 0) {
         double total = cells * capacity / 1000 * meanOcv(chemistry);
         r.wh_left = total * r.energy;
         if(r.power > 1) {
-            r.minutes = std::max(0.0, (r.energy - reserve) * total / r.power * 60);
+            r.minutes = std::max(0.0, (r.energy - target) * total / r.power * 60);
         }
     }
 
-    // else the time left from the trend of the energy
-    if(r.minutes < 0 && history.size() >= 10 && last.t - history.front().first > 60) {
+    // else (no current or no capacity) the time left from the trend of the energy, while the motors
+    // run. With the current and the capacity, only the power counts: no power (on the ground), no
+    // time, and a jump of the estimate (e.g. the sag gone at the landing) does not change it.
+    bool from_power = with_current && capacity > 0;
+    if(!from_power && motors && r.minutes < 0 && history.size() >= 10 && last.t - history.front().first > 60) {
         double st = 0, se = 0, stt = 0, ste = 0;
         int k = history.size();
         for(auto &[t, e] : history) {
@@ -406,7 +430,7 @@ EnergyEstimator::Result EnergyEstimator::estimate() const
         double den = k * stt - st * st;
         double slope = den > 0 ? (k * ste - st * se) / den : 0;     // per s
         if(slope < -1e-6) {
-            r.minutes = std::max(0.0, (r.energy - reserve) / -slope / 60);
+            r.minutes = std::max(0.0, (r.energy - target) / -slope / 60);
         }
     }
     return r;

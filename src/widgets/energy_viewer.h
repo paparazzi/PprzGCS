@@ -3,7 +3,10 @@
 
 #include <QWidget>
 #include <QElapsedTimer>
+#include <deque>
+#include <vector>
 #include <QToolButton>
+#include <QStringList>
 #include "energy_estimator.h"
 
 /**
@@ -12,7 +15,8 @@
  * discharge curve of the chemistry with the state of the battery on it (at rest on the curve,
  * under load below it), and under it the charge left, the flight time to the reserve and the
  * internal resistance. Inputs: the voltage, and the current when measured, else the throttle.
- * The cells and the capacity come from the airframe (BAT_NB_CELLS, MAX_BAT_CAPACITY in mAh).
+ * The chemistry, cells, capacity and R come from the airframe (BAT_TYPE, BAT_NB_CELLS,
+ * BAT_CAPACITY in mAh, BAT_CELL_RESISTANCE in mOhm per cell).
  * Pills at the top: the estimator (V, V - I*R or filter), changed often in flight. The battery
  * (chemistry, cells, capacity, reserve) in a window: click the battery line, or right click.
  * All saved per aircraft.
@@ -35,6 +39,9 @@ protected:
 private:
     void addEngineStatus();
     void drawCurve(QPainter &p, QRectF area);
+    void drawLevelLabels(QPainter &p);
+    /// V - I.R: the history of the measured voltage and load, and the filtered load
+    void drawHistory(QPainter &p, QRectF area);
     /// the pills of the estimator, at the top of the panel; returns their height
     double drawChips(QPainter &p);
     /// the window of the battery settings
@@ -50,9 +57,34 @@ private:
     bool seen_current = false;      // the aircraft measures the current
     bool cells_known = false;       // from the airframe or the user, else guessed from the voltage
     int airframe_cells = 0;         // BAT_NB_CELLS of the airframe; 0: none
-    double airframe_capacity = 0;   // mAh, MAX_BAT_CAPACITY of the airframe; 0: none
+    double airframe_capacity = 0;   // mAh, BAT_CAPACITY of the airframe; 0: none
+    /// BAT_TYPE of the airframe; LiPo when not set (or not known)
+    EnergyEstimator::Chemistry airframe_chemistry = EnergyEstimator::LIPO;
+    bool airframe_chemistry_set = false;
+    double airframe_resistance = 0; // mOhm per cell, BAT_CELL_RESISTANCE of the airframe; 0: none
+    double level_low = 0;           // V of the pack: LOW_BAT_LEVEL, CRITIC_BAT_LEVEL and
+    double level_critic = 0;        // CATASTROPHIC_BAT_LEVEL of the airframe (else the defaults)
+    double level_catastrophic = 0;
+    QStringList level_defaults;     // the levels not set in the airframe (defaults)
+    struct LevelLabel { QRectF rect; QString text; QColor color; };
+    std::vector<LevelLabel> level_labels;   // placed by drawCurve, drawn over the curves
     QRectF method_chips[EnergyEstimator::METHODS];
     QRectF battery_line;
+    QRectF history_button;      // the chevron that opens and closes the history
+    bool show_history = true;   // the history of the voltage and the load under the curve
+    struct Past {
+        double t;       // s
+        double cell;    // V per cell, measured
+        double load;    // A, else % of throttle
+        double load_x;  // the same, low-passed
+    };
+    std::deque<Past> history;   // the last minutes, for drawHistory
+    struct Trace {
+        double t;       // s
+        double cell;    // V per cell, measured
+        double energy[EnergyEstimator::METHODS];    // left, 0..1, by each method; -1: unknown
+    };
+    std::vector<Trace> trace;   // the whole flight (1 per s), drawn on the curve
     QToolButton *help_button;  // the help, as in the app settings
 };
 

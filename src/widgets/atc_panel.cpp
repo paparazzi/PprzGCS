@@ -341,9 +341,9 @@ void AtcPanel::paintEvent(QPaintEvent *event) {
             float v;
             eng->getField("bat", v);
             auto vmax = ac->getAirframe()->getDefine("MAX_BAT_LEVEL");
-            auto vmin = ac->getAirframe()->getDefine("CATASTROPHIC_BAT_LEVEL");
-            if(vmax && vmin && vmax->value.toFloat() > vmin->value.toFloat()) {
-                float pct = 100.f * (v - vmin->value.toFloat()) / (vmax->value.toFloat() - vmin->value.toFloat());
+            float vmin = ac->getAirframe()->batteryLevel("CATASTROPHIC_BAT_LEVEL");
+            if(vmax && vmax->value.toFloat() > vmin) {
+                float pct = 100.f * (v - vmin) / (vmax->value.toFloat() - vmin);
                 bat = QString("BAT %1 %").arg(std::lround(qBound(0.f, pct, 100.f)));
             } else {
                 bat = QString("BAT %1 V").arg(v, 0, 'f', 1);

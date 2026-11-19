@@ -41,6 +41,12 @@ public:
     float getAltShiftPlusPlus();
     float getAltShiftMinus();
     std::optional<struct Param> getDefine(QString name, QString section="");
+    /// A battery alarm level of the pack, in V: LOW_BAT_LEVEL, CRITIC_BAT_LEVEL or CATASTROPHIC_BAT_LEVEL.
+    /// Not set: the default per cell (defaultCellLevel) times BAT_NB_CELLS, else 3 cells (as on board
+    /// and in the server; not the cells guessed from the voltage, so the GCS warns at the same voltages).
+    double batteryLevel(QString name);
+    /// The default of a battery alarm level per cell (V): LOW 3.5, CRITIC 3.25, CATASTROPHIC 3.0
+    static double defaultCellLevel(QString name);
 
     /// Write the airframe file with the values set by setParams. From the text of source (the file
     /// it was loaded from), only the changed value attributes replaced: the layout, comments and

@@ -299,6 +299,30 @@ std::optional<Param> Airframe::getDefine(QString def_name, QString section_name)
     return std::nullopt;
 }
 
+double Airframe::defaultCellLevel(QString name) {
+    if(name == "LOW_BAT_LEVEL") {
+        return 3.5;
+    } else if(name == "CRITIC_BAT_LEVEL") {
+        return 3.25;
+    } else if(name == "CATASTROPHIC_BAT_LEVEL") {
+        return 3.0;
+    }
+    return 0;
+}
+
+double Airframe::batteryLevel(QString name) {
+    auto d = getDefine(name);
+    if(d && d->value.toDouble() > 0) {
+        return d->value.toDouble();
+    }
+    int cells = 3;  // the default on board and in the server
+    auto nb = getDefine("BAT_NB_CELLS");
+    if(nb && nb->value.toInt() > 0) {
+        cells = nb->value.toInt();
+    }
+    return defaultCellLevel(name) * cells;
+}
+
 QList<ChecklistItem*> Airframe::getChecklistItems() {
     QList<ChecklistItem*> items;
 

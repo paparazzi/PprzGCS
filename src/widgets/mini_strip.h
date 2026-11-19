@@ -65,7 +65,7 @@ private:
     QHBoxLayout* status_layout;
     QHBoxLayout* compact_icons;     // the status icons on the first line, when compact
     bool compact = false;
-    bool bat_per_cell = true;   // with BAT_NB_CELLS: per cell or the total (click)
+    bool bat_per_cell = true;   // per cell or the total (click)
     void fitCells();
     bool all_icons = false;     // GCS setting: the status icons always, also when ok
 
@@ -85,7 +85,7 @@ private:
     QLabel* block_icon;
 
     QLabel* bat_label;
-    int bat_nb_cells;
+    int bat_nb_cells = 3;       // BAT_NB_CELLS, else 3
 
     QLabel* throttle_caption;
     QLabel* throttle_label;
