@@ -61,6 +61,7 @@ private:
     std::optional<Quat> estimate;
     std::optional<Quat> setpoint;
     bool has_ref_msg = false;       // AHRS_REF_QUAT received: ATTITUDE is not used
+    bool show_setpoint = true;      // the setpoint outline and the attitude error (per aircraft)
     QElapsedTimer last_update;
 
     bool follow = true;             // view behind the aircraft, else from where it was dragged

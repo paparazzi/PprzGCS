@@ -105,6 +105,7 @@ Attitude3D::Attitude3D(QString ac_id, QWidget *parent) : QWidget(parent),
     auto settings = getAppSettings();
     model = static_cast<Model>(settings.value("attitude3d/model/" + ac->name(), model).toInt());
     follow = settings.value("attitude3d/follow", true).toBool();
+    show_setpoint = settings.value("attitude3d/setpoint/" + ac->name(), true).toBool();
 
     PprzDispatcher::get()->bindOptional("AHRS_REF_QUAT", this, [=, this](QString sender, pprzlink::Message msg) {
         if(sender != this->ac_id) {
@@ -138,7 +139,7 @@ Attitude3D::Attitude3D(QString ac_id, QWidget *parent) : QWidget(parent),
         msg.getField("psi", psi);
         setEstimate(quatOfEulers(phi * ANGLE_BFP, theta * ANGLE_BFP, psi * ANGLE_BFP), false);
     });
-    setToolTip("Solid: estimated attitude, outline: setpoint.\nDrag: turn the view; right click: model and view.");
+    setToolTip("Solid: estimated attitude, outline: setpoint.\nDrag: turn the view; right click: model, setpoint and view.");
 }
 
 QSize Attitude3D::sizeHint() const
@@ -340,7 +341,7 @@ void Attitude3D::paintEvent(QPaintEvent *event)
     }
 
     // the setpoint: the outline of its faces that face the camera
-    if(setpoint && !stale) {
+    if(setpoint && show_setpoint && !stale) {
         QColor sc = SETPOINT;
         sc.setAlpha(200);
         p.setPen(QPen(sc, 1.4));
@@ -369,6 +370,8 @@ void Attitude3D::paintEvent(QPaintEvent *event)
     QColor status_color = secondary;
     if(stale) {
         status = estimate ? "No recent attitude data" : "No attitude data";
+    } else if(!show_setpoint) {
+        status = "Setpoint hidden";
     } else if(setpoint) {
         double err = angleBetween(*estimate, *setpoint);
         status = QString("Attitude error %1°").arg(qRound(err));
@@ -384,7 +387,7 @@ void Attitude3D::paintEvent(QPaintEvent *event)
     f.setBold(false);
     p.setFont(f);
     p.setPen(secondary);
-    QString legend = setpoint ? "Solid: estimate   Outline: setpoint" : "Estimate";
+    QString legend = setpoint && show_setpoint ? "Solid: estimate   Outline: setpoint" : "Estimate";
     legend += follow ? "   View: behind" : "   View: dragged";
     p.drawText(QRectF(4, height() - 18, width() - 8, 16), Qt::AlignLeft | Qt::AlignVCenter, legend);
 }
@@ -437,6 +440,16 @@ void Attitude3D::contextMenuEvent(QContextMenuEvent *event)
             update();
         });
     }
+    auto sp = menu.addAction("Show the setpoint");
+    sp->setCheckable(true);
+    sp->setChecked(show_setpoint);
+    connect(sp, &QAction::triggered, this, [this](bool checked) {
+        show_setpoint = checked;
+        if(AircraftManager::get()->aircraftExists(ac_id)) {
+            getAppSettings().setValue("attitude3d/setpoint/" + AircraftManager::get()->getAircraft(ac_id)->name(), checked);
+        }
+        update();
+    });
     auto behind = menu.addAction("View from behind (follows the heading)");
     behind->setCheckable(true);
     behind->setChecked(follow);
