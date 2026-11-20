@@ -241,4 +241,5 @@ hide, e.g. for a tail-sitter, and whether the aircraft follows its setpoint. Wit
 comes from ``ATTITUDE`` or ``ROTORCRAFT_FP``.
 
 By default the view is from behind the aircraft. Drag to turn the view around. Right click: the model (quadrotor,
-fixedwing, or tail-sitter: nose up in a hover, saved per aircraft) and the view from behind.
+fixedwing, or tail-sitter: nose up in a hover, saved per aircraft), *Show the setpoint* (off: only the estimate, without
+the outline and the error; saved per aircraft) and the view from behind.
