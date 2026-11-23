@@ -3,6 +3,7 @@
 #include "gcs_utils.h"
 #include "pprz_dispatcher.h"
 #include <QContextMenuEvent>
+#include <QImage>
 #include <QMenu>
 #include <QMouseEvent>
 #include <QPainter>
@@ -58,6 +59,65 @@ struct Camera {
         return center + QPointF(dot(v, right), -dot(v, up)) * (focal / z);
     }
 };
+
+/// Fill a convex face (world points) in img, scaled by ss, where it is nearer than zbuf (1/depth);
+/// its outline (not the diagonals of the fan) in edge
+void rasterFace(QImage &img, std::vector<float> &zbuf, const Camera &cam, const std::vector<Vec3> &w,
+                QRgb fill, QRgb edge, double ss)
+{
+    const int n = w.size();
+    std::vector<QPointF> s(n);
+    std::vector<double> iz(n);
+    for(int i = 0; i < n; i++) {
+        double z = cam.depth(w[i]);
+        if(z < 0.1) {
+            return;     // behind the camera
+        }
+        s[i] = cam.project(w[i]) * ss;
+        iz[i] = 1 / z;
+    }
+    const double edge_px = 0.7 * ss;
+    for(int t = 1; t + 1 < n; t++) {
+        const QPointF a = s[0], b = s[t], c = s[t + 1];
+        const double area = (b.x() - a.x()) * (c.y() - a.y()) - (b.y() - a.y()) * (c.x() - a.x());
+        if(std::abs(area) < 1e-9) {
+            continue;
+        }
+        // edges opposite a, b, c, and whether they are on the outline of the face
+        const double len[3] = {std::hypot(c.x() - b.x(), c.y() - b.y()),
+                               std::hypot(a.x() - c.x(), a.y() - c.y()),
+                               std::hypot(b.x() - a.x(), b.y() - a.y())};
+        const bool outline[3] = {true, t + 2 == n, t == 1};
+        const int x0 = std::max(0, int(std::floor(std::min({a.x(), b.x(), c.x()}))));
+        const int x1 = std::min(img.width() - 1, int(std::ceil(std::max({a.x(), b.x(), c.x()}))));
+        const int y0 = std::max(0, int(std::floor(std::min({a.y(), b.y(), c.y()}))));
+        const int y1 = std::min(img.height() - 1, int(std::ceil(std::max({a.y(), b.y(), c.y()}))));
+        for(int y = y0; y <= y1; y++) {
+            QRgb *line = reinterpret_cast<QRgb *>(img.scanLine(y));
+            for(int x = x0; x <= x1; x++) {
+                const double px = x + 0.5, py = y + 0.5;
+                const double l[3] = {
+                    ((c.x() - b.x()) * (py - b.y()) - (c.y() - b.y()) * (px - b.x())) / area,
+                    ((a.x() - c.x()) * (py - c.y()) - (a.y() - c.y()) * (px - c.x())) / area,
+                    ((b.x() - a.x()) * (py - a.y()) - (b.y() - a.y()) * (px - a.x())) / area};
+                if(l[0] < -1e-6 || l[1] < -1e-6 || l[2] < -1e-6) {
+                    continue;
+                }
+                const float inv_z = l[0] * iz[0] + l[1] * iz[t] + l[2] * iz[t + 1];
+                float &zb = zbuf[size_t(y) * img.width() + x];
+                if(inv_z <= zb) {
+                    continue;
+                }
+                zb = inv_z;
+                bool on_edge = false;
+                for(int k = 0; k < 3; k++) {
+                    on_edge |= outline[k] && l[k] * std::abs(area) / len[k] < edge_px;
+                }
+                line[x] = on_edge ? edge : fill;
+            }
+        }
+    }
+}
 
 /// 6 faces of a box, from its center and half sizes
 void addBox(std::vector<std::pair<std::vector<Vec3>, QColor>> &faces, Vec3 c, Vec3 h, QColor color) {
@@ -302,10 +362,14 @@ void Attitude3D::paintEvent(QPaintEvent *event)
     }
 
     auto faces = modelFaces();
-    // the estimate: solid faces, far ones first, lit from above
+    // the estimate: solid faces lit from above, with a depth buffer (parts cross each other,
+    // e.g. the wing through the fuselage, so sorting whole faces by depth is not enough)
     if(estimate) {
-        struct Drawn { QPolygonF poly; double depth; QColor color; };
-        std::vector<Drawn> drawn;
+        const qreal dpr = devicePixelRatioF();
+        const double ss = 2 * dpr;      // supersampling, for smooth edges
+        QImage img(QSize(width() * ss, height() * ss), QImage::Format_ARGB32_Premultiplied);
+        img.fill(Qt::transparent);
+        std::vector<float> zbuf(size_t(img.width()) * img.height(), 0);     // 1/depth, 0: empty
         const Vec3 light = normalized({-0.3, 0.4, -1});     // to the light, from above
         for(auto &face : faces) {
             std::vector<Vec3> w;
@@ -313,31 +377,22 @@ void Attitude3D::paintEvent(QPaintEvent *event)
                 w.push_back(bodyToNed(*estimate, pt));
             }
             Vec3 n = normalized(cross(sub(w[1], w[0]), sub(w[2], w[0])));
-            Vec3 c{};
-            for(auto &pt : w) {
-                c = add(c, scale(pt, 1. / w.size()));
-            }
-            if(dot(n, sub(c, cam.position)) >= 0) {
+            if(dot(n, sub(w[0], cam.position)) >= 0) {
                 continue;   // facing away
             }
             double lum = 0.55 + 0.45 * std::max(0.0, dot(n, light));
-            QColor color = face.color;
-            color = QColor::fromRgbF(color.redF() * lum, color.greenF() * lum, color.blueF() * lum);
-            if(stale) {
-                color.setAlpha(90);
-            }
-            QPolygonF poly;
-            for(auto &pt : w) {
-                poly << cam.project(pt);
-            }
-            drawn.push_back({poly, cam.depth(c), color});
+            QColor c = face.color;
+            c = QColor::fromRgbF(c.redF() * lum, c.greenF() * lum, c.blueF() * lum);
+            rasterFace(img, zbuf, cam, w, c.rgb(), c.darker(130).rgb(), ss);
         }
-        std::sort(drawn.begin(), drawn.end(), [](auto &a, auto &b) { return a.depth > b.depth; });
-        for(auto &d : drawn) {
-            p.setPen(QPen(d.color.darker(130), 0.8));
-            p.setBrush(d.color);
-            p.drawPolygon(d.poly);
+        img = img.scaled(QSize(width() * dpr, height() * dpr), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        img.setDevicePixelRatio(dpr);
+        p.save();
+        if(stale) {
+            p.setOpacity(0.35);
         }
+        p.drawImage(QPointF(0, 0), img);
+        p.restore();
     }
 
     // the setpoint: the outline of its faces that face the camera
@@ -407,7 +462,7 @@ void Attitude3D::mouseMoveEvent(QMouseEvent *event)
         QPointF d = event->position() - *drag_from;
         drag_from = event->position();
         follow = false;
-        azimuth -= d.x() * 0.01;
+        azimuth += d.x() * 0.01;    // the model turns with the mouse in the lower half (nearest part)
         elevation = std::clamp(elevation + d.y() * 0.01, -0.3, 1.5);
         update();
         return;
