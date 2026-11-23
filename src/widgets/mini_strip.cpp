@@ -158,20 +158,17 @@ MiniStrip::MiniStrip(QString ac_id, QWidget *parent) : QWidget(parent),
     auto bat_cell = makeCell(bat_caption, bat_label, true);
     bat_caption->setText("Battery");
     bat_cell->setFocusPolicy(Qt::NoFocus);
+    // BAT_NB_CELLS, else 3 cells: the default on board and in the server
     auto bnbc = ac->getAirframe()->getDefine("BAT_NB_CELLS");
-    bat_nb_cells = bnbc.has_value() ? bnbc->value.toInt() : 0;
-    if(bat_nb_cells != 0) {
-        // per cell or the total voltage (click)
-        bat_cell->setToolTip("Battery voltage per cell (click: total)");
-        connect(bat_cell, &QPushButton::clicked, this, [=,this]() {
-            bat_per_cell = !bat_per_cell;
-            bat_cell->setToolTip(bat_per_cell ? "Battery voltage per cell (click: total)" :
-                                                "Battery voltage, total (click: per cell)");
-            updateData();
-        });
-    } else {
-        bat_cell->setAttribute(Qt::WA_TransparentForMouseEvents);
-    }
+    bat_nb_cells = (bnbc && bnbc->value.toInt() > 0) ? bnbc->value.toInt() : 3;
+    // per cell or the total voltage (click)
+    bat_cell->setToolTip("Battery voltage per cell (click: total)");
+    connect(bat_cell, &QPushButton::clicked, this, [=,this]() {
+        bat_per_cell = !bat_per_cell;
+        bat_cell->setToolTip(bat_per_cell ? "Battery voltage per cell (click: total)" :
+                                            "Battery voltage, total (click: per cell)");
+        updateData();
+    });
     row2->addWidget(bat_cell, 0, 0);
 
     QLabel* alt_caption;
@@ -549,7 +546,7 @@ void MiniStrip::updateData() {
 
 
     // battery
-    if(bat_nb_cells != 0 && bat_per_cell) {
+    if(bat_per_cell) {
         bat_label->setText(QString("%1 V/c").arg(bat/bat_nb_cells, 0, 'f', 2));
     } else {
         bat_label->setText(QString("%1 V").arg(bat, 0, 'f', 1));

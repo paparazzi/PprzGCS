@@ -17,16 +17,18 @@
  * - SAG: OCV = V + 60 % of R * load, R learned: the load is the current (R in Ohm) when it is
  *   measured, else the throttle (R in V per %). R0 and Rp (polarization, 10 s) are fitted by
  *   recursive least squares on the changes of voltage and load over 2 s, which cancels the slow
- *   fall of the OCV, updated only when the load changes. Only 60 % is corrected: the estimate
+ *   fall of the OCV, updated only when the load changes. R starts at 0 with a small covariance:
+ *   the first changes of the load cannot make it too high at once. Only 60 % is corrected: the estimate
  *   must not show more charge than is left. A voltage reading that follows the throttle (motor
  *   ripple) makes R too high, and then even 60 % can be too much.
  * - FILTER: complementary filter: the charge used of CHARGE, pulled towards the SoC of SAG with a
- *   time constant of 5 min.
+ *   time constant of 2 min.
  *
  * The energy left is in Wh (the integral of the OCV over the charge), not in Ah: the last
  * percent of charge holds less energy, at a lower voltage. The time left: from the mean power of
- * the last 30 s and the capacity when both are known, else from how fast the energy went down over
- * the last 2 min.
+ * the last 30 s and the capacity when both are known (none without power, on the ground), else
+ * from how fast the energy went down over the last 2 min while the motors run. Below the reserve:
+ * the time to empty.
  */
 class EnergyEstimator
 {
@@ -68,9 +70,12 @@ public:
         bool with_current = false;
         bool r_known = false;   // R is fitted
         double used = -1;       // Ah used since the start, -1: unknown
+        double load = 0;        // the load now: A with the current, else % of throttle
+        double load_x = 0;      // the load low-passed (10 s), the polarization of V - I.R
         double power = 0;       // W, mean of the last seconds; 0: unknown
         double wh_left = -1;    // Wh, -1: unknown (no capacity)
-        double minutes = -1;    // to the reserve, -1: unknown
+        double minutes = -1;    // to the reserve (below it: to empty), -1: unknown
+        bool to_empty = false;  // below the reserve: minutes is the time to 0 %
     };
 
     void setChemistry(Chemistry c);
@@ -84,11 +89,17 @@ public:
     void setReserve(double r) { reserve = r; }         // 0..1 of the energy
     double getReserve() const { return reserve; }
     void setSag(double v) { sag_user = v; }            // V per cell under load, for VOLTAGE
+    /// R per cell (Ohm) to start V - I.R with (e.g. from the airframe), with the current only; 0: from 0.
+    /// Used at the next start of the fit (new battery), or at once while R is not known yet.
+    void setStartResistance(double ohm);
+    double getStartResistance() const { return r_start; }
     double getSag() const { return sag_user; }
 
     void addSample(const Sample &s);
     void clear();
-    Result estimate() const;
+    Result estimate() const { return estimate(method); }
+    /// the estimate of another method than the chosen one (e.g. to draw them all)
+    Result estimate(Method chosen) const;
 
     /// Cell voltage at rest for a state of charge (0..1)
     static double ocvOfSoc(Chemistry c, double soc);
@@ -132,6 +143,7 @@ private:
     double capacity = 0;    // mAh
     double reserve = 0.2;
     double sag_user = 0;    // 0: the voltage alone, never optimistic
+    double r_start = 0;     // Ohm per cell, the start of R0 with the current; 0: from 0
     bool with_current = false;
 
     // VOLTAGE and SAG: the cell voltage (+ the fitted sag), low-passed
