@@ -56,6 +56,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#chat">Chat</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#plotter">Plotter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#energy">Energy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#attitude-3d">Attitude 3D</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="map_tile_sources.html">Map tile sources</a></li>
@@ -264,6 +265,19 @@ for a few seconds) with a nearly full battery (above 90 %); otherwise, use New b
 the capacity when you use another battery, also in flight: the mAh estimate follows at once; a button sets it back to
 the value of the airframe. Right click: the battery window, new battery. The choices are saved per aircraft; the
 chemistry, the cells, the capacity and R only when they differ from the airframe, else they follow the airframe.</p>
+</section>
+<section id="attitude-3d">
+<h2>Attitude 3D<a class="headerlink" href="#attitude-3d" title="Permalink to this heading"></a></h2>
+<p>name: <code class="docutils literal notranslate"><span class="pre">attitude3d</span></code></p>
+<p>The attitude of the selected aircraft in 3D, as the <code class="docutils literal notranslate"><span class="pre">attitude_viz</span></code> tool of Paparazzi: the estimate as a solid
+model and the setpoint as an orange outline (<code class="docutils literal notranslate"><span class="pre">AHRS_REF_QUAT</span></code>), above a ground grid with a compass rose (the north
+point in red), N, E, S and W and distant hills that show the view turn with the heading, and the
+attitude error (the angle between both: green below 10°, orange below 30°, else red). It shows what pitch and roll
+hide, e.g. for a tail-sitter, and whether the aircraft follows its setpoint. Without <code class="docutils literal notranslate"><span class="pre">AHRS_REF_QUAT</span></code> the estimate
+comes from <code class="docutils literal notranslate"><span class="pre">ATTITUDE</span></code> or <code class="docutils literal notranslate"><span class="pre">ROTORCRAFT_FP</span></code>.</p>
+<p>By default the view is from behind the aircraft. Drag to turn the view around. Right click: the model (quadrotor,
+fixedwing, or tail-sitter: nose up in a hover, saved per aircraft), <em>Show the setpoint</em> (off: only the estimate, without
+the outline and the error; saved per aircraft) and the view from behind.</p>
 </section>
 </section>
 

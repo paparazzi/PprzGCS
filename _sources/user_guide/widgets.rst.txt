@@ -228,3 +228,19 @@ for a few seconds) with a nearly full battery (above 90 %); otherwise, use New b
 the capacity when you use another battery, also in flight: the mAh estimate follows at once; a button sets it back to
 the value of the airframe. Right click: the battery window, new battery. The choices are saved per aircraft; the
 chemistry, the cells, the capacity and R only when they differ from the airframe, else they follow the airframe.
+
+Attitude 3D
+-----------
+
+name: ``attitude3d``
+
+The attitude of the selected aircraft in 3D, as the ``attitude_viz`` tool of Paparazzi: the estimate as a solid
+model and the setpoint as an orange outline (``AHRS_REF_QUAT``), above a ground grid with a compass rose (the north
+point in red), N, E, S and W and distant hills that show the view turn with the heading, and the
+attitude error (the angle between both: green below 10°, orange below 30°, else red). It shows what pitch and roll
+hide, e.g. for a tail-sitter, and whether the aircraft follows its setpoint. Without ``AHRS_REF_QUAT`` the estimate
+comes from ``ATTITUDE`` or ``ROTORCRAFT_FP``.
+
+By default the view is from behind the aircraft. Drag to turn the view around. Right click: the model (quadrotor,
+fixedwing, or tail-sitter: nose up in a hover, saved per aircraft), *Show the setpoint* (off: only the estimate, without
+the outline and the error; saved per aircraft) and the view from behind.
