@@ -17,6 +17,8 @@ const double ANGLE_BFP = 1. / (1 << 12);    // INT32_ANGLE_FRAC: rad
 const double CAMERA_DISTANCE = 5;
 const double GROUND = 1.5;              // m below the aircraft
 const int GRID = 4;
+const double ROSE_R = 2.6;             // m, compass rose on the ground
+const double HILLS_R = 60;             // m, distant hills
 const int STALE_MS = 3000;
 
 const QColor SETPOINT(0xf0a020);        // the accent orange, as in the ATC panel
@@ -339,9 +341,80 @@ void Attitude3D::paintEvent(QPaintEvent *event)
     QRectF area = QRectF(rect()).adjusted(0, 28, 0, -18);
     Camera cam(azimuth, elevation, area);
 
+    // distant hills all around, to see the view turn and the heading change
+    {
+        QColor hill = text;
+        hill.setAlpha(22);
+        p.setPen(Qt::NoPen);
+        p.setBrush(hill);
+        QPolygonF run;
+        auto flush = [&]() {
+            if(run.size() > 2) {
+                p.drawPolygon(run);
+            }
+            run.clear();
+        };
+        std::vector<QPointF> base;
+        for(int k = 0; k <= 360; k += 2) {
+            const double a = k * M_PI / 180;
+            const double peaks = std::pow(std::max(0.0, std::sin(2 * a + 0.5)), 2);
+            const double h = HILLS_R * (0.008 + 0.08 * peaks + 0.015 * (1 + std::sin(5 * a + 1)) + 0.008 * (1 + std::sin(11 * a + 2)));
+            const Vec3 top = {HILLS_R * std::cos(a), HILLS_R * std::sin(a), GROUND - h};
+            const Vec3 bottom = {top[0], top[1], GROUND};
+            if(cam.depth(top) < 1) {
+                std::reverse(base.begin(), base.end());
+                run.append(QPolygonF(QList<QPointF>(base.begin(), base.end())));
+                base.clear();
+                flush();
+                continue;
+            }
+            run << cam.project(top);
+            base.push_back(cam.project(bottom));
+        }
+        std::reverse(base.begin(), base.end());
+        run.append(QPolygonF(QList<QPointF>(base.begin(), base.end())));
+        flush();
+    }
+
+    // compass rose on the ground: the north point in red
+    {
+        QColor rose = text;
+        rose.setAlpha(12);
+        QColor rose_dark = text;
+        rose_dark.setAlpha(30);
+        auto ground = [&](double r, double a) { return cam.project({r * std::cos(a), r * std::sin(a), GROUND}); };
+        for(int k = 0; k < 8; k++) {
+            const double a = k * M_PI / 4;
+            const double len = k % 2 ? 0.55 * ROSE_R : 0.9 * ROSE_R;
+            const double w = k % 2 ? 0.1 * ROSE_R : 0.14 * ROSE_R;
+            // each point in two halves, one lighter, as on a compass
+            QColor dark = k == 0 ? FRONT : rose_dark;
+            if(k == 0) {
+                dark.setAlpha(90);
+            }
+            p.setPen(Qt::NoPen);
+            p.setBrush(rose);
+            p.drawPolygon(QPolygonF({ground(0, 0), ground(len, a), ground(w, a + M_PI / 4)}));
+            p.setBrush(dark);
+            p.drawPolygon(QPolygonF({ground(0, 0), ground(len, a), ground(w, a - M_PI / 4)}));
+        }
+        // ring with a tick every 10°, longer every 30°
+        p.setPen(QPen(rose_dark, 1));
+        p.setBrush(Qt::NoBrush);
+        QPolygonF ring;
+        for(int k = 0; k <= 72; k++) {
+            ring << ground(ROSE_R, k * M_PI / 36);
+        }
+        p.drawPolyline(ring);
+        for(int k = 0; k < 36; k++) {
+            const double a = k * M_PI / 18;
+            p.drawLine(ground(ROSE_R, a), ground(ROSE_R * (k % 3 ? 0.95 : 0.88), a));
+        }
+    }
+
     // ground grid and the directions
     QColor grid = text;
-    grid.setAlpha(45);
+    grid.setAlpha(30);
     p.setPen(QPen(grid, 1));
     for(int i = -GRID; i <= GRID; i++) {
         p.drawLine(cam.project({double(i), double(-GRID), GROUND}), cam.project({double(i), double(GRID), GROUND}));

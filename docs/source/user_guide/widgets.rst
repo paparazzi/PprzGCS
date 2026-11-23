@@ -235,7 +235,8 @@ Attitude 3D
 name: ``attitude3d``
 
 The attitude of the selected aircraft in 3D, as the ``attitude_viz`` tool of Paparazzi: the estimate as a solid
-model and the setpoint as an orange outline (``AHRS_REF_QUAT``), above a ground grid with N, E, S and W, and the
+model and the setpoint as an orange outline (``AHRS_REF_QUAT``), above a ground grid with a compass rose (the north
+point in red), N, E, S and W and distant hills that show the view turn with the heading, and the
 attitude error (the angle between both: green below 10°, orange below 30°, else red). It shows what pitch and roll
 hide, e.g. for a tail-sitter, and whether the aircraft follows its setpoint. Without ``AHRS_REF_QUAT`` the estimate
 comes from ``ATTITUDE`` or ``ROTORCRAFT_FP``.
