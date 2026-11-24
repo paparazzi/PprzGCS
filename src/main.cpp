@@ -14,6 +14,12 @@
 #include "gcs_utils.h"
 #include "AircraftManager.h"
 #include "globalconfig.h"
+#include <QSocketNotifier>
+#if defined(Q_OS_UNIX)
+#include <csignal>
+#include <sys/socket.h>
+#include <unistd.h>
+#endif
 
 #include "speaker.h"
 
@@ -74,6 +80,49 @@ void launch_main_app() {
 
 }
 
+#if defined(Q_OS_UNIX)
+namespace {
+// SIGTERM (e.g. Stop in the Paparazzi Center), SIGINT (Ctrl+C), SIGHUP (the terminal closed): PprzGCS quits as
+// when its window is closed, so the recordings are closed properly. Through a socket: a signal handler may only
+// write. A second signal while quitting: at once.
+int quit_fds[2] = {-1, -1};
+volatile sig_atomic_t quit_signals = 0;
+
+void onQuitSignal(int sig) {
+    if(quit_signals++ > 0) {
+        std::signal(sig, SIG_DFL);
+        std::raise(sig);
+        return;
+    }
+    char c = 1;
+    auto r = ::write(quit_fds[1], &c, 1);
+    (void)r;
+}
+
+void setupQuitSignals(QCoreApplication* app) {
+    if(quit_fds[0] < 0) {
+        if(::socketpair(AF_UNIX, SOCK_STREAM, 0, quit_fds) != 0) {
+            return;
+        }
+        struct sigaction sa = {};
+        sa.sa_handler = onQuitSignal;
+        sigemptyset(&sa.sa_mask);
+        sa.sa_flags = SA_RESTART;
+        for(int sig: {SIGTERM, SIGINT, SIGHUP}) {
+            sigaction(sig, &sa, nullptr);
+        }
+    }
+    auto notifier = new QSocketNotifier(quit_fds[0], QSocketNotifier::Read, app);
+    QObject::connect(notifier, &QSocketNotifier::activated, app, [=]() {
+        char c;
+        auto r = ::read(quit_fds[0], &c, 1);
+        (void)r;
+        QCoreApplication::quit();
+    });
+}
+}
+#endif
+
 int main(int argc, char *argv[])
 {
     qSetMessagePattern("[%{category}] %{file}:%{line} %{message}");
@@ -89,6 +138,9 @@ int main(int argc, char *argv[])
         gconfig->setValue("SETTINGS_PATH", settings_path);
 
         PprzApplication a(argc, argv);
+#if defined(Q_OS_UNIX)
+        setupQuitSignals(&a);
+#endif
 
         QCommandLineParser parser;
         parser.setApplicationDescription("Test helper");
@@ -191,6 +243,10 @@ int main(int argc, char *argv[])
 
         return_code = qApp->exec();
         a._shutdown();
+        if(return_code != PprzMain::EXIT_CODE_REBOOT) {
+            // closed (not a crash, not a restart from the settings): no recording again at the next start
+            getAppSettings().setValue("audio/was_recording", false);
+        }
     } while(return_code == PprzMain::EXIT_CODE_REBOOT);
     return return_code;
 }

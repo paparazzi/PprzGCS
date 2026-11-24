@@ -7,6 +7,7 @@
 #include <QDateTime>
 #include <QRegularExpression>
 #include <QDebug>
+#include <QPointer>
 #if defined(Q_OS_LINUX)
 #include <fcntl.h>
 #include <unistd.h>
@@ -31,7 +32,11 @@ QString fileLabel(QString label) {
 }
 
 VideoRecorder* VideoRecorder::get() {
-    static VideoRecorder* recorder = new VideoRecorder(qApp);
+    // (a new one after a restart from the settings: the old one went with the old application)
+    static QPointer<VideoRecorder> recorder;
+    if(!recorder) {
+        recorder = new VideoRecorder(qApp);
+    }
     return recorder;
 }
 
@@ -64,6 +69,13 @@ VideoRecorder::VideoRecorder(QObject* parent) : QObject(parent)
 }
 
 VideoRecorder::~VideoRecorder() {
+    // all asked to stop first (each ffmpeg closes its files), then waited for together
+    for(auto c: std::as_const(cameras)) {
+        if(c->process != nullptr) {
+            c->process->disconnect(this);
+            c->process->terminate();
+        }
+    }
     for(auto c: std::as_const(cameras)) {
         stopProcess(c);
         delete c;

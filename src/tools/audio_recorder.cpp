@@ -12,6 +12,7 @@
 #include <QDateTime>
 #include <QRegularExpression>
 #include <QDebug>
+#include <QPointer>
 #include <sndfile.h>
 #include <cmath>
 
@@ -37,7 +38,11 @@ QString defaultFolder() {
 }
 
 AudioRecorder* AudioRecorder::get() {
-    static AudioRecorder* recorder = new AudioRecorder(qApp);
+    // (a new one after a restart from the settings: the old one went with the old application)
+    static QPointer<AudioRecorder> recorder;
+    if(!recorder) {
+        recorder = new AudioRecorder(qApp);
+    }
     return recorder;
 }
 
