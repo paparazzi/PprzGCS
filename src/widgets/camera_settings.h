@@ -24,6 +24,7 @@ private:
         QWidget* box;
         QComboBox* source;
         QLineEdit* label;
+        QCheckBox* record;
     };
 
     void addRow(CameraConfig c);

@@ -80,6 +80,7 @@ QList<CameraConfig> VideoRecorder::cameraConfigs(QString profile) {
         c.source = settings.value("source").toString();
         c.name = settings.value("name").toString();
         c.label = settings.value("label").toString();
+        c.record = settings.value("record", true).toBool();
         if(c.label.isEmpty()) {
             c.label = QString("Camera %1").arg(i + 1);
         }
@@ -98,6 +99,7 @@ void VideoRecorder::saveCameraConfigs(QList<CameraConfig> list, QString profile)
         settings.setValue("source", list[i].source);
         settings.setValue("name", list[i].name);
         settings.setValue("label", list[i].label);
+        settings.setValue("record", list[i].record);
     }
     settings.endArray();
 }
@@ -152,6 +154,16 @@ QStringList VideoRecorder::labels() {
     return l;
 }
 
+QStringList VideoRecorder::recordedLabels() {
+    QStringList l;
+    for(auto c: std::as_const(cameras)) {
+        if(recording && c->config.record) {
+            l.append(c->config.label);
+        }
+    }
+    return l;
+}
+
 void VideoRecorder::setRecording(bool r) {
     recording = r;
     if(r) {
@@ -200,14 +212,15 @@ QString VideoRecorder::sourcePath(const CameraConfig& c) {
 }
 
 void VideoRecorder::update(Camera* c) {
-    bool needed = recording || c->viewers > 0;
+    bool rec = recording && c->config.record;
+    bool needed = rec || c->viewers > 0;
     bool running = c->process != nullptr;
     if(!needed) {
         stopProcess(c);
         c->error.clear();
         return;
     }
-    if(running && c->writing != recording) {
+    if(running && c->writing != rec) {
         stopProcess(c);     // (again, with or without the files)
         running = false;
     }
@@ -235,8 +248,8 @@ void VideoRecorder::startProcess(Camera* c) {
         args << "-i" << src;
     }
 
-    c->writing = recording;
-    if(recording) {
+    c->writing = recording && c->config.record;
+    if(c->writing) {
         // a USB camera in H.264 (raw or MJPEG would be huge), a stream as it comes
         c->file_pattern = "__video__" + fileLabel(c->config.label) + ".mkv";
         args << "-map" << "0:v:0" << "-an";
@@ -345,7 +358,7 @@ QStringList VideoRecorder::problems() {
     QStringList list;
     auto now = QDateTime::currentMSecsSinceEpoch();
     for(auto c: std::as_const(cameras)) {
-        if(!recording) {
+        if(!recording || !c->config.record) {
             continue;   // (only shown: the Video panel says "No video")
         }
         bool no_video = c->process == nullptr ||

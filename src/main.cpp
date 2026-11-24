@@ -102,9 +102,26 @@ int main(int argc, char *argv[])
                           "Swarm XML configuration file.", "file"});
         parser.addOption({"speech", "Enable speech"});
         // (always accepted: a session that passes it also starts a PprzGCS built without the recorder)
-        parser.addOption({"record", "Record the microphones from the start (Settings, Recording)"});
+        parser.addOption({"record", "Record from the start the microphones and cameras of the profile (Settings, "
+                                    "Recording); --record audio or --record video: only those, for this run"});
         parser.addOption({"profile", "The devices of this profile: microphones, cameras, alert output (Settings, Recording)", "name"});
-        parser.process(a);
+        // --record takes an optional value (QCommandLineParser has none): --record [audio|video|all]
+        QString record_what = "all";
+        QStringList args = a.arguments();
+        for(int i = 1; i < args.size(); i++) {
+            if(args[i].startsWith("--record=")) {
+                record_what = args[i].mid(9);
+                args[i] = "--record";
+            } else if(args[i] == "--record" && i + 1 < args.size() && !args[i + 1].startsWith("-")) {
+                // (PprzGCS has no positional argument: a word after --record is its value)
+                record_what = args.takeAt(i + 1);
+            }
+        }
+        if(!QStringList({"audio", "video", "all"}).contains(record_what)) {
+            std::cerr << "Unknown --record value '" << record_what.toStdString() << "' (audio, video or all)" << std::endl;
+            return 1;
+        }
+        parser.process(args);
 
         setVerbose(parser.isSet("v"));
 
@@ -157,6 +174,7 @@ int main(int argc, char *argv[])
 
         PprzDispatcher::get()->setSilent(parser.isSet("silent"));
         gconfig->setValue("AUDIO_RECORD_ARG", parser.isSet("record"));
+        gconfig->setValue("RECORD_WHAT", record_what);
         gconfig->setValue("PROFILE_ARG", parser.value("profile"));
 
 

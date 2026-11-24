@@ -92,6 +92,11 @@ AudioRecorder::~AudioRecorder() {
     }
 }
 
+QString AudioRecorder::recordWhat() {
+    auto w = appConfig()->value("RECORD_WHAT").toString();
+    return (w == "audio" || w == "video") ? w : "all";
+}
+
 QList<MicConfig> AudioRecorder::micConfigs(QString profile) {
     QList<MicConfig> list;
     auto settings = getAppSettings();
@@ -103,6 +108,7 @@ QList<MicConfig> AudioRecorder::micConfigs(QString profile) {
         c.device_name = settings.value("device_name").toString();
         auto labels = settings.value("labels").toString();
         c.labels = labels.isEmpty() ? QStringList() : labels.split(";");
+        c.record = settings.value("record", true).toBool();
         list.append(c);
     }
     settings.endArray();
@@ -118,6 +124,7 @@ void AudioRecorder::saveMicConfigs(QList<MicConfig> list, QString profile) {
         settings.setValue("device_id", list[i].device_id);
         settings.setValue("device_name", list[i].device_name);
         settings.setValue("labels", list[i].labels.join(";"));
+        settings.setValue("record", list[i].record);
     }
     settings.endArray();
 }
@@ -191,6 +198,9 @@ void AudioRecorder::loadSettings() {
     }
     mics.clear();
     for(auto &c: micConfigs(activeProfile())) {
+        if(!c.record || !recordsAudio()) {
+            continue;
+        }
         auto m = new Mic();
         m->config = c;
         mics.append(m);
@@ -217,7 +227,7 @@ void AudioRecorder::doStart() {
         for(auto m: std::as_const(mics)) {
             openMic(m);
         }
-        VideoRecorder::get()->setRecording(true);   // the cameras with the microphones
+        VideoRecorder::get()->setRecording(recordsVideo());   // the cameras with the microphones
     }
     sendStatus();
 }
@@ -420,7 +430,7 @@ void AudioRecorder::sendStatus() {
 
     // the cameras (VideoRecorder): their problems and files with those of the microphones
     auto video = VideoRecorder::get();
-    bool has_cameras = !video->labels().isEmpty();
+    bool has_cameras = !video->recordedLabels().isEmpty();
     auto video_problems = video->problems();
     files.append(video->files());
     QStringList info;
@@ -428,7 +438,8 @@ void AudioRecorder::sendStatus() {
         info.append(QString("profile %1 not on this computer: the default profile").arg(requestedProfile()));
     }
     if(recording && mics.isEmpty() && !has_cameras) {
-        info.append("no microphone or camera in the settings");
+        info.append(recordWhat() == "all" ? QString("nothing to record in the settings") :
+                        QString("nothing to record (--record %1)").arg(recordWhat()));
     }
     if(!missing.isEmpty()) {
         info.append("not connected: " + missing.join(", "));
@@ -443,7 +454,7 @@ void AudioRecorder::sendStatus() {
     }
     s.info = info.join(" · ");
     s.file = files.join(";");
-    bool video_ok = has_cameras && video_problems.size() < video->labels().size();
+    bool video_ok = has_cameras && video_problems.size() < video->recordedLabels().size();
     s.state = !recording ? AudioStatus::IDLE : (open > 0 || video_ok) ? AudioStatus::RECORDING : AudioStatus::ERROR;
     emit status(s);
 

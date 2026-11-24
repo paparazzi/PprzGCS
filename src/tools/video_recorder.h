@@ -13,6 +13,7 @@ struct CameraConfig {
     QString source;     // /dev/video0, rtsp://..., udp://..., srt://...
     QString name;       // of a USB camera: to find it back when its device changed
     QString label;      // e.g. Pilot view
+    bool record = true; // false: only shown in the Video panel
 };
 
 /// A USB camera of this computer
@@ -45,6 +46,8 @@ public:
     void setRecording(bool recording);
     /// the labels of the cameras (for the Video panel)
     QStringList labels();
+    /// the cameras being recorded (empty when not recording)
+    QStringList recordedLabels();
     /// a panel shows it (ffmpeg runs) or not anymore
     void addViewer(QString label);
     void removeViewer(QString label);

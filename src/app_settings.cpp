@@ -453,7 +453,9 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
             "each channel, and a microphone that is not connected or has no signal.<br>Started from the status "
             "bar (click the recorder), or from the start when PprzGCS runs with --record: e.g. in the flight "
             "sessions of the Paparazzi Center, not in the simulations. It records until PprzGCS closes, and "
-            "starts again after a crash during a recording. Never while editing flight plans.", w_rec, l_rec, row);
+            "starts again after a crash during a recording. Never while editing flight plans. --record audio or "
+            "--record video records only those; a microphone or camera without Record ticked is not recorded "
+            "(a camera then only shows in the Video panel).", w_rec, l_rec, row);
     cb = addSetting("Format", "audio/format", w_rec, l_rec, row, Type::STRING_COMBO,
                     QStringList{"opus|Opus (speech, about 11 MB per channel and hour)",
                                 "flac|FLAC (lossless, about 15 times larger)"});

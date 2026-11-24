@@ -35,6 +35,7 @@ private:
         QWidget* box;
         QComboBox* device;
         QLineEdit* labels;
+        QCheckBox* record;
         QWidget* meters;
         QLabel* channels;
         QList<AudioLevelBar*> bars;

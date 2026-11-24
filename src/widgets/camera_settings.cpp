@@ -51,6 +51,7 @@ QList<CameraConfig> CameraSettings::configs() {
             c.source = r->source->currentText().trimmed();
         }
         c.label = r->label->text().trimmed();
+        c.record = r->record->isChecked();
         if(!c.source.isEmpty()) {
             list.append(c);
         }
@@ -108,12 +109,16 @@ void CameraSettings::addRow(CameraConfig c) {
     r->source->lineEdit()->setPlaceholderText("USB camera, or rtsp://...");
     r->label = new QLineEdit(c.label, r->box);
     r->label->setPlaceholderText("Label, e.g. Pilot view");
+    r->record = new QCheckBox("Record", r->box);
+    r->record->setChecked(c.record);
+    r->record->setToolTip("Recorded with the microphones (unticked: only shown in the Video panel)");
     auto remove = new QToolButton(r->box);
     remove->setText(QString::fromUtf8("×"));
     remove->setToolTip("Remove this camera");
     remove->setAutoRaise(true);
     g->addWidget(r->source, 1);
     g->addWidget(r->label, 1);
+    g->addWidget(r->record);
     g->addWidget(remove);
     rows_lay->addWidget(r->box);
     rows.append(r);

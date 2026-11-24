@@ -17,6 +17,7 @@ struct MicConfig {
     QByteArray device_id;
     QString device_name;    // to find it back when its id changed (e.g. another USB port)
     QStringList labels;
+    bool record = true;     // false: kept in the profile, not recorded
 };
 
 /**
@@ -47,6 +48,10 @@ public:
 
     /// the microphones of a profile (see activeProfile())
     static QList<MicConfig> micConfigs(QString profile);
+    /// what this run records (pprzgcs --record audio|video|all, all by default)
+    static QString recordWhat();
+    static bool recordsAudio() {return recordWhat() != "video";}
+    static bool recordsVideo() {return recordWhat() != "audio";}
     static void saveMicConfigs(QList<MicConfig> mics, QString profile);
     /// the device of a microphone: by its id, else by its name (null if not connected)
     static QAudioDevice findDevice(const MicConfig& mic);

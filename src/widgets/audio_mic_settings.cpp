@@ -59,6 +59,7 @@ QList<MicConfig> AudioMicSettings::configs() {
         while(!c.labels.isEmpty() && c.labels.last().isEmpty()) {
             c.labels.removeLast();
         }
+        c.record = r->record->isChecked();
         list.append(c);
     }
     return list;
@@ -84,6 +85,9 @@ void AudioMicSettings::addRow(MicConfig c) {
     auto ml = new QHBoxLayout(r->meters);
     ml->setContentsMargins(0, 0, 0, 0);
     ml->setSpacing(3);
+    r->record = new QCheckBox("Record", r->box);
+    r->record->setChecked(c.record);
+    r->record->setToolTip("Recorded with the others (unticked: kept in this profile, not recorded)");
     auto remove = new QToolButton(r->box);
     remove->setText(QString::fromUtf8("×"));
     remove->setToolTip("Remove this microphone");
@@ -94,8 +98,9 @@ void AudioMicSettings::addRow(MicConfig c) {
     g->addWidget(r->device, 0, 0);
     g->addWidget(r->labels, 0, 1);
     g->addWidget(r->meters, 0, 2);
-    g->addWidget(remove, 0, 3);
-    g->addWidget(r->channels, 1, 0, 1, 4);
+    g->addWidget(r->record, 0, 3);
+    g->addWidget(remove, 0, 4);
+    g->addWidget(r->channels, 1, 0, 1, 5);
     g->setColumnStretch(1, 1);
     rows_lay->addWidget(r->box);
     rows.append(r);
