@@ -25,8 +25,15 @@ CameraSettings::CameraSettings(QWidget *parent) : QWidget(parent)
     h->addWidget(add);
     h->addStretch(1);
     v->addLayout(h);
+}
 
-    for(auto &c: VideoRecorder::cameraConfigs()) {
+void CameraSettings::setConfigs(QList<CameraConfig> list) {
+    for(auto r: std::as_const(rows)) {
+        r->box->deleteLater();
+        delete r;
+    }
+    rows.clear();
+    for(auto &c: list) {
         addRow(c);
     }
 }

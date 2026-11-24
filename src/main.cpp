@@ -103,6 +103,7 @@ int main(int argc, char *argv[])
         parser.addOption({"speech", "Enable speech"});
         // (always accepted: a session that passes it also starts a PprzGCS built without the recorder)
         parser.addOption({"record", "Record the microphones from the start (Settings, Recording)"});
+        parser.addOption({"profile", "The devices of this profile: microphones, cameras, alert output (Settings, Recording)", "name"});
         parser.process(a);
 
         setVerbose(parser.isSet("v"));
@@ -156,6 +157,7 @@ int main(int argc, char *argv[])
 
         PprzDispatcher::get()->setSilent(parser.isSet("silent"));
         gconfig->setValue("AUDIO_RECORD_ARG", parser.isSet("record"));
+        gconfig->setValue("PROFILE_ARG", parser.value("profile"));
 
 
         launch_main_app();

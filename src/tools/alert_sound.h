@@ -7,8 +7,8 @@
 /**
  * The alert sounds (a chime for a warning, a beep for an alarm), played by the player of the system
  * (paplay, pw-play, aplay or afplay: no Qt Multimedia needed), on the output of the settings
- * (notify/output, empty: the default of the system, e.g. an intercom such as the Vokkero for the crew)
- * at its volume (notify/volume, 0 to 100 %).
+ * (notify/output of the profile, empty: the default of the system, e.g. an intercom such as the Vokkero
+ * for the crew) at its volume (notify/volume of the profile, 0 to 100 %).
  */
 namespace AlertSound {
 

@@ -70,10 +70,10 @@ VideoRecorder::~VideoRecorder() {
     }
 }
 
-QList<CameraConfig> VideoRecorder::cameraConfigs() {
+QList<CameraConfig> VideoRecorder::cameraConfigs(QString profile) {
     QList<CameraConfig> list;
     auto settings = getAppSettings();
-    int n = settings.beginReadArray("video/cameras");
+    int n = settings.beginReadArray(profileKey("video/cameras", profile));
     for(int i = 0; i < n; i++) {
         settings.setArrayIndex(i);
         CameraConfig c;
@@ -89,10 +89,10 @@ QList<CameraConfig> VideoRecorder::cameraConfigs() {
     return list;
 }
 
-void VideoRecorder::saveCameraConfigs(QList<CameraConfig> list) {
+void VideoRecorder::saveCameraConfigs(QList<CameraConfig> list, QString profile) {
     auto settings = getAppSettings();
-    settings.remove("video/cameras");
-    settings.beginWriteArray("video/cameras", list.size());
+    settings.remove(profileKey("video/cameras", profile));
+    settings.beginWriteArray(profileKey("video/cameras", profile), list.size());
     for(int i = 0; i < list.size(); i++) {
         settings.setArrayIndex(i);
         settings.setValue("source", list[i].source);
@@ -137,7 +137,7 @@ void VideoRecorder::loadSettings() {
         folder = logsFolder() + "/video";
     }
     chunk_minutes = std::max(1, settings.value("audio/chunk_minutes", 10).toInt());
-    for(auto &c: cameraConfigs()) {
+    for(auto &c: cameraConfigs(activeProfile())) {
         auto cam = new Camera();
         cam->config = c;
         cameras.append(cam);

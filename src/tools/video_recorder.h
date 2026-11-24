@@ -36,8 +36,9 @@ class VideoRecorder : public QObject
 public:
     static VideoRecorder* get();
 
-    static QList<CameraConfig> cameraConfigs();
-    static void saveCameraConfigs(QList<CameraConfig> cameras);
+    /// the cameras of a profile (see activeProfile())
+    static QList<CameraConfig> cameraConfigs(QString profile);
+    static void saveCameraConfigs(QList<CameraConfig> cameras, QString profile);
     /// the USB cameras of this computer (their capture devices)
     static QList<CameraDevice> devices();
 

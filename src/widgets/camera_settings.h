@@ -16,6 +16,8 @@ public:
     explicit CameraSettings(QWidget *parent = nullptr);
 
     QList<CameraConfig> configs();
+    /// the rows of these cameras (e.g. of another profile)
+    void setConfigs(QList<CameraConfig> list);
 
 private:
     struct Row {

@@ -92,10 +92,10 @@ AudioRecorder::~AudioRecorder() {
     }
 }
 
-QList<MicConfig> AudioRecorder::micConfigs() {
+QList<MicConfig> AudioRecorder::micConfigs(QString profile) {
     QList<MicConfig> list;
     auto settings = getAppSettings();
-    int n = settings.beginReadArray("audio/mics");
+    int n = settings.beginReadArray(profileKey("audio/mics", profile));
     for(int i = 0; i < n; i++) {
         settings.setArrayIndex(i);
         MicConfig c;
@@ -109,10 +109,10 @@ QList<MicConfig> AudioRecorder::micConfigs() {
     return list;
 }
 
-void AudioRecorder::saveMicConfigs(QList<MicConfig> list) {
+void AudioRecorder::saveMicConfigs(QList<MicConfig> list, QString profile) {
     auto settings = getAppSettings();
-    settings.remove("audio/mics");
-    settings.beginWriteArray("audio/mics", list.size());
+    settings.remove(profileKey("audio/mics", profile));
+    settings.beginWriteArray(profileKey("audio/mics", profile), list.size());
     for(int i = 0; i < list.size(); i++) {
         settings.setArrayIndex(i);
         settings.setValue("device_id", list[i].device_id);
@@ -190,7 +190,7 @@ void AudioRecorder::loadSettings() {
         delete m;
     }
     mics.clear();
-    for(auto &c: micConfigs()) {
+    for(auto &c: micConfigs(activeProfile())) {
         auto m = new Mic();
         m->config = c;
         mics.append(m);
@@ -424,6 +424,9 @@ void AudioRecorder::sendStatus() {
     auto video_problems = video->problems();
     files.append(video->files());
     QStringList info;
+    if(!requestedProfile().isEmpty() && activeProfile().isEmpty()) {
+        info.append(QString("profile %1 not on this computer: the default profile").arg(requestedProfile()));
+    }
     if(recording && mics.isEmpty() && !has_cameras) {
         info.append("no microphone or camera in the settings");
     }

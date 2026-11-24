@@ -45,8 +45,9 @@ public:
     void start();
     void stop();
 
-    static QList<MicConfig> micConfigs();
-    static void saveMicConfigs(QList<MicConfig> mics);
+    /// the microphones of a profile (see activeProfile())
+    static QList<MicConfig> micConfigs(QString profile);
+    static void saveMicConfigs(QList<MicConfig> mics, QString profile);
     /// the device of a microphone: by its id, else by its name (null if not connected)
     static QAudioDevice findDevice(const MicConfig& mic);
     /// the format asked of a device: 16 bits at 48 kHz (Opus), its channels

@@ -406,56 +406,8 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     cb = addSetting("Alert sounds", "notify/sound", w_sound, l_sound, row, Type::BOOL);
     callbacks.append(cb);
     addHelp("A chime when a warning of the map shows or gets worse. An alarm beeps, and again every 4 s until it "
-            "clears or is dismissed (\u00d7).", w_sound, l_sound, row);
-    {
-        // the output of the alerts (e.g. an intercom, for the crew) and their volume
-        auto settings = getAppSettings();
-        QString output = settings.value("notify/output").toString();
-        l_sound->addWidget(new QLabel("Output", w_sound), row, 0);
-        auto out_combo = new QComboBox(w_sound);
-        out_combo->addItem("Default output of the system", QString());
-        for(auto &o: AlertSound::outputs()) {
-            out_combo->addItem(o.description, o.name);
-        }
-        if(!output.isEmpty() && out_combo->findData(output) < 0) {
-            // kept, until it is connected again (meanwhile: the default)
-            out_combo->addItem(output + " (not connected)", output);
-        }
-        out_combo->setCurrentIndex(std::max(0, out_combo->findData(output)));
-        l_sound->addWidget(out_combo, row, 1);
-        row += 1;
-
-        l_sound->addWidget(new QLabel("Volume", w_sound), row, 0);
-        auto vol_box = new QWidget(w_sound);
-        auto vol_lay = new QHBoxLayout(vol_box);
-        vol_lay->setContentsMargins(0, 0, 0, 0);
-        auto vol_slider = new QSlider(Qt::Horizontal, vol_box);
-        vol_slider->setRange(0, 100);
-        vol_slider->setValue(settings.value("notify/volume", 100).toInt());
-        auto vol_label = new QLabel(vol_box);
-        vol_label->setMinimumWidth(vol_label->fontMetrics().horizontalAdvance("100 %"));
-        auto show_volume = [=]() {vol_label->setText(QString("%1 %").arg(vol_slider->value()));};
-        show_volume();
-        connect(vol_slider, &QSlider::valueChanged, vol_label, show_volume);
-        auto test = new QPushButton("Test", vol_box);
-        test->setToolTip("Plays the warning chime on this output, at this volume");
-        connect(test, &QPushButton::clicked, this, [=]() {
-            AlertSound::play(false, out_combo->currentData().toString(), vol_slider->value());
-        });
-        vol_lay->addWidget(vol_slider, 1);
-        vol_lay->addWidget(vol_label);
-        vol_lay->addWidget(test);
-        l_sound->addWidget(vol_box, row, 1);
-        row += 1;
-        callbacks.append([=]() {
-            auto settings = getAppSettings();
-            settings.setValue("notify/output", out_combo->currentData().toString());
-            settings.setValue("notify/volume", vol_slider->value());
-        });
-        addHelp("Where the alerts are heard, e.g. an intercom (Vokkero) for the whole crew: a Bluetooth output "
-                "that is not connected plays on the default output. The volume is also the one of the speech.",
-                w_sound, l_sound, row);
-    }
+            "clears or is dismissed (\u00d7). Their output (e.g. an intercom for the crew) and volume: the Recording "
+            "tab, per profile.", w_sound, l_sound, row);
     cb = addSetting("Speech", "notify/speech", w_sound, l_sound, row, Type::BOOL);
     callbacks.append(cb);
     if(Speaker::available()) {
@@ -515,33 +467,232 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     cb = addSetting("Recorder name (empty: the computer)", "audio/name", w_rec, l_rec, row, Type::STRING);
     callbacks.append(cb);
     addHelp("Shown in the status bar of the other GCSs, which can start and stop it.", w_rec, l_rec, row);
-
-    addSection("Microphones", w_rec, l_rec, row);
-    auto mics = new AudioMicSettings(w_rec);
-    l_rec->addWidget(mics, row, 0, 1, 3);
-    row += 1;
-    callbacks.append([=]() {
-        AudioRecorder::saveMicConfigs(mics->configs());
-    });
-
-    addSection("Cameras", w_rec, l_rec, row);
-    auto cams = new CameraSettings(w_rec);
-    l_rec->addWidget(cams, row, 0, 1, 3);
-    row += 1;
-    callbacks.append([=]() {
-        VideoRecorder::saveCameraConfigs(cams->configs());
-    });
     cb = addSetting("Video folder (empty: var/logs/video)", "video/folder", w_rec, l_rec, row, Type::PATH_DIR);
     callbacks.append(cb);
     addHelp("Recorded with the microphones (ffmpeg): a USB camera in H.264, a stream as it comes, a file per camera "
             "and a new one with the audio files. About 0.5 to 1.5 GB per camera and hour. The Video panel shows "
             "them (right click: the source).", w_rec, l_rec, row);
+
     live_settings << "video/";
 #else
     addSection("Recording", w_rec, l_rec, row);
     addHelp("This PprzGCS is built without the audio recorder (install qt6-multimedia-dev and libsndfile1-dev, "
             "and build again).", w_rec, l_rec, row);
 #endif
+
+    // The devices of a place (profile): the microphones, the cameras, the output of the alerts.
+    // Edited here for each profile, saved together; pprzgcs --profile NAME uses one (else the default).
+    struct ProfileEdit {
+#if defined(AUDIO_RECORDER_ENABLED)
+        QList<MicConfig> mics;
+        QList<CameraConfig> cams;
+#endif
+        QString output;
+        int volume = 100;
+    };
+    struct ProfileState {
+        QString current;                    // "": the default profile
+        QMap<QString, ProfileEdit> edits;   // the profiles shown in the dialog (by name)
+        QStringList deleted;
+    };
+    auto pstate = std::make_shared<ProfileState>();
+    pstate->current = activeProfile();
+
+    addSection("Profile", w_rec, l_rec, row);
+    l_rec->addWidget(new QLabel("Devices of", w_rec), row, 0);
+    auto prof_box = new QWidget(w_rec);
+    auto prof_lay = new QHBoxLayout(prof_box);
+    prof_lay->setContentsMargins(0, 0, 0, 0);
+    auto prof_combo = new QComboBox(prof_box);
+    auto prof_new = new QPushButton("New...", prof_box);
+    prof_new->setToolTip("A new profile, starting as a copy of this one");
+    auto prof_delete = new QPushButton("Delete", prof_box);
+    prof_lay->addWidget(prof_combo, 1);
+    prof_lay->addWidget(prof_new);
+    prof_lay->addWidget(prof_delete);
+    l_rec->addWidget(prof_box, row, 1);
+    row += 1;
+    {
+        QString help = "The microphones, cameras and alert output of a place (e.g. cyberzoo, field), set up on each "
+                       "computer. A session of the Paparazzi Center chooses one with pprzgcs --profile NAME (e.g. "
+                       "--profile cyberzoo); without it, or when this computer has no profile of that name, the "
+                       "default one.";
+        if(!requestedProfile().isEmpty()) {
+            help += activeProfile().isEmpty() ?
+                        QString("<br>This run asked for profile %1, which this computer does not have: the default "
+                                "one is used.").arg(requestedProfile().toHtmlEscaped()) :
+                        QString("<br>This run uses profile %1.").arg(activeProfile().toHtmlEscaped());
+        }
+        addHelp(help, w_rec, l_rec, row);
+    }
+
+#if defined(AUDIO_RECORDER_ENABLED)
+    addSection("Microphones", w_rec, l_rec, row);
+    auto mics = new AudioMicSettings(w_rec);
+    l_rec->addWidget(mics, row, 0, 1, 3);
+    row += 1;
+
+    addSection("Cameras", w_rec, l_rec, row);
+    auto cams = new CameraSettings(w_rec);
+    l_rec->addWidget(cams, row, 0, 1, 3);
+    row += 1;
+#endif
+
+    addSection("Alerts", w_rec, l_rec, row);
+    l_rec->addWidget(new QLabel("Output", w_rec), row, 0);
+    auto out_combo = new QComboBox(w_rec);
+    l_rec->addWidget(out_combo, row, 1);
+    row += 1;
+    l_rec->addWidget(new QLabel("Volume", w_rec), row, 0);
+    auto vol_box = new QWidget(w_rec);
+    auto vol_lay = new QHBoxLayout(vol_box);
+    vol_lay->setContentsMargins(0, 0, 0, 0);
+    auto vol_slider = new QSlider(Qt::Horizontal, vol_box);
+    vol_slider->setRange(0, 100);
+    auto vol_label = new QLabel(vol_box);
+    vol_label->setMinimumWidth(vol_label->fontMetrics().horizontalAdvance("100 %"));
+    connect(vol_slider, &QSlider::valueChanged, vol_label, [=]() {
+        vol_label->setText(QString("%1 %").arg(vol_slider->value()));
+    });
+    auto test = new QPushButton("Test", vol_box);
+    test->setToolTip("Plays the warning chime on this output, at this volume");
+    connect(test, &QPushButton::clicked, this, [=]() {
+        AlertSound::play(false, out_combo->currentData().toString(), vol_slider->value());
+    });
+    vol_lay->addWidget(vol_slider, 1);
+    vol_lay->addWidget(vol_label);
+    vol_lay->addWidget(test);
+    l_rec->addWidget(vol_box, row, 1);
+    row += 1;
+    addHelp("Where the alert sounds (Sound tab) are heard, e.g. an intercom (Vokkero) for the whole crew: an output "
+            "that is not connected (e.g. Bluetooth, off) plays on the default output. The volume is also the one "
+            "of the speech.", w_rec, l_rec, row);
+
+    auto loadProfile = [=](QString name) {
+        if(pstate->edits.contains(name)) {
+            return pstate->edits[name];
+        }
+        ProfileEdit e;
+#if defined(AUDIO_RECORDER_ENABLED)
+        e.mics = AudioRecorder::micConfigs(name);
+        e.cams = VideoRecorder::cameraConfigs(name);
+#endif
+        auto settings = getAppSettings();
+        e.output = settings.value(profileKey("notify/output", name)).toString();
+        e.volume = settings.value(profileKey("notify/volume", name), 100).toInt();
+        return e;
+    };
+    auto storeShown = [=]() {
+        ProfileEdit e;
+#if defined(AUDIO_RECORDER_ENABLED)
+        e.mics = mics->configs();
+        e.cams = cams->configs();
+#endif
+        e.output = out_combo->currentData().toString();
+        e.volume = vol_slider->value();
+        pstate->edits[pstate->current] = e;
+    };
+    auto showProfile = [=](QString name) {
+        auto e = loadProfile(name);
+        pstate->current = name;
+#if defined(AUDIO_RECORDER_ENABLED)
+        mics->setConfigs(e.mics);
+        cams->setConfigs(e.cams);
+#endif
+        out_combo->clear();
+        out_combo->addItem("Default output of the system", QString());
+        for(auto &o: AlertSound::outputs()) {
+            out_combo->addItem(o.description, o.name);
+        }
+        if(!e.output.isEmpty() && out_combo->findData(e.output) < 0) {
+            // kept, until it is connected again (meanwhile: the default)
+            out_combo->addItem(e.output + " (not connected)", e.output);
+        }
+        out_combo->setCurrentIndex(std::max(0, out_combo->findData(e.output)));
+        vol_slider->setValue(e.volume);
+        vol_label->setText(QString("%1 %").arg(e.volume));
+        prof_delete->setEnabled(!name.isEmpty());
+    };
+    auto fillProfiles = [=]() {
+        QSignalBlocker block(prof_combo);
+        prof_combo->clear();
+        prof_combo->addItem("Default (without --profile)", QString());
+        QStringList names = profileNames();
+        for(auto &n: pstate->edits.keys()) {
+            if(!n.isEmpty() && !names.contains(n)) {
+                names.append(n);
+            }
+        }
+        for(auto &n: pstate->deleted) {
+            names.removeAll(n);
+        }
+        names.sort(Qt::CaseInsensitive);
+        for(auto &n: names) {
+            prof_combo->addItem(n == activeProfile() && !n.isEmpty() ? n + " (this run)" : n, n);
+        }
+        prof_combo->setCurrentIndex(std::max(0, prof_combo->findData(pstate->current)));
+    };
+    fillProfiles();
+    showProfile(pstate->current);
+
+    connect(prof_combo, qOverload<int>(&QComboBox::currentIndexChanged), this, [=]() {
+        storeShown();
+        showProfile(prof_combo->currentData().toString());
+    });
+    connect(prof_new, &QPushButton::clicked, this, [=]() {
+        bool ok = false;
+        QString name = QInputDialog::getText(this, "New profile", "Name (letters, digits, - and _), e.g. cyberzoo:",
+                                             QLineEdit::Normal, QString(), &ok).trimmed();
+        if(!ok || name.isEmpty()) {
+            return;
+        }
+        bool taken = name.compare("default", Qt::CaseInsensitive) == 0;
+        for(int i = 1; i < prof_combo->count(); i++) {
+            taken |= prof_combo->itemData(i).toString().compare(name, Qt::CaseInsensitive) == 0;
+        }
+        if(!QRegularExpression("^[A-Za-z0-9_-]+$").match(name).hasMatch() || taken) {
+            QMessageBox::warning(this, "New profile", taken ? "There is already a profile of that name." :
+                                     "Only letters, digits, - and _ (it is passed as --profile NAME).");
+            return;
+        }
+        storeShown();
+        pstate->edits[name] = pstate->edits[pstate->current];   // a copy of the shown one
+        pstate->deleted.removeAll(name);
+        pstate->current = name;
+        fillProfiles();
+        showProfile(name);
+    });
+    connect(prof_delete, &QPushButton::clicked, this, [=]() {
+        QString name = pstate->current;
+        if(name.isEmpty()) {
+            return;
+        }
+        if(QMessageBox::question(this, "Delete profile", QString("Delete profile %1 (its microphones, cameras and "
+                                 "alert output) when saving?").arg(name)) != QMessageBox::Yes) {
+            return;
+        }
+        pstate->edits.remove(name);
+        pstate->deleted.append(name);
+        pstate->current = QString();
+        fillProfiles();
+        showProfile(QString());
+    });
+    callbacks.append([=]() {
+        storeShown();
+        auto settings = getAppSettings();
+        for(auto &n: pstate->deleted) {
+            settings.remove("profiles/" + n);
+        }
+        for(auto it = pstate->edits.constBegin(); it != pstate->edits.constEnd(); ++it) {
+#if defined(AUDIO_RECORDER_ENABLED)
+            AudioRecorder::saveMicConfigs(it->mics, it.key());
+            VideoRecorder::saveCameraConfigs(it->cams, it.key());
+#endif
+            settings.setValue(profileKey("notify/output", it.key()), it->output);
+            settings.setValue(profileKey("notify/volume", it.key()), it->volume);
+        }
+    });
+    live_settings << "profiles/";
     live_settings << "audio/";      // the recorder follows right away
     finishTab(l_rec, row);
     tabWidget->addTab(w_rec, "Recording");

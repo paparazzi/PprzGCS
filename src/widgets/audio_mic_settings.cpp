@@ -27,9 +27,6 @@ AudioMicSettings::AudioMicSettings(QWidget *parent) : QWidget(parent),
     h->addStretch(1);
     v->addLayout(h);
 
-    for(auto &c: AudioRecorder::micConfigs()) {
-        addRow(c);
-    }
     connect(media_devices, &QMediaDevices::audioInputsChanged, this, &AudioMicSettings::refreshDevices);
 }
 
@@ -37,6 +34,16 @@ AudioMicSettings::~AudioMicSettings() {
     for(auto r: std::as_const(rows)) {
         closeTest(r);
         delete r;
+    }
+}
+
+void AudioMicSettings::setConfigs(QList<MicConfig> list) {
+    const auto old = rows;
+    for(auto r: old) {
+        removeRow(r);
+    }
+    for(auto &c: list) {
+        addRow(c);
     }
 }
 

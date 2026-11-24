@@ -128,7 +128,7 @@ void Speaker::speak(QString text) {
     if(tts) {
         tts->setRate(qBound(-1.0, getAppSettings().value("notify/speech_rate", 0).toInt() / 100.0, 1.0));
         // the volume of the alerts (Settings, Sound)
-        tts->setVolume(std::clamp(getAppSettings().value("notify/volume", 100).toInt(), 0, 100) / 100.0);
+        tts->setVolume(std::clamp(getAppSettings().value(profileKey("notify/volume", activeProfile()), 100).toInt(), 0, 100) / 100.0);
         tts->say(spoken(text));
         return;
     }
@@ -163,7 +163,7 @@ QStringList Speaker::systemArguments(QString text, QString language, QString voi
     auto command = systemCommand();
     QStringList args = command.mid(1);
     // the volume of the alerts (Settings, Sound), 0 to 100
-    int volume = std::clamp(getAppSettings().value("notify/volume", 100).toInt(), 0, 100);
+    int volume = std::clamp(getAppSettings().value(profileKey("notify/volume", activeProfile()), 100).toInt(), 0, 100);
     if(command.value(0).endsWith("spd-say")) {
         auto module = voice.section(':', 0, 0);
         auto name = voice.section(':', 1);

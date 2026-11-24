@@ -23,6 +23,8 @@ public:
     ~AudioMicSettings();
 
     QList<MicConfig> configs();
+    /// the rows of these microphones (e.g. of another profile)
+    void setConfigs(QList<MicConfig> list);
 
 protected:
     void showEvent(QShowEvent* e) override;

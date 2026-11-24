@@ -56,7 +56,7 @@ QList<Output> outputs() {
 
 void play(bool alarm) {
     auto settings = getAppSettings();
-    QString output = settings.value("notify/output").toString();
+    QString output = settings.value(profileKey("notify/output", activeProfile())).toString();
     if(!output.isEmpty()) {
         // not connected (e.g. the Bluetooth intercom is off): heard on the default rather than not at all
         bool found = false;
@@ -67,7 +67,7 @@ void play(bool alarm) {
             output.clear();
         }
     }
-    play(alarm, output, settings.value("notify/volume", 100).toInt());
+    play(alarm, output, settings.value(profileKey("notify/volume", activeProfile()), 100).toInt());
 }
 
 void play(bool alarm, QString output, int volume) {

@@ -85,6 +85,36 @@ bool speech() {
     return qApp->property("SPEECH").toBool() || getAppSettings().value("notify/speech", false).toBool();
 }
 
+QStringList profileNames() {
+    auto settings = getAppSettings();
+    settings.beginGroup("profiles");
+    auto names = settings.childGroups();
+    settings.endGroup();
+    names.sort(Qt::CaseInsensitive);
+    return names;
+}
+
+QString requestedProfile() {
+    return appConfig()->value("PROFILE_ARG").toString().trimmed();
+}
+
+QString activeProfile() {
+    auto asked = requestedProfile();
+    if(asked.isEmpty()) {
+        return QString();
+    }
+    for(auto &n: profileNames()) {
+        if(n.compare(asked, Qt::CaseInsensitive) == 0) {
+            return n;
+        }
+    }
+    return QString();
+}
+
+QString profileKey(QString key, QString profile) {
+    return profile.isEmpty() ? key : "profiles/" + profile + "/" + key;
+}
+
 void setSpeech(bool s) {
     qApp->setProperty("SPEECH", s);
 }
