@@ -11,6 +11,7 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/units.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/watcher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/speaker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/alert_sound.cpp
 )
 
 if(${AUDIO_RECORDER})

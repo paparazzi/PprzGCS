@@ -9,6 +9,7 @@
 #include "dispatcher_ui.h"
 #include "map_notifications.h"
 #include "speaker.h"
+#include "alert_sound.h"
 #include "switch.h"
 #include <QApplication>
 #include <QFile>
@@ -127,6 +128,8 @@ void set_app_settings() {
         default_setting("notify/" + k.key, k.on);
     }
     default_setting("notify/sound", true);
+    default_setting("notify/output", "");
+    default_setting("notify/volume", 100);
     default_setting("audio/enabled", false);
     default_setting("audio/name", "");
     default_setting("audio/format", "opus");
@@ -404,6 +407,55 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     callbacks.append(cb);
     addHelp("A chime when a warning of the map shows or gets worse. An alarm beeps, and again every 4 s until it "
             "clears or is dismissed (\u00d7).", w_sound, l_sound, row);
+    {
+        // the output of the alerts (e.g. an intercom, for the crew) and their volume
+        auto settings = getAppSettings();
+        QString output = settings.value("notify/output").toString();
+        l_sound->addWidget(new QLabel("Output", w_sound), row, 0);
+        auto out_combo = new QComboBox(w_sound);
+        out_combo->addItem("Default output of the system", QString());
+        for(auto &o: AlertSound::outputs()) {
+            out_combo->addItem(o.description, o.name);
+        }
+        if(!output.isEmpty() && out_combo->findData(output) < 0) {
+            // kept, until it is connected again (meanwhile: the default)
+            out_combo->addItem(output + " (not connected)", output);
+        }
+        out_combo->setCurrentIndex(std::max(0, out_combo->findData(output)));
+        l_sound->addWidget(out_combo, row, 1);
+        row += 1;
+
+        l_sound->addWidget(new QLabel("Volume", w_sound), row, 0);
+        auto vol_box = new QWidget(w_sound);
+        auto vol_lay = new QHBoxLayout(vol_box);
+        vol_lay->setContentsMargins(0, 0, 0, 0);
+        auto vol_slider = new QSlider(Qt::Horizontal, vol_box);
+        vol_slider->setRange(0, 100);
+        vol_slider->setValue(settings.value("notify/volume", 100).toInt());
+        auto vol_label = new QLabel(vol_box);
+        vol_label->setMinimumWidth(vol_label->fontMetrics().horizontalAdvance("100 %"));
+        auto show_volume = [=]() {vol_label->setText(QString("%1 %").arg(vol_slider->value()));};
+        show_volume();
+        connect(vol_slider, &QSlider::valueChanged, vol_label, show_volume);
+        auto test = new QPushButton("Test", vol_box);
+        test->setToolTip("Plays the warning chime on this output, at this volume");
+        connect(test, &QPushButton::clicked, this, [=]() {
+            AlertSound::play(false, out_combo->currentData().toString(), vol_slider->value());
+        });
+        vol_lay->addWidget(vol_slider, 1);
+        vol_lay->addWidget(vol_label);
+        vol_lay->addWidget(test);
+        l_sound->addWidget(vol_box, row, 1);
+        row += 1;
+        callbacks.append([=]() {
+            auto settings = getAppSettings();
+            settings.setValue("notify/output", out_combo->currentData().toString());
+            settings.setValue("notify/volume", vol_slider->value());
+        });
+        addHelp("Where the alerts are heard, e.g. an intercom (Vokkero) for the whole crew: a Bluetooth output "
+                "that is not connected plays on the default output. The volume is also the one of the speech.",
+                w_sound, l_sound, row);
+    }
     cb = addSetting("Speech", "notify/speech", w_sound, l_sound, row, Type::BOOL);
     callbacks.append(cb);
     if(Speaker::available()) {
