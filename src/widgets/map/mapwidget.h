@@ -4,6 +4,7 @@
 #include <QElapsedTimer>
 #include <QGraphicsItem>
 #include <QList>
+#include <QSet>
 #include <QPointer>
 #include <QTimer>
 #include <QDialog>
@@ -211,6 +212,10 @@ private:
     QVBoxLayout* columnRight;
     QVBoxLayout* buttonsRightLayout;
     WindIndicator* wind_indicator;
+    // the ground estimate of the server (WIND), per aircraft: shown when the aircraft uses no wind (AIR_DATA)
+    QMap<QString, WindIndicator::WindData> ground_wind;
+    QSet<QString> air_data_wind;    // the aircraft whose AIR_DATA has a wind
+    void updateWind(QString ac_id);
     QToolButton* follow_button;
     enum FollowMode {FOLLOW_OFF = 0, FOLLOW = 1, FOLLOW_HEADING = 2};
     int follow_mode = FOLLOW_OFF;

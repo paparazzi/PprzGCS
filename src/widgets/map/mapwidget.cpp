@@ -1094,7 +1094,7 @@ void MapWidget::configure(QDomElement ele) {
     show_follow();
 
     // the wind the aircraft uses (air_data module): north/east/down, blowing to; NaN if unknown.
-    // Without the wind fields (older messages.xml) or a wind source (wind_id 0): no wind.
+    // Without the wind fields (older messages.xml) or a wind source (wind_id 0): the ground estimate (WIND).
     PprzDispatcher::get()->bindOptional("AIR_DATA", this, [=,this](QString sender, pprzlink::Message msg){
         const auto& def = msg.getDefinition();
         if(!def.hasFieldName("wind") || !def.hasFieldName("wind_id")) {
@@ -1105,12 +1105,39 @@ void MapWidget::configure(QDomElement ele) {
         msg.getField("wind", wind);
         msg.getField("wind_id", wind_id);
         if(wind_id == 0 || wind.size() < 2 || !std::isfinite(wind[0]) || !std::isfinite(wind[1])) {
-            wind_indicator->removeAC(sender);
+            if(air_data_wind.remove(sender)) {
+                updateWind(sender);
+            }
             return;
         }
+        air_data_wind.insert(sender);
         // the direction the wind comes from, in degrees
         double dir = fmod(qRadiansToDegrees(atan2(-wind[1], -wind[0])) + 360., 360.);
         wind_indicator->setWindData(sender, dir, hypot(wind[0], wind[1]));
+    });
+
+    // the wind estimated by the server from the aircraft track (dir: where the wind comes from, in degrees)
+    PprzDispatcher::get()->bindOptional("WIND", this, [=,this](QString sender, pprzlink::Message msg){
+        (void)sender;
+        QString ac_id;
+        msg.getField("ac_id", ac_id);
+        double dir = getFloatingField(msg, "dir");
+        double wspeed = getFloatingField(msg, "wspeed");
+        if(!std::isfinite(dir) || !std::isfinite(wspeed)) {
+            ground_wind.remove(ac_id);
+        } else {
+            ground_wind[ac_id] = {dir, wspeed};
+        }
+        updateWind(ac_id);
+    });
+
+    // the ground estimate is reset
+    PprzDispatcher::get()->bindOptional("WIND_CLEAR", this, [=,this](QString sender, pprzlink::Message msg){
+        (void)sender;
+        QString ac_id;
+        msg.getField("ac_id", ac_id);
+        ground_wind.remove(ac_id);
+        updateWind(ac_id);
     });
 
     connect(wind_indicator, &WindIndicator::requestRotation, this, [=,this](double rot) {
@@ -3241,6 +3268,19 @@ void MapWidget::placeFrozenBanner() {
         banner->move((width() - banner->width()) / 2, bottom - banner->height());
         banner->raise();
         bottom -= banner->height() + 6;
+    }
+}
+
+// the wind of an aircraft: from AIR_DATA if it has one (set there), else the ground estimate, else none
+void MapWidget::updateWind(QString ac_id) {
+    if(air_data_wind.contains(ac_id)) {
+        return;
+    }
+    if(ground_wind.contains(ac_id)) {
+        const auto& w = ground_wind[ac_id];
+        wind_indicator->setWindData(ac_id, w.wind_dir, w.wind_speed);
+    } else {
+        wind_indicator->removeAC(ac_id);
     }
 }
 
