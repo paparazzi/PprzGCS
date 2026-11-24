@@ -186,7 +186,11 @@ PprzMain* configure(QString filename) {
         exit(-1);
     }
 
-    xmlLayout.setContent(&f);
+    QString error;
+    int line, column;
+    if(!xmlLayout.setContent(&f, &error, &line, &column)) {
+        qCritical(LOG_CONFIG) << "Error in layout file" << filename << "line" << line << "column" << column << ":" << error;
+    }
     f.close();
 
     QDomElement root = xmlLayout.documentElement();
@@ -194,7 +198,7 @@ PprzMain* configure(QString filename) {
     // configure layout
     auto layout_ele = root.firstChildElement("layout");
     if(layout_ele.isNull()) {
-        qCritical(LOG_CONFIG)  << "Cannot find a \"layout\" element.";
+        qCritical(LOG_CONFIG)  << "Cannot find a \"layout\" element in" << filename;
         exit(-1);
     }
 
@@ -202,7 +206,7 @@ PprzMain* configure(QString filename) {
     int height = layout_ele.attribute("height", DEFAULT_HEIGHT).toInt();
 
     if (layout_ele.childNodes().length() != 1) {
-        qCritical(LOG_CONFIG)  << "Root tag \"layout\" expected to have exactly one child, rows, colums or widget.";
+        qCritical(LOG_CONFIG)  << "Root tag \"layout\" expected to have exactly one child, rows, colums or widget, in" << filename;
         exit(-1);
     }
 
