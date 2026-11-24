@@ -19,6 +19,7 @@
 #include <QGroupBox>
 #include <QPushButton>
 #include <QSaveFile>
+#include <QScrollArea>
 #include <QSettings>
 #include <QSet>
 #include <QSignalBlocker>
@@ -270,9 +271,13 @@ GroupController::GroupController(QWidget *parent): QWidget(parent)
     table->setEditTriggers(QAbstractItemView::AllEditTriggers);
 
     for (const QString &groupName : groupNames) {
-        auto groupPage = new QWidget(tabWidget);
-        tabWidget->addTab(groupPage, groupName);
+        auto scroll = new QScrollArea(tabWidget);
+        scroll->setWidgetResizable(true);
+        scroll->setFrameShape(QFrame::NoFrame);
+        tabWidget->addTab(scroll, groupName);
+        auto groupPage = new QWidget(scroll);
         auto groupLayout = new QVBoxLayout(groupPage);
+        groupLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
         auto noActiveWarning = new QLabel(tr("No active drones in this group"), groupPage);
         noActiveWarning->setWordWrap(true);
         noActiveWarning->setStyleSheet(QStringLiteral("QLabel { color: #ef6c00; }"));
@@ -414,6 +419,7 @@ GroupController::GroupController(QWidget *parent): QWidget(parent)
             groupLayout->addWidget(actionsBox);
         }
         groupLayout->addStretch();
+        scroll->setWidget(groupPage);
     }
 
     for (auto it = messageFields.cbegin(); it != messageFields.cend(); ++it) {
