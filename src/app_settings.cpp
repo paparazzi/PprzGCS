@@ -406,7 +406,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     cb = addSetting("Alert sounds", "notify/sound", w_sound, l_sound, row, Type::BOOL);
     callbacks.append(cb);
     addHelp("A chime when a warning of the map shows or gets worse. An alarm beeps, and again every 4 s until it "
-            "clears or is dismissed (\u00d7). Their output (e.g. an intercom for the crew) and volume: the Recording "
+            "clears or is dismissed (\u00d7). Their output (e.g. an intercom for the crew) and volume: the Devices "
             "tab, per profile.", w_sound, l_sound, row);
     cb = addSetting("Speech", "notify/speech", w_sound, l_sound, row, Type::BOOL);
     callbacks.append(cb);
@@ -440,50 +440,11 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     }
     finishTab(l_sound, row);
     tabWidget->addTab(w_sound, "Sound");
-    // Tab Recording: the microphones (e.g. of the pilots), for the transcription and the logbook
-    auto w_rec = new QWidget(tabWidget);
-    auto l_rec = new QGridLayout(w_rec);
-    row = 0;
-#if defined(AUDIO_RECORDER_ENABLED)
-    addSection("Recording", w_rec, l_rec, row);
-    cb = addSetting("Record the microphones and cameras", "audio/enabled", w_rec, l_rec, row, Type::BOOL);
-    callbacks.append(cb);
-    addHelp("The microphones below are recorded in var/logs/audio (or the folder below), a file per microphone, for the "
-            "transcription and the logbook after the flight. The status bar shows the recording, the level of "
-            "each channel, and a microphone that is not connected or has no signal.<br>Started from the status "
-            "bar (click the recorder), or from the start when PprzGCS runs with --record: e.g. in the flight "
-            "sessions of the Paparazzi Center, not in the simulations. It records until PprzGCS closes, and "
-            "starts again after a crash during a recording. Never while editing flight plans. --record audio or "
-            "--record video records only those; a microphone or camera without Record ticked is not recorded "
-            "(a camera then only shows in the Video panel).", w_rec, l_rec, row);
-    cb = addSetting("Format", "audio/format", w_rec, l_rec, row, Type::STRING_COMBO,
-                    QStringList{"opus|Opus (speech, about 11 MB per channel and hour)",
-                                "flac|FLAC (lossless, about 15 times larger)"});
-    callbacks.append(cb);
-    cb = addSetting("New file every (minutes)", "audio/chunk_minutes", w_rec, l_rec, row, Type::INT);
-    callbacks.append(cb);
-    addHelp("A crash or a power loss then loses only the last seconds. The files follow each other "
-            "without a gap.", w_rec, l_rec, row);
-    cb = addSetting("Folder (empty: var/logs/audio)", "audio/folder", w_rec, l_rec, row, Type::PATH_DIR);
-    callbacks.append(cb);
-    cb = addSetting("Recorder name (empty: the computer)", "audio/name", w_rec, l_rec, row, Type::STRING);
-    callbacks.append(cb);
-    addHelp("Shown in the status bar of the other GCSs, which can start and stop it.", w_rec, l_rec, row);
-    cb = addSetting("Video folder (empty: var/logs/video)", "video/folder", w_rec, l_rec, row, Type::PATH_DIR);
-    callbacks.append(cb);
-    addHelp("Recorded with the microphones (ffmpeg): a USB camera in H.264, a stream as it comes, a file per camera "
-            "and a new one with the audio files. About 0.5 to 1.5 GB per camera and hour. The Video panel shows "
-            "them (right click: the source).", w_rec, l_rec, row);
-
-    live_settings << "video/";
-#else
-    addSection("Recording", w_rec, l_rec, row);
-    addHelp("This PprzGCS is built without the audio recorder (install qt6-multimedia-dev and libsndfile1-dev, "
-            "and build again).", w_rec, l_rec, row);
-#endif
-
-    // The devices of a place (profile): the microphones, the cameras, the output of the alerts.
+    // Tab Devices: per profile (a place, e.g. cyberzoo), the microphones, the cameras and the output of the alerts.
     // Edited here for each profile, saved together; pprzgcs --profile NAME uses one (else the default).
+    auto w_dev = new QWidget(tabWidget);
+    auto l_dev = new QGridLayout(w_dev);
+    row = 0;
     struct ProfileEdit {
 #if defined(AUDIO_RECORDER_ENABLED)
         QList<MicConfig> mics;
@@ -500,53 +461,66 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     auto pstate = std::make_shared<ProfileState>();
     pstate->current = activeProfile();
 
-    addSection("Profile", w_rec, l_rec, row);
-    l_rec->addWidget(new QLabel("Devices of", w_rec), row, 0);
-    auto prof_box = new QWidget(w_rec);
+    l_dev->addWidget(new QLabel("Profile", w_dev), row, 0);
+    auto prof_box = new QWidget(w_dev);
     auto prof_lay = new QHBoxLayout(prof_box);
     prof_lay->setContentsMargins(0, 0, 0, 0);
     auto prof_combo = new QComboBox(prof_box);
     auto prof_new = new QPushButton("New...", prof_box);
     prof_new->setToolTip("A new profile, starting as a copy of this one");
+    auto prof_rename = new QPushButton("Rename...", prof_box);
     auto prof_delete = new QPushButton("Delete", prof_box);
     prof_lay->addWidget(prof_combo, 1);
     prof_lay->addWidget(prof_new);
+    prof_lay->addWidget(prof_rename);
     prof_lay->addWidget(prof_delete);
-    l_rec->addWidget(prof_box, row, 1);
+    l_dev->addWidget(prof_box, row, 1);
     row += 1;
+    addHelp("A profile holds the devices of a place (e.g. cyberzoo, field), set up on each computer: its "
+            "microphones, cameras and alert output. A session of the Paparazzi Center chooses one with "
+            "pprzgcs --profile NAME (e.g. --profile cyberzoo); without it, or when this computer has no profile of "
+            "that name, the default one. The Recording tab is the same for all profiles.", w_dev, l_dev, row);
     {
-        QString help = "The microphones, cameras and alert output of a place (e.g. cyberzoo, field), set up on each "
-                       "computer. A session of the Paparazzi Center chooses one with pprzgcs --profile NAME (e.g. "
-                       "--profile cyberzoo); without it, or when this computer has no profile of that name, the "
-                       "default one.";
-        if(!requestedProfile().isEmpty()) {
-            help += activeProfile().isEmpty() ?
-                        QString("<br>This run asked for profile %1, which this computer does not have: the default "
-                                "one is used.").arg(requestedProfile().toHtmlEscaped()) :
-                        QString("<br>This run uses profile %1.").arg(activeProfile().toHtmlEscaped());
+        // which one this run uses
+        QString run;
+        if(requestedProfile().isEmpty()) {
+            run = "This run: the default profile (started without --profile)";
+        } else if(activeProfile().isEmpty()) {
+            run = QString("This run: the default profile (--profile %1 is not on this computer)").arg(requestedProfile());
+        } else {
+            run = QString("This run: %1 (--profile %1)").arg(activeProfile());
         }
-        addHelp(help, w_rec, l_rec, row);
+        auto run_label = new QLabel(run, w_dev);
+        run_label->setObjectName("link_secondary");
+        l_dev->addWidget(run_label, row, 1, 1, 2);
+        row += 1;
     }
 
+    // everything of the profile in one frame: switching the profile switches all of it
+    auto group = new QGroupBox(w_dev);
+    auto l_grp = new QGridLayout(group);
+    l_dev->addWidget(group, row, 0, 1, 3);
+    row += 1;
+    int grow = 0;
 #if defined(AUDIO_RECORDER_ENABLED)
-    addSection("Microphones", w_rec, l_rec, row);
-    auto mics = new AudioMicSettings(w_rec);
-    l_rec->addWidget(mics, row, 0, 1, 3);
-    row += 1;
+    addSection("Microphones", group, l_grp, grow);
+    auto mics = new AudioMicSettings(group);
+    l_grp->addWidget(mics, grow, 0, 1, 3);
+    grow += 1;
 
-    addSection("Cameras", w_rec, l_rec, row);
-    auto cams = new CameraSettings(w_rec);
-    l_rec->addWidget(cams, row, 0, 1, 3);
-    row += 1;
+    addSection("Cameras", group, l_grp, grow);
+    auto cams = new CameraSettings(group);
+    l_grp->addWidget(cams, grow, 0, 1, 3);
+    grow += 1;
 #endif
 
-    addSection("Alerts", w_rec, l_rec, row);
-    l_rec->addWidget(new QLabel("Output", w_rec), row, 0);
-    auto out_combo = new QComboBox(w_rec);
-    l_rec->addWidget(out_combo, row, 1);
-    row += 1;
-    l_rec->addWidget(new QLabel("Volume", w_rec), row, 0);
-    auto vol_box = new QWidget(w_rec);
+    addSection("Alert output", group, l_grp, grow);
+    l_grp->addWidget(new QLabel("Output", group), grow, 0);
+    auto out_combo = new QComboBox(group);
+    l_grp->addWidget(out_combo, grow, 1);
+    grow += 1;
+    l_grp->addWidget(new QLabel("Volume", group), grow, 0);
+    auto vol_box = new QWidget(group);
     auto vol_lay = new QHBoxLayout(vol_box);
     vol_lay->setContentsMargins(0, 0, 0, 0);
     auto vol_slider = new QSlider(Qt::Horizontal, vol_box);
@@ -564,11 +538,12 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     vol_lay->addWidget(vol_slider, 1);
     vol_lay->addWidget(vol_label);
     vol_lay->addWidget(test);
-    l_rec->addWidget(vol_box, row, 1);
-    row += 1;
+    l_grp->addWidget(vol_box, grow, 1);
+    grow += 1;
     addHelp("Where the alert sounds (Sound tab) are heard, e.g. an intercom (Vokkero) for the whole crew: an output "
             "that is not connected (e.g. Bluetooth, off) plays on the default output. The volume is also the one "
-            "of the speech.", w_rec, l_rec, row);
+            "of the speech.", group, l_grp, grow);
+    l_grp->setColumnStretch(1, 1);
 
     auto loadProfile = [=](QString name) {
         if(pstate->edits.contains(name)) {
@@ -597,6 +572,7 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     auto showProfile = [=](QString name) {
         auto e = loadProfile(name);
         pstate->current = name;
+        group->setTitle(name.isEmpty() ? QString("Devices of the default profile") : QString("Devices of %1").arg(name));
 #if defined(AUDIO_RECORDER_ENABLED)
         mics->setConfigs(e.mics);
         cams->setConfigs(e.cams);
@@ -613,12 +589,13 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
         out_combo->setCurrentIndex(std::max(0, out_combo->findData(e.output)));
         vol_slider->setValue(e.volume);
         vol_label->setText(QString("%1 %").arg(e.volume));
+        prof_rename->setEnabled(!name.isEmpty());
         prof_delete->setEnabled(!name.isEmpty());
     };
     auto fillProfiles = [=]() {
         QSignalBlocker block(prof_combo);
         prof_combo->clear();
-        prof_combo->addItem("Default (without --profile)", QString());
+        prof_combo->addItem("Default", QString());
         QStringList names = profileNames();
         for(auto &n: pstate->edits.keys()) {
             if(!n.isEmpty() && !names.contains(n)) {
@@ -626,13 +603,35 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
             }
         }
         for(auto &n: pstate->deleted) {
-            names.removeAll(n);
+            if(!pstate->edits.contains(n)) {
+                names.removeAll(n);
+            }
         }
         names.sort(Qt::CaseInsensitive);
         for(auto &n: names) {
-            prof_combo->addItem(n == activeProfile() && !n.isEmpty() ? n + " (this run)" : n, n);
+            prof_combo->addItem(n, n);
         }
         prof_combo->setCurrentIndex(std::max(0, prof_combo->findData(pstate->current)));
+    };
+    // a new name: letters, digits, - and _ (passed as --profile NAME), not taken
+    auto askName = [=](QString title, QString current) {
+        bool ok = false;
+        QString name = QInputDialog::getText(this, title, "Name (letters, digits, - and _), e.g. cyberzoo:",
+                                             QLineEdit::Normal, current, &ok).trimmed();
+        if(!ok || name.isEmpty() || name == current) {
+            return QString();
+        }
+        bool taken = name.compare("default", Qt::CaseInsensitive) == 0;
+        for(int i = 1; i < prof_combo->count(); i++) {
+            auto other = prof_combo->itemData(i).toString();
+            taken |= other != current && other.compare(name, Qt::CaseInsensitive) == 0;
+        }
+        if(!QRegularExpression("^[A-Za-z0-9_-]+$").match(name).hasMatch() || taken) {
+            QMessageBox::warning(this, title, taken ? "There is already a profile of that name." :
+                                     "Only letters, digits, - and _ (it is passed as --profile NAME).");
+            return QString();
+        }
+        return name;
     };
     fillProfiles();
     showProfile(pstate->current);
@@ -642,24 +641,27 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
         showProfile(prof_combo->currentData().toString());
     });
     connect(prof_new, &QPushButton::clicked, this, [=]() {
-        bool ok = false;
-        QString name = QInputDialog::getText(this, "New profile", "Name (letters, digits, - and _), e.g. cyberzoo:",
-                                             QLineEdit::Normal, QString(), &ok).trimmed();
-        if(!ok || name.isEmpty()) {
-            return;
-        }
-        bool taken = name.compare("default", Qt::CaseInsensitive) == 0;
-        for(int i = 1; i < prof_combo->count(); i++) {
-            taken |= prof_combo->itemData(i).toString().compare(name, Qt::CaseInsensitive) == 0;
-        }
-        if(!QRegularExpression("^[A-Za-z0-9_-]+$").match(name).hasMatch() || taken) {
-            QMessageBox::warning(this, "New profile", taken ? "There is already a profile of that name." :
-                                     "Only letters, digits, - and _ (it is passed as --profile NAME).");
+        QString name = askName("New profile", QString());
+        if(name.isEmpty()) {
             return;
         }
         storeShown();
         pstate->edits[name] = pstate->edits[pstate->current];   // a copy of the shown one
-        pstate->deleted.removeAll(name);
+        pstate->current = name;
+        fillProfiles();
+        showProfile(name);
+    });
+    connect(prof_rename, &QPushButton::clicked, this, [=]() {
+        QString old = pstate->current;
+        QString name = askName("Rename profile", old);
+        if(old.isEmpty() || name.isEmpty()) {
+            return;
+        }
+        storeShown();
+        pstate->edits[name] = pstate->edits.take(old);
+        if(!pstate->deleted.contains(old)) {
+            pstate->deleted.append(old);    // (its saved settings, under the old name)
+        }
         pstate->current = name;
         fillProfiles();
         showProfile(name);
@@ -674,7 +676,9 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
             return;
         }
         pstate->edits.remove(name);
-        pstate->deleted.append(name);
+        if(!pstate->deleted.contains(name)) {
+            pstate->deleted.append(name);
+        }
         pstate->current = QString();
         fillProfiles();
         showProfile(QString());
@@ -695,6 +699,45 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
         }
     });
     live_settings << "profiles/";
+    finishTab(l_dev, row);
+    tabWidget->addTab(w_dev, "Devices");
+
+    // Tab Recording: the same for all profiles (the files, when it records)
+    auto w_rec = new QWidget(tabWidget);
+    auto l_rec = new QGridLayout(w_rec);
+    row = 0;
+#if defined(AUDIO_RECORDER_ENABLED)
+    cb = addSetting("Record the microphones and cameras", "audio/enabled", w_rec, l_rec, row, Type::BOOL);
+    callbacks.append(cb);
+    addHelp("The microphones and cameras of the profile (Devices tab) are recorded, a file per microphone and camera, "
+            "for the transcription and the logbook after the flight. The status bar shows the recording, the level "
+            "of each channel, and a device that is not connected or has no signal.<br>Started from the status "
+            "bar (click the recorder), or from the start when PprzGCS runs with --record: e.g. in the flight "
+            "sessions of the Paparazzi Center, not in the simulations. --record audio or --record video records "
+            "only those. It records until PprzGCS closes (also when the Paparazzi Center stops it), and starts "
+            "again after a crash during a recording. Never while editing flight plans.", w_rec, l_rec, row);
+    cb = addSetting("Audio format", "audio/format", w_rec, l_rec, row, Type::STRING_COMBO,
+                    QStringList{"opus|Opus (speech, about 11 MB per channel and hour)",
+                                "flac|FLAC (lossless, about 15 times larger)"});
+    callbacks.append(cb);
+    cb = addSetting("New file every (minutes)", "audio/chunk_minutes", w_rec, l_rec, row, Type::INT);
+    callbacks.append(cb);
+    addHelp("For the audio and the video: a crash or a power loss then loses only the last seconds. The files "
+            "follow each other without a gap.", w_rec, l_rec, row);
+    cb = addSetting("Audio folder (empty: var/logs/audio)", "audio/folder", w_rec, l_rec, row, Type::PATH_DIR);
+    callbacks.append(cb);
+    cb = addSetting("Video folder (empty: var/logs/video)", "video/folder", w_rec, l_rec, row, Type::PATH_DIR);
+    callbacks.append(cb);
+    addHelp("Recorded with the microphones (ffmpeg): a USB camera in H.264, a stream as it comes. About 0.5 to "
+            "1.5 GB per camera and hour.", w_rec, l_rec, row);
+    cb = addSetting("Recorder name (empty: the computer)", "audio/name", w_rec, l_rec, row, Type::STRING);
+    callbacks.append(cb);
+    addHelp("Shown in the status bar of the other GCSs, which can start and stop it.", w_rec, l_rec, row);
+    live_settings << "video/";
+#else
+    addHelp("This PprzGCS is built without the recorder (install qt6-multimedia-dev and libsndfile1-dev, "
+            "and build again).", w_rec, l_rec, row);
+#endif
     live_settings << "audio/";      // the recorder follows right away
     finishTab(l_rec, row);
     tabWidget->addTab(w_rec, "Recording");

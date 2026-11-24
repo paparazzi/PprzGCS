@@ -94,6 +94,7 @@ void AudioMicSettings::addRow(MicConfig c) {
     remove->setAutoRaise(true);
     r->channels = new QLabel(r->box);
     r->channels->setObjectName("link_secondary");
+    r->channels->hide();
 
     g->addWidget(r->device, 0, 0);
     g->addWidget(r->labels, 0, 1);
@@ -202,12 +203,15 @@ void AudioMicSettings::openTest(Row* r) {
     auto device = AudioRecorder::findDevice(c);
     if(device.isNull()) {
         r->channels->setText("Not connected: recorded when it is plugged in");
+        r->channels->show();
         return;
     }
     r->format = AudioRecorder::captureFormat(device);
     int ch = r->format.channelCount();
-    r->channels->setText(ch == 1 ? QString("1 channel") :
-                         ch == 2 ? QString("2 channels: left; right") : QString("%1 channels").arg(ch));
+    // (the channels in the tooltip: a line under the row only for a problem)
+    r->channels->hide();
+    r->meters->setToolTip(ch == 1 ? QString("1 channel") :
+                          ch == 2 ? QString("2 channels: left; right") : QString("%1 channels").arg(ch));
     for(int i = 0; i < ch; i++) {
         auto b = new AudioLevelBar(r->meters);
         r->meters->layout()->addWidget(b);
@@ -219,6 +223,7 @@ void AudioMicSettings::openTest(Row* r) {
     r->io = r->source->start();
     if(r->io == nullptr) {
         r->channels->setText("Cannot open this device");
+        r->channels->show();
         closeTest(r);
         return;
     }

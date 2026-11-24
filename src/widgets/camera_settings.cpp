@@ -116,7 +116,7 @@ void CameraSettings::addRow(CameraConfig c) {
     remove->setText(QString::fromUtf8("×"));
     remove->setToolTip("Remove this camera");
     remove->setAutoRaise(true);
-    g->addWidget(r->source, 1);
+    g->addWidget(r->source);
     g->addWidget(r->label, 1);
     g->addWidget(r->record);
     g->addWidget(remove);

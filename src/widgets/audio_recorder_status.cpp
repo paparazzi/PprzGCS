@@ -328,9 +328,9 @@ void AudioRecorderStatus::showMenu(QString name) {
         });
     }
     if(local) {
-        connect(menu.addAction("Recording settings..."), &QAction::triggered, this, [=,this]() {
+        connect(menu.addAction("Devices and recording settings..."), &QAction::triggered, this, [=,this]() {
             auto se = new SettingsEditor(false, window());
-            se->showTab("Recording");
+            se->showTab("Devices");
             se->open();
         });
     }
