@@ -5,6 +5,14 @@
 #include <QtXml>
 
 QString user_or_app_path(QString data_path) {
+    if(QDir::isAbsolutePath(data_path)) {
+        // settings from before v1.0.6 hold full paths (e.g. /usr/share/pprzgcs/default_style.qss):
+        // use the file if it is there, else its name in the user or the app data
+        if(QFile::exists(data_path)) {
+            return data_path;
+        }
+        data_path = QFileInfo(data_path).fileName();
+    }
     auto path = appConfig()->value("USER_DATA_PATH").toString() + "/" + data_path;
     if(QFile::exists(path)) {
         return path;

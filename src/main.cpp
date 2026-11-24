@@ -24,10 +24,19 @@
 
 void launch_main_app() {
     auto settings = getAppSettings();
-    QString style_path = user_or_app_path(settings.value("APP_STYLE_FILE").toString());
+    // a style or layout file that is not found (deleted, renamed, ...): start with the default one
+    auto file_or_default = [&](QString key, QString default_file) {
+        QString path = user_or_app_path(settings.value(key, default_file).toString());
+        if(!QFileInfo(path).isFile()) {
+            qWarning() << key << settings.value(key).toString() << "not found, using" << default_file;
+            path = user_or_app_path(default_file);
+        }
+        return path;
+    };
+    QString style_path = file_or_default("APP_STYLE_FILE", "default_style.qss");
     QFile file(style_path);
     if(!file.open(QFile::ReadOnly | QFile::Text)) {
-        qCritical()  << "could not open " << settings.value("APP_STYLE_FILE").toString();
+        qCritical()  << "could not open " << style_path;
         exit(-1);
     }
     QTextStream stream(&file);
@@ -38,7 +47,7 @@ void launch_main_app() {
     switch (PprzMain::launch_type) {
     case DEFAULT:
     case NORMAL:
-        layout_path = user_or_app_path(settings.value("APP_LAYOUT_FILE").toString());
+        layout_path = file_or_default("APP_LAYOUT_FILE", "default_layout.xml");
         break;
     case FLIGHTPLAN_EDIT:
         {
