@@ -34,7 +34,7 @@
 + Checklist: progress bar and count of the required items, open items in amber, aligned rows
 + Style: the default theme is for sunlight; new night theme (night_style.qss), chosen from a list in Settings > General > Style
 + Chat: unread-message bubble on the chat button when an `INFO_MSG` arrives while the chat is closed
-+ Start: a style or layout file that is not found no longer stops the GCS: it starts with the default one (with a warning). Settings from before v1.0.6 (full paths, e.g. /usr/share/pprzgcs/default_style.qss) work again: the file is used if it is there, else its name in the user or the app data
++ Start: a style or layout file that is not found no longer stops the GCS: it starts with the default one (with a warning). Settings from before v1.0.6 (full paths, e.g. /usr/share/pprzgcs/default_style.qss) work again: the file is used if it is there, else its name in the user or the app data. A layout file with an error (e.g. truncated) shows the file, the line and the column in a dialog (and in red on the terminal) that starts with the default layout or quits
 
 ## v1.0.13
 + Add Chat widget for `INFO_MSG`

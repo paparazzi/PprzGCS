@@ -11,6 +11,8 @@
 #include <iostream>
 #include "pprzmain.h"
 #include <QLabel>
+#include <QMessageBox>
+#include <QFileInfo>
 #include <iostream>
 #include "configurable.h"
 #include "widget_utils.h"
@@ -178,36 +180,54 @@ void configure_speech(QDomElement ele) {
     }
 }
 
+/// A layout that cannot be used: the error in red on the terminal and in a dialog, which starts
+/// with the default layout or quits
+static PprzMain* layoutError(QString filename, QString error) {
+    QString message = QString("The layout file %1 cannot be used: %2").arg(filename, error);
+    qCritical(LOG_CONFIG).noquote() << message;
+    QString default_layout = user_or_app_path("default_layout.xml");
+    QMessageBox box(QMessageBox::Critical, "PprzGCS: layout error",
+                    message + "\n\nFix the file, or choose another layout in Settings > General > Layout.");
+    QPushButton* use_default = nullptr;
+    if(QFileInfo(filename) != QFileInfo(default_layout)) {
+        use_default = box.addButton("Start with the default layout", QMessageBox::AcceptRole);
+    }
+    box.addButton("Quit", QMessageBox::RejectRole);
+    box.exec();
+    if(use_default != nullptr && box.clickedButton() == use_default) {
+        return configure(default_layout);
+    }
+    exit(-1);
+}
+
 PprzMain* configure(QString filename) {
     QDomDocument xmlLayout;
     QFile f(filename);
     if(!f.open(QFile::ReadOnly | QFile::Text)) {
-        qCritical(LOG_CONFIG)  << "Error while loading layout file " << filename;
-        exit(-1);
+        return layoutError(filename, "it cannot be opened.");
     }
 
     QString error;
     int line, column;
-    if(!xmlLayout.setContent(&f, &error, &line, &column)) {
-        qCritical(LOG_CONFIG) << "Error in layout file" << filename << "line" << line << "column" << column << ":" << error;
-    }
+    bool parsed = xmlLayout.setContent(&f, &error, &line, &column);
     f.close();
+    if(!parsed) {
+        return layoutError(filename, QString("line %1, column %2: %3").arg(line).arg(column).arg(error));
+    }
 
     QDomElement root = xmlLayout.documentElement();
 
     // configure layout
     auto layout_ele = root.firstChildElement("layout");
     if(layout_ele.isNull()) {
-        qCritical(LOG_CONFIG)  << "Cannot find a \"layout\" element in" << filename;
-        exit(-1);
+        return layoutError(filename, "no \"layout\" element.");
     }
 
     int width = layout_ele.attribute("width", DEFAULT_WIDTH).toInt();
     int height = layout_ele.attribute("height", DEFAULT_HEIGHT).toInt();
 
     if (layout_ele.childNodes().length() != 1) {
-        qCritical(LOG_CONFIG)  << "Root tag \"layout\" expected to have exactly one child, rows, colums or widget, in" << filename;
-        exit(-1);
+        return layoutError(filename, "the \"layout\" element must have exactly one child: rows, columns or widget.");
     }
 
     QDomElement first_element = layout_ele.firstChildElement();
