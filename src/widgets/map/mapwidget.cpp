@@ -1093,15 +1093,24 @@ void MapWidget::configure(QDomElement ele) {
     setFollowMode(FOLLOW_OFF);
     show_follow();
 
-    PprzDispatcher::get()->bind("WIND", this, [=,this](QString sender, pprzlink::Message msg){
-        (void)sender;
-        QString ac_id;
-        msg.getField("ac_id", ac_id);
-        double dir = getFloatingField(msg, "dir");
-        double wspeed = getFloatingField(msg, "wspeed");
-        // double mean_aspeed = getFloatingField(msg, "mean_aspeed");
-        // double stddev = getFloatingField(msg, "stddev");
-        wind_indicator->setWindData(ac_id, dir, wspeed);
+    // the wind the aircraft uses (air_data module): north/east/down, blowing to; NaN if unknown.
+    // Without the wind fields (older messages.xml) or a wind source (wind_id 0): no wind.
+    PprzDispatcher::get()->bindOptional("AIR_DATA", this, [=,this](QString sender, pprzlink::Message msg){
+        const auto& def = msg.getDefinition();
+        if(!def.hasFieldName("wind") || !def.hasFieldName("wind_id")) {
+            return;
+        }
+        std::vector<float> wind;
+        uint8_t wind_id = 0;
+        msg.getField("wind", wind);
+        msg.getField("wind_id", wind_id);
+        if(wind_id == 0 || wind.size() < 2 || !std::isfinite(wind[0]) || !std::isfinite(wind[1])) {
+            wind_indicator->removeAC(sender);
+            return;
+        }
+        // the direction the wind comes from, in degrees
+        double dir = fmod(qRadiansToDegrees(atan2(-wind[1], -wind[0])) + 360., 360.);
+        wind_indicator->setWindData(sender, dir, hypot(wind[0], wind[1]));
     });
 
     connect(wind_indicator, &WindIndicator::requestRotation, this, [=,this](double rot) {
