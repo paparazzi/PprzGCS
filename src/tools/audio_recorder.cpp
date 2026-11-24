@@ -64,7 +64,7 @@ AudioRecorder::AudioRecorder(QObject* parent) : QObject(parent),
         sendStatus();
     });
 
-    PprzDispatcher::get()->bindOptional("AUDIO_RECORD_CMD", this, [this](QString sender, pprzlink::Message msg) {
+    PprzDispatcher::get()->bindOptional("RECORD_CMD", this, [this](QString sender, pprzlink::Message msg) {
         (void)sender;
         QString name;
         uint8_t command = 0;
@@ -331,7 +331,7 @@ void AudioRecorder::openFile(Mic* m, double t) {
     sf_set_string(m->sf, SF_STR_DATE, date.toUTC().toString(Qt::ISODateWithMs).toUtf8().constData());
     sf_set_string(m->sf, SF_STR_SOFTWARE, "PprzGCS");
     sf_set_string(m->sf, SF_STR_TITLE, m->config.labels.join(", ").toUtf8().constData());
-    // (as in AUDIO_RECORD_STATUS: relative to var/logs when in it, e.g. audio/26_11_18__...opus)
+    // (as in RECORD_STATUS: relative to var/logs when in it, e.g. audio/26_11_18__...opus)
     auto rel = QDir(logsFolder()).relativeFilePath(path);
     m->file = rel.startsWith("..") ? path : rel;
     m->error.clear();
@@ -459,13 +459,14 @@ void AudioRecorder::sendStatus() {
     }
     s.info = info.join(" · ");
     s.file = files.join(";");
+    s.cameras = video->recordedLabels();
     bool video_ok = has_cameras && video_problems.size() < video->recordedLabels().size();
     s.state = !recording ? AudioStatus::IDLE : (open > 0 || video_ok) ? AudioStatus::RECORDING : AudioStatus::ERROR;
     emit status(s);
 
     auto dispatcher = PprzDispatcher::get();
-    if(dispatcher->isStarted() && dispatcher->hasMessage("AUDIO_RECORD_STATUS")) {
-        pprzlink::Message msg(dispatcher->getDict()->getDefinition("AUDIO_RECORD_STATUS"));
+    if(dispatcher->isStarted() && dispatcher->hasMessage("RECORD_STATUS")) {
+        pprzlink::Message msg(dispatcher->getDict()->getDefinition("RECORD_STATUS"));
         QStringList labels;
         for(auto l: s.labels) {
             labels.append(l.replace(" ", "_"));
@@ -479,7 +480,12 @@ void AudioRecorder::sendStatus() {
         msg.addField("unix_time", s.start_time);
         msg.addField("labels", PprzDispatcher::ivyString(labels.join(";")));
         msg.addField("levels", levels);
-        msg.addField("file", PprzDispatcher::ivyString(s.file));
+        QStringList cameras;
+        for(auto c: s.cameras) {
+            cameras.append(c.replace(" ", "_"));
+        }
+        msg.addField("cameras", PprzDispatcher::ivyString(cameras.join(";")));
+        msg.addField("files", PprzDispatcher::ivyString(s.file));
         msg.addField("info", PprzDispatcher::ivyString(s.info));
         dispatcher->sendMessage(msg);
     }

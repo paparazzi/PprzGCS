@@ -24,7 +24,7 @@ private:
 
 /**
  * In the status bar: the audio recorders (e.g. the microphones of the pilots): the one of this
- * GCS (AudioRecorder) and the others on the bus (AUDIO_RECORD_STATUS), and a Mark button (also a
+ * GCS (AudioRecorder) and the others on the bus (RECORD_STATUS), and a Mark button (also a
  * key, F9 by default) that sends a LOG_MARK.
  * A recorder shows once it reported: recording and since when, the level of each channel, and
  * warnings (a microphone not connected, a channel without signal, a recorder that stopped

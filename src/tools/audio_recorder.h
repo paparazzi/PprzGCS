@@ -27,8 +27,8 @@ struct MicConfig {
  * - a file per microphone, a new one every few minutes (a crash loses seconds, not the file):
  *   YY_MM_DD__HH_MM_SS__audio__<labels>.opus (or .flac), the UTC start time of its first sample
  *   in its comment
- * - AUDIO_RECORD_STATUS each second (and the status signal, for this GCS: Ivy does not send its
- *   messages back), started and stopped by AUDIO_RECORD_CMD as well
+ * - RECORD_STATUS each second (and the status signal, for this GCS: Ivy does not send its
+ *   messages back), started and stopped by RECORD_CMD as well
  * - a microphone unplugged: a warning, and recorded again when it is back
  * - started with the GCS (option), and again after a crash during a recording
  */
@@ -42,7 +42,7 @@ public:
     bool isRecording() {return recording;}
     QString name() {return recorder_name;}
 
-    /// by the user (status bar, AUDIO_RECORD_CMD)
+    /// by the user (status bar, RECORD_CMD)
     void start();
     void stop();
 

@@ -66,18 +66,19 @@ AudioRecorderStatus::AudioRecorderStatus(QWidget *parent) : QWidget(parent)
 
     auto dispatcher = PprzDispatcher::get();
     // the recorders of the other GCSs, or programs (Ivy does not send this GCS its own messages)
-    dispatcher->bindOptional("AUDIO_RECORD_STATUS", this, [=,this](QString sender, pprzlink::Message msg) {
+    dispatcher->bindOptional("RECORD_STATUS", this, [=,this](QString sender, pprzlink::Message msg) {
         (void)sender;
         AudioStatus s;
         uint8_t state = 0;
         std::vector<float> levels;
-        QString labels;
+        QString labels, cameras;
         msg.getField("recorder", s.name);
         msg.getField("state", state);
         msg.getField("unix_time", s.start_time);
         msg.getField("labels", labels);
         msg.getField("levels", levels);
-        msg.getField("file", s.file);
+        msg.getField("cameras", cameras);
+        msg.getField("files", s.file);
         msg.getField("info", s.info);
         s.state = state;
         for(auto l: levels) {
@@ -88,6 +89,7 @@ AudioRecorderStatus::AudioRecorderStatus(QWidget *parent) : QWidget(parent)
         if(s.labels.isEmpty()) {
             s.levels.clear();
         }
+        s.cameras = cameras.isEmpty() ? QStringList() : cameras.replace("_", " ").split(";");
         onStatus(s, false);
     });
 #if defined(AUDIO_RECORDER_ENABLED)
@@ -256,7 +258,10 @@ void AudioRecorderStatus::updateView(Recorder& r) {
     }
 
     QStringList tip;
-    tip << QString("Audio recorder %1%2").arg(s.name, r.local ? " (this GCS)" : "");
+    tip << QString("Recorder %1%2").arg(s.name, r.local ? " (this GCS)" : "");
+    if(!s.cameras.isEmpty()) {
+        tip << "Cameras: " + s.cameras.join(", ");
+    }
     if(!s.file.isEmpty()) {
         tip << "File: " + s.file.split(";").join(", ");
     }
@@ -293,6 +298,9 @@ void AudioRecorderStatus::showMenu(QString name) {
     for(auto &f: s.file.split(";", Qt::SkipEmptyParts)) {
         info("File: " + f);
     }
+    if(!s.cameras.isEmpty()) {
+        info("Cameras: " + s.cameras.join(", "));
+    }
     for(int i = 0; i < s.levels.size(); i++) {
         info(QString("%1: %2 dBFS").arg(s.labels[i]).arg(s.levels[i], 0, 'f', 0));
     }
@@ -303,7 +311,7 @@ void AudioRecorderStatus::showMenu(QString name) {
     menu.addSeparator();
     bool recording = s.state != AudioStatus::IDLE;
     auto dispatcher = PprzDispatcher::get();
-    if(local || dispatcher->hasMessage("AUDIO_RECORD_CMD")) {
+    if(local || dispatcher->hasMessage("RECORD_CMD")) {
         auto action = menu.addAction(recording ? "Stop recording" : "Start recording");
         action->setEnabled(local || !dispatcher->isSilent());
         connect(action, &QAction::triggered, this, [=,this]() {
@@ -342,7 +350,7 @@ void AudioRecorderStatus::sendCommand(QString recorder, bool start) {
     if(!dispatcher->isStarted()) {
         return;
     }
-    pprzlink::Message msg(dispatcher->getDict()->getDefinition("AUDIO_RECORD_CMD"));
+    pprzlink::Message msg(dispatcher->getDict()->getDefinition("RECORD_CMD"));
     msg.addField("recorder", PprzDispatcher::ivyString(recorder));
     msg.addField("command", static_cast<uint8_t>(start ? 1 : 0));
     dispatcher->sendMessage(msg);
