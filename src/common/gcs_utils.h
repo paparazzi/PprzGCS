@@ -28,3 +28,4 @@ void setSpeech(bool s);
 
 void logDebug(QString log_class, QString msg, LogLevel level = LogLevel::LOG_MID);
 QStringList getLayoutFiles(QString location);
+QStringList getXmlFiles(QString location, QString rootTag);
