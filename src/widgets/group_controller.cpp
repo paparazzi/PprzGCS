@@ -450,8 +450,7 @@ GroupController::GroupController(QWidget *parent): QWidget(parent)
                         control.pendingValues.remove(aircraftId);
                     }
                 }
-                refreshStatuses();
-                refreshActionValues();
+                scheduleSettingsRefresh();
             });
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config,
             this, [this](const QString &) { refreshTable(); });
@@ -572,6 +571,19 @@ void GroupController::refreshTable()
     refreshActionControls();
 }
 
+void GroupController::scheduleSettingsRefresh()
+{
+    if (settingsRefreshPending) return;
+    settingsRefreshPending = true;
+    // DL_VALUES emits one notification per setting. Refresh once after the burst,
+    // using the latest values; further notifications must not postpone the refresh.
+    QTimer::singleShot(0, this, [this]() {
+        settingsRefreshPending = false;
+        refreshStatuses();
+        refreshActionValues();
+    });
+}
+
 void GroupController::refreshStatuses()
 {
     const auto liveness = currentLiveness();
@@ -655,8 +667,11 @@ void GroupController::refreshStatuses()
 
             const char *color = passingCount == 0 ? "#c62828"
                                 : passingCount == activeCount ? "#2e7d32" : "#ef6c00";
-            rule.label->setStyleSheet(QString(
-                "QLabel { background-color: %1; color: white; padding: 4px; border-radius: 3px; }").arg(color));
+            const QString style = QString(
+                "QLabel { background-color: %1; color: white; padding: 4px; border-radius: 3px; }").arg(color);
+            if (rule.label->styleSheet() != style) {
+                rule.label->setStyleSheet(style);
+            }
             QStringList names = failingAircraft.values();
             std::sort(names.begin(), names.end());
             rule.label->setToolTip(activeCount == 0 ? tr("No active drones") : names.join(", "));
