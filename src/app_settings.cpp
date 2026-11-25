@@ -126,6 +126,7 @@ void set_app_settings() {
     default_setting("notify/speech_rate", "0");
     default_setting("APP_STYLE_FILE", "default_style.qss");
     default_setting("APP_LAYOUT_FILE", "default_layout.xml");
+    default_setting("groups_conf", "swarm.xml");
 
 }
 
@@ -261,6 +262,16 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     auto app_layout_files = getLayoutFiles("APP_DATA_PATH");
     cb = addSetting("Layout", "APP_LAYOUT_FILE", w_general, l_general, row, Type::STRING_COMBO, user_layout_files + app_layout_files);
     callbacks.append(cb);
+    auto group_files = getXmlFiles("USER_DATA_PATH", "swarm") + getXmlFiles("APP_DATA_PATH", "swarm");
+    group_files.removeDuplicates();
+    auto current_groups = settings.value("groups_conf").toString();
+    if(!current_groups.isEmpty() && !group_files.contains(current_groups)) {
+        group_files.append(current_groups);
+    }
+    cb = addSetting("Groups configuration file", "groups_conf", w_general, l_general, row, Type::STRING_COMBO, group_files);
+    callbacks.append(cb);
+    addHelp("Swarm XML file defining drone groups, statuses and actions. "
+            "The --swarm-conf command-line option overrides this file.", w_general, l_general, row);
     // the style sheets in the user and application data folders (e.g. default and night),
     // plus the current one if it is elsewhere
     QStringList style_files;

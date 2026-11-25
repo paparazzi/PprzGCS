@@ -41,11 +41,8 @@ void Aircraft::setSetting(Setting* setting, float value) {
 }
 
 void Aircraft::setSetting(uint8_t setting_no, float value) {
-    for(auto set: setting_menu->getAllSettings()) {
-        if(set->getNo() == setting_no) {
-            setSetting(set, value);
-            break;
-        }
+    if(auto setting = setting_menu->getSetting(setting_no)) {
+        setSetting(setting, value);
     }
 }
 

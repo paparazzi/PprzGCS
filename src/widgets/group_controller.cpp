@@ -19,6 +19,7 @@
 #include <QGroupBox>
 #include <QPushButton>
 #include <QSaveFile>
+#include <QScrollArea>
 #include <QSettings>
 #include <QSet>
 #include <QSignalBlocker>
@@ -89,15 +90,9 @@ static QList<QPair<Aircraft *, Setting *>> actionTargets(
             continue;
         }
 
-        bool foundSetting = false;
-        for (Setting *setting : aircraft.value()->getSettingMenu()->getAllSettings()) {
-            if (setting->getFullName() == variable) {
-                targets.append(qMakePair(aircraft.value(), setting));
-                foundSetting = true;
-                break;
-            }
-        }
-        if (!foundSetting && onSkipped) {
+        if (Setting *setting = aircraft.value()->getSettingMenu()->getSetting(variable)) {
+            targets.append(qMakePair(aircraft.value(), setting));
+        } else if (onSkipped) {
             onSkipped(aircraftName, QString("setting '%1' is not available").arg(variable));
         }
     }
@@ -270,9 +265,13 @@ GroupController::GroupController(QWidget *parent): QWidget(parent)
     table->setEditTriggers(QAbstractItemView::AllEditTriggers);
 
     for (const QString &groupName : groupNames) {
-        auto groupPage = new QWidget(tabWidget);
-        tabWidget->addTab(groupPage, groupName);
+        auto scroll = new QScrollArea(tabWidget);
+        scroll->setWidgetResizable(true);
+        scroll->setFrameShape(QFrame::NoFrame);
+        tabWidget->addTab(scroll, groupName);
+        auto groupPage = new QWidget(scroll);
         auto groupLayout = new QVBoxLayout(groupPage);
+        groupLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
         auto noActiveWarning = new QLabel(tr("No active drones in this group"), groupPage);
         noActiveWarning->setWordWrap(true);
         noActiveWarning->setStyleSheet(QStringLiteral("QLabel { color: #ef6c00; }"));
@@ -414,6 +413,7 @@ GroupController::GroupController(QWidget *parent): QWidget(parent)
             groupLayout->addWidget(actionsBox);
         }
         groupLayout->addStretch();
+        scroll->setWidget(groupPage);
     }
 
     for (auto it = messageFields.cbegin(); it != messageFields.cend(); ++it) {
@@ -450,8 +450,7 @@ GroupController::GroupController(QWidget *parent): QWidget(parent)
                         control.pendingValues.remove(aircraftId);
                     }
                 }
-                refreshStatuses();
-                refreshActionValues();
+                scheduleSettingsRefresh();
             });
     connect(DispatcherUi::get(), &DispatcherUi::new_ac_config,
             this, [this](const QString &) { refreshTable(); });
@@ -572,6 +571,19 @@ void GroupController::refreshTable()
     refreshActionControls();
 }
 
+void GroupController::scheduleSettingsRefresh()
+{
+    if (settingsRefreshPending) return;
+    settingsRefreshPending = true;
+    // DL_VALUES emits one notification per setting. Refresh once after the burst,
+    // using the latest values; further notifications must not postpone the refresh.
+    QTimer::singleShot(0, this, [this]() {
+        settingsRefreshPending = false;
+        refreshStatuses();
+        refreshActionValues();
+    });
+}
+
 void GroupController::refreshStatuses()
 {
     const auto liveness = currentLiveness();
@@ -599,15 +611,12 @@ void GroupController::refreshStatuses()
                     QStringList enumValues;
                     bool hasValue = false;
                     if (rule.type == StatusSource::Setting) {
-                        for (Setting *setting : aircraft.value()->getSettingMenu()->getAllSettings()) {
-                            if (setting->getFullName() == rule.source) {
-                                const auto value = setting->getValue();
-                                if (value.has_value()) {
-                                    actual = QString::number(value.value(), 'g', 9);
-                                    enumValues = setting->getValues();
-                                    hasValue = true;
-                                }
-                                break;
+                        if (Setting *setting = aircraft.value()->getSettingMenu()->getSetting(rule.source)) {
+                            const auto value = setting->getValue();
+                            if (value.has_value()) {
+                                actual = QString::number(value.value(), 'g', 9);
+                                enumValues = setting->getValues();
+                                hasValue = true;
                             }
                         }
                     } else if (rule.type == StatusSource::Message) {
@@ -658,8 +667,11 @@ void GroupController::refreshStatuses()
 
             const char *color = passingCount == 0 ? "#c62828"
                                 : passingCount == activeCount ? "#2e7d32" : "#ef6c00";
-            rule.label->setStyleSheet(QString(
-                "QLabel { background-color: %1; color: white; padding: 4px; border-radius: 3px; }").arg(color));
+            const QString style = QString(
+                "QLabel { background-color: %1; color: white; padding: 4px; border-radius: 3px; }").arg(color);
+            if (rule.label->styleSheet() != style) {
+                rule.label->setStyleSheet(style);
+            }
             QStringList names = failingAircraft.values();
             std::sort(names.begin(), names.end());
             rule.label->setToolTip(activeCount == 0 ? tr("No active drones") : names.join(", "));

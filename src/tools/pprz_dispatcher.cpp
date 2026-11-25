@@ -371,27 +371,24 @@ void PprzDispatcher::updateSettings(pprzlink::Message msg) {
 
     auto ac = AircraftManager::get()->getAircraft(id);
 
-    auto settings = ac->getSettingMenu()->getAllSettings();
-    sort(settings.begin(), settings.end(),
-        [](Setting* sl, Setting* sr) {
-                return sl->getNo() < sr->getNo();
-    });
-
-    if(settings.size() == 0) {
+    auto menu = ac->getSettingMenu();
+    const auto setting_count = menu->getAllSettings().size();
+    if(setting_count == 0) {
         return;
     }
 
     size_t i=0;
     for(QString &token: values.split(",")) {
-        if(settings.size() <= static_cast<int>(i)) {
+        if(setting_count <= static_cast<int>(i)) {
             break;
         }
         if(token != "" && token != "?") {
             double s = token.toDouble();
-            assert(settings[i]->getNo() == static_cast<uint8_t>(i));
+            auto setting = menu->getSetting(static_cast<uint8_t>(i));
+            assert(setting != nullptr);
             float value = static_cast<float>(s);
-            settings[i]->setValue(value);
-            emit DispatcherUi::get()->settingUpdated(ac_id, settings[i], value);
+            setting->setValue(value);
+            emit DispatcherUi::get()->settingUpdated(ac_id, setting, value);
         }
         i++;
     }

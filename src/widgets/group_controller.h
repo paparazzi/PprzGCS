@@ -69,6 +69,7 @@ private:
 
     QMap<QString, Liveness> currentLiveness();
     void refreshTable();
+    void scheduleSettingsRefresh();
     void refreshStatuses();
     void refreshActionControls();
     void refreshActionValues();
@@ -96,6 +97,7 @@ private:
     QSet<QString> missingStatusBlockWarnings;
     QSet<QString> seenInTelemetry;
     QMap<QString, Liveness> displayedLiveness;
+    bool settingsRefreshPending = false;
 };
 
 #endif // GROUP_CONTROLLER_H

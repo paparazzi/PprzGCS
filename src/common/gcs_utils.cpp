@@ -91,25 +91,27 @@ void logDebug(QString log_class, QString msg, LogLevel level) {
 
 
 QStringList getLayoutFiles(QString location) {
+    return getXmlFiles(location, "gcsconf");
+}
+
+QStringList getXmlFiles(QString location, QString rootTag) {
     auto path = appConfig()->value(location).toString();
-    if(path.isNull()) {
+    if(path.isEmpty()) {
         return QStringList();
     }
 
     QDir conf_dir(path);
     auto xml_files = conf_dir.entryList({"*.xml"});
-    QStringList layout_files;
+    QStringList files;
     for(auto &fn:xml_files) {
         QFile f(path + "/" + fn);
         if(f.open(QIODevice::ReadOnly)) {
             QDomDocument doc;
-            doc.setContent(&f);
-            auto ele = doc.firstChildElement( "gcsconf" );
-            if(!ele.isNull()) {
-                layout_files.append(fn);
+            if(doc.setContent(&f) && doc.documentElement().tagName() == rootTag) {
+                files.append(fn);
             }
             f.close();
         }
     }
-    return layout_files;
+    return files;
 }
