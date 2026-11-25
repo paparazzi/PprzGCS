@@ -90,15 +90,9 @@ static QList<QPair<Aircraft *, Setting *>> actionTargets(
             continue;
         }
 
-        bool foundSetting = false;
-        for (Setting *setting : aircraft.value()->getSettingMenu()->getAllSettings()) {
-            if (setting->getFullName() == variable) {
-                targets.append(qMakePair(aircraft.value(), setting));
-                foundSetting = true;
-                break;
-            }
-        }
-        if (!foundSetting && onSkipped) {
+        if (Setting *setting = aircraft.value()->getSettingMenu()->getSetting(variable)) {
+            targets.append(qMakePair(aircraft.value(), setting));
+        } else if (onSkipped) {
             onSkipped(aircraftName, QString("setting '%1' is not available").arg(variable));
         }
     }
@@ -605,15 +599,12 @@ void GroupController::refreshStatuses()
                     QStringList enumValues;
                     bool hasValue = false;
                     if (rule.type == StatusSource::Setting) {
-                        for (Setting *setting : aircraft.value()->getSettingMenu()->getAllSettings()) {
-                            if (setting->getFullName() == rule.source) {
-                                const auto value = setting->getValue();
-                                if (value.has_value()) {
-                                    actual = QString::number(value.value(), 'g', 9);
-                                    enumValues = setting->getValues();
-                                    hasValue = true;
-                                }
-                                break;
+                        if (Setting *setting = aircraft.value()->getSettingMenu()->getSetting(rule.source)) {
+                            const auto value = setting->getValue();
+                            if (value.has_value()) {
+                                actual = QString::number(value.value(), 'g', 9);
+                                enumValues = setting->getValues();
+                                hasValue = true;
                             }
                         }
                     } else if (rule.type == StatusSource::Message) {

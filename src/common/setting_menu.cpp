@@ -69,19 +69,28 @@ void SettingMenu::mergeSameNames() {
         (*same)->mergeSameNames();
     }
     setting_menus = merged;
+    rebuildIndexes();
 }
 
 
-QList<Setting*> SettingMenu::getAllSettings() {
-    QList<Setting*> v;
-    v.append(settings);
-
+void SettingMenu::rebuildIndexes() {
+    // Children have already been indexed, including any merged sub-menus.
+    all_settings = settings;
     for(auto menu: setting_menus) {
-        auto sets = menu->getAllSettings();
-        v.append(sets);
+        all_settings.append(menu->getAllSettings());
     }
 
-    return v;
+    settings_by_name.clear();
+    settings_by_number.clear();
+    for(auto setting: all_settings) {
+        // Keep the first match, as the previous linear lookups did.
+        if(!settings_by_name.contains(setting->getFullName())) {
+            settings_by_name.insert(setting->getFullName(), setting);
+        }
+        if(!settings_by_number.contains(setting->getNo())) {
+            settings_by_number.insert(setting->getNo(), setting);
+        }
+    }
 }
 
 QList<shared_ptr<SettingMenu::ButtonGroup>> SettingMenu::getButtonGroups() {
