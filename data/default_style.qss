@@ -341,6 +341,12 @@ QLineEdit:focus {
     border: 2px solid #1d5fc9;
     padding: 4px 7px;
 }
+/* Drop-down lists: the item under the mouse in light blue (the white background of the right
+   pane otherwise makes it white on white) */
+QComboBox {
+    selection-background-color: #dde7f7;
+    selection-color: #111418;
+}
 /* Settings: home and save as flat icon buttons, the path as links */
 QToolButton#setting_tool {
     background: transparent;
