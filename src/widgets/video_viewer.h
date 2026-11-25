@@ -11,6 +11,7 @@ class QUdpSocket;
 class QTcpSocket;
 class QTimer;
 class QToolButton;
+class QTabBar;
 
 /**
  * Shows a live video made of JPEG frames, e.g. from a GStreamer pipeline started
@@ -26,8 +27,9 @@ class QToolButton;
  * The width (pixels) is the size the widget asks for at the start, the height follows
  * the aspect ratio of the video. To change the size, drag the corner of the panel.
  *
- * The sources are the cameras and streams of the Devices settings (camera:<label>), chosen with
- * the right click (kept); the source of the layout only without them. A JPEG stream (udp://,
+ * The sources are the cameras and streams of the Devices settings (camera:<label>), a tab each
+ * (the one chosen is kept), with a checkbox to record it and a red dot while it is recorded; the
+ * source of the layout only without them. A JPEG stream (udp://,
  * tcp://) is read here, except while it is recorded: then, as a USB camera or another stream,
  * its frames come from the recorder (VideoRecorder, ffmpeg), the only reader of the stream.
  * The button in the corner starts and stops the recording (as the status bar does).
@@ -58,6 +60,11 @@ private:
     void showImage(const QImage &img);
     void chooseSource(const QString &src);
     void updateRecordButton(bool enabled, bool recording);
+    void rebuildTabs();
+    void updateTabs();
+    void layoutBar();
+    int barHeight() const;
+    QRect videoRect() const;
 
     QUrl source;
     QString source_text;
@@ -73,6 +80,7 @@ private:
     QElapsedTimer last_frame;
     int preferred_width = 320;
     QToolButton *record_button = nullptr;  // starts and stops the recording (microphones and cameras)
+    QTabBar *tabs = nullptr;                // the cameras and streams: the one shown, recorded or not
 };
 
 #endif // VIDEO_VIEWER_H

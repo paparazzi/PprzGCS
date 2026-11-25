@@ -44,7 +44,13 @@ public:
     /// the USB cameras of this computer (their capture devices)
     static QList<CameraDevice> devices();
 
+    /// with the microphones (AudioRecorder): the cameras ticked Record in the settings
     void setRecording(bool recording);
+    /// being recorded now
+    bool isRecorded(QString label);
+    /// recorded with the microphones (the Record checkbox of the settings), changed from the Video panel too
+    bool recordTicked(QString label);
+    void setRecordTicked(QString label, bool on);
     /// the labels of the cameras (for the Video panel)
     QStringList labels();
     /// the cameras being recorded (empty when not recording)
@@ -85,6 +91,7 @@ private:
     };
 
     void loadSettings();
+    bool isRecorded(Camera* c);
     void update(Camera* c);
     void startProcess(Camera* c);
     void stopProcess(Camera* c);

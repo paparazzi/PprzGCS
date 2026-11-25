@@ -237,6 +237,37 @@ void AudioRecorder::loadSettings() {
     }
 }
 
+void AudioRecorder::setMicRecorded(int index, bool on) {
+    // saved in the profile (the Record checkbox of the Devices settings), followed right away: only this
+    // microphone opened or closed (the files of the others go on)
+    auto profile = activeProfile();
+    auto configs = micConfigs(profile);
+    if(index < 0 || index >= configs.size()) {
+        return;
+    }
+    configs[index].record = on;
+    saveMicConfigs(configs, profile);
+    auto &c = configs[index];
+    for(int i = 0; i < mics.size(); i++) {
+        auto m = mics[i];
+        if(m->config.device_id == c.device_id && m->config.device_name == c.device_name) {
+            closeMic(m);
+            mics.removeAt(i);
+            delete m;
+            break;
+        }
+    }
+    if(on && recordsAudio()) {
+        auto m = new Mic();
+        m->config = c;
+        mics.append(m);
+        if(recording) {
+            openMic(m);
+        }
+    }
+    sendStatus();
+}
+
 void AudioRecorder::start() {
     user_stopped = false;
     auto_started = false;   // started by the user: until stopped by the user

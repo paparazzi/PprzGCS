@@ -8,6 +8,8 @@
 #include <QContextMenuEvent>
 #include <QMenu>
 #include <QToolButton>
+#include <QTabBar>
+#include <QCheckBox>
 #include "app_settings.h"
 #include "dispatcher_ui.h"
 #include "gcs_utils.h"
@@ -47,6 +49,7 @@ VideoViewer::VideoViewer(QWidget *parent) : QWidget(parent)
     });
     // a stream read here while not recorded: by the recorder while it is (one reader of a UDP port)
     connect(VideoRecorder::get(), &VideoRecorder::recordingChanged, this, [this]() {
+        updateTabs();
         auto rec = VideoRecorder::get();
         bool from_recorder = !VideoRecorder::isJpegStream(rec->source(camera)) || rec->recordedLabels().contains(camera);
         if(!camera.isEmpty() && from_recorder != viewing) {
@@ -54,8 +57,27 @@ VideoViewer::VideoViewer(QWidget *parent) : QWidget(parent)
         }
     });
     connect(VideoRecorder::get(), &VideoRecorder::camerasChanged, this, [this]() {
+        rebuildTabs();
         setSource(pickSource());
     });
+
+    // a tab per camera or stream of the Devices settings: the one shown, and a checkbox to record it
+    tabs = new QTabBar(this);
+    tabs->setDrawBase(false);
+    tabs->setExpanding(false);
+    tabs->setDocumentMode(true);
+    tabs->setUsesScrollButtons(true);
+    tabs->setElideMode(Qt::ElideRight);
+    tabs->setFocusPolicy(Qt::NoFocus);
+    tabs->setStyleSheet("QTabBar {background: black;} QTabBar::tab {color: #bbbbbb; background: #202020; padding: 2px 6px; border: none; "
+                        "margin-right: 1px;} QTabBar::tab:selected {color: white; background: #3a3a3a;}");
+    connect(tabs, &QTabBar::currentChanged, this, [this](int i) {
+        auto src = "camera:" + tabs->tabData(i).toString();
+        if(i >= 0 && src != source_text) {
+            chooseSource(src);
+        }
+    });
+    rebuildTabs();
 
     // the recording: started and stopped here too (the status bar shows it)
     record_button = new QToolButton(this);
@@ -71,6 +93,7 @@ VideoViewer::VideoViewer(QWidget *parent) : QWidget(parent)
     });
     connect(AudioRecorder::get(), &AudioRecorder::status, this, [this](AudioStatus s) {
         updateRecordButton(true, s.state != AudioStatus::IDLE);
+        updateTabs();
     });
     updateRecordButton(AudioRecorder::get()->isEnabled(), AudioRecorder::get()->isRecording());
     connect(DispatcherUi::get(), &DispatcherUi::appSettingsChanged, this, [this]() {
@@ -107,7 +130,7 @@ QSize VideoViewer::sizeHint() const
 {
     // height from the aspect ratio of the video (4:3 until a frame is received)
     double aspect = image.isNull() ? 0.75 : double(image.height()) / image.width();
-    return QSize(preferred_width, qRound(preferred_width * aspect));
+    return QSize(preferred_width, qRound(preferred_width * aspect) + barHeight());
 }
 
 QSize VideoViewer::minimumSizeHint() const
@@ -118,27 +141,12 @@ QSize VideoViewer::minimumSizeHint() const
 void VideoViewer::contextMenuEvent(QContextMenuEvent *event)
 {
     QMenu menu(this);
-    // the source: a camera or stream of the Devices settings (else the stream of the layout)
-    menu.addSection(tr("Source"));
 #if defined(AUDIO_RECORDER_ENABLED)
-    auto labels = VideoRecorder::get()->labels();
-    for(auto &label: labels) {
-        QString src = "camera:" + label;
-        auto action = menu.addAction(label, this, [this, src]() { chooseSource(src); });
-        action->setCheckable(true);
-        action->setChecked(source_text == src);
-        action->setToolTip(VideoRecorder::get()->source(label));
-    }
-    menu.setToolTipsVisible(true);
-    if(labels.isEmpty()) {
+    if(VideoRecorder::get()->labels().isEmpty()) {
 #endif
-        auto action = menu.addAction(tr("%1 (of the layout)").arg(layout_source));
-        action->setCheckable(true);
-        action->setChecked(true);
-        action->setEnabled(false);
+        menu.addAction(tr("Source: %1 (of the layout)").arg(layout_source))->setEnabled(false);
 #if defined(AUDIO_RECORDER_ENABLED)
     }
-    menu.addSeparator();
     menu.addAction(tr("Cameras and streams..."), this, [this]() {
         auto se = new SettingsEditor(false, window());
         se->showTab("Devices");
@@ -162,15 +170,94 @@ void VideoViewer::updateRecordButton(bool enabled, bool recording)
                                          "padding: 2px 6px; font-weight: bold;}")
                                      .arg(recording ? "#ff3b30" : "#dddddd"));
     record_button->adjustSize();
-    record_button->move(width() - record_button->width() - 4, 4);
+    layoutBar();
+}
+
+void VideoViewer::rebuildTabs()
+{
+#if defined(AUDIO_RECORDER_ENABLED)
+    auto rec = VideoRecorder::get();
+    QSignalBlocker block(tabs);
+    while(tabs->count() > 0) {
+        tabs->removeTab(0);
+    }
+    for(auto &label: rec->labels()) {
+        int i = tabs->addTab(label);
+        tabs->setTabData(i, label);
+        tabs->setTabToolTip(i, rec->source(label));
+        auto check = new QCheckBox(tabs);
+        check->setToolTip(tr("Record %1 with the microphones").arg(label));
+        check->setFocusPolicy(Qt::NoFocus);
+        connect(check, &QCheckBox::toggled, this, [label](bool on) {
+            VideoRecorder::get()->setRecordTicked(label, on);
+        });
+        tabs->setTabButton(i, QTabBar::LeftSide, check);
+    }
+    tabs->setVisible(tabs->count() > 0);
+    updateTabs();
+    layoutBar();
+    updateGeometry();
+#endif
+}
+
+void VideoViewer::updateTabs()
+{
+#if defined(AUDIO_RECORDER_ENABLED)
+    // a red dot: recorded now
+    static const QIcon red_dot = []() {
+        QPixmap pix(12, 12);
+        pix.fill(Qt::transparent);
+        QPainter p(&pix);
+        p.setRenderHint(QPainter::Antialiasing);
+        p.setPen(Qt::NoPen);
+        p.setBrush(QColor("#ff3b30"));
+        p.drawEllipse(1, 1, 10, 10);
+        return QIcon(pix);
+    }();
+    auto rec = VideoRecorder::get();
+    QSignalBlocker block(tabs);
+    for(int i = 0; i < tabs->count(); i++) {
+        auto label = tabs->tabData(i).toString();
+        tabs->setTabIcon(i, rec->isRecorded(label) ? red_dot : QIcon());
+        if(auto check = qobject_cast<QCheckBox*>(tabs->tabButton(i, QTabBar::LeftSide))) {
+            QSignalBlocker block_check(check);
+            check->setChecked(rec->recordTicked(label));
+        }
+        if(label == camera) {
+            tabs->setCurrentIndex(i);
+        }
+    }
+#endif
+}
+
+int VideoViewer::barHeight() const
+{
+    return (tabs != nullptr && tabs->isVisibleTo(this)) ? tabs->sizeHint().height() : 0;
+}
+
+QRect VideoViewer::videoRect() const
+{
+    return rect().adjusted(0, barHeight(), 0, 0);
+}
+
+void VideoViewer::layoutBar()
+{
+    int bar = barHeight();
+    int button = (record_button != nullptr && record_button->isVisibleTo(this)) ? record_button->width() : 0;
+    if(tabs != nullptr && bar > 0) {
+        tabs->setGeometry(0, 0, std::max(0, width() - button - 4), bar);
+    }
+    if(record_button != nullptr) {
+        // at the end of the tabs, else in the corner of the video
+        int y = bar > 0 ? std::max(0, (bar - record_button->height()) / 2) : 4;
+        record_button->move(width() - record_button->width() - 4, y);
+    }
 }
 
 void VideoViewer::resizeEvent(QResizeEvent *event)
 {
     QWidget::resizeEvent(event);
-    if(record_button != nullptr) {
-        record_button->move(width() - record_button->width() - 4, 4);
-    }
+    layoutBar();
 }
 
 /// the source: the camera chosen last, else the stream of the layout as a camera of the Devices settings, else
@@ -221,6 +308,7 @@ void VideoViewer::setSource(const QString &src)
         auto rec = VideoRecorder::get();
         camera = src.mid(7);
         url = rec->source(camera);
+        updateTabs();
         if(!VideoRecorder::isJpegStream(url) || rec->recordedLabels().contains(camera)) {
             // its frames from the recorder (ffmpeg): a USB camera or another stream, or recorded
             viewing = true;
@@ -335,18 +423,19 @@ void VideoViewer::paintEvent(QPaintEvent *event)
     QPainter p(this);
     p.fillRect(rect(), Qt::black);
 
+    QRect area = videoRect();
     if(!image.isNull()) {
-        QSize s = image.size().scaled(size(), Qt::KeepAspectRatio);
-        QRect r(QPoint((width() - s.width()) / 2, (height() - s.height()) / 2), s);
+        QSize s = image.size().scaled(area.size(), Qt::KeepAspectRatio);
+        QRect r(QPoint(area.x() + (area.width() - s.width()) / 2, area.y() + (area.height() - s.height()) / 2), s);
         p.setRenderHint(QPainter::SmoothPixmapTransform);
         p.drawImage(r, image);
     }
 
     if(image.isNull() || last_frame.elapsed() > NO_VIDEO_TIMEOUT) {
         if(!image.isNull()) {
-            p.fillRect(rect(), QColor(0, 0, 0, 160));
+            p.fillRect(area, QColor(0, 0, 0, 160));
         }
         p.setPen(Qt::white);
-        p.drawText(rect(), Qt::AlignCenter, tr("No video\n%1").arg(camera.isEmpty() ? source_text : camera));
+        p.drawText(area, Qt::AlignCenter, tr("No video\n%1").arg(camera.isEmpty() ? source_text : camera));
     }
 }

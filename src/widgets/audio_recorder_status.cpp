@@ -6,6 +6,7 @@
 #include <cmath>
 #if defined(AUDIO_RECORDER_ENABLED)
 #include "audio_recorder.h"
+#include "video_recorder.h"
 #endif
 
 namespace {
@@ -335,6 +336,36 @@ void AudioRecorderStatus::showMenu(QString name) {
             sendCommand(name, !recording);
         });
     }
+#if defined(AUDIO_RECORDER_ENABLED)
+    if(local) {
+        // what is recorded (the Record checkboxes of the Devices settings), changed right away
+        auto mic_configs = AudioRecorder::micConfigs(activeProfile());
+        auto video = VideoRecorder::get();
+        auto cams = video->labels();
+        if(!mic_configs.isEmpty() || !cams.isEmpty()) {
+            menu.addSection("Record");
+        }
+        for(int i = 0; i < mic_configs.size(); i++) {
+            auto &c = mic_configs[i];
+            auto action = menu.addAction(c.labels.isEmpty() ? c.device_name : c.labels.join(", "));
+            action->setCheckable(true);
+            action->setChecked(c.record);
+            action->setEnabled(AudioRecorder::recordsAudio());
+            connect(action, &QAction::toggled, this, [i](bool on) {
+                AudioRecorder::get()->setMicRecorded(i, on);
+            });
+        }
+        for(auto &label: cams) {
+            auto action = menu.addAction(tr("Camera: %1").arg(label));
+            action->setCheckable(true);
+            action->setChecked(video->recordTicked(label));
+            action->setEnabled(AudioRecorder::recordsVideo());
+            connect(action, &QAction::toggled, this, [label](bool on) {
+                VideoRecorder::get()->setRecordTicked(label, on);
+            });
+        }
+    }
+#endif
     if(local) {
         connect(menu.addAction("Devices and recording settings..."), &QAction::triggered, this, [=,this]() {
             auto se = new SettingsEditor(false, window());

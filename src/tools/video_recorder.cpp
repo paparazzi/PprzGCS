@@ -169,7 +169,7 @@ QStringList VideoRecorder::labels() {
 QStringList VideoRecorder::recordedLabels() {
     QStringList l;
     for(auto c: std::as_const(cameras)) {
-        if(recording && c->config.record) {
+        if(isRecorded(c)) {
             l.append(c->config.label);
         }
     }
@@ -183,6 +183,51 @@ QString VideoRecorder::source(QString label) {
         }
     }
     return QString();
+}
+
+bool VideoRecorder::isRecorded(Camera* c) {
+    return recording && c->config.record;
+}
+
+bool VideoRecorder::isRecorded(QString label) {
+    for(auto c: std::as_const(cameras)) {
+        if(c->config.label == label) {
+            return isRecorded(c);
+        }
+    }
+    return false;
+}
+
+bool VideoRecorder::recordTicked(QString label) {
+    for(auto c: std::as_const(cameras)) {
+        if(c->config.label == label) {
+            return c->config.record;
+        }
+    }
+    return false;
+}
+
+void VideoRecorder::setRecordTicked(QString label, bool on) {
+    // saved in the profile (the Record checkbox of the Devices settings), followed right away
+    auto profile = activeProfile();
+    auto configs = cameraConfigs(profile);
+    for(auto &c: configs) {
+        if(c.label == label) {
+            c.record = on;
+        }
+    }
+    saveCameraConfigs(configs, profile);
+    for(auto c: std::as_const(cameras)) {
+        if(c->config.label == label) {
+            c->config.record = on;
+        }
+    }
+    emit recordingChanged(recording);   // (a panel reading the stream itself lets it go, or takes it back)
+    for(auto c: std::as_const(cameras)) {
+        if(c->config.label == label) {
+            update(c);
+        }
+    }
 }
 
 void VideoRecorder::setRecording(bool r) {
@@ -237,7 +282,7 @@ QString VideoRecorder::sourcePath(const CameraConfig& c) {
 }
 
 void VideoRecorder::update(Camera* c) {
-    bool rec = recording && c->config.record;
+    bool rec = isRecorded(c);
     bool needed = rec || c->viewers > 0;
     bool running = c->process != nullptr;
     if(!needed) {
@@ -278,7 +323,7 @@ void VideoRecorder::startProcess(Camera* c) {
         args << "-i" << src;
     }
 
-    c->writing = recording && c->config.record;
+    c->writing = isRecorded(c);
     if(c->writing) {
         // a USB camera in H.264 (raw or MJPEG would be huge), a stream as it comes
         c->file_pattern = "__video__" + fileLabel(c->config.label) + ".mkv";
@@ -399,7 +444,7 @@ QStringList VideoRecorder::problems() {
     QStringList list;
     auto now = QDateTime::currentMSecsSinceEpoch();
     for(auto c: std::as_const(cameras)) {
-        if(!recording || !c->config.record) {
+        if(!isRecorded(c)) {
             continue;   // (only shown: the Video panel says "No video")
         }
         bool no_video = c->process == nullptr ||
@@ -413,9 +458,6 @@ QStringList VideoRecorder::problems() {
 
 QStringList VideoRecorder::files() {
     QStringList list;
-    if(!recording) {
-        return list;
-    }
     QDir dir(folder);
     for(auto c: std::as_const(cameras)) {
         if(c->process == nullptr || !c->writing) {

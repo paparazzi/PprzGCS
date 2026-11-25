@@ -48,6 +48,9 @@ public:
     void start();
     void stop();
 
+    /// a microphone of the profile (index in micConfigs) recorded or not (its Record checkbox), right away
+    void setMicRecorded(int index, bool on);
+
     /// the microphones of a profile (see activeProfile())
     static QList<MicConfig> micConfigs(QString profile);
     /// what this run records (pprzgcs --record audio|video|all, all by default)
