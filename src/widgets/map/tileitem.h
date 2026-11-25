@@ -34,6 +34,9 @@ public:
     void setChild(TileItem* t, int x, int y) {_childs[x][y] = t;}
     TileItem* mother() {return _mother;}
     bool setInheritedData();
+    /// the pixmap (cache key) of the ancestor this tile was last made from (0: none)
+    qint64 inheritedFrom() {return inherited_from;}
+    void setInheritedFrom(qint64 key) {inherited_from = key;}
     bool paintPixmapFromAncestors(QPixmap* altPixmap);
     bool paintPixmapFromOffspring(QPixmap* altPixmap);
 
@@ -49,6 +52,7 @@ private:
     const int SIZE;
     bool inScene;
     bool _hasData;
+    qint64 inherited_from = 0;
     TileRequestStatus request_status;
     const Point2DTile _coordinates;
     TileItem* _childs[2][2];

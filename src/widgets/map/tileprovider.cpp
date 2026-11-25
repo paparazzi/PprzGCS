@@ -84,7 +84,13 @@ void TileProvider::fetch_tile(Point2DTile t, Point2DTile tObj) {
 
         if(tile != tileObj) {   // an ancestor was loaded
             assert(tileObj->requestStatus() != TILE_OK);
-            tileObj->setInheritedData();
+            // made from it once: zoomed in beyond the zoomMax of the layer, every tile of the view
+            // comes here at each update of the tiles (each mouse move with a button held)
+            qint64 key = tile->pixmap().cacheKey();
+            if(tileObj->inheritedFrom() != key) {
+                tileObj->setInheritedData();
+                tileObj->setInheritedFrom(key);
+            }
         }
         sendTile(tile, tileObj);
         return;
