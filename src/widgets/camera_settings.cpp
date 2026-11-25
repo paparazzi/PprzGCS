@@ -104,8 +104,9 @@ void CameraSettings::addRow(CameraConfig c) {
     r->source->setInsertPolicy(QComboBox::NoInsert);
     r->source->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
     r->source->setMinimumContentsLength(24);
-    r->source->setToolTip("A USB camera of this computer, or the URL of a stream (e.g. rtsp://192.168.1.10:8554/video, "
-                          "udp://:5000, srt://...)");
+    r->source->setToolTip("A USB camera of this computer, or the URL of a stream: the JPEG frames of the video pipeline "
+                          "(udp://:5600, or tcp://192.168.1.10:5601 for its TCP server), or another stream "
+                          "(rtsp://192.168.1.10:8554/video, srt://...)");
     r->source->lineEdit()->setPlaceholderText("USB camera, or rtsp://...");
     r->label = new QLineEdit(c.label, r->box);
     r->label->setPlaceholderText("Label, e.g. Pilot view");

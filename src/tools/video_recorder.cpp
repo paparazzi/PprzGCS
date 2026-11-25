@@ -176,10 +176,23 @@ QStringList VideoRecorder::recordedLabels() {
     return l;
 }
 
+QString VideoRecorder::source(QString label) {
+    for(auto c: std::as_const(cameras)) {
+        if(c->config.label == label) {
+            return c->config.source;
+        }
+    }
+    return QString();
+}
+
 void VideoRecorder::setRecording(bool r) {
+    bool changed = r != recording;
     recording = r;
     if(r) {
         QDir().mkpath(folder);
+    }
+    if(changed) {
+        emit recordingChanged(r);
     }
     for(auto c: std::as_const(cameras)) {
         update(c);
@@ -256,6 +269,11 @@ void VideoRecorder::startProcess(Camera* c) {
         args << "-analyzeduration" << "1000000" << "-probesize" << "1000000";
         if(src.startsWith("rtsp")) {
             args << "-rtsp_transport" << "tcp";
+        }
+        if(isJpegStream(src)) {
+            // the JPEG frames of the video pipeline (a frame per datagram, or one after the other on TCP):
+            // not found by the probe; timed as they come (else at 25 fps)
+            args << "-use_wallclock_as_timestamps" << "1" << "-f" << "mjpeg";
         }
         args << "-i" << src;
     }

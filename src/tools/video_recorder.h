@@ -49,6 +49,10 @@ public:
     QStringList labels();
     /// the cameras being recorded (empty when not recording)
     QStringList recordedLabels();
+    /// the source of a camera (empty if there is no such camera)
+    QString source(QString label);
+    /// a JPEG stream of the video pipeline (udp://, tcp://): the Video panel can read it itself
+    static bool isJpegStream(QString source) {return source.startsWith("udp://") || source.startsWith("tcp://");}
     /// a panel shows it (ffmpeg runs) or not anymore
     void addViewer(QString label);
     void removeViewer(QString label);
@@ -60,6 +64,8 @@ public:
 signals:
     void frame(QString label, QImage image);
     void camerasChanged();
+    /// the recording starts or stops: before the cameras do (a panel reading a stream itself lets it go)
+    void recordingChanged(bool recording);
 
 private:
     explicit VideoRecorder(QObject* parent = nullptr);

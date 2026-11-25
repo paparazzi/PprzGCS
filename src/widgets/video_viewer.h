@@ -25,11 +25,12 @@ class QToolButton;
  * Layout: <widget name="video"><configure source="udp://:5600" width="320"/></widget>
  * The width (pixels) is the size the widget asks for at the start, the height follows
  * the aspect ratio of the video. To change the size, drag the corner of the panel.
- * Right click: choose another source (saved, it replaces the one of the layout).
  *
- * Or a camera of the Recording settings (camera:<label>): its frames from the recorder
- * (VideoRecorder), which runs it while shown. The button in the corner starts and stops the
- * recording (microphones and cameras, as the status bar does).
+ * The sources are the cameras and streams of the Devices settings (camera:<label>), chosen with
+ * the right click (kept); the source of the layout only without them. A JPEG stream (udp://,
+ * tcp://) is read here, except while it is recorded: then, as a USB camera or another stream,
+ * its frames come from the recorder (VideoRecorder, ffmpeg), the only reader of the stream.
+ * The button in the corner starts and stops the recording (as the status bar does).
  */
 class VideoViewer : public QWidget, public Configurable
 {
@@ -49,7 +50,7 @@ protected:
 
 private:
     void setSource(const QString &source);
-    void askSource();
+    QString pickSource();
     void readUdp();
     void readTcp();
     void connectTcp();
@@ -62,6 +63,7 @@ private:
     QString source_text;
     QString layout_source = "udp://:5600";  // used when no source is chosen in the GCS
     QString camera;                         // the camera shown (camera:<label>), else empty
+    bool viewing = false;                   // its frames from the recorder (else read here: a JPEG stream)
     QUdpSocket *udp = nullptr;
     QTcpSocket *tcp = nullptr;
     QTimer *reconnect_timer;
