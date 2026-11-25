@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QImage>
 #include <QTimer>
+#include <QSet>
 #include <QMap>
 
 class QProcess;
@@ -70,6 +71,7 @@ private:
         bool writing = false;       // the process records (else only the preview)
         QByteArray buffer;
         QString error;
+        QSet<QString> logged;       // the errors printed (each once, not again at every retry)
         QString file_pattern;
         qint64 started = 0;         // ms
         qint64 last_frame = 0;      // ms

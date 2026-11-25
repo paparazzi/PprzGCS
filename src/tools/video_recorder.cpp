@@ -292,10 +292,20 @@ void VideoRecorder::startProcess(Camera* c) {
 #endif
     connect(p, &QProcess::readyReadStandardOutput, this, [=,this]() {readFrames(c);});
     connect(p, &QProcess::readyReadStandardError, this, [=]() {
-        auto lines = QString::fromUtf8(p->readAllStandardError()).trimmed().split("\n");
-        if(!lines.isEmpty() && !lines.last().isEmpty()) {
-            c->error = lines.last().trimmed();
-            qDebug() << "video" << c->config.label << c->error;
+        // the last message, without the "[video4linux2,v4l2 @ 0x...]" of ffmpeg
+        static const QRegularExpression context("^\\[[^\\]]* @ 0x[0-9a-f]+\\]\\s*");
+        auto lines = QString::fromUtf8(p->readAllStandardError()).split("\n");
+        for(auto &line: lines) {
+            line = line.trimmed().remove(context);
+            if(line.isEmpty()) {
+                continue;
+            }
+            c->error = line;
+            // once, not again at each retry of the camera (every few seconds)
+            if(!c->logged.contains(line)) {
+                c->logged.insert(line);
+                qDebug() << "video" << c->config.label << line;
+            }
         }
     });
     connect(p, &QProcess::finished, this, [=,this]() {
@@ -358,6 +368,7 @@ void VideoRecorder::readFrames(Camera* c) {
     }
     c->last_frame = QDateTime::currentMSecsSinceEpoch();
     c->error.clear();
+    c->logged.clear();      // working again: a new failure is printed
     if(c->viewers > 0) {
         QImage img;
         if(img.loadFromData(jpeg, "JPEG")) {
