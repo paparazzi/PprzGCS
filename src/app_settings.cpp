@@ -135,7 +135,7 @@ void set_app_settings() {
     default_setting("audio/format", "opus");
     default_setting("audio/folder", "");
     default_setting("audio/chunk_minutes", 10);
-    default_setting("audio/start", "launch");
+    default_setting("audio/record_when", "aircraft");
     default_setting("audio/mark_key", "F9");
     default_setting("video/folder", "");
     default_setting("notify/speech", false);
@@ -713,16 +713,17 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
     addHelp("The microphones and cameras of the profile (Devices tab) are recorded, a file per microphone and camera, "
             "for the transcription and the logbook after the flight. The status bar shows the recording, the level "
             "of each channel, and a device that is not connected or has no signal.<br>Started from the status "
-            "bar (click the recorder), or from the start when PprzGCS runs with --record: e.g. in the flight "
+            "bar or the Video panel, or by itself when PprzGCS runs with --record (below): e.g. in the flight "
             "sessions of the Paparazzi Center, not in the simulations. --record audio or --record video records "
-            "only those. It records until PprzGCS closes (also when the Paparazzi Center stops it), and starts "
-            "again after a crash during a recording. Never while editing flight plans.", w_rec, l_rec, row);
-    cb = addSetting("With --record, record", "audio/start", w_rec, l_rec, row, Type::STRING_COMBO,
-                    QStringList{"launch|From the start, until PprzGCS closes",
-                                "aircraft|While an aircraft is connected"});
+            "only those. The files are closed when PprzGCS closes (also when the Paparazzi Center stops it), and "
+            "it starts again after a crash during a recording. Never while editing flight plans.", w_rec, l_rec, row);
+    cb = addSetting("With --record, record", "audio/record_when", w_rec, l_rec, row, Type::STRING_COMBO,
+                    QStringList{"aircraft|While an aircraft is connected",
+                                "launch|From the start, until PprzGCS closes"});
     callbacks.append(cb);
     addHelp("While an aircraft is connected: started when the telemetry of an aircraft comes in, stopped when no "
-            "aircraft has sent telemetry for 5 minutes (a short loss of the link does not stop it). Stopped from "
+            "aircraft has sent telemetry for 5 minutes (a short loss of the link does not stop it), or when the "
+            "server has not answered for 30 s (e.g. its session stopped). Stopped from "
             "the status bar: not again until the aircraft are gone. The status bar and the Video panel can "
             "always start and stop it.", w_rec, l_rec, row);
     cb = addSetting("Audio format", "audio/format", w_rec, l_rec, row, Type::STRING_COMBO,

@@ -31,7 +31,7 @@ struct MicConfig {
  * - RECORD_STATUS each second (and the status signal, for this GCS: Ivy does not send its
  *   messages back), started and stopped by RECORD_CMD as well
  * - a microphone unplugged: a warning, and recorded again when it is back
- * - with --record: from the start, or while an aircraft is connected (audio/start); again after a
+ * - with --record: from the start, or while an aircraft is connected (audio/record_when); again after a
  *   crash during a recording
  */
 class AudioRecorder : public QObject
@@ -94,7 +94,7 @@ private:
     void onData(Mic* m);
     void onDevicesChanged();
     void sendStatus();
-    /// audio/start "aircraft": started when an aircraft is connected, stopped some time after the last one
+    /// audio/record_when "aircraft": started when an aircraft is connected, stopped some time after the last one
     bool autoAircraft();
     void checkAircraft();
 
@@ -112,6 +112,7 @@ private:
 
     QMap<QString, qint64> aircraft_rx;  // per aircraft: the time of its last telemetry (ms)
     bool auto_started = false;          // started for the aircraft: stopped when they are gone
+    qint64 server_lost = 0;             // since when the server does not answer (ms), 0 if it does
     bool user_stopped = false;          // stopped by the user while aircraft are connected: not again until they are gone
 };
 

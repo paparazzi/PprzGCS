@@ -19,6 +19,7 @@
 namespace {
 constexpr qint64 AIRCRAFT_CONNECTED_MS = 5000;          // telemetry this recent: the aircraft is connected
 constexpr qint64 AIRCRAFT_GONE_MS = 5 * 60 * 1000;      // no telemetry for that long: stopped (not at a short link loss)
+constexpr qint64 SERVER_GONE_MS = 30 * 1000;            // the server stopped (e.g. the session): stopped sooner
 // Opus: clear speech at 24 kbit/s per channel (about 11 MB per channel and hour). libsndfile sets
 // it by a compression level, from about 256 kbit/s per channel (0) down to 6 (1)
 constexpr double OPUS_KBPS = 24;
@@ -85,7 +86,7 @@ AudioRecorder::AudioRecorder(QObject* parent) : QObject(parent),
         }
     });
 
-    // the aircraft connected (audio/start "aircraft"): the time of their last telemetry, from the server
+    // the aircraft connected (audio/record_when "aircraft"): the time of their last telemetry, from the server
     PprzDispatcher::get()->bindOptional("TELEMETRY_STATUS", this, [this](QString sender, pprzlink::Message msg) {
         (void)sender;
         QString ac_id;
@@ -97,6 +98,9 @@ AudioRecorder::AudioRecorder(QObject* parent) : QObject(parent),
     });
     connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, [this](QString ac_id) {
         aircraft_rx.remove(ac_id);
+    });
+    connect(PprzDispatcher::get(), &PprzDispatcher::serverStatusChanged, this, [this](bool ok) {
+        server_lost = ok ? 0 : QDateTime::currentMSecsSinceEpoch();
     });
 
     loadSettings();
@@ -247,7 +251,7 @@ void AudioRecorder::stop() {
 
 bool AudioRecorder::autoAircraft() {
     return enabled && appConfig()->value("AUDIO_RECORD_ARG").toBool() &&
-           getAppSettings().value("audio/start").toString() == "aircraft";
+           getAppSettings().value("audio/record_when", "aircraft").toString() == "aircraft";
 }
 
 void AudioRecorder::checkAircraft() {
@@ -260,6 +264,10 @@ void AudioRecorder::checkAircraft() {
     for(auto rx: std::as_const(aircraft_rx)) {
         connected |= now - rx < AIRCRAFT_CONNECTED_MS;
         gone &= now - rx >= AIRCRAFT_GONE_MS;
+    }
+    if(server_lost != 0 && now - server_lost >= SERVER_GONE_MS) {
+        gone = true;    // no server (e.g. its session stopped): no aircraft
+        connected = false;
     }
     if(connected && !recording && !user_stopped) {
         doStart();
