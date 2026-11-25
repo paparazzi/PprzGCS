@@ -264,7 +264,8 @@ void Map2D::zoomCenteredScene(double z, QPoint center, Point2DPseudoMercator pm)
 
 void Map2D::mouseMoveEvent(QMouseEvent *event) {
     QGraphicsView::mouseMoveEvent(event);
-    if(event->buttons() & mouse_load_tiles_mask) {
+    // (not while an item is dragged, e.g. a waypoint: the view does not move)
+    if(event->buttons() & mouse_load_tiles_mask && scene()->mouseGrabberItem() == nullptr) {
         updateTiles();
     }
     
