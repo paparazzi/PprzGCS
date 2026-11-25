@@ -10,6 +10,7 @@
 class QUdpSocket;
 class QTcpSocket;
 class QTimer;
+class QToolButton;
 
 /**
  * Shows a live video made of JPEG frames, e.g. from a GStreamer pipeline started
@@ -27,7 +28,8 @@ class QTimer;
  * Right click: choose another source (saved, it replaces the one of the layout).
  *
  * Or a camera of the Recording settings (camera:<label>): its frames from the recorder
- * (VideoRecorder), which runs it while shown.
+ * (VideoRecorder), which runs it while shown. The button in the corner starts and stops the
+ * recording (microphones and cameras, as the status bar does).
  */
 class VideoViewer : public QWidget, public Configurable
 {
@@ -43,6 +45,7 @@ public:
 protected:
     void paintEvent(QPaintEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
     void setSource(const QString &source);
@@ -53,6 +56,7 @@ private:
     void showFrame(const QByteArray &jpeg);
     void showImage(const QImage &img);
     void chooseSource(const QString &src);
+    void updateRecordButton(bool enabled, bool recording);
 
     QUrl source;
     QString source_text;
@@ -66,6 +70,7 @@ private:
     QImage image;
     QElapsedTimer last_frame;
     int preferred_width = 320;
+    QToolButton *record_button = nullptr;  // starts and stops the recording (microphones and cameras)
 };
 
 #endif // VIDEO_VIEWER_H

@@ -8,9 +8,13 @@
 #include <QContextMenuEvent>
 #include <QInputDialog>
 #include <QMenu>
+#include <QToolButton>
+#include "app_settings.h"
+#include "dispatcher_ui.h"
 #include "gcs_utils.h"
 #if defined(AUDIO_RECORDER_ENABLED)
 #include "video_recorder.h"
+#include "audio_recorder.h"
 #endif
 
 static constexpr int NO_VIDEO_TIMEOUT = 1000;   // ms without frame before "No video"
@@ -41,6 +45,29 @@ VideoViewer::VideoViewer(QWidget *parent) : QWidget(parent)
         if(label == camera) {
             showImage(img);
         }
+    });
+
+    // the recording: started and stopped here too (the status bar shows it)
+    record_button = new QToolButton(this);
+    record_button->setAutoRaise(true);
+    record_button->setFocusPolicy(Qt::NoFocus);
+    connect(record_button, &QToolButton::clicked, this, []() {
+        auto rec = AudioRecorder::get();
+        if(rec->isRecording()) {
+            rec->stop();
+        } else {
+            rec->start();
+        }
+    });
+    connect(AudioRecorder::get(), &AudioRecorder::status, this, [this](AudioStatus s) {
+        updateRecordButton(true, s.state != AudioStatus::IDLE);
+    });
+    updateRecordButton(AudioRecorder::get()->isEnabled(), AudioRecorder::get()->isRecording());
+    connect(DispatcherUi::get(), &DispatcherUi::appSettingsChanged, this, [this]() {
+        // (after the recorder has its new settings)
+        QTimer::singleShot(0, this, [this]() {
+            updateRecordButton(AudioRecorder::get()->isEnabled(), AudioRecorder::get()->isRecording());
+        });
     });
 #endif
     // the source chosen last (context menu), else the layout's
@@ -101,7 +128,38 @@ void VideoViewer::contextMenuEvent(QContextMenuEvent *event)
     }
 #endif
     menu.addAction(tr("Video source..."), this, &VideoViewer::askSource);
+    menu.addSeparator();
+    menu.addAction(tr("Cameras and microphones..."), this, [this]() {
+        auto se = new SettingsEditor(false, window());
+        se->showTab("Devices");
+        se->open();
+    });
     menu.exec(event->globalPos());
+}
+
+void VideoViewer::updateRecordButton(bool enabled, bool recording)
+{
+    if(record_button == nullptr) {
+        return;
+    }
+    // (only with the recorder enabled: Settings, Recording)
+    record_button->setVisible(enabled);
+    record_button->setText(recording ? tr("\u25cf REC") : tr("\u25cf Record"));
+    record_button->setToolTip(recording ? tr("Stop recording the microphones and cameras")
+                                        : tr("Record the microphones and cameras"));
+    record_button->setStyleSheet(QString("QToolButton {color: %1; background: rgba(0, 0, 0, 120); border-radius: 4px; "
+                                         "padding: 2px 6px; font-weight: bold;}")
+                                     .arg(recording ? "#ff3b30" : "#dddddd"));
+    record_button->adjustSize();
+    record_button->move(width() - record_button->width() - 4, 4);
+}
+
+void VideoViewer::resizeEvent(QResizeEvent *event)
+{
+    QWidget::resizeEvent(event);
+    if(record_button != nullptr) {
+        record_button->move(width() - record_button->width() - 4, 4);
+    }
 }
 
 /// Ask for the source; saved for the next start, empty: back to the one of the layout
