@@ -135,6 +135,7 @@ void set_app_settings() {
     default_setting("audio/format", "opus");
     default_setting("audio/folder", "");
     default_setting("audio/chunk_minutes", 10);
+    default_setting("audio/start", "launch");
     default_setting("audio/mark_key", "F9");
     default_setting("video/folder", "");
     default_setting("notify/speech", false);
@@ -716,6 +717,14 @@ SettingsEditor::SettingsEditor(bool standalone, QWidget* parent): QDialog(parent
             "sessions of the Paparazzi Center, not in the simulations. --record audio or --record video records "
             "only those. It records until PprzGCS closes (also when the Paparazzi Center stops it), and starts "
             "again after a crash during a recording. Never while editing flight plans.", w_rec, l_rec, row);
+    cb = addSetting("With --record, record", "audio/start", w_rec, l_rec, row, Type::STRING_COMBO,
+                    QStringList{"launch|From the start, until PprzGCS closes",
+                                "aircraft|While an aircraft is connected"});
+    callbacks.append(cb);
+    addHelp("While an aircraft is connected: started when the telemetry of an aircraft comes in, stopped when no "
+            "aircraft has sent telemetry for 5 minutes (a short loss of the link does not stop it). Stopped from "
+            "the status bar: not again until the aircraft are gone. The status bar and the Video panel can "
+            "always start and stop it.", w_rec, l_rec, row);
     cb = addSetting("Audio format", "audio/format", w_rec, l_rec, row, Type::STRING_COMBO,
                     QStringList{"opus|Opus (speech, about 11 MB per channel and hour)",
                                 "flac|FLAC (lossless, about 15 times larger)"});

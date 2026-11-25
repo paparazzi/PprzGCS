@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTimer>
+#include <QMap>
 #include <QAudioDevice>
 #include <QAudioFormat>
 #include "audio_status.h"
@@ -30,7 +31,8 @@ struct MicConfig {
  * - RECORD_STATUS each second (and the status signal, for this GCS: Ivy does not send its
  *   messages back), started and stopped by RECORD_CMD as well
  * - a microphone unplugged: a warning, and recorded again when it is back
- * - started with the GCS (option), and again after a crash during a recording
+ * - with --record: from the start, or while an aircraft is connected (audio/start); again after a
+ *   crash during a recording
  */
 class AudioRecorder : public QObject
 {
@@ -92,6 +94,9 @@ private:
     void onData(Mic* m);
     void onDevicesChanged();
     void sendStatus();
+    /// audio/start "aircraft": started when an aircraft is connected, stopped some time after the last one
+    bool autoAircraft();
+    void checkAircraft();
 
     bool enabled = false;
     bool recording = false;
@@ -104,6 +109,10 @@ private:
 
     QTimer status_timer;
     QMediaDevices* media_devices;
+
+    QMap<QString, qint64> aircraft_rx;  // per aircraft: the time of its last telemetry (ms)
+    bool auto_started = false;          // started for the aircraft: stopped when they are gone
+    bool user_stopped = false;          // stopped by the user while aircraft are connected: not again until they are gone
 };
 
 #endif // AUDIO_RECORDER_H

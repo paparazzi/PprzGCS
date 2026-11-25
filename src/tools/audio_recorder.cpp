@@ -17,6 +17,8 @@
 #include <cmath>
 
 namespace {
+constexpr qint64 AIRCRAFT_CONNECTED_MS = 5000;          // telemetry this recent: the aircraft is connected
+constexpr qint64 AIRCRAFT_GONE_MS = 5 * 60 * 1000;      // no telemetry for that long: stopped (not at a short link loss)
 // Opus: clear speech at 24 kbit/s per channel (about 11 MB per channel and hour). libsndfile sets
 // it by a compression level, from about 256 kbit/s per channel (0) down to 6 (1)
 constexpr double OPUS_KBPS = 24;
@@ -50,7 +52,10 @@ AudioRecorder::AudioRecorder(QObject* parent) : QObject(parent),
     media_devices(new QMediaDevices(this))
 {
     connect(media_devices, &QMediaDevices::audioInputsChanged, this, &AudioRecorder::onDevicesChanged);
-    connect(&status_timer, &QTimer::timeout, this, &AudioRecorder::sendStatus);
+    connect(&status_timer, &QTimer::timeout, this, [this]() {
+        checkAircraft();
+        sendStatus();
+    });
     connect(DispatcherUi::get(), &DispatcherUi::appSettingsChanged, this, [this]() {
         // again with the new settings (new files), as it was
         bool was = recording;
@@ -80,12 +85,28 @@ AudioRecorder::AudioRecorder(QObject* parent) : QObject(parent),
         }
     });
 
+    // the aircraft connected (audio/start "aircraft"): the time of their last telemetry, from the server
+    PprzDispatcher::get()->bindOptional("TELEMETRY_STATUS", this, [this](QString sender, pprzlink::Message msg) {
+        (void)sender;
+        QString ac_id;
+        float since = 0;
+        msg.getField("ac_id", ac_id);
+        msg.getField("time_since_last_msg", since);
+        qint64 rx = QDateTime::currentMSecsSinceEpoch() - qint64(since * 1000);
+        aircraft_rx[ac_id] = std::max(aircraft_rx.value(ac_id, 0), rx);     // (the newest of its links)
+    });
+    connect(DispatcherUi::get(), &DispatcherUi::ac_deleted, this, [this](QString ac_id) {
+        aircraft_rx.remove(ac_id);
+    });
+
     loadSettings();
-    // pprzgcs --record (e.g. the flight sessions of the Paparazzi Center): until PprzGCS closes
-    // (not in the simulations: their sessions do not pass it), or again after a crash during a recording
-    if(enabled && (appConfig()->value("AUDIO_RECORD_ARG").toBool() ||
-                   getAppSettings().value("audio/was_recording").toBool())) {
+    // pprzgcs --record (e.g. the flight sessions of the Paparazzi Center): until PprzGCS closes, or while
+    // an aircraft is connected (not in the simulations: their sessions do not pass it); again after a crash
+    // during a recording
+    bool was_recording = getAppSettings().value("audio/was_recording").toBool();
+    if(enabled && ((appConfig()->value("AUDIO_RECORD_ARG").toBool() && !autoAircraft()) || was_recording)) {
         doStart();
+        auto_started = autoAircraft();  // (after a crash: stopped when the aircraft are gone)
     }
     status_timer.start(1000);
 }
@@ -213,11 +234,43 @@ void AudioRecorder::loadSettings() {
 }
 
 void AudioRecorder::start() {
+    user_stopped = false;
+    auto_started = false;   // started by the user: until stopped by the user
     doStart();
 }
 
 void AudioRecorder::stop() {
+    user_stopped = autoAircraft();
+    auto_started = false;
     doStop();
+}
+
+bool AudioRecorder::autoAircraft() {
+    return enabled && appConfig()->value("AUDIO_RECORD_ARG").toBool() &&
+           getAppSettings().value("audio/start").toString() == "aircraft";
+}
+
+void AudioRecorder::checkAircraft() {
+    if(!autoAircraft()) {
+        return;
+    }
+    auto now = QDateTime::currentMSecsSinceEpoch();
+    bool connected = false;
+    bool gone = true;
+    for(auto rx: std::as_const(aircraft_rx)) {
+        connected |= now - rx < AIRCRAFT_CONNECTED_MS;
+        gone &= now - rx >= AIRCRAFT_GONE_MS;
+    }
+    if(connected && !recording && !user_stopped) {
+        doStart();
+        auto_started = true;
+    } else if(gone) {
+        user_stopped = false;
+        if(recording && auto_started) {
+            doStop();
+            auto_started = false;
+        }
+    }
 }
 
 void AudioRecorder::doStart() {
