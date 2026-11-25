@@ -7,7 +7,6 @@
 #include <QObject>
 #include <QMap>
 #include <QtNetwork/QNetworkAccessManager>
-#include <QtNetwork/QNetworkDiskCache>
 #include "point2dlatlon.h"
 #include "point2dtile.h"
 #include "tileproviderconfig.h"
@@ -87,7 +86,6 @@ private:
 
     TileItem* motherTile;
     QNetworkAccessManager* manager;
-    QNetworkDiskCache* diskCache;
 };
 
 #endif // OSMTILEPROVIDER_H

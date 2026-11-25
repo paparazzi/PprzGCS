@@ -17,10 +17,9 @@ TileProvider::TileProvider(TileProviderConfig* config, int z, int displaySize, Q
     _config(config), z_value(z), alpha(1), visibility(true), tileDisplaySize(displaySize), tiles_path(tiles_path)
 {
     motherTile = new TileItem(nullptr, tileDisplaySize, Point2DTile(0, 0, 0));
+    // (no QNetworkDiskCache: each tile is saved in the tiles folder; above its size limit the
+    // cache was scanned on the GUI thread after each download)
     manager = new QNetworkAccessManager(this);
-    diskCache = new QNetworkDiskCache(this);
-    diskCache->setCacheDirectory(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
-    manager->setCache(diskCache);
 
     connect(manager, &QNetworkAccessManager::finished, this, &TileProvider::handleReply);
 }
