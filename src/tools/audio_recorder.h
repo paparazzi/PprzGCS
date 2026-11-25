@@ -11,7 +11,7 @@
 class QAudioSource;
 class QIODevice;
 class QMediaDevices;
-typedef struct SNDFILE_tag SNDFILE;
+#include <sndfile.h>     // (SNDFILE: its struct is named differently in each libsndfile version)
 
 /// A microphone of the settings (audio/mics): the device, and a label per channel
 struct MicConfig {
