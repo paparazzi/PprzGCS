@@ -12,6 +12,8 @@ class SettingsEditor : public QDialog
     Q_OBJECT
 public:
     explicit SettingsEditor(bool standalone = false, QWidget *parent = nullptr);
+    /// open on this tab (e.g. "Recording")
+    void showTab(QString name);
 
 
 
@@ -35,6 +37,7 @@ private:
     std::function<void()> addSetting(QString name, QString key, QWidget* w, QGridLayout* gl, int &row, Type type, QVariant data = QVariant());
 
     QList<std::function<void()>> callbacks;
+    QTabWidget* tabs;
 
 };
 

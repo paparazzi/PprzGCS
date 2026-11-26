@@ -9,6 +9,7 @@
 #include "gcs_utils.h"
 #include <QColorDialog>
 #include "panels.h"
+#include "audio_recorder_status.h"
 
 #include "speaker.h"
 
@@ -39,7 +40,8 @@ void PprzMain::setupUi(int width, int height, QWidget* centralWidget) {
         setupTitleBar();
     }
 
-    // on the right: the server, and the link of the selected aircraft
+    // on the right: the audio recorders and the Mark button, the server, and the link of the selected aircraft
+    statusBar->addPermanentWidget(new AudioRecorderStatus(statusBar));
     serverStatusLed = new QLabel(statusBar);
     setServerStatus(false);
     statusBar->addPermanentWidget(serverStatusLed);

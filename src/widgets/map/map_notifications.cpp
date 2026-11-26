@@ -2,6 +2,7 @@
 #include "dispatcher_ui.h"
 #include "AircraftManager.h"
 #include "gcs_utils.h"
+#include "alert_sound.h"
 
 static const int MAX_ROWS = 3;
 static const int MESSAGE_MS = 6000;
@@ -197,7 +198,7 @@ void MapNotifications::announce(QString key, QString sender, QString text, Level
     }
 }
 
-/// The alert sounds (setting notify/sound), played by the player of the system: no Qt Multimedia needed
+/// The alert sounds (setting notify/sound), on the output and at the volume of the settings
 void MapNotifications::playSound(bool alarm) {
     if(!getAppSettings().value("notify/sound", true).toBool()) {
         return;
@@ -209,29 +210,7 @@ void MapNotifications::playSound(bool alarm) {
         return;
     }
     last[alarm] = now;
-    // paplay first: it plays with PulseAudio and with PipeWire (through pipewire-pulse), while pw-play
-    // fails when PipeWire runs next to PulseAudio without its own audio output
-    static const QStringList player = []() {
-        for(auto &p: QList<QStringList>{{"paplay"}, {"pw-play"}, {"aplay", "-q"}, {"afplay"}}) {
-            auto path = QStandardPaths::findExecutable(p[0]);
-            if(!path.isEmpty()) {
-                return QStringList{path} + p.mid(1);
-            }
-        }
-        return QStringList();
-    }();
-    QString file = user_or_app_path(alarm ? "sounds/alarm.wav" : "sounds/warning.wav");
-    if(player.isEmpty() || !QFile::exists(file)) {
-        QApplication::beep();
-        return;
-    }
-    // its messages not in the terminal of the GCS (an alarm plays again every few seconds)
-    QProcess p;
-    p.setProgram(player[0]);
-    p.setArguments(player.mid(1) << file);
-    p.setStandardOutputFile(QProcess::nullDevice());
-    p.setStandardErrorFile(QProcess::nullDevice());
-    p.startDetached();
+    AlertSound::play(alarm);
 }
 
 void MapNotifications::expire() {

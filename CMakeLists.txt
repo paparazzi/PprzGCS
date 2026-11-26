@@ -47,6 +47,7 @@ endif()
 
 option(SPEECH "Speak with Qt TextToSpeech (Qt 6.4 or later), else with spd-say or espeak-ng" OFF)
 option(GRPC "Enable GRPC" OFF)
+option(AUDIO_RECORDER "Record the microphones (Qt Multimedia and libsndfile; off when they are missing)" ON)
 
 add_subdirectory(ext/pprzlinkQt ${CMAKE_BINARY_DIR}/pprzlinkqt)
 # no warnings from the external code (and no -Werror in Debug builds)
@@ -67,6 +68,25 @@ else()
     message("SPEECH: Qt TextToSpeech DISABLED, speaking with spd-say or espeak-ng")
 endif()
 
+
+# the audio recorder: when its libraries are there (else built without it, with a message)
+if(AUDIO_RECORDER)
+    find_package(Qt6 QUIET COMPONENTS Multimedia)
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+        pkg_check_modules(SNDFILE QUIET sndfile)
+    endif()
+    if(Qt6Multimedia_FOUND AND SNDFILE_FOUND)
+        message("AUDIO RECORDER ENABLED !")
+        add_definitions(-DAUDIO_RECORDER_ENABLED)
+        list(APPEND QT_COMPONENTS Multimedia)
+    else()
+        message(WARNING "AUDIO RECORDER DISABLED: install qt6-multimedia-dev and libsndfile1-dev")
+        set(AUDIO_RECORDER OFF)
+    endif()
+else()
+    message("AUDIO RECORDER DISABLED !")
+endif()
 
 if(DEFINED ENV{QT_DIR})
     set(Qt5_DIR $ENV{QT_DIR})
@@ -101,6 +121,7 @@ add_subdirectory(src)
 include_directories(
     ${INC_DIRS}
     ${LIBXML2_INCLUDE_DIR}
+    ${SNDFILE_INCLUDE_DIRS}
 )
 
 
@@ -121,6 +142,8 @@ target_link_libraries(${PROJECT_NAME}
     Qt6::Network
     Qt6::Svg
     $<$<BOOL:${SPEECH}>:Qt6::TextToSpeech>
+    $<$<BOOL:${AUDIO_RECORDER}>:Qt6::Multimedia>
+    $<$<BOOL:${AUDIO_RECORDER}>:${SNDFILE_LIBRARIES}>
     ${PROJ4_LIBRARIES}
     ${LIBXML2_LIBRARIES}
     zip

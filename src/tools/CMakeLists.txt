@@ -11,7 +11,12 @@ list(APPEND SOURCE
     ${CMAKE_CURRENT_SOURCE_DIR}/units.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/watcher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/speaker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/alert_sound.cpp
 )
+
+if(${AUDIO_RECORDER})
+    list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/audio_recorder.cpp ${CMAKE_CURRENT_SOURCE_DIR}/video_recorder.cpp)
+endif()
 
 if(${GRPC})
     list(APPEND SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/grpcconnector.cpp)

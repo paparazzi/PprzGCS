@@ -5,6 +5,7 @@
 #include "dispatcher_ui.h"
 #include <QStandardPaths>
 #include <QRegularExpression>
+#include <algorithm>
 
 Speaker::Speaker(PprzApplication* app, PprzToolbox* toolbox) : PprzTool(app, toolbox),
 #if defined(QT_TEXTTOSPEECH)
@@ -126,6 +127,8 @@ void Speaker::speak(QString text) {
 #if defined(QT_TEXTTOSPEECH)
     if(tts) {
         tts->setRate(qBound(-1.0, getAppSettings().value("notify/speech_rate", 0).toInt() / 100.0, 1.0));
+        // the volume of the alerts (Settings, Sound)
+        tts->setVolume(std::clamp(getAppSettings().value(profileKey("notify/volume", activeProfile()), 100).toInt(), 0, 100) / 100.0);
         tts->say(spoken(text));
         return;
     }
@@ -159,6 +162,8 @@ QString Speaker::spoken(QString text) {
 QStringList Speaker::systemArguments(QString text, QString language, QString voice, int rate) {
     auto command = systemCommand();
     QStringList args = command.mid(1);
+    // the volume of the alerts (Settings, Sound), 0 to 100
+    int volume = std::clamp(getAppSettings().value(profileKey("notify/volume", activeProfile()), 100).toInt(), 0, 100);
     if(command.value(0).endsWith("spd-say")) {
         auto module = voice.section(':', 0, 0);
         auto name = voice.section(':', 1);
@@ -168,9 +173,11 @@ QStringList Speaker::systemArguments(QString text, QString language, QString voi
             args << "-l" << language;
         }
         args << "-r" << QString::number(qBound(-100, rate, 100));
+        args << "-i" << QString::number(volume - 100);        // 0: the normal volume, -100: silent
     } else {
         // espeak-ng: words per minute, 175 by default
         args << "-v" << language << "-s" << QString::number(175 + 175 * qBound(-100, rate, 100) / 200);
+        args << "-a" << QString::number(volume);              // amplitude, 100 by default
     }
     return args << "--" << spoken(text);
 }
