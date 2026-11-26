@@ -263,7 +263,7 @@ void Speaker::bindMessage(struct Message msg) {
                 }  catch (pprzlink::no_such_field& e) {
                     return;
                 }
-            } else if(msg_class == "telemetry") {
+            } else if(msg_class == "telemetry" || msg_class == "module_telemetry") {
                 ac_id = sender;
             }
 

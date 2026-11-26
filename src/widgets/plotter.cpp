@@ -21,6 +21,10 @@ const QString AGL = "ground:FLIGHT_PARAM:agl";
 const QString TARGET_AGL = "ground:NAV_STATUS:target_agl";  // target_alt (MSL) above the ground
 const QString ROLL = "attitude:roll", PITCH = "attitude:pitch", YAW = "attitude:yaw";     // deg
 
+/// The classes of the messages sent by the aircraft: the telemetry, and the messages of the
+/// modules (decoded by link from MODULE_SPECIFIC, in messages.xml only with the module messages)
+const QStringList AIRCRAFT_CLASSES = {"telemetry", "module_telemetry"};
+
 /// The telemetry messages received from each aircraft (for "Other message field"): one listener
 /// for all the plotters
 QHash<QString, QSet<QString>>& seenTelemetry() {
@@ -29,12 +33,20 @@ QHash<QString, QSet<QString>>& seenTelemetry() {
     if(!bound) {
         bound = true;
         auto dict = PprzDispatcher::get()->getDict();
-        for(auto &def: dict->getMsgsForClass("telemetry")) {
-            QString name = def.getName();
-            PprzDispatcher::get()->bind(name, qApp, [name](QString sender, pprzlink::Message msg) {
-                (void)msg;
-                seen[sender].insert(name);
-            });
+        for(auto &msg_class: AIRCRAFT_CLASSES) {
+            std::vector<pprzlink::MessageDefinition> defs;
+            try {
+                defs = dict->getMsgsForClass(msg_class);
+            } catch(pprzlink::no_such_class&) {
+                continue;
+            }
+            for(auto &def: defs) {
+                QString name = def.getName();
+                PprzDispatcher::get()->bind(name, qApp, [name](QString sender, pprzlink::Message msg) {
+                    (void)msg;
+                    seen[sender].insert(name);
+                });
+            }
         }
     }
     return seen;
@@ -533,7 +545,7 @@ void Plotter::listen(QString series, int index) {
     listened.insert(series);
     QString msg_class = parts[0], field = parts[2];
     PprzDispatcher::get()->bind(parts[1], this, [=, this](QString sender, pprzlink::Message msg) {
-        if(msg_class == "telemetry") {
+        if(AIRCRAFT_CLASSES.contains(msg_class)) {
             if(sender != ac_id) {
                 return;
             }
@@ -678,7 +690,7 @@ QMenu* Plotter::plotMenu(std::function<void(QString)> chosen) {
             if(msg_menu == nullptr) {
                 msg_menu = other->addMenu(name);
             }
-            QString series = "telemetry:" + name + ":" + f.getName();
+            QString series = msg_dict->getClassName(def->getClassId()) + ":" + name + ":" + f.getName();
             if(t.isArray()) {
                 // the elements of a fixed array (up to 16)
                 size_t n = t.getArraySize();
