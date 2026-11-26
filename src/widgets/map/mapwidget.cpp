@@ -1250,12 +1250,11 @@ void MapWidget::mousePressEvent(QMouseEvent *event) {
 void MapWidget::mouseMoveEvent(QMouseEvent *event) {
     Map2D::mouseMoveEvent(event);
     updateWaypointHover(event->pos(), event->buttons() == Qt::NoButton);
-    auto settings = getAppSettings();
     if(event->buttons() & pan_mouse_mask) {
         if(pan_state == PAN_PRESSED) {
             QPoint dp = event->pos()-lastPos;
             double d = sqrt(dp.x()*dp.x() + dp.y()*dp.y());
-            if(d > settings.value("map/move_hyteresis").toInt()) {
+            if(d > getAppSettings().value("map/move_hyteresis").toInt()) {
                 pan_state = PAN_MOVE;
                 setFollowMode(FOLLOW_OFF);     // the map moved by hand: not followed any more
             }
